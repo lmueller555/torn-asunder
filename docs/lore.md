@@ -29,4 +29,6 @@ In **Year One**, a Human crown takes custody of the bridle. An Orc delegation fo
 
 The first shared battle takes place at the mine. A Human commander must evacuate the bridle, an Orc commander fights to capture the crew who used it, and a Druid commander tries to hold the tunnels long enough to get the workers out.
 
+The [combat system](combat.md#year-one-battle-at-the-mine) describes how each side plays through that battle.
+
 Faction campaigns enter the war at different points and can revisit the same battle from opposing sides. An Elven campaign could open in **Year Two** with a harbor rising out of the sea while its ships are still moored. An Undead campaign could begin in **Year Three** when a village starts hearing the voices of its unburied dead. Each campaign reveals a different consequence of the same struggle. By **Year Five**, the factions know enough to give Orrun a command deliberately, and each has people it would keep safe at someone else’s expense.
