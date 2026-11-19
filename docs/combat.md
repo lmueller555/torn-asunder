@@ -22,13 +22,13 @@ The eight combat ratings are **Melee Power, Ranged Power, Fire, Lightning, Ice, 
 
 ```text
 Resolved component = max(0, base damage) × (100 + attacker's rating) / (100 + 0.2 × defender's rating)
-Total damage       = sum of resolved components
+Total damage       = sum of resolved components × attacker's level factor² / defender's level factor
 HP lost            = min(target's current HP, total damage)
 ```
 
-Each component uses the attacker's and defender's ratings for its own damage type. A point in a rating contributes its full value to attack and 20% of its value to defense. As both ratings rise together, the same hit deals more damage. At the widest rating gaps, a hit deals between 83.33% and 200% of base damage. HP retains fractional damage between hits, and a hit can remove only as much HP as the target has left.
+Each component uses the attacker's and defender's ratings for its own damage type. A point in a rating contributes its full value to attack and 20% of its value to defense. As both ratings rise together, the same hit deals more damage. Ratings can scale each component to between 83.33% and 200% of its base damage. The level factor, defined below, then applies to the combined damage. HP retains fractional damage between hits, and a hit can remove only as much HP as the target has left.
 
-Tune ordinary attacks to keep full-health opponents of the same level from dying in one hit. A large level advantage can make a single hit lethal.
+Tune ordinary attacks to keep full-health opponents of the same level from dying in one hit. A large level advantage can make a single hit lethal. The examples below use the level-1 factor of 1.
 
 | Base HP damage | Attacker rating | Defender rating | Resolved HP damage |
 |---:|---:|---:|---:|
@@ -46,22 +46,27 @@ A flaming arrow with 60 base Ranged damage at 75 versus 25 deals 100 HP of Range
 
 ### Health and unit progression
 
-A standard unit starts with 1,200 HP. The target is roughly 30 hits from a 40-base-damage attack between units of the same level and rating. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
+A standard unit starts with 1,200 HP. Each level now gives double the HP gain of the previous curve. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
 
 ```text
 Reference rating R    = (L − 1) × 5 / 5
-Maximum HP at level L = starting HP × (100 + R) / (100 + 0.2 × R)
+Previous HP factor B  = (100 + R) / (100 + 0.2 × R)
+New HP factor H       = 1 + 2 × (B − 1)
+Maximum HP at level L = starting HP × H
+Level factor          = H / B
 XP to advance from L  = 100 + 25 × (L − 1)
 ```
+
+At equal levels, the multiplier on damage reduces to a single level factor. HP and damage grow by that same proportion, so the share of HP lost per hit stays the same for any pair of same-level builds. Against a level-1 target, a level-99 attack deals about 1.95 times its damage under the previous curve at the same ratings. A level-1 attack against a level-99 target removes about half as much of the target's HP pool as it did under the previous curve.
 
 XP carries across level thresholds. The first level-up costs 100 XP, level 98 to 99 costs 2,525 XP, and a unit reaches the cap at 128,625 total XP. Each new level automatically increases maximum HP and awards one banked stat point. Living units gain the same amount of current HP and keep their existing wounds. A point can raise any of the eight combat ratings by 5, up to 100. From zero starting ratings, the 98 points earned by level 99 can max four ratings and raise a fifth to 90.
 
 | Unit level | Standard maximum HP | Damage at matched reference ratings | Hits to defeat |
 |---:|---:|---:|---:|
 | 1 | 1,200 | 40.00 | 30 |
-| 20 | 1,375.72 | 45.86 | 30 |
-| 50 | 1,628.42 | 54.28 | 30 |
-| 99 | 1,986.62 | 66.22 | 30 |
+| 20 | 1,551.45 | 51.71 | 30 |
+| 50 | 2,056.83 | 68.56 | 30 |
+| 99 | 2,773.24 | 92.44 | 30 |
 
 Real builds spend whole points. Distributing them evenly across five ratings produces 30–31 hits across levels 1–99. Two specialists who both reach 100 in the relevant rating at level 21 take 21 hits. At level 99, two units using a rating of zero take 50 hits.
 

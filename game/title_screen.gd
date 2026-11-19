@@ -509,8 +509,7 @@ func _train_combat_rating(type: Unit.Damage) -> void:
 
 func _update_training() -> void:
 	_training_level.text = "Level %d" % _training_unit.level
-	var melee := _training_unit.rating(Unit.Damage.MELEE)
-	var damage := _training_base_hit * Unit.damage_factor(melee, melee)
+	var damage := _training_unit.damage_from(_training_unit, {Unit.Damage.MELEE: _training_base_hit})
 	var hits := ceili(_training_unit.max_hp / damage)
 	var xp := "XP to next level  %d / %d" % [_training_unit.experience, _training_unit.experience_for_next_level()]
 	if _training_unit.level == Unit.MAX_LEVEL:

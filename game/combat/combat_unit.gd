@@ -10,6 +10,7 @@ const REFERENCE_HIT := 40.0
 const MAX_LEVEL := 99
 const RATING_PER_POINT := 5
 const HP_REFERENCE_RATING_COUNT := 5
+const HP_GROWTH_MULTIPLIER := 2.0
 const FIRST_LEVEL_XP := 100
 const LEVEL_XP_STEP := 25
 
@@ -34,6 +35,7 @@ var _max_hp: float
 var _hp: float
 var _ratings: Dictionary
 var _level := 1
+var _level_scale := 1.0
 var _experience := 0
 var _stat_points := 0
 
@@ -72,7 +74,10 @@ func award_experience(amount: int) -> int:
 
 	var previous_max_hp := _max_hp
 	var reference_rating := float((_level - 1) * RATING_PER_POINT) / HP_REFERENCE_RATING_COUNT
-	_max_hp = _starting_hp * damage_factor(reference_rating, reference_rating)
+	var reference_scale := damage_factor(reference_rating, reference_rating)
+	var hp_scale := 1.0 + HP_GROWTH_MULTIPLIER * (reference_scale - 1.0)
+	_max_hp = _starting_hp * hp_scale
+	_level_scale = hp_scale / reference_scale
 	if is_alive():
 		_hp = _max_hp - (previous_max_hp - _hp)
 	_stat_points += gained
@@ -107,7 +112,8 @@ func damage_from(attacker: CombatUnit, components: Dictionary) -> float:
 		var base_damage := maxf(0.0, float(components.get(type, 0.0)))
 		var matchup := damage_factor(attacker.rating(type), rating(type))
 		damage += base_damage * matchup
-	return damage
+	# Peer damage grows in proportion to HP. A level gap adds an advantage or resistance.
+	return damage * attacker._level_scale * (attacker._level_scale / _level_scale)
 
 
 func receive_damage(damage: float) -> float:

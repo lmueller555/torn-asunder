@@ -94,7 +94,8 @@ func _check_hits_to_defeat() -> bool:
 			ratings[type] = int(ratings.get(type, 0)) + 5
 		var attacker := Unit.new(Unit.STARTING_HP, ratings)
 		attacker.award_experience(xp)
-		var expected_hp := 1200.0 * (99.0 + level) / (99.8 + 0.2 * level)
+		var previous_hp := 1200.0 * (99.0 + level) / (99.8 + 0.2 * level)
+		var expected_hp := 2.0 * previous_hp - 1200.0
 		for type in REFERENCE_BUILD:
 			var target := Unit.new(Unit.STARTING_HP, ratings)
 			target.award_experience(xp)
@@ -148,7 +149,7 @@ func _check_progression() -> bool:
 	if unit.award_experience(151) != 2 or unit.level != 3 or unit.experience != 25:
 		push_error("XP did not carry across multiple thresholds.")
 		return false
-	if not _same_damage(unit.max_hp, 1219.1235059760957) or not _same_damage(unit.hp, 1179.1235059760957) or unit.stat_points != 2:
+	if not _same_damage(unit.max_hp, 1238.2470119521914) or not _same_damage(unit.hp, 1198.2470119521914) or unit.stat_points != 2:
 		push_error("Automatic HP growth, wound preservation, or point awards were incorrect.")
 		return false
 	if unit.rating(Unit.Damage.MELEE) != 0 or unit.rating(Unit.Damage.FIRE) != 98:
@@ -166,7 +167,7 @@ func _check_progression() -> bool:
 	if unit.award_experience(1_000_000) != 96 or unit.level != 99 or unit.experience != 0:
 		push_error("The level cap was handled incorrectly.")
 		return false
-	if not _same_damage(unit.max_hp, 1986.6220735785955) or unit.stat_points != 96 or unit.award_experience(1_000_000) != 0:
+	if not _same_damage(unit.max_hp, 2773.244147157191) or unit.stat_points != 96 or unit.award_experience(1_000_000) != 0:
 		push_error("The unit earned the wrong HP or points at the level cap.")
 		return false
 	var at_cap := Unit.new()

@@ -11,6 +11,7 @@ const REPORT_LEVELS: Array[int] = [1, 10, 21, 50, 75, 99]
 var _random := RandomNumberGenerator.new()
 var _xp := PackedInt64Array()
 var _hp := PackedFloat64Array()
+var _previous_hp := PackedFloat64Array()
 var _builds: Array[Array] = []
 
 
@@ -27,11 +28,14 @@ func _initialize() -> void:
 func _prepare_levels() -> void:
 	_xp.resize(Unit.MAX_LEVEL + 1)
 	_hp.resize(Unit.MAX_LEVEL + 1)
+	_previous_hp.resize(Unit.MAX_LEVEL + 1)
 	var unit := Unit.new()
 	var total_xp := 0
 	for level in range(1, Unit.MAX_LEVEL + 1):
 		_xp[level] = total_xp
 		_hp[level] = unit.max_hp
+		var reference_rating := float(level - 1)
+		_previous_hp[level] = Unit.STARTING_HP * Unit.damage_factor(reference_rating, reference_rating)
 		var next_cost := unit.experience_for_next_level()
 		unit.award_experience(next_cost)
 		total_xp += next_cost
@@ -45,6 +49,12 @@ func _unit_at(level: int, ratings: Dictionary = {}) -> Unit:
 
 func _rating_cap(level: int) -> int:
 	return mini(Unit.MAX_RATING, (level - 1) * Unit.RATING_PER_POINT)
+
+
+func _level_multiplier(attacking_level: int, defending_level: int) -> float:
+	var attack := _hp[attacking_level] / _previous_hp[attacking_level]
+	var defense := _hp[defending_level] / _previous_hp[defending_level]
+	return attack * attack / defense
 
 
 func _scan_melee_ratings() -> bool:
@@ -63,13 +73,19 @@ func _scan_melee_ratings() -> bool:
 						level, attacker_rating, defender_rating,
 					])
 					return false
+				var previous_damage := 40.0 * Unit.damage_factor(attacker_rating, defender_rating)
+				if not is_equal_approx(dealt / target.max_hp, previous_damage / _previous_hp[level]):
+					push_error("The share of HP lost changed for matched level %d, ratings %d/%d." % [
+						level, attacker_rating, defender_rating,
+					])
+					return false
 				var hits := ceili(target.max_hp / dealt - 1.0e-10)
 				fewest = mini(fewest, hits)
 				most = maxi(most, hits)
 				cases += 1
 		if REPORT_LEVELS.has(level):
 			print("Level %d, %.2f HP: %d–%d hits to defeat at 40 base." % [level, _hp[level], fewest, most])
-	print("Passed %d equal-level single-type rating matchups." % cases)
+	print("Verified the same share of HP lost in %d equal-level single-type rating matchups." % cases)
 	return true
 
 
@@ -83,7 +99,8 @@ func _check_one_hit_boundaries() -> bool:
 		var attacker := _unit_at(attacking_level, {MELEE: rating})
 		for defending_level in range(1, Unit.MAX_LEVEL + 1):
 			# Maximum attainable offense against zero defense is an upper bound for every component of a hit.
-			var threshold := _hp[defending_level] / Unit.damage_factor(rating, 0)
+			var factor := Unit.damage_factor(rating, 0) * _level_multiplier(attacking_level, defending_level)
+			var threshold := _hp[defending_level] / factor
 			var survivor := _unit_at(defending_level)
 			survivor.receive_hit(attacker, {MELEE: threshold - 0.01})
 			var casualty := _unit_at(defending_level)
@@ -118,7 +135,8 @@ func _sample_mixed_hits() -> bool:
 			var attacker := _unit_at(attacking_level, attacking_ratings)
 			var target := _unit_at(defending_level, defending_ratings)
 			var lost := target.receive_hit(attacker, _mixed_components(base))
-			if lost > 2.0 * base + 1.0e-9:
+			var maximum_damage := 2.0 * base * _level_multiplier(attacking_level, defending_level)
+			if lost > maximum_damage + 1.0e-9:
 				push_error("Mixed hit exceeded its damage bound at base %.0f." % base)
 				return false
 			if attacking_level == defending_level:
