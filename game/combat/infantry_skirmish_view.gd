@@ -17,6 +17,7 @@ const CLIPS := {
 	Battle.State.KNOCKDOWN: &"Backward Knockdown",
 	Battle.State.GET_UP: &"Get Up",
 	Battle.State.DEAD: &"Death Fall",
+	Battle.State.CHEER: &"Sword Cheer",
 }
 
 signal updated
@@ -131,8 +132,9 @@ func _frame_battle(delta: float) -> void:
 			continue
 		var ground := Vector3(soldier.position.x, 0.0, soldier.position.y)
 		var projected := Vector2(ground.dot(_camera.basis.x), ground.dot(_camera.basis.y))
+		var height := 2.60 if soldier.state == Battle.State.CHEER else 1.95
 		low = low.min(projected)
-		high = high.max(projected + Vector2(0.0, 1.95 * _camera.basis.y.y))
+		high = high.max(projected + Vector2(0.0, height * _camera.basis.y.y))
 	if not low.is_finite():
 		return
 	var aspect := get_viewport().get_visible_rect().size.aspect()

@@ -43,6 +43,8 @@ In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `
 
 **Death Fall** is the Infantry's defeat animation for zero HP. His knees buckle, his weight drops onto his sword side, and his sword arm goes slack. The 1.2-second clip holds the final side-lying pose. In **Unit Test**, use **Restart** to replay it from ready.
 
+**Sword Cheer** is a 1.4-second sword thrust into the air. Infantry waiting at the edge of a full engagement occasionally cheer and return to combat when a target opens up. Once the fight has started, 0.75 seconds with no enemy within 5 meters of any surviving platoon member triggers three cheers per survivor, staggered across the platoon. If the enemy returns to range, Infantry resume combat. **Unit Test** also lets you preview the cheer on its own.
+
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
 Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.

@@ -12,6 +12,8 @@ func _initialize() -> void:
 	passed = _check_passing() and passed
 	passed = _check_trade() and passed
 	passed = _check_reactions() and passed
+	passed = _check_waiting_cheer() and passed
+	passed = _check_victory_cheers() and passed
 	passed = _check_full_matches() and passed
 	quit(0 if passed else 1)
 
@@ -205,6 +207,85 @@ func _check_reactions() -> bool:
 	if attacker.unit.hp != attacker.unit.max_hp:
 		return _fail("An interrupted swing still dealt damage.")
 	print("Verified block reactions and heavy-hit interruption before contact.")
+	return true
+
+
+func _check_waiting_cheer() -> bool:
+	var battle := _fixture([0, 1, 2, 3, FIRST_AMBER])
+	var enemy := battle.soldiers[FIRST_AMBER]
+	enemy.position = Vector2.ZERO
+	enemy.target = 0
+	for index in range(3):
+		battle.soldiers[index].position = Vector2.LEFT.rotated(index * TAU / 3.0) * Battle.SLOT_DISTANCE
+	var reserve := battle.soldiers[3]
+	reserve.position = Vector2(0, 2.15)
+	reserve.cheer_in = 0.0
+	battle.step(TICK)
+	if reserve.state != Battle.State.CHEER or reserve.target >= 0 or battle.waiting_count() != 1:
+		return _fail("A reserve did not cheer when all engagement slots were occupied.")
+	for tick in range(15):
+		battle.step(TICK)
+	if reserve.state != Battle.State.CHEER or battle.hits != 0:
+		return _fail("A reserve did not sustain a harmless cheer while waiting.")
+	battle.soldiers[0].unit.receive_damage(battle.soldiers[0].unit.hp)
+	reserve.scan_in = 0.0
+	battle.step(TICK)
+	if reserve.state != Battle.State.RUN or reserve.approach != FIRST_AMBER:
+		return _fail("A reserve kept cheering when an engagement slot opened.")
+	print("Verified reserves cheer at full engagements and break off when a target opens.")
+	return true
+
+
+func _check_victory_cheers() -> bool:
+	var battle := _fixture([0, 1, FIRST_AMBER])
+	var front := battle.soldiers[0]
+	var recovering := battle.soldiers[1]
+	var enemy := battle.soldiers[FIRST_AMBER]
+	front.position = Vector2(-4, 0)
+	recovering.position = Vector2(-4, 2)
+	enemy.position = Vector2(4, 0)
+	for soldier in [front, recovering, enemy]:
+		soldier.scan_in = 100.0
+	for tick in range(90):
+		battle.step(TICK)
+	if front.state != Battle.State.IDLE or front.victory_cheers != 0:
+		return _fail("The platoon celebrated before the first engagement.")
+	enemy.position = Vector2(-2.7, 0)
+	front.approach = FIRST_AMBER
+	battle.step(TICK)
+	if front.target != FIRST_AMBER:
+		return _fail("The victory fixture did not engage.")
+	front.target = -1
+	front.pursuit = -1
+	enemy.position = Vector2(4, 0)
+	for tick in range(80):
+		battle.step(TICK)
+	if front.state != Battle.State.CHEER or battle.winner != Battle.LIVE:
+		return _fail("The survivors did not celebrate after all enemies left engagement range.")
+	enemy.position = Vector2(-2.7, 0)
+	battle.step(TICK)
+	if front.state == Battle.State.CHEER or front.victory_cheers != 0:
+		return _fail("The survivors continued their victory cheers after the enemy returned.")
+	var casualty := battle.soldiers[2]
+	casualty.state = Battle.State.DEAD
+	enemy.unit.receive_damage(enemy.unit.hp)
+	recovering.state = Battle.State.KNOCKDOWN
+	recovering.time = 0.0
+	var cheers := [0, 0]
+	var cheering := [false, false]
+	for tick in range(60 * 11):
+		battle.step(TICK)
+		for index in range(2):
+			var soldier := battle.soldiers[index]
+			var playing := soldier.state == Battle.State.CHEER
+			if playing and not cheering[index]:
+				cheers[index] += 1
+			cheering[index] = playing
+		if casualty.state != Battle.State.DEAD or enemy.state == Battle.State.CHEER:
+			return _fail("A casualty joined the celebration.")
+	if battle.winner != 0 or cheers != [3, 3] or front.state != Battle.State.IDLE or recovering.state != Battle.State.IDLE:
+		return _fail("Survivors did not finish exactly three cheers, including after recovery.")
+	print("Verified range-based victory cheers, combat resumption, and three cheers per survivor.")
 	return true
 
 

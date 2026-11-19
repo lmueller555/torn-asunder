@@ -4,8 +4,8 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
 
-# Reaction states are ordered by priority when several contacts resolve together.
-enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD }
+# From RECOIL through KNOCKDOWN, states are ordered by contact priority.
+enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER }
 
 const PLATOON_SIZE := 32
 const FORMATION_COLUMNS := 8
@@ -27,6 +27,8 @@ const SLOT_DISTANCE := 1.22
 const SLOT_TOLERANCE := 0.48
 const SLOT_ANGLES := [0.0, -TAU / 3.0, TAU / 3.0]
 const ARENA_LIMIT := Vector2(9.0, 10.0)
+const VICTORY_CLEAR_TIME := 0.75
+const VICTORY_CHEERS := 3
 const DURATIONS := {
 	State.ATTACK: 88.0 / 60.0,
 	State.RAISE: 0.32,
@@ -39,6 +41,7 @@ const DURATIONS := {
 	State.DOWN: 0.26,
 	State.GET_UP: 94.0 / 60.0,
 	State.DEAD: 1.2,
+	State.CHEER: 84.0 / 60.0,
 }
 const DISPLACEMENTS := {
 	State.RECOIL: Vector2(0, 0.155),
@@ -66,6 +69,9 @@ class Soldier:
 	var approach := -1
 	var pursuit := -1
 	var heavy := false
+	var cheer_in := 0.0
+	var victory_cheers := 0
+	var victory_in := 0.0
 
 	func _init(model: Unit, side: int, index: int, spawn: Vector2) -> void:
 		unit = model
@@ -84,11 +90,17 @@ var hits := 0
 var blocks := 0
 
 var _random := RandomNumberGenerator.new()
+var _cheer_random := RandomNumberGenerator.new()
 var _attack: Dictionary
+var _battle_engaged := false
+var _clear_time := 0.0
+var _celebrating := false
 
 
 func _init(seed_value: int = 8) -> void:
 	_random.seed = seed_value
+	# Celebration timings are independent of target selection and combat rolls.
+	_cheer_random.seed = seed_value ^ 0x494E46
 	var infantry: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
 	_attack = infantry.basic_attack
 	for team in range(2):
@@ -104,6 +116,7 @@ func _init(seed_value: int = 8) -> void:
 			spawn += Vector2(_random.randf_range(-0.12, 0.12), _random.randf_range(-0.10, 0.10))
 			var soldier := Soldier.new(unit, team, index, spawn)
 			soldier.ready_in = _random.randf_range(0.05, 0.50)
+			soldier.cheer_in = _cheer_random.randf_range(2.0, 5.0)
 			soldiers.append(soldier)
 			engagements.append({})
 		platoons.append(Platoon.new(roster, infantry.platoon_training))
@@ -130,6 +143,7 @@ func step(delta: float) -> void:
 	if winner == LIVE:
 		_resolve_contacts(contacts)
 		_check_winner()
+	_update_celebration(delta)
 	if winner == LIVE:
 		_update_ai(delta)
 		_separate(delta)
@@ -158,10 +172,15 @@ func _assign_targets() -> void:
 	# Assignment is shared by both sides. A reciprocal target uses the same slot.
 	for index in range(soldiers.size()):
 		var soldier := soldiers[index]
-		if not soldier.unit.is_alive() or not _is_mobile(soldier) or soldier.target >= 0:
+		if not soldier.unit.is_alive() or soldier.victory_cheers > 0 or soldier.target >= 0:
+			continue
+		if not _is_mobile(soldier) and soldier.state != State.CHEER:
 			continue
 		if soldier.approach < 0 and soldier.scan_in <= 0.0:
 			_scan_for_enemy(index)
+		if soldier.state == State.CHEER:
+			if not _waiting_for_slot(soldier) or soldier.position.distance_to(soldiers[soldier.pursuit].position) > WAIT_DISTANCE + 0.25:
+				_set_state(soldier, State.IDLE)
 		if soldier.approach < 0:
 			continue
 		var enemy := soldiers[soldier.approach]
@@ -205,6 +224,7 @@ func _has_slot(index: int, rival: int) -> bool:
 
 
 func _link_engagement(index: int, rival: int) -> void:
+	_battle_engaged = true
 	engagements[index][rival] = true
 	engagements[rival][index] = true
 
@@ -273,6 +293,11 @@ func _finish_action(soldier: Soldier) -> void:
 			_set_state(soldier, State.GET_UP)
 		State.DEAD:
 			soldier.time = DURATIONS[State.DEAD]
+		State.CHEER:
+			_set_state(soldier, State.IDLE)
+			if soldier.victory_cheers > 0:
+				soldier.victory_cheers -= 1
+				soldier.victory_in = _cheer_random.randf_range(0.30, 0.75)
 		_:
 			_set_state(soldier, State.IDLE)
 			soldier.ready_in = _random.randf_range(0.08, 0.36)
@@ -296,7 +321,7 @@ func _move_action(soldier: Soldier, before: float) -> void:
 
 func _update_ai(delta: float) -> void:
 	for soldier in soldiers:
-		if not _is_mobile(soldier) or not soldier.unit.is_alive():
+		if not _is_mobile(soldier) or not soldier.unit.is_alive() or soldier.victory_cheers > 0:
 			continue
 		var assigned := soldier.target >= 0
 		var pursuing_target := soldier.approach >= 0
@@ -319,6 +344,12 @@ func _update_ai(delta: float) -> void:
 		_set_state(soldier, State.IDLE)
 		if distance > 0.001:
 			soldier.facing = offset / distance
+		if _waiting_for_slot(soldier):
+			soldier.cheer_in -= delta
+			if soldier.cheer_in <= 0.0:
+				soldier.cheer_in = _cheer_random.randf_range(8.0, 16.0)
+				_set_state(soldier, State.CHEER)
+			continue
 		if not assigned or soldier.ready_in > 0.0:
 			continue
 		if soldier.think_in <= 0.0 and _threatened(soldier):
@@ -328,6 +359,49 @@ func _update_ai(delta: float) -> void:
 				continue
 		soldier.heavy = _random.randf() < 0.28
 		_set_state(soldier, State.ATTACK)
+
+
+func _update_celebration(delta: float) -> void:
+	if winner == DRAW or (winner == LIVE and not _battle_engaged):
+		return
+	if winner == LIVE and _enemies_in_range():
+		_clear_time = 0.0
+		if _celebrating:
+			for soldier in soldiers:
+				if soldier.victory_cheers > 0 and soldier.state == State.CHEER:
+					_set_state(soldier, State.IDLE)
+				soldier.victory_cheers = 0
+			_celebrating = false
+		return
+	if not _celebrating:
+		_clear_time += delta
+		if _clear_time < VICTORY_CLEAR_TIME:
+			return
+		_celebrating = true
+		for soldier in soldiers:
+			if soldier.unit.is_alive():
+				soldier.victory_cheers = VICTORY_CHEERS
+				soldier.victory_in = _cheer_random.randf_range(0.0, 0.48)
+				if soldier.state in [State.RUN, State.CHEER]:
+					_set_state(soldier, State.IDLE)
+	for soldier in soldiers:
+		if soldier.victory_cheers == 0 or soldier.state != State.IDLE or not soldier.unit.is_alive():
+			continue
+		soldier.victory_in -= delta
+		if soldier.victory_in <= 0.0:
+			_set_state(soldier, State.CHEER)
+
+
+func _enemies_in_range() -> bool:
+	for index in range(PLATOON_SIZE):
+		var blue := soldiers[index]
+		if not blue.unit.is_alive():
+			continue
+		for rival in range(PLATOON_SIZE, soldiers.size()):
+			var amber := soldiers[rival]
+			if amber.unit.is_alive() and blue.position.distance_squared_to(amber.position) <= ENGAGEMENT_RANGE * ENGAGEMENT_RANGE:
+				return true
+	return false
 
 
 func _slot_waypoint(soldier: Soldier, enemy: Soldier, distance: float) -> Vector2:
@@ -501,7 +575,12 @@ func _check_winner() -> void:
 func waiting_count() -> int:
 	var count := 0
 	for soldier in soldiers:
-		if soldier.unit.is_alive() and soldier.target < 0 and soldier.approach < 0 and soldier.pursuit >= 0:
-			if soldiers[soldier.pursuit].unit.is_alive() and engagements[soldier.pursuit].size() >= MAX_ENGAGEMENTS:
-				count += 1
+		if _waiting_for_slot(soldier):
+			count += 1
 	return count
+
+
+func _waiting_for_slot(soldier: Soldier) -> bool:
+	return soldier.unit.is_alive() and soldier.target < 0 and soldier.approach < 0 and soldier.pursuit >= 0 and (
+		soldiers[soldier.pursuit].unit.is_alive() and engagements[soldier.pursuit].size() >= MAX_ENGAGEMENTS
+	)

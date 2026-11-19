@@ -18,6 +18,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 			&"Hit Stagger": {"travel": -0.26},
 			&"Sword Slash": {"headroom": 0.62, "travel": 0.52},
 			&"Sword Recoil": {"headroom": 0.20, "travel": 0.52},
+			&"Sword Cheer": {"headroom": 0.68},
 		},
 		"equipment": {
 			"main_hand": &"sword",
