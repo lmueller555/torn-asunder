@@ -1,0 +1,65 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/combat/infantry_skirmish_view.gd" id="1_view"]
+
+[sub_resource type="Environment" id="Environment_field"]
+background_mode = 1
+background_color = Color(0.053, 0.068, 0.074, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.78, 0.85, 0.91, 1)
+ambient_light_energy = 0.78
+
+[sub_resource type="Shader" id="Shader_field"]
+code = "shader_type spatial;
+uniform vec3 ground : source_color = vec3(0.20, 0.25, 0.24);
+varying vec2 ground_pos;
+
+void vertex() {
+	ground_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
+}
+
+void fragment() {
+	vec2 cell = abs(fract(ground_pos / 2.0 + 0.5) - 0.5);
+	float grid = 1.0 - smoothstep(0.006, 0.018, min(cell.x, cell.y));
+	float grain = sin(dot(ground_pos, vec2(18.1, 11.5))) * sin(dot(ground_pos, vec2(8.6, -14.3)));
+	float border = max(abs(ground_pos.x) - 9.0, abs(ground_pos.y) - 8.0);
+	ALBEDO = ground * (0.94 + grain * 0.025 + grid * 0.12) * (1.0 - 0.36 * smoothstep(0.0, 0.55, border));
+	ROUGHNESS = 0.94;
+}"
+
+[sub_resource type="ShaderMaterial" id="Material_field"]
+shader = SubResource("Shader_field")
+
+[sub_resource type="PlaneMesh" id="Mesh_field"]
+material = SubResource("Material_field")
+size = Vector2(100, 100)
+
+[node name="InfantrySkirmish" type="Node3D"]
+script = ExtResource("1_view")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_field")
+
+[node name="Field" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_field")
+cast_shadow = 0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+rotation = Vector3(-0.55, 1.28, 0)
+projection = 1
+current = true
+keep_aspect = 0
+size = 19.0
+far = 66.0
+
+[node name="Key" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-55, -36, 0)
+light_color = Color(1, 0.91, 0.76, 1)
+light_energy = 0.8
+shadow_enabled = true
+directional_shadow_max_distance = 37.0
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-40, 145, 0)
+light_color = Color(0.72, 0.84, 1, 1)
+light_energy = 0.38

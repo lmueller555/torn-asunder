@@ -23,6 +23,8 @@ In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model**
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
 
+Select **AI Skirmish** in **Unit Test** to watch two platoons of ten Human Infantry fight on their own. Each soldier can engage up to three opponents. A soldier without an available target runs toward the nearest enemy, including an enemy already fighting three opponents, and idles at the edge of the fight until a slot opens or the enemy moves. The health bars show current HP in green, missing HP on survivors in red, and HP lost to casualties in black. **Restart** replays the same opening.
+
 The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances 0.52 meters into an overhead cut and ends in guard. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
 
 The shield block starts with **Shield Raise**, stays up in the looping **Shield Guard**, and returns to the ready pose with **Shield Lower**. All three clips are available in **Unit Test**.
@@ -44,6 +46,8 @@ In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
 Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.
+
+Run `godot --headless --script tests/infantry_skirmish.gd` to check the engagement cap, reserve movement, simultaneous hits, and complete AI matches.
 
 ## Game design
 

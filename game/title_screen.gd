@@ -7,6 +7,9 @@ const Drills := preload("res://game/combat/drills.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
+const SkirmishView := preload("res://game/combat/infantry_skirmish_view.gd")
+const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
+const SKIRMISH_SCENE := preload("res://game/combat/infantry_skirmish_view.tscn")
 const UNIT_STUDIO_SCENE := preload("res://game/combat/unit_model_studio.tscn")
 const TITLE_ART := preload("res://assets/art/title.webp")
 const VAULT_ART := preload("res://assets/art/vault.webp")
@@ -19,7 +22,7 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST }
+enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH }
 
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
@@ -111,6 +114,9 @@ func _go_back() -> void:
 			_show_briefing()
 		Page.UNIT_MODEL:
 			_show_unit_progression(true)
+		Page.SKIRMISH:
+			_show_unit_test()
+			_stage.get_node("AI Skirmish").grab_focus()
 		_:
 			_show_title()
 
@@ -289,6 +295,14 @@ func _show_unit_model(definition: Dictionary) -> void:
 
 
 func _create_unit_studio(rect: Rect2) -> UnitModelStudio:
+	var viewport := _create_model_viewport(rect)
+	viewport.msaa_3d = Viewport.MSAA_2X
+	var studio := UNIT_STUDIO_SCENE.instantiate() as UnitModelStudio
+	viewport.add_child(studio)
+	return studio
+
+
+func _create_model_viewport(rect: Rect2) -> SubViewport:
 	_color_rect(_stage, rect.grow(1), HAIRLINE)
 	var frame := SubViewportContainer.new()
 	frame.position = rect.position
@@ -300,11 +314,8 @@ func _create_unit_studio(rect: Rect2) -> UnitModelStudio:
 	var viewport := SubViewport.new()
 	viewport.own_world_3d = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
-	viewport.msaa_3d = Viewport.MSAA_2X
 	frame.add_child(viewport)
-	var studio := UNIT_STUDIO_SCENE.instantiate() as UnitModelStudio
-	viewport.add_child(studio)
-	return studio
+	return viewport
 
 
 func _unit_view_buttons(studio: UnitModelStudio, rect: Rect2, step: Vector2) -> Array[Button]:
@@ -342,6 +353,7 @@ func _show_unit_test() -> void:
 	var animation_choice := _option_button("Animation", Rect2(1012, 418, 352, 55))
 	var playback := _button("Pause", Rect2(1012, 492, 352, 52))
 	var restart := _button("Restart", Rect2(1012, 554, 352, 52))
+	var skirmish := _button("AI Skirmish", Rect2(1012, 616, 352, 52), _show_skirmish)
 
 	var play_animation := func(index: int) -> void:
 		var player := studio.animation_player
@@ -402,6 +414,7 @@ func _show_unit_test() -> void:
 			animation_choice.add_item("No animations")
 			animation_choice.select(0)
 			playback.text = "Play"
+		navigation.append(skirmish)
 		var last := navigation.back() as Button
 		navigation.append(views[0])
 		_link_cycle(navigation, SIDE_TOP, SIDE_BOTTOM)
@@ -412,6 +425,64 @@ func _show_unit_test() -> void:
 	unit_choice.select(0)
 	show_unit.call(0)
 	unit_choice.grab_focus()
+
+
+func _show_skirmish() -> void:
+	_open_page(Page.SKIRMISH)
+	var back := _heading("AI Infantry Skirmish", "Two platoons of ten. Up to three opponents per soldier.")
+	var viewport := _create_model_viewport(Rect2(76, 275, 1288, 392))
+	var view := SKIRMISH_SCENE.instantiate() as SkirmishView
+	viewport.add_child(view)
+	var team_names := ["Blue Platoon", "Amber Platoon"]
+	var team_labels: Array[Label] = []
+	var health_bars: Array[Control] = []
+	for team in range(2):
+		var x := 76 if team == 0 else 887
+		team_labels.append(_label(_stage, "", Rect2(x, 208, 477, 29), 22, SkirmishView.TEAM_COLORS[team]))
+		var bar := _color_rect(_stage, Rect2(x, 244, 477, 14), Color("#131719"))
+		for color in [Color("#63935d"), Color("#a84c47"), Color("#08090a")]:
+			_color_rect(bar, Rect2(0, 0, 0, 14), color)
+		health_bars.append(bar)
+	var status := _label(_stage, "", Rect2(573, 205, 294, 52), 22, IVORY)
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var counts := _label(_stage, "", Rect2(76, 682, 885, 45), 22, MUTED)
+	var playback := _button("Pause", Rect2(1012, 680, 168, 50))
+	var restart := _button("Restart", Rect2(1192, 680, 172, 50))
+
+	var update := func() -> void:
+		var battle := view.battle
+		for team in range(2):
+			var health: Vector3 = battle.platoons[team].health_fractions()
+			var bar := health_bars[team]
+			var offset := 0.0
+			for segment in range(3):
+				var fill := bar.get_child(segment) as ColorRect
+				fill.position.x = offset
+				fill.size.x = health[segment] * bar.size.x
+				offset += fill.size.x
+			var survivors := 0
+			for soldier in battle.soldiers:
+				if soldier.team == team and soldier.unit.is_alive():
+					survivors += 1
+			team_labels[team].text = "%s   %d / %d alive" % [team_names[team], survivors, Skirmish.PLATOON_SIZE]
+		var seconds := floori(battle.elapsed)
+		status.text = "%02d:%02d" % [floori(seconds / 60.0), seconds % 60]
+		if battle.winner != Skirmish.LIVE:
+			status.text = "Mutual defeat" if battle.winner == Skirmish.DRAW else "%s wins" % team_names[battle.winner]
+		counts.text = "%d hits   ·   %d blocks   ·   %d waiting for a slot" % [battle.hits, battle.blocks, battle.waiting_count()]
+	view.updated.connect(update)
+	update.call()
+	playback.pressed.connect(func() -> void:
+		view.paused = not view.paused
+		playback.text = "Resume" if view.paused else "Pause"
+	)
+	restart.pressed.connect(func() -> void:
+		view.restart()
+		playback.text = "Pause"
+	)
+	_link_cycle([back, playback, restart], SIDE_TOP, SIDE_BOTTOM)
+	_link_cycle([playback, restart], SIDE_LEFT, SIDE_RIGHT)
+	playback.grab_focus()
 
 
 func _award_training_experience() -> void:
@@ -778,13 +849,14 @@ func _texture(parent: Control, art: Texture2D, rect: Rect2) -> TextureRect:
 	return texture
 
 
-func _color_rect(parent: Control, rect: Rect2, color: Color) -> void:
+func _color_rect(parent: Control, rect: Rect2, color: Color) -> ColorRect:
 	var fill := ColorRect.new()
 	fill.color = color
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(fill)
 	fill.position = rect.position
 	fill.size = rect.size
+	return fill
 
 
 func _rule(rect: Rect2, color: Color) -> void:

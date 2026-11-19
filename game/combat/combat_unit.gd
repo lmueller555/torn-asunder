@@ -98,12 +98,20 @@ func receive_hit(attacker: CombatUnit, components: Dictionary) -> float:
 	if not is_alive() or not attacker.is_alive():
 		return 0.0
 
+	return receive_damage(damage_from(attacker, components))
+
+
+func damage_from(attacker: CombatUnit, components: Dictionary) -> float:
 	var damage := 0.0
 	for type in Damage.values():
 		var base_damage := maxf(0.0, float(components.get(type, 0.0)))
 		var matchup := damage_factor(attacker.rating(type), rating(type))
 		damage += base_damage * matchup
-	var lost := minf(_hp, damage)
+	return damage
+
+
+func receive_damage(damage: float) -> float:
+	var lost := minf(_hp, maxf(0.0, damage))
 	# Clear floating-point residue at an exact defeat threshold.
 	if _hp - lost <= minf(1.0e-9, lost * 1.0e-9):
 		lost = _hp

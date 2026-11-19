@@ -44,6 +44,17 @@ func hit_unit(index: int, attacker: Unit, components: Dictionary) -> float:
 		return 0.0
 	var unit := _roster[index]
 	var lost := unit.receive_hit(attacker, components)
+	return _record_damage(unit, lost)
+
+
+func apply_damage(index: int, damage: float) -> float:
+	if index < 0 or index >= _roster.size():
+		return 0.0
+	var unit := _roster[index]
+	return _record_damage(unit, unit.receive_damage(damage))
+
+
+func _record_damage(unit: Unit, lost: float) -> float:
 	if lost > 0.0 and not unit.is_alive():
 		lose_cohesion(22.0)
 	return lost
