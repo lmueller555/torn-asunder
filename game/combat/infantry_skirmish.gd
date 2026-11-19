@@ -7,7 +7,8 @@ const Catalog := preload("res://game/combat/unit_catalog.gd")
 # Reaction states are ordered by priority when several contacts resolve together.
 enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD }
 
-const PLATOON_SIZE := 10
+const PLATOON_SIZE := 32
+const FORMATION_COLUMNS := 8
 const MAX_ENGAGEMENTS := 3
 const LIVE := -2
 const DRAW := -1
@@ -15,9 +16,12 @@ const CONTACT := 0.70
 const ATTACK_RANGE := 1.48
 const WAIT_DISTANCE := 2.16
 const ENGAGEMENT_RANGE := 5.0
+const PURSUIT_RANGE := ENGAGEMENT_RANGE * 1.3
+const SCAN_MIN_INTERVAL := 0.35
+const SCAN_MAX_INTERVAL := 0.70
 const RUN_SPEED := 2.7
 const SPACING := 0.68
-const ARENA_LIMIT := Vector2(9.0, 8.0)
+const ARENA_LIMIT := Vector2(9.0, 10.0)
 const DURATIONS := {
 	State.ATTACK: 88.0 / 60.0,
 	State.RAISE: 0.32,
@@ -50,7 +54,9 @@ class Soldier:
 	var time := 0.0
 	var ready_in := 0.0
 	var think_in := 0.0
+	var scan_in := 0.0
 	var target := -1
+	var approach := -1
 	var pursuit := -1
 	var heavy := false
 
@@ -84,9 +90,10 @@ func _init(seed_value: int = 8) -> void:
 			var unit := Unit.new(infantry.starting_hp, infantry.ratings)
 			roster.append(unit)
 			var side := -1.0 if team == 0 else 1.0
-			var column := index % 5 - 2
-			var row := floori(float(index) / 5.0)
-			var spawn := Vector2(column * 1.55 + row * 0.46, side * (4.6 + row * 1.36))
+			var column := index % FORMATION_COLUMNS - (FORMATION_COLUMNS - 1) * 0.5
+			var row := floori(float(index) / FORMATION_COLUMNS)
+			var rank_offset := -0.23 if row % 2 == 0 else 0.23
+			var spawn := Vector2(column * 1.55 + rank_offset, side * (4.6 + row * 1.36))
 			spawn += Vector2(_random.randf_range(-0.12, 0.12), _random.randf_range(-0.10, 0.10))
 			var soldier := Soldier.new(unit, team, index, spawn)
 			soldier.ready_in = _random.randf_range(0.05, 0.50)
@@ -107,6 +114,7 @@ func step(delta: float) -> void:
 		soldier.time += delta
 		soldier.ready_in = maxf(0.0, soldier.ready_in - delta)
 		soldier.think_in = maxf(0.0, soldier.think_in - delta)
+		soldier.scan_in = maxf(0.0, soldier.scan_in - delta)
 		if soldier.state == State.ATTACK and before < CONTACT and soldier.time >= CONTACT:
 			contacts.append(index)
 		_move_action(soldier, before)
@@ -134,25 +142,40 @@ func _assign_targets() -> void:
 		var soldier := soldiers[index]
 		if not soldier.unit.is_alive() or not _is_mobile(soldier) or soldier.target >= 0:
 			continue
-		var nearest := -1
-		var nearest_distance := INF
-		var open_target := -1
-		var open_distance := ENGAGEMENT_RANGE * ENGAGEMENT_RANGE
-		for rival in range(soldiers.size()):
-			var enemy := soldiers[rival]
-			if enemy.team == soldier.team or not enemy.unit.is_alive():
-				continue
-			var distance := soldier.position.distance_squared_to(enemy.position)
-			if distance < nearest_distance:
-				nearest = rival
-				nearest_distance = distance
-			if distance < open_distance and _has_slot(index, rival):
-				open_target = rival
-				open_distance = distance
-		soldier.pursuit = nearest
-		if open_target >= 0:
-			soldier.target = open_target
-			_link_engagement(index, open_target)
+		if soldier.approach < 0 and soldier.scan_in <= 0.0:
+			_scan_for_enemy(index)
+		if soldier.approach < 0:
+			continue
+		var enemy := soldiers[soldier.approach]
+		var distance := soldier.position.distance_squared_to(enemy.position)
+		if not enemy.unit.is_alive() or distance > PURSUIT_RANGE * PURSUIT_RANGE:
+			soldier.approach = -1
+			soldier.scan_in = 0.0
+		elif distance <= ATTACK_RANGE * ATTACK_RANGE:
+			if _has_slot(index, soldier.approach):
+				soldier.target = soldier.approach
+				_link_engagement(index, soldier.target)
+			soldier.approach = -1
+
+
+func _scan_for_enemy(index: int) -> void:
+	var soldier := soldiers[index]
+	soldier.scan_in = _random.randf_range(SCAN_MIN_INTERVAL, SCAN_MAX_INTERVAL)
+	var nearest_distance := INF
+	var candidates: Array[int] = []
+	soldier.pursuit = -1
+	for rival in range(soldiers.size()):
+		var enemy := soldiers[rival]
+		if enemy.team == soldier.team or not enemy.unit.is_alive():
+			continue
+		var distance := soldier.position.distance_squared_to(enemy.position)
+		if distance < nearest_distance:
+			soldier.pursuit = rival
+			nearest_distance = distance
+		if distance <= ENGAGEMENT_RANGE * ENGAGEMENT_RANGE and _has_slot(index, rival):
+			candidates.append(rival)
+	if not candidates.is_empty():
+		soldier.approach = candidates[_random.randi_range(0, candidates.size() - 1)]
 
 
 func _has_slot(index: int, rival: int) -> bool:
@@ -216,7 +239,8 @@ func _update_ai(delta: float) -> void:
 		if not _is_mobile(soldier) or not soldier.unit.is_alive():
 			continue
 		var assigned := soldier.target >= 0
-		var goal := soldier.target if assigned else soldier.pursuit
+		var pursuing_target := soldier.approach >= 0
+		var goal := soldier.target if assigned else (soldier.approach if pursuing_target else soldier.pursuit)
 		if goal < 0 or not soldiers[goal].unit.is_alive():
 			_set_state(soldier, State.IDLE)
 			continue
@@ -224,7 +248,7 @@ func _update_ai(delta: float) -> void:
 		var distance := offset.length()
 		if distance > 0.001:
 			soldier.facing = offset / distance
-		var reach := ATTACK_RANGE - 0.08 if assigned else WAIT_DISTANCE
+		var reach := ATTACK_RANGE - 0.08 if assigned or pursuing_target else WAIT_DISTANCE
 		if distance > reach + 0.025:
 			_set_state(soldier, State.RUN)
 			soldier.position += soldier.facing * minf(RUN_SPEED * delta, distance - reach)
@@ -318,6 +342,7 @@ func _check_winner() -> void:
 	winner = DRAW if not blue_alive and not amber_alive else (0 if blue_alive else 1)
 	for soldier in soldiers:
 		soldier.target = -1
+		soldier.approach = -1
 		soldier.pursuit = -1
 		if soldier.unit.is_alive() and _is_mobile(soldier):
 			_set_state(soldier, State.IDLE)
@@ -326,7 +351,7 @@ func _check_winner() -> void:
 func waiting_count() -> int:
 	var count := 0
 	for soldier in soldiers:
-		if soldier.unit.is_alive() and soldier.target < 0 and soldier.pursuit >= 0:
-			if engagements[soldier.pursuit].size() >= MAX_ENGAGEMENTS:
+		if soldier.unit.is_alive() and soldier.target < 0 and soldier.approach < 0 and soldier.pursuit >= 0:
+			if soldiers[soldier.pursuit].unit.is_alive() and engagements[soldier.pursuit].size() >= MAX_ENGAGEMENTS:
 				count += 1
 	return count

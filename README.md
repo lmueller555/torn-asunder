@@ -23,7 +23,7 @@ In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model**
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
 
-Select **AI Skirmish** in **Unit Test** to watch two platoons of ten Human Infantry fight on their own. Each soldier can engage up to three opponents. A soldier without an available target runs toward the nearest enemy, including an enemy already fighting three opponents, and idles at the edge of the fight until a slot opens or the enemy moves. The health bars show current HP in green, missing HP on survivors in red, and HP lost to casualties in black. **Restart** replays the same opening.
+Select **AI Skirmish** in **Unit Test** to watch two platoons of 32 Human Infantry fight on their own. Free soldiers scan every 0.35 to 0.70 seconds, pick a random eligible enemy within 5 meters, and run over to try to engage. Each soldier can engage up to three opponents. When a scan finds no available target, the soldier follows the nearest enemy and idles at the edge of the fight until a slot opens or the enemy moves. The health bars show current HP in green, missing HP on survivors in red, and HP lost to casualties in black. **Restart** replays the same opening.
 
 The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances 0.52 meters into an overhead cut and ends in guard. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
 

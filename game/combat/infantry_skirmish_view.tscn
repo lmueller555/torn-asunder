@@ -22,7 +22,7 @@ void fragment() {
 	vec2 cell = abs(fract(ground_pos / 2.0 + 0.5) - 0.5);
 	float grid = 1.0 - smoothstep(0.006, 0.018, min(cell.x, cell.y));
 	float grain = sin(dot(ground_pos, vec2(18.1, 11.5))) * sin(dot(ground_pos, vec2(8.6, -14.3)));
-	float border = max(abs(ground_pos.x) - 9.0, abs(ground_pos.y) - 8.0);
+	float border = max(abs(ground_pos.x) - 9.0, abs(ground_pos.y) - 10.0);
 	ALBEDO = ground * (0.94 + grain * 0.025 + grid * 0.12) * (1.0 - 0.36 * smoothstep(0.0, 0.55, border));
 	ROUGHNESS = 0.94;
 }"

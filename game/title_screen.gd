@@ -429,7 +429,10 @@ func _show_unit_test() -> void:
 
 func _show_skirmish() -> void:
 	_open_page(Page.SKIRMISH)
-	var back := _heading("AI Infantry Skirmish", "Two platoons of ten. Up to three opponents per soldier.")
+	var back := _heading(
+		"AI Infantry Skirmish",
+		"Two platoons of %d. Up to three opponents per soldier." % Skirmish.PLATOON_SIZE
+	)
 	var viewport := _create_model_viewport(Rect2(76, 275, 1288, 392))
 	var view := SKIRMISH_SCENE.instantiate() as SkirmishView
 	viewport.add_child(view)
