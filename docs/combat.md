@@ -46,7 +46,7 @@ A flaming arrow with 60 base Ranged damage at 75 versus 25 deals 100 HP of Range
 
 ### Health and unit progression
 
-A standard unit starts with 600 HP. The target is roughly 15 hits from a 40-base-damage attack between units of the same level and rating. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
+A standard unit starts with 1,200 HP. The target is roughly 30 hits from a 40-base-damage attack between units of the same level and rating. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
 
 ```text
 Reference rating R    = (L − 1) × 5 / 5
@@ -58,12 +58,12 @@ XP carries across level thresholds. The first level-up costs 100 XP, level 98 to
 
 | Unit level | Standard maximum HP | Damage at matched reference ratings | Hits to defeat |
 |---:|---:|---:|---:|
-| 1 | 600 | 40.00 | 15 |
-| 20 | 687.86 | 45.86 | 15 |
-| 50 | 814.21 | 54.28 | 15 |
-| 99 | 993.31 | 66.22 | 15 |
+| 1 | 1,200 | 40.00 | 30 |
+| 20 | 1,375.72 | 45.86 | 30 |
+| 50 | 1,628.42 | 54.28 | 30 |
+| 99 | 1,986.62 | 66.22 | 30 |
 
-Real builds spend whole points. Distributing them evenly across five ratings produces 15–16 hits across levels 1–99. Two specialists who both reach 100 in the relevant rating at level 21 take 11 hits. At level 99, two units using a rating of zero take 25 hits.
+Real builds spend whole points. Distributing them evenly across five ratings produces 30–31 hits across levels 1–99. Two specialists who both reach 100 in the relevant rating at level 21 take 21 hits. At level 99, two units using a rating of zero take 50 hits.
 
 Open **Unit Progression** from a campaign briefing to award XP and allocate points on a practice unit. The practice unit is temporary. Campaign XP rewards will be connected when playable missions are added.
 

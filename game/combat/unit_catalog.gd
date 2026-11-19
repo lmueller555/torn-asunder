@@ -23,7 +23,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 			"main_hand": &"sword",
 			"off_hand": &"shield",
 		},
-		"starting_hp": 600.0,
+		"starting_hp": Unit.STARTING_HP,
 		"ratings": {
 			Unit.Damage.MELEE: 15,
 			Unit.Damage.RANGED: 0,

@@ -214,11 +214,13 @@ func _check_full_matches() -> bool:
 		var roster_counts := [0, 0]
 		for soldier in battle.soldiers:
 			roster_counts[soldier.team] += 1
+			if soldier.unit.hp != 1200.0 or soldier.unit.max_hp != 1200.0:
+				return _fail("The skirmish did not spawn Infantry with 1,200 HP.")
 			if soldier.position.abs().x > Battle.ARENA_LIMIT.x or soldier.position.abs().y > Battle.ARENA_LIMIT.y:
 				return _fail("An opening rank spawned outside the arena.")
 		if roster_counts != [32, 32]:
 			return _fail("The skirmish did not spawn 32 soldiers per side.")
-		for tick in range(60 * 120):
+		for tick in range(60 * 240):
 			battle.step(TICK)
 			for engagement in battle.engagements:
 				if engagement.size() > Battle.MAX_ENGAGEMENTS:
