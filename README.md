@@ -39,6 +39,8 @@ In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `
 
 **Get Up** starts from the exact final pose and position of **Backward Knockdown**. The soldier rolls onto his shield side, braces on his forearm, and plants a boot to push up from a kneel. He keeps both weapons in hand and finishes in the ready stance. Select **Get Up** in **Unit Test** to preview the recovery from the floor.
 
+**Death Fall** is the Infantry's defeat animation for zero HP. His knees buckle, his weight drops onto his sword side, and his sword arm goes slack. The 1.2-second clip holds the final side-lying pose. In **Unit Test**, use **Restart** to replay it from ready.
+
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
 Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.

@@ -353,7 +353,8 @@ func _show_unit_test() -> void:
 			framing.get("headroom", 0.0),
 			framing.get("travel", 0.0),
 			framing.get("floor_scale", 1.0),
-			framing.get("start_offset", 0.0)
+			framing.get("start_offset", 0.0),
+			framing.get("side_offset", 0.0)
 		)
 		player.stop()
 		player.play(clip)
