@@ -41,6 +41,9 @@ _subresources={
 "animations": {
 "Idle": {
 "settings/loop_mode": 1
+},
+"Walk": {
+"settings/loop_mode": 1
 }
 },
 "nodes": {
