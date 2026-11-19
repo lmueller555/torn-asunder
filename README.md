@@ -35,6 +35,8 @@ In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `
 
 **Hit Stagger** is the reaction to an unblocked frontal hit. The torso jerks back, the sword arm drops, and the rear boot catches the soldier's weight. He brings the other foot back and finishes in the ready pose 0.26 meters behind his starting position. **Unit Test** previews the 0.9-second clip from ready on a marked floor.
 
+**Backward Knockdown** starts from ready. The rear boot tries to catch the soldier, his knee folds, and his hips land before his upper back. He keeps his sword and shield in hand. The 1.15-second clip holds a face-up pose at the end that **Get Up** can use as its starting frame. In **Unit Test**, select **Restart** to return to the standing pose.
+
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
 Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.

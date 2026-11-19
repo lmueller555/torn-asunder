@@ -349,7 +349,9 @@ func _show_unit_test() -> void:
 		var definition := units[unit_choice.selected]
 		var previews: Dictionary = definition.get("animation_preview", {})
 		var framing: Dictionary = previews.get(clip, {})
-		studio.set_preview_framing(framing.get("headroom", 0.0), framing.get("travel", 0.0))
+		studio.set_preview_framing(
+			framing.get("headroom", 0.0), framing.get("travel", 0.0), framing.get("floor_scale", 1.0)
+		)
 		player.stop()
 		player.play(clip)
 		player.advance(0.0)

@@ -28,12 +28,13 @@ func set_unit_model(model: PackedScene) -> void:
 	set_preview_framing(0.0, 0.0)
 
 
-func set_preview_framing(height: float, travel: float) -> void:
+func set_preview_framing(height: float, travel: float, floor_scale: float = 1.0) -> void:
 	_headroom = height
 	_travel = travel
 	_plinth.visible = is_zero_approx(travel)
 	_travel_floor.visible = not _plinth.visible
 	_platform.position.z = travel * 0.5
+	_platform.scale.z = floor_scale
 	_finish.position.z = travel
 	if not _face_view:
 		_frame_body()
