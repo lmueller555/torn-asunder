@@ -16,6 +16,8 @@ dest_files=["res://.godot/imported/human_infantry.glb-d3d6520a6fe3788b96ae47245d
 nodes/root_type=""
 nodes/root_name=""
 nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
@@ -29,23 +31,15 @@ meshes/lightmap_texel_size=0.2
 meshes/force_disable_compression=false
 skins/use_named_skins=true
 animation/import=true
-animation/fps=30
+animation/fps=60
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path=""
+import_script/path="res://assets/models/infantry_model_import.gd"
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={
-"animations": {
-"Idle": {
-"settings/loop_mode": 1
-},
-"Walk": {
-"settings/loop_mode": 1
-}
-},
 "nodes": {
 "PATH:AnimationPlayer": {
 "optimizer/enabled": false
@@ -54,3 +48,4 @@ _subresources={
 }
 gltf/naming_version=2
 gltf/embedded_image_handling=1
+gltf/texture_map_mode=0

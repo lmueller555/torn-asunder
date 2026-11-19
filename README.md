@@ -21,7 +21,9 @@ Open **Unit Progression** to award XP to a practice unit, inspect its HP growth,
 
 In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model** to view the Human Infantry. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLB in `assets/models`.
 
-Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview. The Human Infantry has a four-second **Idle** and a 1.2-second **Walk** that loops in place. The walk matches forward travel at 1.02 m/s.
+Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
+
+The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** plays once and returns to the ready pose.
 
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
