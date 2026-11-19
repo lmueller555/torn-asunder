@@ -1,0 +1,61 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/combat/unit_model_studio.gd" id="1_studio"]
+
+[sub_resource type="Environment" id="Environment_studio"]
+background_mode = 1
+background_color = Color(0.067, 0.076, 0.087, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.79, 0.85, 0.94, 1)
+ambient_light_energy = 0.59
+reflected_light_source = 2
+
+[sub_resource type="StandardMaterial3D" id="Material_plinth"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.78
+
+[sub_resource type="CylinderMesh" id="Mesh_plinth"]
+material = SubResource("Material_plinth")
+top_radius = 0.76
+bottom_radius = 0.79
+height = 0.06
+radial_segments = 64
+
+[node name="UnitModelStudio" type="Node3D"]
+script = ExtResource("1_studio")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_studio")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 1.71, 4.0)
+rotation = Vector3(-0.195, 0, 0)
+current = true
+projection = 1
+size = 2.18
+far = 40.0
+
+[node name="Key" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -30, 0)
+light_color = Color(1, 0.85, 0.69, 1)
+light_energy = 0.94
+shadow_enabled = true
+directional_shadow_max_distance = 7.0
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-21, 48, 0)
+light_color = Color(0.73, 0.86, 1, 1)
+light_energy = 0.34
+light_specular = 0.35
+
+[node name="Rim" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-50, 144, 0)
+light_color = Color(1, 0.77, 0.46, 1)
+light_energy = 0.72
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.03, 0)
+mesh = SubResource("Mesh_plinth")
+
+[node name="Model" type="Node3D" parent="."]
+rotation_degrees = Vector3(0, 25, 0)

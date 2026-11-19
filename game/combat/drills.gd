@@ -45,45 +45,46 @@ const EXERCISES: Array[Dictionary] = [
 		"name": "Curse",
 		"description": "Trade Curse attacks worth 40 base damage with a unit that has a Curse rating of zero.",
 		"metrics": ["Damage you deal", "Damage you take"],
+		"damage_rating": true,
 	},
 ]
 
 
-static func run(exercise: StringName, training_rank: int) -> Array[String]:
+static func run(exercise: StringName, level: int) -> Array[String]:
 	match exercise:
 		&"charge_brace":
-			var platoon := _platoon(Platoon.Skill.CHARGE_BRACE, training_rank)
+			var platoon := _platoon(Platoon.Skill.CHARGE_BRACE, level)
 			var enemy := _platoon(Platoon.Skill.CHARGE_BRACE, 2)
 			return ["%.0f" % platoon.charge(enemy, true), "%.0f" % enemy.charge(platoon, true)]
 		&"mounted_training":
-			var platoon := _platoon(Platoon.Skill.MOUNTED_TRAINING, training_rank)
+			var platoon := _platoon(Platoon.Skill.MOUNTED_TRAINING, level)
 			return [
 				"%.1f s" % platoon.mounted_maneuver_seconds(4.0),
 				"%.1f s" % platoon.mounted_maneuver_seconds(6.0),
 				"%.1f s" % platoon.mounted_maneuver_seconds(8.0),
 			]
 		&"formation_drill":
-			var platoon := _platoon(Platoon.Skill.FORMATION_DRILL, training_rank)
-			platoon.hit_unit(0, Unit.new(100.0), {Unit.Damage.MELEE: 100.0})
+			var platoon := _platoon(Platoon.Skill.FORMATION_DRILL, level)
+			platoon.hit_unit(0, Unit.new(), {Unit.Damage.MELEE: Unit.STARTING_HP})
 			var after_casualty := platoon.cohesion
 			platoon.reform(2.0)
 			return ["%.1f%%" % after_casualty, "%.1f%%" % platoon.cohesion]
 		&"scouting":
-			var platoon := _platoon(Platoon.Skill.SCOUTING, training_rank)
+			var platoon := _platoon(Platoon.Skill.SCOUTING, level)
 			return [
 				"%.0f m" % platoon.detection_range(false),
 				"%.0f m" % platoon.detection_range(true),
 				"Spotted" if platoon.can_detect(40.0, true, true) else "Hidden",
 			]
 		&"siegecraft":
-			var platoon := _platoon(Platoon.Skill.SIEGECRAFT, training_rank)
+			var platoon := _platoon(Platoon.Skill.SIEGECRAFT, level)
 			return [
 				"%.1f s" % platoon.siege_setup_seconds(),
 				"%.0f%%" % (platoon.siege_hit_chance() * 100.0),
 				"%.1f s" % platoon.siege_reload_seconds(),
 			]
 		&"beast_handling":
-			var platoon := _platoon(Platoon.Skill.BEAST_HANDLING, training_rank)
+			var platoon := _platoon(Platoon.Skill.BEAST_HANDLING, level)
 			platoon.lose_cohesion(60.0)
 			var accepts_order := platoon.beasts_follow_orders()
 			platoon.rally_beasts(3.0)
@@ -93,8 +94,8 @@ static func run(exercise: StringName, training_rank: int) -> Array[String]:
 				"%.0f%%" % platoon.cohesion,
 			]
 		&"curse":
-			var unit := Unit.new(100.0, {Unit.Damage.CURSE: training_rank})
-			var enemy := Unit.new(100.0)
+			var unit := Unit.new(Unit.STARTING_HP, {Unit.Damage.CURSE: level})
+			var enemy := Unit.new()
 			var attack := {Unit.Damage.CURSE: 40.0}
 			return ["%.1f HP" % enemy.receive_hit(unit, attack), "%.1f HP" % unit.receive_hit(enemy, attack)]
 	return []
@@ -103,5 +104,5 @@ static func run(exercise: StringName, training_rank: int) -> Array[String]:
 static func _platoon(skill: Platoon.Skill, training_rank: int) -> Platoon:
 	var roster: Array[Unit] = []
 	for index in range(10):
-		roster.append(Unit.new(100.0))
+		roster.append(Unit.new())
 	return Platoon.new(roster, {skill: training_rank})

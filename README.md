@@ -4,7 +4,7 @@
 
 ## Run the menu
 
-Use Godot 4.6. Open `project.godot` in the editor and press **F5**. From a terminal, import the assets once and launch the game from the repository root.
+Use Godot 4.7. Open `project.godot` in the editor and press **F5**. From a terminal, import the assets once and launch the game from the repository root.
 
 ```sh
 godot --headless --editor --import --quit
@@ -15,7 +15,17 @@ Use a mouse, the arrow keys and Enter, or the DualSense D-pad and Cross to navig
 
 New Game opens the Campaign Vault and its six leader portraits. Starting a campaign opens its briefing and writes one local save per leader. Continue opens the most recently played briefing, and Load lists every saved briefing. Settings saves fullscreen and reduced-motion preferences. Playable missions are planned for a later milestone.
 
-Open **Combat Drills** from any briefing to compare the six platoon skills and the Curse rating against their rank 0 outcomes.
+Open **Combat Drills** from any briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings.
+
+Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
+
+In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model** to view the Human Infantry. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLB in `assets/models`.
+
+Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview. The Human Infantry's **Idle** plays in a four-second loop.
+
+After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
+
+Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.
 
 ## Game design
 

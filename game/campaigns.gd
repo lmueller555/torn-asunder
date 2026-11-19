@@ -1,5 +1,7 @@
 extends RefCounted
 
+const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
+
 const ALL: Array[Dictionary] = [
 	{
 		"id": "sova",
@@ -30,6 +32,7 @@ const ALL: Array[Dictionary] = [
 		"title": "King",
 		"region": "The Seven Marches",
 		"opening": "Year One · The Mine",
+		"starting_unit": UnitCatalog.HUMAN_INFANTRY,
 		"briefing": "Mara has taken the Godbridle under his royal seal. As Orc troops close on the mine, his escort must get the artifact through the pass and into the Marches.",
 		"portrait": preload("res://assets/art/mara.webp"),
 		"accent": Color("#d2aa82"),

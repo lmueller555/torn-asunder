@@ -5,6 +5,9 @@ const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
 const Drills := preload("res://game/combat/drills.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
+const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
+const UNIT_STUDIO_SCENE := preload("res://game/combat/unit_model_studio.tscn")
 const TITLE_ART := preload("res://assets/art/title.webp")
 const VAULT_ART := preload("res://assets/art/vault.webp")
 const DISPLAY_FACE := preload("res://assets/fonts/Cinzel.ttf")
@@ -16,7 +19,18 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS }
+enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST }
+
+const RATING_NAMES := {
+	Unit.Damage.MELEE: "Melee Power",
+	Unit.Damage.RANGED: "Ranged Power",
+	Unit.Damage.FIRE: "Fire",
+	Unit.Damage.LIGHTNING: "Lightning",
+	Unit.Damage.ICE: "Ice",
+	Unit.Damage.NATURE: "Nature",
+	Unit.Damage.HOLY: "Holy",
+	Unit.Damage.CURSE: "Curse",
+}
 
 var _profile := ProfileStore.new()
 var _body_face := FontVariation.new()
@@ -37,11 +51,17 @@ var _drill_buttons: Array[Button] = []
 var _drill_title: Label
 var _drill_description: Label
 var _drill_rank_label: Label
+var _drill_baseline_heading: Label
 var _drill_rank_heading: Label
 var _drill_lower_rank: Button
 var _drill_metrics: Array[Label] = []
 var _drill_baseline: Array[Label] = []
 var _drill_results: Array[Label] = []
+var _training_unit: CombatUnit
+var _training_base_hit: float
+var _training_level: Label
+var _training_stats: Label
+var _training_buttons: Dictionary[Unit.Damage, Button] = {}
 
 
 func _ready() -> void:
@@ -74,6 +94,12 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
+		if _page == Page.UNIT_TEST:
+			for option in _stage.find_children("*", "OptionButton", false):
+				var popup := (option as OptionButton).get_popup()
+				if popup.visible:
+					popup.hide()
+					return
 		_go_back()
 
 
@@ -81,8 +107,10 @@ func _go_back() -> void:
 	match _page:
 		Page.TITLE:
 			_show_quit()
-		Page.DRILLS:
+		Page.DRILLS, Page.UNIT_PROGRESSION:
 			_show_briefing()
+		Page.UNIT_MODEL:
+			_show_unit_progression(true)
 		_:
 			_show_title()
 
@@ -106,7 +134,8 @@ func _show_title() -> void:
 		actions.append(resume)
 	actions.append(_button("Load", Rect2(94, 481, 352, 52), _show_load))
 	actions.append(_button("Settings", Rect2(94, 542, 352, 52), _show_settings))
-	actions.append(_button("Quit", Rect2(94, 603, 352, 52), _show_quit))
+	actions.append(_button("Unit Test", Rect2(94, 603, 352, 52), _show_unit_test))
+	actions.append(_button("Quit", Rect2(94, 664, 352, 52), _show_quit))
 	_link_cycle(actions, SIDE_TOP, SIDE_BOTTOM)
 	new_game.grab_focus()
 
@@ -183,14 +212,235 @@ func _show_briefing() -> void:
 	briefing.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	briefing.text = campaign.briefing
 	var drills := _button("Combat Drills", Rect2(442, 570, 274, 57), _show_drills)
+	var progression := _button("Unit Progression", Rect2(736, 570, 274, 57), _show_unit_progression)
 	_link_focus(back, SIDE_BOTTOM, drills)
 	_link_focus(drills, SIDE_TOP, back)
+	_link_focus(drills, SIDE_RIGHT, progression)
+	_link_focus(progression, SIDE_TOP, back)
+	_link_focus(progression, SIDE_LEFT, drills)
 	back.grab_focus()
+
+
+func _show_unit_progression(keep_training: bool = false) -> void:
+	var unit_id: StringName = _active_campaign.get("starting_unit", &"")
+	var definition: Dictionary = UnitCatalog.TYPES.get(unit_id, {})
+	var basic_attack: Dictionary = definition.get("basic_attack", {})
+	if not keep_training:
+		_training_unit = Unit.new(definition.get("starting_hp", Unit.STARTING_HP), definition.get("ratings", {}))
+	_training_base_hit = basic_attack.get(Unit.Damage.MELEE, Unit.REFERENCE_HIT)
+	var subtitle := "Practice awarding XP and spending stat points on a training unit."
+	if not definition.is_empty():
+		var equipment: Dictionary = definition.equipment
+		subtitle = "%s · %s · %s and %s" % [
+			definition.faction, definition.name, String(equipment.main_hand).capitalize(), equipment.off_hand,
+		]
+	_open_page(Page.UNIT_PROGRESSION)
+	var back := _heading("Unit Progression", subtitle)
+	_training_level = _label(_stage, "", Rect2(76, 228, 445, 58), 40, IVORY, DISPLAY_FACE)
+	_training_stats = _label(_stage, "", Rect2(76, 311, 445, 245), 25, IVORY)
+	_training_stats.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	var award := _button("Award 100 XP", Rect2(76, 573, 345, 55), _award_training_experience)
+	if definition.has("model"):
+		var inspect := _button("Inspect 3D Model", Rect2(76, 640, 345, 55), _show_unit_model.bind(definition))
+		_link_focus(award, SIDE_BOTTOM, inspect)
+		_link_focus(inspect, SIDE_TOP, award)
+
+	_rule(Rect2(523, 229, 841, 1), HAIRLINE)
+	_label(_stage, "Combat ratings", Rect2(523, 245, 820, 42), 29, GOLD, DISPLAY_FACE)
+	_training_buttons.clear()
+	var left: Array[Button] = []
+	var right: Array[Button] = []
+	for type in Unit.Damage.values():
+		var index: int = _training_buttons.size()
+		var column := index % 2
+		var row := floori(index / 2.0)
+		var button := _button(
+			RATING_NAMES[type], Rect2(523 + 429 * column, 306 + 80 * row, 412, 60),
+			_train_combat_rating.bind(type)
+		)
+		_training_buttons[type] = button
+		var buttons := left if column == 0 else right
+		buttons.append(button)
+
+	_link_cycle(left, SIDE_TOP, SIDE_BOTTOM)
+	_link_cycle(right, SIDE_TOP, SIDE_BOTTOM)
+	_link_focus(award, SIDE_TOP, back)
+	_link_focus(back, SIDE_BOTTOM, award)
+	_link_focus(award, SIDE_RIGHT, left[0])
+	for row in range(left.size()):
+		_link_focus(left[row], SIDE_LEFT, award)
+		_link_focus(left[row], SIDE_RIGHT, right[row])
+		_link_focus(right[row], SIDE_LEFT, left[row])
+	_update_training()
+	award.grab_focus()
+
+
+func _show_unit_model(definition: Dictionary) -> void:
+	_open_page(Page.UNIT_MODEL)
+	var back := _heading(definition.name, "%s · %s" % [definition.faction, definition.role])
+	var studio := _create_unit_studio(Rect2(76, 212, 896, 512))
+	studio.set_unit_model(definition.model)
+	_label(_stage, "View", Rect2(1012, 248, 352, 48), 30, IVORY, DISPLAY_FACE)
+	var views := _unit_view_buttons(studio, Rect2(1012, 319, 352, 55), Vector2(0, 71))
+	var navigation: Array[Button] = [back]
+	navigation.append_array(views)
+	_link_cycle(navigation, SIDE_TOP, SIDE_BOTTOM)
+	views[0].grab_focus()
+
+
+func _create_unit_studio(rect: Rect2) -> UnitModelStudio:
+	_color_rect(_stage, rect.grow(1), HAIRLINE)
+	var frame := SubViewportContainer.new()
+	frame.position = rect.position
+	frame.size = rect.size
+	frame.stretch = true
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(frame)
+
+	var viewport := SubViewport.new()
+	viewport.own_world_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
+	viewport.msaa_3d = Viewport.MSAA_2X
+	frame.add_child(viewport)
+	var studio := UNIT_STUDIO_SCENE.instantiate() as UnitModelStudio
+	viewport.add_child(studio)
+	return studio
+
+
+func _unit_view_buttons(studio: UnitModelStudio, rect: Rect2, step: Vector2) -> Array[Button]:
+	var front := _button("Front", rect, studio.show_body.bind(25.0))
+	rect.position += step
+	var side := _button("Side", rect, studio.show_body.bind(-82.0))
+	rect.position += step
+	var rear := _button("Back view", rect, studio.show_body.bind(153.0))
+	rect.position += step
+	var face := _button("Face", rect, studio.show_face)
+	return [front, side, rear, face]
+
+
+func _show_unit_test() -> void:
+	_open_page(Page.UNIT_TEST)
+	var back := _heading("Unit Test", "")
+	var units: Array[Dictionary] = []
+	for definition in UnitCatalog.TYPES.values():
+		if definition.get("model") is PackedScene:
+			units.append(definition)
+	if units.is_empty():
+		_label(_stage, "No unit models available.", Rect2(76, 224, 660, 48), 25, MUTED)
+		back.grab_focus()
+		return
+
+	var studio := _create_unit_studio(Rect2(76, 212, 896, 460))
+	var views := _unit_view_buttons(studio, Rect2(76, 682, 214, 48), Vector2(227, 0))
+	_link_cycle(views, SIDE_LEFT, SIDE_RIGHT)
+	var details := _label(_stage, "", Rect2(77, 148, 1050, 34), 23, MUTED)
+	_label(_stage, "Unit", Rect2(1012, 226, 352, 38), 26, IVORY, DISPLAY_FACE)
+	var unit_choice := _option_button("Unit", Rect2(1012, 275, 352, 55))
+	for definition in units:
+		unit_choice.add_item("%s · %s" % [definition.faction, definition.name])
+	_label(_stage, "Animation", Rect2(1012, 369, 352, 38), 26, IVORY, DISPLAY_FACE)
+	var animation_choice := _option_button("Animation", Rect2(1012, 418, 352, 55))
+	var playback := _button("Pause", Rect2(1012, 492, 352, 52))
+	var restart := _button("Restart", Rect2(1012, 554, 352, 52))
+
+	var play_animation := func(index: int) -> void:
+		var player := studio.animation_player
+		var clip: StringName = animation_choice.get_item_metadata(index)
+		player.stop()
+		player.play(clip)
+		player.advance(0.0)
+		playback.text = "Pause"
+	animation_choice.item_selected.connect(play_animation)
+	restart.pressed.connect(func() -> void: play_animation.call(animation_choice.selected))
+	playback.pressed.connect(func() -> void:
+		var player := studio.animation_player
+		if player.is_playing():
+			player.pause()
+			playback.text = "Play"
+		else:
+			var clip: StringName = animation_choice.get_selected_metadata()
+			player.play(clip)
+			playback.text = "Pause"
+	)
+
+	var show_unit := func(index: int) -> void:
+		var definition := units[index]
+		studio.set_unit_model(definition.model)
+		studio.show_body(25.0)
+		details.text = definition.role
+		animation_choice.clear()
+		var player := studio.animation_player
+		var initial_clip := 0
+		if player:
+			for clip in player.get_animation_list():
+				if clip != "RESET":
+					if clip == "Idle":
+						initial_clip = animation_choice.item_count
+					animation_choice.add_item(clip)
+					animation_choice.set_item_metadata(animation_choice.item_count - 1, StringName(clip))
+		var can_play := animation_choice.item_count > 0
+		animation_choice.disabled = not can_play
+		playback.disabled = not can_play
+		restart.disabled = not can_play
+		var navigation: Array[Button] = [back, unit_choice]
+		if can_play:
+			navigation.append_array([animation_choice, playback, restart])
+			animation_choice.select(initial_clip)
+			player.animation_finished.connect(func(_clip: StringName) -> void: playback.text = "Play")
+			play_animation.call(initial_clip)
+		else:
+			animation_choice.add_item("No animations")
+			animation_choice.select(0)
+			playback.text = "Play"
+		var last := navigation.back() as Button
+		navigation.append(views[0])
+		_link_cycle(navigation, SIDE_TOP, SIDE_BOTTOM)
+		for view in views:
+			_link_focus(view, SIDE_TOP, last)
+			_link_focus(view, SIDE_BOTTOM, back)
+	unit_choice.item_selected.connect(show_unit)
+	unit_choice.select(0)
+	show_unit.call(0)
+	unit_choice.grab_focus()
+
+
+func _award_training_experience() -> void:
+	_notice.hide()
+	if _training_unit.level == Unit.MAX_LEVEL:
+		_show_notice("This unit has reached level %d." % Unit.MAX_LEVEL)
+		return
+	_training_unit.award_experience(100)
+	_update_training()
+
+
+func _train_combat_rating(type: Unit.Damage) -> void:
+	_notice.hide()
+	if _training_unit.spend_stat_point(type):
+		_update_training()
+	elif _training_unit.rating(type) == Unit.MAX_RATING:
+		_show_notice("This rating is already at %d." % Unit.MAX_RATING)
+	else:
+		_show_notice("Gain a level to earn a stat point.")
+
+
+func _update_training() -> void:
+	_training_level.text = "Level %d" % _training_unit.level
+	var melee := _training_unit.rating(Unit.Damage.MELEE)
+	var damage := _training_base_hit * Unit.damage_factor(melee, melee)
+	var hits := ceili(_training_unit.max_hp / damage)
+	var xp := "XP to next level  %d / %d" % [_training_unit.experience, _training_unit.experience_for_next_level()]
+	if _training_unit.level == Unit.MAX_LEVEL:
+		xp = "Maximum level reached"
+	_training_stats.text = "Maximum HP  %.1f\nMatched melee hit  %.1f damage\n%d hits to defeat\n\n%s\nUnspent stat points  %d" % [
+		_training_unit.max_hp, damage, hits, xp, _training_unit.stat_points,
+	]
+	for type in _training_buttons:
+		_training_buttons[type].text = "%s   %d" % [RATING_NAMES[type], _training_unit.rating(type)]
 
 
 func _show_drills() -> void:
 	_open_page(Page.DRILLS)
-	var back := _heading("Combat Drills", "Compare combat outcomes across training ranks.")
+	var back := _heading("Combat Drills", "Compare outcomes at different skill ranks and damage ratings.")
 	_drill_buttons.clear()
 	for index in range(Drills.EXERCISES.size()):
 		var exercise := Drills.EXERCISES[index]
@@ -206,11 +456,11 @@ func _show_drills() -> void:
 	_drill_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_drill_description.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_drill_lower_rank = _button("−", Rect2(1038, 251, 51, 43), _change_drill_rank.bind(-1))
-	_drill_lower_rank.tooltip_text = "Lower rank"
+	_drill_lower_rank.tooltip_text = "Decrease value"
 	_drill_rank_label = _label(_stage, "", Rect2(1092, 251, 180, 43), 21, IVORY)
 	_drill_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var raise_rank := _button("+", Rect2(1275, 251, 51, 43), _change_drill_rank.bind(1))
-	raise_rank.tooltip_text = "Raise rank"
+	raise_rank.tooltip_text = "Increase value"
 	_link_focus(back, SIDE_BOTTOM, _drill_lower_rank)
 	_link_focus(_drill_lower_rank, SIDE_TOP, back)
 	_link_focus(raise_rank, SIDE_TOP, back)
@@ -219,7 +469,7 @@ func _show_drills() -> void:
 	for button in _drill_buttons:
 		_link_focus(button, SIDE_RIGHT, _drill_lower_rank)
 
-	_label(_stage, "Rank 0", Rect2(902, 398, 164, 36), 20, MUTED)
+	_drill_baseline_heading = _label(_stage, "", Rect2(902, 398, 164, 36), 20, MUTED)
 	_drill_rank_heading = _label(_stage, "", Rect2(1135, 398, 180, 36), 20, GOLD)
 	_drill_metrics.clear()
 	_drill_baseline.clear()
@@ -251,12 +501,18 @@ func _change_drill_rank(change: int) -> void:
 func _update_drill() -> void:
 	var exercise := Drills.EXERCISES[_drill_index]
 	var metrics: Array = exercise.metrics
+	var uses_rating: bool = exercise.get("damage_rating", false)
+	var level := _drill_rank
+	if uses_rating:
+		level = roundi(float(_drill_rank) / Platoon.MAX_RANK * Unit.MAX_RATING)
+	var scale_label := "Rating" if uses_rating else "Rank"
 	var baseline := Drills.run(exercise.id, 0)
-	var results := Drills.run(exercise.id, _drill_rank)
+	var results := Drills.run(exercise.id, level)
 	_drill_title.text = exercise.name
 	_drill_description.text = exercise.description
-	_drill_rank_label.text = "%s %d" % ["Curse rating" if exercise.id == &"curse" else "Training rank", _drill_rank]
-	_drill_rank_heading.text = "Rank %d" % _drill_rank
+	_drill_rank_label.text = "%s %d" % ["Curse rating" if uses_rating else "Training rank", level]
+	_drill_baseline_heading.text = "%s 0" % scale_label
+	_drill_rank_heading.text = "%s %d" % [scale_label, level]
 	for row in range(_drill_metrics.size()):
 		var has_metric := row < metrics.size()
 		_drill_metrics[row].text = metrics[row] if has_metric else ""
@@ -370,7 +626,8 @@ func _open_page(page: Page) -> void:
 
 func _heading(title: String, subtitle: String) -> Button:
 	_label(_stage, title, Rect2(76, 67, 1050, 76), 57, IVORY, DISPLAY_FACE)
-	_label(_stage, subtitle, Rect2(77, 148, 1050, 34), 23, MUTED)
+	if not subtitle.is_empty():
+		_label(_stage, subtitle, Rect2(77, 148, 1050, 34), 23, MUTED)
 	_rule(Rect2(76, 196, 1288, 1), HAIRLINE)
 	return _button("Back", Rect2(1192, 91, 172, 48), _go_back)
 
@@ -421,6 +678,28 @@ func _button(text: String, rect: Rect2, action: Callable = Callable()) -> Button
 	var button := Button.new()
 	button.name = text
 	button.text = text
+	_style_button(button, rect)
+	if action.is_valid():
+		button.pressed.connect(action)
+	return button
+
+
+func _option_button(name: String, rect: Rect2) -> OptionButton:
+	var button := OptionButton.new()
+	button.name = name
+	button.fit_to_longest_item = false
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_style_button(button, rect)
+	var popup := button.get_popup()
+	popup.add_theme_stylebox_override("panel", _box(DARK, HAIRLINE))
+	popup.add_theme_stylebox_override("hover", _box(Color("#403123"), GOLD))
+	popup.add_theme_font_override("font", _body_face)
+	popup.add_theme_font_size_override("font_size", 24)
+	popup.add_theme_color_override("font_color", IVORY)
+	return button
+
+
+func _style_button(button: Button, rect: Rect2) -> void:
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_override("font", _body_face)
@@ -437,9 +716,6 @@ func _button(text: String, rect: Rect2, action: Callable = Callable()) -> Button
 	_stage.add_child(button)
 	button.position = rect.position
 	button.size = rect.size
-	if action.is_valid():
-		button.pressed.connect(action)
-	return button
 
 
 func _box(fill: Color, border: Color, border_width: int = 1) -> StyleBoxFlat:

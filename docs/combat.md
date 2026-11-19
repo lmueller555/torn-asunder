@@ -16,7 +16,56 @@ From behind the hero, the player uses light and heavy attacks, guards, dodges, a
 
 A platoon contains individual units with their own HP pools and combat ratings. The platoon health bar uses the combined maximum HP of its roster as its full width. Green is the HP of surviving units, red is the HP those survivors have lost, and black is the maximum HP of dead units. If one of ten equal-HP units dies and another drops to half health, the bar is 85% green, 5% red, and 10% black. When the wounded unit dies, its entire share becomes black.
 
-The eight combat ratings are **Melee Power, Ranged Power, Fire, Lightning, Ice, Nature, Holy, and Curse**. Every rating works on both sides of a hit. Multiply each damage component by the attacker's matching rating multiplier and divide it by the defender's. The multiplier is `1 + 0.10 × rating`, with ratings from 0 to 5. Add the results and subtract the total from the target's HP. For example, an arrow that carries a curse resolves its impact with Ranged Power and its curse with Curse.
+### Damage formulas
+
+The eight combat ratings are **Melee Power, Ranged Power, Fire, Lightning, Ice, Nature, Holy, and Curse**. Each unit has an integer rating from 0 to 100 for each type. An unspecified rating defaults to 0. Values outside the range are clamped to the nearest endpoint.
+
+```text
+Resolved component = max(0, base damage) × (100 + attacker's rating) / (100 + 0.2 × defender's rating)
+Total damage       = sum of resolved components
+HP lost            = min(target's current HP, total damage)
+```
+
+Each component uses the attacker's and defender's ratings for its own damage type. A point in a rating contributes its full value to attack and 20% of its value to defense. As both ratings rise together, the same hit deals more damage. At the widest rating gaps, a hit deals between 83.33% and 200% of base damage. HP retains fractional damage between hits, and a hit can remove only as much HP as the target has left.
+
+Tune ordinary attacks to keep full-health opponents of the same level from dying in one hit. A large level advantage can make a single hit lethal.
+
+| Base HP damage | Attacker rating | Defender rating | Resolved HP damage |
+|---:|---:|---:|---:|
+| 0.50 | 0 | 100 | 0.42 |
+| 40 | 50 | 50 | 54.55 |
+| 40 | 20 | 0 | 48 |
+| 40 | 100 | 80 | 68.97 |
+| 40 | 80 | 20 | 69.23 |
+| 40 | 20 | 80 | 41.38 |
+| 40 | 100 | 0 | 80 |
+| 40 | 0 | 100 | 33.33 |
+| 2,500 | 90 | 10 | 4,656.86 |
+
+A flaming arrow with 60 base Ranged damage at 75 versus 25 deals 100 HP of Ranged damage. Its 40 base Fire damage at 20 versus 80 adds 41.38 HP. The hit resolves to 141.38 HP before the remaining-HP cap. A target with 42 HP loses 42 HP and dies. The displayed examples round to two decimal places.
+
+### Health and unit progression
+
+A standard unit starts with 600 HP. The target is roughly 15 hits from a 40-base-damage attack between units of the same level and rating. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
+
+```text
+Reference rating R    = (L − 1) × 5 / 5
+Maximum HP at level L = starting HP × (100 + R) / (100 + 0.2 × R)
+XP to advance from L  = 100 + 25 × (L − 1)
+```
+
+XP carries across level thresholds. The first level-up costs 100 XP, level 98 to 99 costs 2,525 XP, and a unit reaches the cap at 128,625 total XP. Each new level automatically increases maximum HP and awards one banked stat point. Living units gain the same amount of current HP and keep their existing wounds. A point can raise any of the eight combat ratings by 5, up to 100. From zero starting ratings, the 98 points earned by level 99 can max four ratings and raise a fifth to 90.
+
+| Unit level | Standard maximum HP | Damage at matched reference ratings | Hits to defeat |
+|---:|---:|---:|---:|
+| 1 | 600 | 40.00 | 15 |
+| 20 | 687.86 | 45.86 | 15 |
+| 50 | 814.21 | 54.28 | 15 |
+| 99 | 993.31 | 66.22 | 15 |
+
+Real builds spend whole points. Distributing them evenly across five ratings produces 15–16 hits across levels 1–99. Two specialists who both reach 100 in the relevant rating at level 21 take 11 hits. At level 99, two units using a rating of zero take 25 hits.
+
+Open **Unit Progression** from a campaign briefing to award XP and allocate points on a practice unit. The practice unit is temporary. Campaign XP rewards will be connected when playable missions are added.
 
 ## Platoon training
 
@@ -31,7 +80,7 @@ Each skill has ranks from 0 to 5 and governs its own part of an engagement. **Co
 | **Siegecraft** | Divides the crew's 12-second setup time by `1 + 0.15 × rank` and its 8-second reload time by `1 + 0.10 × rank`. Accuracy starts at 50% and gains 8 percentage points per rank. |
 | **Beast Handling** | War beasts obey at 60 cohesion or higher at rank 0. Each rank lowers that threshold by 8 points. Rallying restores 3 cohesion per second plus 2 per rank. |
 
-Combat Drills is available from every campaign briefing. Select a skill or Curse, then change the rank to compare the outcome against rank 0. The drills run the combat rules in controlled scenarios, including charging and bracing, reforming after a casualty, scouting through cover, and trading Curse hits. Campaign battles are planned for a later milestone.
+Combat Drills is available from every campaign briefing. Select a skill to compare its training ranks against rank 0, or select Curse to compare damage ratings from 0 to 100 in steps of 20. The drills run the combat rules in controlled scenarios, including charging and bracing, reforming after a casualty, scouting through cover, and trading Curse hits. Campaign battles are planned for a later milestone.
 
 ## 3D battlefield presentation
 
