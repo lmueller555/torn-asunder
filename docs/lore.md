@@ -4,6 +4,8 @@ The six peoples share **Vareth**, a continent wide enough that most people know 
 
 ## The six peoples of Vareth
 
+See [The leaders of Vareth](leaders.md) for each people's government, beliefs, and wartime leadership.
+
 | People | Homeland | What they want from the Godbridle |
 |---|---|---|
 | **Druids** | The **Cairnspine**, a chain of windswept uplands where the oldest standing stones mark places the god can hear. Druids are born with an ear for its dreams. Tending the stones is a calling within their society, and most Druids live by herding, farming, or trade. | Return the Godbridle to its vault. Their oldest records describe the centuries it took the god to settle after its last command. Some Druids buried those records because they also reveal who gave the order. |
