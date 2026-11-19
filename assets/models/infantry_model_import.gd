@@ -1,7 +1,7 @@
 @tool
 extends EditorScenePostImport
 
-const LOOPING_CLIPS: Array[StringName] = [&"Idle", &"Walk", &"Run"]
+const LOOPING_CLIPS: Array[StringName] = [&"Idle", &"Walk", &"Run", &"Shield Guard"]
 
 
 func _post_import(scene: Node) -> Object:

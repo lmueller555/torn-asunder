@@ -25,6 +25,8 @@ Open **Unit Test** from the title screen to inspect any unit with a model in the
 
 The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances 0.52 meters into an overhead cut and ends in guard. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
 
+The shield block starts with **Shield Raise**, stays up in the looping **Shield Guard**, and returns to the ready pose with **Shield Lower**. All three clips are available in **Unit Test**.
+
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
 Run `godot --headless --script tests/platoon_balance.gd` to sweep level-legal platoon ratings, sample mixed attacks, and check full-health one-hit thresholds.
