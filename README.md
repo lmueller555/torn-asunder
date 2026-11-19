@@ -27,7 +27,11 @@ The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-
 
 The shield block starts with **Shield Raise**, stays up in the looping **Shield Guard**, and returns to the ready pose with **Shield Lower**. All three clips are available in **Unit Test**.
 
-**Blocked Hit Stagger** starts and ends in Shield Guard. Shield contact is at `0.0 s` in Godot, marked **Shield Contact** on the first frame of the Blender action. The shield gives first, then the Infantry shifts his weight rearward and settles back into guard.
+**Blocked Hit Stagger** starts and ends in Shield Guard. The shield gives first, then the Infantry shifts his weight rearward and settles back into guard.
+
+**Sword Recoil** is the attacker's reaction to a blocked overhead slash. The blade rebounds as the elbow folds and the torso carries forward over the planted lead boot. The trailing boot steps up as the soldier returns to the same ready pose and position as the end of Sword Slash.
+
+In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `0.0 s` in both **Sword Recoil** and **Blocked Hit Stagger**. Start both reactions on the contact frame to pair the attacker and defender.
 
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 

@@ -11,7 +11,10 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 		"faction": "Humans",
 		"role": "Frontline melee",
 		"model": preload("res://assets/models/human_infantry.glb"),
-		"animation_preview": {&"Sword Slash": {"headroom": 0.62, "travel": 0.52}},
+		"animation_preview": {
+			&"Sword Slash": {"headroom": 0.62, "travel": 0.52},
+			&"Sword Recoil": {"headroom": 0.20, "travel": 0.52},
+		},
 		"equipment": {
 			"main_hand": &"sword",
 			"off_hand": &"shield",
