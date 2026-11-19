@@ -20,7 +20,12 @@ const PURSUIT_RANGE := ENGAGEMENT_RANGE * 1.3
 const SCAN_MIN_INTERVAL := 0.35
 const SCAN_MAX_INTERVAL := 0.70
 const RUN_SPEED := 2.7
-const SPACING := 0.68
+const BODY_SPACING := 0.82
+const BODY_CORE := 0.60
+const PASS_LOOKAHEAD := 1.05
+const SLOT_DISTANCE := 1.22
+const SLOT_TOLERANCE := 0.48
+const SLOT_ANGLES := [0.0, -TAU / 3.0, TAU / 3.0]
 const ARENA_LIMIT := Vector2(9.0, 10.0)
 const DURATIONS := {
 	State.ATTACK: 88.0 / 60.0,
@@ -56,6 +61,8 @@ class Soldier:
 	var think_in := 0.0
 	var scan_in := 0.0
 	var target := -1
+	var slot := -1
+	var slot_axis := Vector2.ZERO
 	var approach := -1
 	var pursuit := -1
 	var heavy := false
@@ -125,7 +132,7 @@ func step(delta: float) -> void:
 		_check_winner()
 	if winner == LIVE:
 		_update_ai(delta)
-		_separate()
+		_separate(delta)
 
 
 func _assign_targets() -> void:
@@ -135,8 +142,19 @@ func _assign_targets() -> void:
 		var soldier := soldiers[index]
 		if not soldier.unit.is_alive() or (soldier.target >= 0 and not soldiers[soldier.target].unit.is_alive()):
 			soldier.target = -1
+			soldier.slot = -1
 		if soldier.target >= 0:
 			_link_engagement(index, soldier.target)
+	# Set the first arrival's bearing as the reference. Keep it fixed while the fight turns.
+	for index in range(soldiers.size()):
+		var enemy := soldiers[index]
+		var occupied := false
+		for rival: int in engagements[index]:
+			if soldiers[rival].target == index and soldiers[rival].slot >= 0:
+				occupied = true
+				break
+		if not occupied:
+			enemy.slot_axis = Vector2.ZERO
 	# Assignment is shared by both sides. A reciprocal target uses the same slot.
 	for index in range(soldiers.size()):
 		var soldier := soldiers[index]
@@ -153,9 +171,11 @@ func _assign_targets() -> void:
 			soldier.scan_in = 0.0
 		elif distance <= ATTACK_RANGE * ATTACK_RANGE:
 			if _has_slot(index, soldier.approach):
+				soldier.slot = _choose_attack_slot(soldier, soldier.approach)
 				soldier.target = soldier.approach
 				_link_engagement(index, soldier.target)
 			soldier.approach = -1
+	_align_reciprocal_slots()
 
 
 func _scan_for_enemy(index: int) -> void:
@@ -187,6 +207,46 @@ func _has_slot(index: int, rival: int) -> bool:
 func _link_engagement(index: int, rival: int) -> void:
 	engagements[index][rival] = true
 	engagements[rival][index] = true
+
+
+func _choose_attack_slot(soldier: Soldier, rival: int) -> int:
+	var enemy := soldiers[rival]
+	if enemy.slot_axis == Vector2.ZERO:
+		enemy.slot_axis = (soldier.position - enemy.position).normalized()
+		if enemy.slot_axis == Vector2.ZERO:
+			enemy.slot_axis = -enemy.facing
+	var used := 0
+	for other: int in engagements[rival]:
+		var attacker := soldiers[other]
+		if attacker.target == rival and attacker.slot >= 0:
+			used |= 1 << attacker.slot
+	var best := -1
+	var nearest := INF
+	for slot in range(SLOT_ANGLES.size()):
+		if used & (1 << slot):
+			continue
+		var position := enemy.position + enemy.slot_axis.rotated(SLOT_ANGLES[slot]) * SLOT_DISTANCE
+		var score := soldier.position.distance_squared_to(position)
+		if position != position.clamp(-ARENA_LIMIT, ARENA_LIMIT):
+			score += 8.0
+		if score < nearest:
+			best = slot
+			nearest = score
+	return best
+
+
+func _align_reciprocal_slots() -> void:
+	# A pair fighting each other shares an axis. Their other opponents take the flanks.
+	for index in range(soldiers.size()):
+		var soldier := soldiers[index]
+		if soldier.target < 0 or soldier.slot < 0:
+			continue
+		var enemy := soldiers[soldier.target]
+		if enemy.target != index or enemy.slot < 0:
+			continue
+		var bearing := enemy.position - soldier.position
+		if not bearing.is_zero_approx():
+			soldier.slot_axis = bearing.normalized().rotated(-SLOT_ANGLES[enemy.slot])
 
 
 func _is_mobile(soldier: Soldier) -> bool:
@@ -244,16 +304,21 @@ func _update_ai(delta: float) -> void:
 		if goal < 0 or not soldiers[goal].unit.is_alive():
 			_set_state(soldier, State.IDLE)
 			continue
-		var offset := soldiers[goal].position - soldier.position
+		var enemy := soldiers[goal]
+		var offset := enemy.position - soldier.position
 		var distance := offset.length()
-		if distance > 0.001:
-			soldier.facing = offset / distance
 		var reach := ATTACK_RANGE - 0.08 if assigned or pursuing_target else WAIT_DISTANCE
+		if assigned and soldier.slot >= 0:
+			var waypoint := _slot_waypoint(soldier, enemy, distance)
+			if waypoint.distance_squared_to(soldier.position) > 0.01:
+				_run_toward(soldier, waypoint - soldier.position, delta)
+				continue
 		if distance > reach + 0.025:
-			_set_state(soldier, State.RUN)
-			soldier.position += soldier.facing * minf(RUN_SPEED * delta, distance - reach)
+			_run_toward(soldier, offset * (1.0 - reach / distance), delta)
 			continue
 		_set_state(soldier, State.IDLE)
+		if distance > 0.001:
+			soldier.facing = offset / distance
 		if not assigned or soldier.ready_in > 0.0:
 			continue
 		if soldier.think_in <= 0.0 and _threatened(soldier):
@@ -263,6 +328,59 @@ func _update_ai(delta: float) -> void:
 				continue
 		soldier.heavy = _random.randf() < 0.28
 		_set_state(soldier, State.ATTACK)
+
+
+func _slot_waypoint(soldier: Soldier, enemy: Soldier, distance: float) -> Vector2:
+	var direction := enemy.slot_axis.rotated(SLOT_ANGLES[soldier.slot])
+	var stand := (enemy.position + direction * SLOT_DISTANCE).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+	var radial := (soldier.position - enemy.position).normalized()
+	var desired := (stand - enemy.position).normalized()
+	var turn := radial.angle_to(desired)
+	if absf(turn) <= SLOT_TOLERANCE and distance <= ATTACK_RANGE - 0.055:
+		return soldier.position
+	# Take short waypoints on the outside of the target instead of crossing through them.
+	if absf(turn) > SLOT_TOLERANCE:
+		var tangent := radial.rotated(clampf(turn, -0.45, 0.45))
+		var radius := clampf(distance, SLOT_DISTANCE, ATTACK_RANGE)
+		return (enemy.position + tangent * radius).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+	return stand
+
+
+func _run_toward(soldier: Soldier, offset: Vector2, delta: float) -> void:
+	_set_state(soldier, State.RUN)
+	var direction := offset.normalized()
+	var sideways := direction.orthogonal()
+	var blocker: Soldier
+	var nearest := PASS_LOOKAHEAD
+	var lateral := 0.0
+	for other in soldiers:
+		if other == soldier or not other.unit.is_alive():
+			continue
+		var ahead := other.position - soldier.position
+		var depth := ahead.dot(direction)
+		if depth <= 0.0 or depth >= nearest:
+			continue
+		var across := ahead.dot(sideways)
+		if absf(across) < BODY_CORE and depth <= offset.length() + BODY_CORE * 0.5:
+			blocker = other
+			nearest = depth
+			lateral = across
+	if blocker:
+		var side := -1.0 if lateral >= 0.0 else 1.0
+		if absf(lateral) < 0.06 and soldier.roster_index % 2 == 0:
+			side = 1.0
+		# Turn back from the arena edge if the preferred passing side runs out of room.
+		var passing_point := soldier.position + sideways * side * BODY_SPACING
+		if passing_point != passing_point.clamp(-ARENA_LIMIT, ARENA_LIMIT):
+			side = -side
+		var squeeze := 1.0 - smoothstep(BODY_CORE * 0.55, PASS_LOOKAHEAD, nearest)
+		var yield_speed := 0.42 * _yield_weight(blocker) * squeeze
+		var shove := -sideways * side * yield_speed * delta
+		blocker.position = (blocker.position + shove).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+		direction = (direction * (1.0 - 0.7 * squeeze) + sideways * side * squeeze).normalized()
+		offset = direction * offset.length() * (1.0 - 0.42 * squeeze)
+	soldier.position += direction * minf(RUN_SPEED * delta, offset.length())
+	soldier.facing = soldier.facing.slerp(direction, minf(12.0 * delta, 1.0)).normalized()
 
 
 func _threatened(soldier: Soldier) -> bool:
@@ -312,26 +430,57 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 				_set_state(soldier, reactions[index] as State)
 
 
-func _separate() -> void:
-	for index in range(soldiers.size()):
-		var a := soldiers[index]
-		if not a.unit.is_alive():
-			continue
-		for other in range(index + 1, soldiers.size()):
-			var b := soldiers[other]
-			if not b.unit.is_alive():
-				continue
-			var offset := b.position - a.position
-			var distance := offset.length()
-			if distance >= SPACING:
-				continue
-			var direction := offset / distance if distance > 0.0001 else Vector2.RIGHT
-			var move := direction * (SPACING - distance) * 0.5
-			a.position -= move
-			b.position += move
+func _yield_weight(soldier: Soldier) -> float:
+	match soldier.state:
+		State.IDLE:
+			return 1.0 if soldier.target < 0 else 0.55
+		State.RUN:
+			return 0.65
+		_:
+			return 0.12
+
+
+func _separate(delta: float) -> void:
+	var living: Array[Soldier] = []
 	for soldier in soldiers:
 		if soldier.unit.is_alive():
 			soldier.position = soldier.position.clamp(-ARENA_LIMIT, ARENA_LIMIT)
+			living.append(soldier)
+	var nearby: Array[Vector2i] = []
+	var soft_limit := 0.95 * delta
+	for index in range(living.size()):
+		var a := living[index]
+		for other in range(index + 1, living.size()):
+			var b := living[other]
+			var offset := b.position - a.position
+			if offset.length_squared() >= BODY_SPACING * BODY_SPACING:
+				continue
+			nearby.append(Vector2i(index, other))
+			_resolve_spacing(a, b, offset, soft_limit)
+	# Resolving one contact can push a soldier into a different neighbor.
+	for iteration in range(2):
+		for pair in nearby:
+			var a := living[pair.x]
+			var b := living[pair.y]
+			var offset := b.position - a.position
+			if offset.length_squared() < BODY_CORE * BODY_CORE:
+				_resolve_spacing(a, b, offset, 0.0)
+
+
+func _resolve_spacing(a: Soldier, b: Soldier, offset: Vector2, soft_limit: float) -> void:
+	var distance := offset.length()
+	var direction := offset / distance if distance > 0.0001 else Vector2.RIGHT
+	var core := maxf(0.0, BODY_CORE - distance)
+	var correction := core + minf((BODY_SPACING - maxf(distance, BODY_CORE)) * 0.24, soft_limit)
+	var a_weight := _yield_weight(a)
+	var b_weight := _yield_weight(b)
+	var a_shift := correction * a_weight / (a_weight + b_weight)
+	var a_position := (a.position - direction * a_shift).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+	var b_shift := correction - (a.position - a_position).dot(direction)
+	var b_position := (b.position + direction * b_shift).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+	var remaining := maxf(0.0, core - (b_position - a_position).dot(direction) + distance)
+	a.position = (a_position - direction * remaining).clamp(-ARENA_LIMIT, ARENA_LIMIT)
+	b.position = b_position
 
 
 func _check_winner() -> void:
@@ -342,6 +491,7 @@ func _check_winner() -> void:
 	winner = DRAW if not blue_alive and not amber_alive else (0 if blue_alive else 1)
 	for soldier in soldiers:
 		soldier.target = -1
+		soldier.slot = -1
 		soldier.approach = -1
 		soldier.pursuit = -1
 		if soldier.unit.is_alive() and _is_mobile(soldier):

@@ -8,6 +8,8 @@ const FIRST_AMBER := Battle.PLATOON_SIZE
 func _initialize() -> void:
 	var passed := _check_waiting()
 	passed = _check_enemy_scan() and passed
+	passed = _check_slots() and passed
+	passed = _check_passing() and passed
 	passed = _check_trade() and passed
 	passed = _check_reactions() and passed
 	passed = _check_full_matches() and passed
@@ -18,6 +20,8 @@ func _check_waiting() -> bool:
 	var battle := _fixture([0, 1, 2, 3, 4, FIRST_AMBER])
 	var enemy := battle.soldiers[FIRST_AMBER]
 	enemy.position = Vector2.ZERO
+	enemy.target = 0
+	enemy.scan_in = 10.0
 	battle.soldiers[0].position = Vector2(-1.36, 0)
 	battle.soldiers[1].position = Vector2(0, -1.36)
 	battle.soldiers[2].position = Vector2(-1, 1)
@@ -36,7 +40,7 @@ func _check_waiting() -> bool:
 		battle.step(TICK)
 	if runner.state != Battle.State.IDLE or runner.position.distance_to(enemy.position) > Battle.WAIT_DISTANCE + 0.07:
 		return _fail("A reserve did not idle after reaching the edge of the fight.")
-	enemy.position.x -= 0.6
+	enemy.position -= (runner.position - enemy.position).normalized() * 0.60
 	battle.step(TICK)
 	if runner.state != Battle.State.RUN or runner.target != -1:
 		return _fail("A reserve did not follow the full engagement when it moved away.")
@@ -82,6 +86,73 @@ func _check_enemy_scan() -> bool:
 		return _fail("Repeated scans always chose the same enemy despite multiple eligible targets.")
 	print("Verified periodic scans, radius filtering, random target selection, and pursuit.")
 	return true
+
+
+func _check_slots() -> bool:
+	var battle := _fixture([0, 1, 2, FIRST_AMBER])
+	var defender := battle.soldiers[FIRST_AMBER]
+	defender.position = Vector2.ZERO
+	defender.target = 0
+	battle.soldiers[0].position = Vector2(0, -1.29)
+	battle.soldiers[1].position = Vector2(-0.64, -1.08)
+	battle.soldiers[2].position = Vector2(0.64, -1.08)
+	for tick in range(180):
+		battle.step(TICK)
+	var slots := {}
+	var bearings: Array[Vector2] = []
+	for index in range(3):
+		var attacker := battle.soldiers[index]
+		if attacker.target != FIRST_AMBER or attacker.slot < 0 or slots.has(attacker.slot):
+			return _fail("Three attackers failed to obtain separate positions.")
+		slots[attacker.slot] = true
+		bearings.append((attacker.position - defender.position).normalized())
+		if attacker.position.distance_to(defender.position) > Battle.ATTACK_RANGE:
+			return _fail("An attacker was left outside melee range.")
+	for first in range(3):
+		for second in range(first + 1, 3):
+			if absf(bearings[first].angle_to(bearings[second])) < deg_to_rad(65.0):
+				return _fail("Attackers on the same defender did not spread out.")
+	defender.slot = 1
+	defender.slot_axis = Vector2.RIGHT
+	battle.soldiers[0].slot_axis = Vector2.RIGHT
+	var prior_position := defender.position
+	for tick in range(60):
+		battle.step(TICK)
+	if defender.position.distance_to(prior_position) > 0.10:
+		return _fail("A reciprocal pair tried to circle each other to reach conflicting slots.")
+	print("Verified three distinct melee positions and a stable reciprocal engagement.")
+	return true
+
+
+func _check_passing() -> bool:
+	var idle_yield := _passing_yield(Battle.State.IDLE)
+	var guard_yield := _passing_yield(Battle.State.GUARD)
+	if idle_yield < 0.01 or guard_yield < 0.0 or guard_yield >= idle_yield:
+		return _fail("A runner did not pass cleanly or the guard yielded as easily as an idle soldier.")
+	print("Verified runners steer around blockers and idle soldiers yield more than guards.")
+	return true
+
+
+func _passing_yield(stance: Battle.State) -> float:
+	var battle := _fixture([0, 1, FIRST_AMBER])
+	var runner := battle.soldiers[0]
+	var blocker := battle.soldiers[1]
+	var enemy := battle.soldiers[FIRST_AMBER]
+	runner.position = Vector2(-2.5, 0)
+	runner.approach = FIRST_AMBER
+	blocker.position = Vector2.ZERO
+	blocker.scan_in = 10.0
+	blocker.state = stance
+	blocker.time = -10.0
+	enemy.position = Vector2(2.0, 0)
+	enemy.scan_in = 10.0
+	for tick in range(155):
+		battle.step(TICK)
+		if runner.position.distance_to(blocker.position) < Battle.BODY_CORE - 0.015:
+			return -1.0
+	if runner.position.x <= blocker.position.x + 0.40:
+		return -1.0
+	return absf(blocker.position.y)
 
 
 func _check_trade() -> bool:
