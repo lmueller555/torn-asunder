@@ -15,6 +15,8 @@ Use a mouse, the arrow keys and Enter, or the DualSense D-pad and Cross to navig
 
 New Game opens the Campaign Vault and its six leader portraits. Starting a campaign opens its briefing and writes one local save per leader. Continue opens the most recently played briefing, and Load lists every saved briefing. Settings saves fullscreen and reduced-motion preferences. Playable missions are planned for a later milestone.
 
+Open **Combat Drills** from any briefing to compare the six platoon skills and the Curse rating against their rank 0 outcomes.
+
 ## Game design
 
 - [Vareth and the Godbridle](docs/lore.md)

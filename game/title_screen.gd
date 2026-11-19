@@ -3,6 +3,8 @@ extends Control
 const Campaigns := preload("res://game/campaigns.gd")
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
+const Drills := preload("res://game/combat/drills.gd")
+const Platoon := preload("res://game/combat/platoon.gd")
 const TITLE_ART := preload("res://assets/art/title.webp")
 const VAULT_ART := preload("res://assets/art/vault.webp")
 const DISPLAY_FACE := preload("res://assets/fonts/Cinzel.ttf")
@@ -14,7 +16,7 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING }
+enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS }
 
 var _profile := ProfileStore.new()
 var _body_face := FontVariation.new()
@@ -28,6 +30,18 @@ var _portraits: Array[Button] = []
 var _selection_title: Label
 var _selection_region: Label
 var _selection_summary: Label
+var _active_campaign: Dictionary
+var _drill_index := 0
+var _drill_rank := Platoon.MAX_RANK
+var _drill_buttons: Array[Button] = []
+var _drill_title: Label
+var _drill_description: Label
+var _drill_rank_label: Label
+var _drill_rank_heading: Label
+var _drill_lower_rank: Button
+var _drill_metrics: Array[Label] = []
+var _drill_baseline: Array[Label] = []
+var _drill_results: Array[Label] = []
 
 
 func _ready() -> void:
@@ -60,9 +74,16 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		if _page == Page.TITLE:
+		_go_back()
+
+
+func _go_back() -> void:
+	match _page:
+		Page.TITLE:
 			_show_quit()
-		else:
+		Page.DRILLS:
+			_show_briefing()
+		_:
 			_show_title()
 
 
@@ -139,7 +160,15 @@ func _begin_selected() -> void:
 
 
 func _open_campaign(campaign: Dictionary) -> void:
+	_active_campaign = campaign
 	var result := _profile.mark_played(campaign.id)
+	_show_briefing()
+	if result != OK:
+		_show_notice("The campaign selection could not be saved.")
+
+
+func _show_briefing() -> void:
+	var campaign := _active_campaign
 	_open_page(Page.BRIEFING)
 	var back := _heading("Campaign Briefing", campaign.opening)
 	_portrait(campaign, Rect2(76, 230, 320, 448), false)
@@ -153,9 +182,86 @@ func _open_campaign(campaign: Dictionary) -> void:
 	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	briefing.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	briefing.text = campaign.briefing
-	if result != OK:
-		_show_notice("The campaign selection could not be saved.")
+	var drills := _button("Combat Drills", Rect2(442, 570, 274, 57), _show_drills)
+	_link_focus(back, SIDE_BOTTOM, drills)
+	_link_focus(drills, SIDE_TOP, back)
 	back.grab_focus()
+
+
+func _show_drills() -> void:
+	_open_page(Page.DRILLS)
+	var back := _heading("Combat Drills", "Compare combat outcomes across training ranks.")
+	_drill_buttons.clear()
+	for index in range(Drills.EXERCISES.size()):
+		var exercise := Drills.EXERCISES[index]
+		var button := _button(exercise.name, Rect2(76, 225 + 67 * index, 345, 55), _select_drill.bind(index))
+		button.focus_entered.connect(_select_drill.bind(index))
+		_drill_buttons.append(button)
+	_link_cycle(_drill_buttons, SIDE_TOP, SIDE_BOTTOM)
+
+	_color_rect(_stage, Rect2(464, 225, 900, 457), Color(0.047, 0.054, 0.055, 0.9))
+	_rule(Rect2(464, 225, 900, 1), HAIRLINE)
+	_drill_title = _label(_stage, "", Rect2(492, 245, 520, 56), 36, IVORY, DISPLAY_FACE)
+	_drill_description = _label(_stage, "", Rect2(492, 317, 823, 66), 23, MUTED)
+	_drill_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_drill_description.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_drill_lower_rank = _button("−", Rect2(1038, 251, 51, 43), _change_drill_rank.bind(-1))
+	_drill_lower_rank.tooltip_text = "Lower rank"
+	_drill_rank_label = _label(_stage, "", Rect2(1092, 251, 180, 43), 21, IVORY)
+	_drill_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var raise_rank := _button("+", Rect2(1275, 251, 51, 43), _change_drill_rank.bind(1))
+	raise_rank.tooltip_text = "Raise rank"
+	_link_focus(back, SIDE_BOTTOM, _drill_lower_rank)
+	_link_focus(_drill_lower_rank, SIDE_TOP, back)
+	_link_focus(raise_rank, SIDE_TOP, back)
+	_link_focus(_drill_lower_rank, SIDE_RIGHT, raise_rank)
+	_link_focus(raise_rank, SIDE_LEFT, _drill_lower_rank)
+	for button in _drill_buttons:
+		_link_focus(button, SIDE_RIGHT, _drill_lower_rank)
+
+	_label(_stage, "Rank 0", Rect2(902, 398, 164, 36), 20, MUTED)
+	_drill_rank_heading = _label(_stage, "", Rect2(1135, 398, 180, 36), 20, GOLD)
+	_drill_metrics.clear()
+	_drill_baseline.clear()
+	_drill_results.clear()
+	for row in range(3):
+		var y := 443 + 65 * row
+		_rule(Rect2(492, y, 833, 1), HAIRLINE)
+		_drill_metrics.append(_label(_stage, "", Rect2(492, y + 9, 402, 46), 24, IVORY))
+		_drill_baseline.append(_label(_stage, "", Rect2(902, y + 9, 165, 46), 24, MUTED))
+		_drill_results.append(_label(_stage, "", Rect2(1135, y + 9, 180, 46), 24, GOLD))
+
+	_select_drill(_drill_index)
+	_drill_buttons[_drill_index].grab_focus()
+
+
+func _select_drill(index: int) -> void:
+	_drill_index = index
+	_link_focus(_drill_lower_rank, SIDE_LEFT, _drill_buttons[index])
+	for i in range(_drill_buttons.size()):
+		_drill_buttons[i].add_theme_color_override("font_color", GOLD if i == index else IVORY)
+	_update_drill()
+
+
+func _change_drill_rank(change: int) -> void:
+	_drill_rank = clampi(_drill_rank + change, 0, Platoon.MAX_RANK)
+	_update_drill()
+
+
+func _update_drill() -> void:
+	var exercise := Drills.EXERCISES[_drill_index]
+	var metrics: Array = exercise.metrics
+	var baseline := Drills.run(exercise.id, 0)
+	var results := Drills.run(exercise.id, _drill_rank)
+	_drill_title.text = exercise.name
+	_drill_description.text = exercise.description
+	_drill_rank_label.text = "%s %d" % ["Curse rating" if exercise.id == &"curse" else "Training rank", _drill_rank]
+	_drill_rank_heading.text = "Rank %d" % _drill_rank
+	for row in range(_drill_metrics.size()):
+		var has_metric := row < metrics.size()
+		_drill_metrics[row].text = metrics[row] if has_metric else ""
+		_drill_baseline[row].text = baseline[row] if has_metric else ""
+		_drill_results[row].text = results[row] if has_metric else ""
 
 
 func _show_load() -> void:
@@ -266,7 +372,7 @@ func _heading(title: String, subtitle: String) -> Button:
 	_label(_stage, title, Rect2(76, 67, 1050, 76), 57, IVORY, DISPLAY_FACE)
 	_label(_stage, subtitle, Rect2(77, 148, 1050, 34), 23, MUTED)
 	_rule(Rect2(76, 196, 1288, 1), HAIRLINE)
-	return _button("Back", Rect2(1192, 91, 172, 48), _show_title)
+	return _button("Back", Rect2(1192, 91, 172, 48), _go_back)
 
 
 func _update_hint() -> void:
