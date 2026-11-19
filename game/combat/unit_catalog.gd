@@ -13,6 +13,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 		"model": preload("res://assets/models/human_infantry.glb"),
 		"animation_preview": {
 			&"Backward Knockdown": {"travel": -0.625, "floor_scale": 1.55},
+			&"Get Up": {"start_offset": -0.625, "travel": -0.28, "floor_scale": 1.55},
 			&"Hit Stagger": {"travel": -0.26},
 			&"Sword Slash": {"headroom": 0.62, "travel": 0.52},
 			&"Sword Recoil": {"headroom": 0.20, "travel": 0.52},

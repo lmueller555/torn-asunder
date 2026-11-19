@@ -4,7 +4,7 @@ extends Node3D
 var animation_player: AnimationPlayer
 var _unit: Node
 var _headroom := 0.0
-var _travel := 0.0
+var _floor_center := 0.0
 var _face_view := false
 
 @onready var _pivot: Node3D = $Model
@@ -12,6 +12,7 @@ var _face_view := false
 @onready var _plinth: MeshInstance3D = $Plinth
 @onready var _travel_floor: Node3D = $TravelFloor
 @onready var _platform: MeshInstance3D = $TravelFloor/Platform
+@onready var _start: MeshInstance3D = $TravelFloor/Start
 @onready var _finish: MeshInstance3D = $TravelFloor/Finish
 @onready var _wide_transform := _camera.transform
 @onready var _wide_size := _camera.size
@@ -28,14 +29,17 @@ func set_unit_model(model: PackedScene) -> void:
 	set_preview_framing(0.0, 0.0)
 
 
-func set_preview_framing(height: float, travel: float, floor_scale: float = 1.0) -> void:
+func set_preview_framing(
+	height: float, finish_offset: float, floor_scale: float = 1.0, start_offset: float = 0.0
+) -> void:
 	_headroom = height
-	_travel = travel
-	_plinth.visible = is_zero_approx(travel)
+	_floor_center = (start_offset + finish_offset) * 0.5
+	_plinth.visible = is_equal_approx(start_offset, finish_offset)
 	_travel_floor.visible = not _plinth.visible
-	_platform.position.z = travel * 0.5
+	_platform.position.z = _floor_center
 	_platform.scale.z = floor_scale
-	_finish.position.z = travel
+	_start.position.z = start_offset
+	_finish.position.z = finish_offset
 	if not _face_view:
 		_frame_body()
 
@@ -49,7 +53,7 @@ func show_body(angle: float) -> void:
 
 func _frame_body() -> void:
 	_camera.transform = _wide_transform
-	_camera.position += _pivot.basis.z * (_travel * 0.5)
+	_camera.position += _pivot.basis.z * _floor_center
 	_camera.position.y += _headroom * 0.5
 	_camera.size = _wide_size + _headroom
 
