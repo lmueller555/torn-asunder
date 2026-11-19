@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://game/combat/unit_model_studio.gd" id="1_studio"]
 
@@ -20,6 +20,18 @@ top_radius = 0.76
 bottom_radius = 0.79
 height = 0.06
 radial_segments = 64
+
+[sub_resource type="BoxMesh" id="Mesh_platform"]
+material = SubResource("Material_plinth")
+size = Vector3(1.72, 0.06, 1.88)
+
+[sub_resource type="StandardMaterial3D" id="Material_mark"]
+albedo_color = Color(0.47, 0.37, 0.22, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_mark"]
+material = SubResource("Material_mark")
+size = Vector3(0.96, 0.002, 0.014)
 
 [node name="UnitModelStudio" type="Node3D"]
 script = ExtResource("1_studio")
@@ -56,6 +68,21 @@ light_energy = 0.72
 [node name="Plinth" type="MeshInstance3D" parent="."]
 position = Vector3(0, -0.03, 0)
 mesh = SubResource("Mesh_plinth")
+
+[node name="TravelFloor" type="Node3D" parent="."]
+visible = false
+
+[node name="Platform" type="MeshInstance3D" parent="TravelFloor"]
+position = Vector3(0, -0.03, 0)
+mesh = SubResource("Mesh_platform")
+
+[node name="Start" type="MeshInstance3D" parent="TravelFloor"]
+position = Vector3(0, 0.001, 0)
+mesh = SubResource("Mesh_mark")
+
+[node name="Finish" type="MeshInstance3D" parent="TravelFloor"]
+position = Vector3(0, 0.001, 0)
+mesh = SubResource("Mesh_mark")
 
 [node name="Model" type="Node3D" parent="."]
 rotation_degrees = Vector3(0, 25, 0)

@@ -346,8 +346,10 @@ func _show_unit_test() -> void:
 	var play_animation := func(index: int) -> void:
 		var player := studio.animation_player
 		var clip: StringName = animation_choice.get_item_metadata(index)
-		var headroom: Dictionary = units[unit_choice.selected].get("animation_preview_headroom", {})
-		studio.set_preview_headroom(headroom.get(clip, 0.0))
+		var definition := units[unit_choice.selected]
+		var previews: Dictionary = definition.get("animation_preview", {})
+		var framing: Dictionary = previews.get(clip, {})
+		studio.set_preview_framing(framing.get("headroom", 0.0), framing.get("travel", 0.0))
 		player.stop()
 		player.play(clip)
 		player.advance(0.0)

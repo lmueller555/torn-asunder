@@ -23,7 +23,7 @@ In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model**
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
 
-The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** plays once and returns to the ready pose.
+The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances 0.52 meters into an overhead cut and ends in guard. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
 
 After importing the project, run the damage and progression checks with `godot --headless --script tests/damage_checks.gd`.
 
