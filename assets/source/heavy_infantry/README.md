@@ -6,7 +6,7 @@ In the standing study, the helmeted soldier is 1.815 m tall and faces −Y. His 
 
 ## Rig and motion review
 
-The painted model now has a dedicated Heavy Infantry rig. Open **Unit Test** and choose **Humans · Heavy Infantry** for the shield raise and the sword grip pose. [Godot previews, Blender controls and formation measurements](rig.md)
+The painted model has a dedicated Heavy Infantry rig. Open **Unit Test → Humans · Heavy Infantry** for the looping **Shield-Ready Idle**, the shield raise test, and the sword grip pose. [Godot previews, Blender controls and formation measurements](rig.md)
 
 ## Standing posture
 

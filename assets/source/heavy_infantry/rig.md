@@ -1,5 +1,13 @@
 # Heavy Infantry rig
 
+## Shield-Ready Idle
+
+![The Heavy Infantry's shield-ready stance from two angles in Godot](review/idle/stance.png)
+
+Open **Unit Test → Humans · Heavy Infantry** to play the 4.5-second idle. The sword stays low in the right hand, the shield sits forward below the eyes, and both boots stay planted. The soldier breathes in and shifts his weight subtly toward the shield side before settling back into the starting stance. [Two cycles from both angles, followed by a 64-soldier formation](review/idle/shield-ready-idle.mp4)
+
+## Equipment fit tests
+
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)
 
 [Shield fit motion from the front, side and at battle distance](review/rig/shield-fit.mp4) · [Editable Blender rig](../human_heavy_infantry_game.blend) · [Godot model](../../models/human_heavy_infantry.glb)
@@ -8,7 +16,7 @@ Open **Unit Test**, select **Humans · Heavy Infantry**, and choose **Shield Fit
 
 ## Blender controls
 
-Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. In the Action Editor, choose **Shield Fit Test** or **Drawn Sword Fit**.
+Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. In the Action Editor, choose **Shield-Ready Idle**, **Shield Fit Test**, or **Drawn Sword Fit**. The idle runs from frame 1 to frame 136 at 30 fps and shares the same pose at both endpoints. The GLB names the clip with Godot’s `-loop` suffix so it imports as a continuous loop.
 
 The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. The rig's **Sword in hand** property seats the sword in the scabbard at 0 and in the right-hand socket at 1. **Drawn Sword Fit** also keys the right-hand finger curl.
 
@@ -18,11 +26,12 @@ The coif blends from the head and neck into the chest and clavicles. The two vis
 
 The Godot export uses 44 bones, 24,352 triangles, three surfaces and one shared material. The runtime clips bake the Blender control rig at 30 frames per second. The model's origin stays planted through the shield fit clip.
 
-Run these commands from the project root in Godot 4.7. Both variants use the same 64-unit camera, lighting and renderer settings. The animated run staggers playback across the formation.
+Run these commands from the project root in Godot 4.7. Each variant uses the same 64-unit camera, lighting and renderer settings. The animated variants stagger playback across the formation.
 
 ```sh
 godot --path . res://tests/heavy_infantry_formation.tscn -- heavy
 godot --path . res://tests/heavy_infantry_formation.tscn -- heavy-animated
+godot --path . res://tests/heavy_infantry_formation.tscn -- heavy-idle
 ```
 
 | 64 Heavy Infantry | Median draw calls | Median frame | 95th percentile |

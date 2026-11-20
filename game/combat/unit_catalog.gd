@@ -52,8 +52,8 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 	HUMAN_HEAVY_INFANTRY: {
 		"name": "Heavy Infantry",
 		"faction": "Humans",
-		"role": "Heavy mail infantry · Rig preview",
+		"role": "Heavy mail infantry",
 		"model": preload("res://assets/models/human_heavy_infantry.glb"),
-		"preview_clip": &"Shield Fit Test",
+		"preview_clip": &"Shield-Ready Idle",
 	},
 }
