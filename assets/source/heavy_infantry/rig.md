@@ -46,6 +46,16 @@ Choose **Run Start**, **Combat Run**, or **Run Stop** under **Unit Test → Huma
 
 The run transitions meet the loop at its opening right-boot contact. The source actions use half-frame keys on the 30 fps Blender timeline, and the GLB bakes all three run clips at 60 fps.
 
+## Travel Run
+
+![Heavy Infantry carrying the shield low mid-stride in the travel run](review/travel/stride.png)
+
+Select **Travel Run** under **Unit Test → Humans · Heavy Infantry**. The soldier leans forward, compresses over the planted boot, pushes off his toes, and folds the trailing knee before bringing it forward. He swings his relaxed right arm close to his ribs, with the shield carried at his left hip and the sword seated in its scabbard. [Front and side views in Godot](review/travel/travel-run.mp4)
+
+The clip loops in place every **0.70 seconds**. At **3.0 m/s**, it covers **2.10 m per cycle**, averaging **1.05 m per step**. The preview shows forward motion at that speed against fixed ground marks. The editable action spans frames 1–22 at 30 fps, with half-frame keys baked at 60 fps for the GLB.
+
+The gait is retargeted from a recorded straight jog, subject 35, trial 18. The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217. [Motion capture and reuse terms](https://github.com/una-dinosauria/cmu-mocap/blob/master/READMEFIRST.txt)
+
 ## Equipment fit tests
 
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)

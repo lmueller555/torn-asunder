@@ -6,7 +6,7 @@ In the standing study, the helmeted soldier is 1.815 m tall and faces −Y. His 
 
 ## Rig and motion review
 
-The painted model has a dedicated Heavy Infantry rig. Open **Unit Test → Humans · Heavy Infantry** for the shield-ready idle, shield block, shield walk, combat run, and equipment fit tests. [Godot previews, Blender controls and formation measurements](rig.md)
+The painted model has a dedicated Heavy Infantry rig. Open **Unit Test → Humans · Heavy Infantry** for the shield-ready idle, shield block, shield walk, combat run, travel run, and equipment fit tests. [Godot previews, Blender controls and formation measurements](rig.md)
 
 ## Standing posture
 
