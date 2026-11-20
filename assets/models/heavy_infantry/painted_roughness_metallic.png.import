@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bidvk14iwgc2g"
-path="res://.godot/imported/neutral_roughness_metallic.png-a997eb331d5c8b215c21e20c11d20213.ctex"
+path="res://.godot/imported/painted_roughness_metallic.png-227a37f70cffd00c63c31f68459c7e70.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/models/heavy_infantry/neutral_roughness_metallic.png"
-dest_files=["res://.godot/imported/neutral_roughness_metallic.png-a997eb331d5c8b215c21e20c11d20213.ctex"]
+source_file="res://assets/models/heavy_infantry/painted_roughness_metallic.png"
+dest_files=["res://.godot/imported/painted_roughness_metallic.png-227a37f70cffd00c63c31f68459c7e70.ctex"]
 
 [params]
 

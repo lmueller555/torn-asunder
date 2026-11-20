@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqn5opq858atp"
-path="res://.godot/imported/neutral_base_color.png-577ecbfd034492caf7c1aa387e3b4804.ctex"
+path="res://.godot/imported/painted_base_color.png-a6e2fed7b6ac93957170aa34194d7b9f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/models/heavy_infantry/neutral_base_color.png"
-dest_files=["res://.godot/imported/neutral_base_color.png-577ecbfd034492caf7c1aa387e3b4804.ctex"]
+source_file="res://assets/models/heavy_infantry/painted_base_color.png"
+dest_files=["res://.godot/imported/painted_base_color.png-a6e2fed7b6ac93957170aa34194d7b9f.ctex"]
 
 [params]
 
