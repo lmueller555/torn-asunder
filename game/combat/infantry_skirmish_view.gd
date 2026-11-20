@@ -2,6 +2,7 @@ extends Node3D
 
 const Battle := preload("res://game/combat/infantry_skirmish.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
+const Setup := preload("res://game/combat/skirmish_setup.gd")
 
 const TEAM_COLORS := [Color("#74cddc"), Color("#ecad67")]
 const CLIPS := {
@@ -22,9 +23,11 @@ const CLIPS := {
 
 signal updated
 
-var battle := Battle.new()
+var battle: Battle
 var paused := false
 
+var _setup := Setup.new()
+var _camera_depth := 25.0
 var _models: Array[Node3D] = []
 var _players: Array[AnimationPlayer] = []
 var _markers: Array[MeshInstance3D] = []
@@ -37,7 +40,13 @@ var _last_waiting := -1
 @onready var _camera: Camera3D = $Camera3D
 
 
+func configure(setup: Setup) -> void:
+	_setup = setup.copy()
+
+
 func _ready() -> void:
+	battle = Battle.new(8, _setup)
+	_size_field()
 	var definition: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
 	var marker_mesh := CylinderMesh.new()
 	marker_mesh.top_radius = 0.36
@@ -78,7 +87,7 @@ func _ready() -> void:
 
 
 func restart() -> void:
-	battle = Battle.new()
+	battle = Battle.new(8, _setup)
 	paused = false
 	_displayed.fill(-1)
 	for player in _players:
@@ -86,6 +95,23 @@ func restart() -> void:
 	_sync_models(0.0)
 	_frame_battle(0.0)
 	updated.emit()
+
+
+func _size_field() -> void:
+	var field := $Field as MeshInstance3D
+	var field_material := field.material_override as ShaderMaterial
+	field_material.set_shader_parameter("arena_limit", battle.arena_limit)
+	var radius: float = battle.arena_limit.length()
+	var ground_size := maxf(100.0, radius * 4.0)
+	field.scale = Vector3(ground_size / 100.0, 1.0, ground_size / 100.0)
+	# Show neighboring platoons across the screen as formations grow wider.
+	_camera.rotation.y *= Battle.ARENA_LIMIT.x / battle.arena_limit.x
+	# Include the front and back ranks at this camera angle, even on the widest field.
+	var axis := _camera.basis.z.abs()
+	var depth := battle.arena_limit.dot(Vector2(axis.x, axis.z)) + axis.y * 2.6
+	_camera_depth = maxf(25.0, depth + 12.0)
+	_camera.far = maxf(66.0, _camera_depth + ground_size)
+	($Key as DirectionalLight3D).directional_shadow_max_distance = _camera_depth + depth + 2.0
 
 
 func _physics_process(delta: float) -> void:
@@ -141,7 +167,7 @@ func _frame_battle(delta: float) -> void:
 	var span := high - low
 	var width := maxf(11.0, maxf(span.x + 3.3, (span.y + 1.05) * aspect))
 	var center := (low + high) * 0.5
-	var position_goal := _camera.basis * Vector3(center.x, center.y, 25.0)
+	var position_goal := _camera.basis * Vector3(center.x, center.y, _camera_depth)
 	var weight := 1.0 - exp(-3.5 * delta) if delta > 0.0 else 1.0
 	_camera.position = _camera.position.lerp(position_goal, weight)
 	_camera.size = lerpf(_camera.size, width, weight)

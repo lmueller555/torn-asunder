@@ -12,6 +12,7 @@ ambient_light_energy = 0.78
 [sub_resource type="Shader" id="Shader_field"]
 code = "shader_type spatial;
 uniform vec3 ground : source_color = vec3(0.20, 0.25, 0.24);
+uniform vec2 arena_limit = vec2(9.0, 10.0);
 varying vec2 ground_pos;
 
 void vertex() {
@@ -22,16 +23,17 @@ void fragment() {
 	vec2 cell = abs(fract(ground_pos / 2.0 + 0.5) - 0.5);
 	float grid = 1.0 - smoothstep(0.006, 0.018, min(cell.x, cell.y));
 	float grain = sin(dot(ground_pos, vec2(18.1, 11.5))) * sin(dot(ground_pos, vec2(8.6, -14.3)));
-	float border = max(abs(ground_pos.x) - 9.0, abs(ground_pos.y) - 10.0);
+	vec2 edge = abs(ground_pos) - arena_limit;
+	float border = max(edge.x, edge.y);
 	ALBEDO = ground * (0.94 + grain * 0.025 + grid * 0.12) * (1.0 - 0.36 * smoothstep(0.0, 0.55, border));
 	ROUGHNESS = 0.94;
 }"
 
 [sub_resource type="ShaderMaterial" id="Material_field"]
+resource_local_to_scene = true
 shader = SubResource("Shader_field")
 
 [sub_resource type="PlaneMesh" id="Mesh_field"]
-material = SubResource("Material_field")
 size = Vector2(100, 100)
 
 [node name="InfantrySkirmish" type="Node3D"]
@@ -41,6 +43,7 @@ script = ExtResource("1_view")
 environment = SubResource("Environment_field")
 
 [node name="Field" type="MeshInstance3D" parent="."]
+material_override = SubResource("Material_field")
 mesh = SubResource("Mesh_field")
 cast_shadow = 0
 

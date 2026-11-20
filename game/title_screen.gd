@@ -9,6 +9,8 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
 const SkirmishView := preload("res://game/combat/infantry_skirmish_view.gd")
 const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
+const SkirmishSetup := preload("res://game/combat/skirmish_setup.gd")
+const SkirmishSetupMenu := preload("res://game/skirmish_setup_menu.gd")
 const SKIRMISH_SCENE := preload("res://game/combat/infantry_skirmish_view.tscn")
 const UNIT_STUDIO_SCENE := preload("res://game/combat/unit_model_studio.tscn")
 const TITLE_ART := preload("res://assets/art/title.webp")
@@ -22,7 +24,7 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH }
+enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH_SETUP, SKIRMISH }
 
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
@@ -65,6 +67,7 @@ var _training_base_hit: float
 var _training_level: Label
 var _training_stats: Label
 var _training_buttons: Dictionary[Unit.Damage, Button] = {}
+var _skirmish_setup := SkirmishSetup.new()
 
 
 func _ready() -> void:
@@ -97,8 +100,8 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		if _page == Page.UNIT_TEST:
-			for option in _stage.find_children("*", "OptionButton", false):
+		if _page == Page.UNIT_TEST or _page == Page.SKIRMISH_SETUP:
+			for option in _stage.find_children("*", "OptionButton", true, false):
 				var popup := (option as OptionButton).get_popup()
 				if popup.visible:
 					popup.hide()
@@ -115,6 +118,8 @@ func _go_back() -> void:
 		Page.UNIT_MODEL:
 			_show_unit_progression(true)
 		Page.SKIRMISH:
+			_show_skirmish_setup()
+		Page.SKIRMISH_SETUP:
 			_show_unit_test()
 			_stage.get_node("AI Skirmish").grab_focus()
 		_:
@@ -353,7 +358,7 @@ func _show_unit_test() -> void:
 	var animation_choice := _option_button("Animation", Rect2(1012, 418, 352, 55))
 	var playback := _button("Pause", Rect2(1012, 492, 352, 52))
 	var restart := _button("Restart", Rect2(1012, 554, 352, 52))
-	var skirmish := _button("AI Skirmish", Rect2(1012, 616, 352, 52), _show_skirmish)
+	var skirmish := _button("AI Skirmish", Rect2(1012, 616, 352, 52), _show_skirmish_setup)
 
 	var play_animation := func(index: int) -> void:
 		var player := studio.animation_player
@@ -427,25 +432,43 @@ func _show_unit_test() -> void:
 	unit_choice.grab_focus()
 
 
+func _show_skirmish_setup() -> void:
+	_open_page(Page.SKIRMISH_SETUP)
+	var back := _heading("Skirmish Setup", "Choose the platoons and combat ratings for each army.")
+	var menu := SkirmishSetupMenu.new()
+	_stage.add_child(menu)
+	menu.initialize(_skirmish_setup, back, RATING_NAMES)
+	menu.start_requested.connect(_show_skirmish)
+	menu.focus_initial()
+
+
 func _show_skirmish() -> void:
 	_open_page(Page.SKIRMISH)
+	var total_platoons: int = _skirmish_setup.sides[0].size() + _skirmish_setup.sides[1].size()
 	var back := _heading(
 		"AI Infantry Skirmish",
-		"Two platoons of %d. Up to three opponents per soldier." % Skirmish.PLATOON_SIZE
+		"%d Human Infantry platoons  ·  %d soldiers per platoon" % [total_platoons, Skirmish.PLATOON_SIZE]
 	)
 	var viewport := _create_model_viewport(Rect2(76, 275, 1288, 392))
 	var view := SKIRMISH_SCENE.instantiate() as SkirmishView
+	view.configure(_skirmish_setup)
 	viewport.add_child(view)
-	var team_names := ["Blue Platoon", "Amber Platoon"]
+	var team_names := ["Blue", "Amber"]
 	var team_labels: Array[Label] = []
 	var health_bars: Array[Control] = []
 	for team in range(2):
 		var x := 76 if team == 0 else 887
-		team_labels.append(_label(_stage, "", Rect2(x, 208, 477, 29), 22, SkirmishView.TEAM_COLORS[team]))
-		var bar := _color_rect(_stage, Rect2(x, 244, 477, 14), Color("#131719"))
-		for color in [Color("#63935d"), Color("#a84c47"), Color("#08090a")]:
-			_color_rect(bar, Rect2(0, 0, 0, 14), color)
-		health_bars.append(bar)
+		team_labels.append(_label(_stage, "", Rect2(x, 199, 477, 30), 22, SkirmishView.TEAM_COLORS[team]))
+		var count: int = _skirmish_setup.sides[team].size()
+		var width := (477.0 - 10.0 * (count - 1)) / count
+		for slot in range(count):
+			var build: SkirmishSetup.PlatoonBuild = _skirmish_setup.sides[team][slot]
+			var left := x + slot * (width + 10.0)
+			_label(_stage, "P%d  ·  Lv %d" % [slot + 1, build.level], Rect2(left, 228, width, 24), 17, IVORY)
+			var bar := _color_rect(_stage, Rect2(left, 254, width, 10), Color("#131719"))
+			for color in [Color("#63935d"), Color("#a84c47"), Color("#08090a")]:
+				_color_rect(bar, Rect2(0, 0, 0, 10), color)
+			health_bars.append(bar)
 	var status := _label(_stage, "", Rect2(573, 205, 294, 52), 22, IVORY)
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var counts := _label(_stage, "", Rect2(76, 682, 885, 45), 22, MUTED)
@@ -455,19 +478,16 @@ func _show_skirmish() -> void:
 	var update := func() -> void:
 		var battle := view.battle
 		for team in range(2):
-			var health: Vector3 = battle.platoons[team].health_fractions()
-			var bar := health_bars[team]
+			team_labels[team].text = "%s   %d / %d alive" % [team_names[team], battle.survivors(team), battle.team_size(team)]
+		for index in range(battle.platoons.size()):
+			var health: Vector3 = battle.platoons[index].health_fractions()
+			var bar := health_bars[index]
 			var offset := 0.0
 			for segment in range(3):
 				var fill := bar.get_child(segment) as ColorRect
 				fill.position.x = offset
 				fill.size.x = health[segment] * bar.size.x
 				offset += fill.size.x
-			var survivors := 0
-			for soldier in battle.soldiers:
-				if soldier.team == team and soldier.unit.is_alive():
-					survivors += 1
-			team_labels[team].text = "%s   %d / %d alive" % [team_names[team], survivors, Skirmish.PLATOON_SIZE]
 		var seconds := floori(battle.elapsed)
 		status.text = "%02d:%02d" % [floori(seconds / 60.0), seconds % 60]
 		if battle.winner != Skirmish.LIVE:
