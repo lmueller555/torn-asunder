@@ -1,6 +1,8 @@
 # Human Heavy Infantry
 
-Open [human_heavy_infantry.blend](../human_heavy_infantry.blend) in Blender 4.3 or later. The soldier stands 1.815 m tall in his helmet and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
+For a new unit, follow the [unit art workflow](../../../docs/unit-art-workflow.md). For Heavy Infantry, use the [high-resolution sculpt](../human_heavy_infantry.blend) to edit the armor construction and the [painted game mesh](../human_heavy_infantry_game.blend) to paint or pose the soldier in Blender 4.3 or later.
+
+In the standing study, the helmeted soldier is 1.815 m tall and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
 
 ## Rig and motion review
 
@@ -53,7 +55,7 @@ The coif gathers below the jaw, the mail sleeves bend at the elbows, and the sur
 
 In the right profile, more of the far edge of the shield shows behind the forearm than in the painting. The model uses the same rigid circular shield and grip position in every view.
 
-## Editing the model
+## Editing the high-resolution sculpt
 
 The anatomy, garments, headgear and equipment are grouped in the Outliner. The hood, sleeves and mail skirt each have editable rows of points that place the links. Their Geometry Nodes modifiers share one wire-ring shape. Toggle those objects in the Outliner to inspect the sculpted folds beneath the links. The anatomy collection includes a hidden body beneath the clothing. The head, hands, surcoat, armor, shield, sword and scabbard are independently editable. Materials are neutral clay for reviewing the forms.
 

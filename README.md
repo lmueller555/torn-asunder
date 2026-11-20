@@ -61,3 +61,4 @@ Run `godot --headless --script tests/infantry_skirmish.gd` to check engagement s
 - [The leaders of Vareth](docs/leaders.md)
 - [Combat system](docs/combat.md)
 - [DualSense combat controls](docs/controls.md)
+- [Unit art workflow, from concept to rig](docs/unit-art-workflow.md)
