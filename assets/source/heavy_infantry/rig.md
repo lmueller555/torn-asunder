@@ -6,6 +6,18 @@
 
 Open **Unit Test → Humans · Heavy Infantry** to play the 4.5-second idle. The sword stays low in the right hand, the shield sits forward below the eyes, and both boots stay planted. The soldier breathes in and shifts his weight subtly toward the shield side before settling back into the starting stance. [Two cycles from both angles, followed by a 64-soldier formation](review/idle/shield-ready-idle.mp4)
 
+## Shield Block
+
+![The Heavy Infantry holding the shield in full guard from two angles](review/block/guard.png)
+
+Choose **Shield Raise**, **Shield Guard**, or **Shield Lower** under **Unit Test → Humans · Heavy Infantry**. The soldier shifts his weight onto the shield-side leg, protects his chest, and keeps his sword low throughout. The boots stay planted. [Full sequence from the front three-quarter and sword-side views](review/block/shield-block.mp4)
+
+| Clip | Duration | Poses |
+| --- | ---: | --- |
+| **Shield Raise** | 0.43 s | Goes from the opening Shield-Ready Idle pose into full guard. |
+| **Shield Guard** | 2.40 s per loop | Holds full guard with a small breath and shield adjustment. |
+| **Shield Lower** | 0.60 s | Returns from full guard to the opening idle pose. |
+
 ## Equipment fit tests
 
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)
@@ -16,7 +28,7 @@ Open **Unit Test**, select **Humans · Heavy Infantry**, and choose **Shield Fit
 
 ## Blender controls
 
-Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. In the Action Editor, choose **Shield-Ready Idle**, **Shield Fit Test**, or **Drawn Sword Fit**. The idle runs from frame 1 to frame 136 at 30 fps and shares the same pose at both endpoints. The GLB names the clip with Godot’s `-loop` suffix so it imports as a continuous loop.
+Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. At 30 fps, **Shield-Ready Idle** spans frames 1–136, **Shield Raise** 1–14, **Shield Guard** 1–73, and **Shield Lower** 1–19. The GLB uses Godot’s `-loop` suffix for the idle and guard.
 
 The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. The rig's **Sword in hand** property seats the sword in the scabbard at 0 and in the right-hand socket at 1. **Drawn Sword Fit** also keys the right-hand finger curl.
 
