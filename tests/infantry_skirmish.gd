@@ -18,6 +18,7 @@ func _initialize() -> void:
 	passed = _check_trade() and passed
 	passed = _check_reactions() and passed
 	passed = _check_knockback() and passed
+	passed = _check_knockdown_immunity() and passed
 	passed = _check_waiting_cheer() and passed
 	passed = _check_victory_cheers() and passed
 	passed = _check_full_matches() and passed
@@ -451,6 +452,45 @@ func _check_knockback() -> bool:
 		return _fail("The knockback direction did not follow the highest-priority hit.")
 	print("Verified tripled stagger and knockdown movement on front, side and rear hits, including simultaneous strikes.")
 	return true
+
+
+func _check_knockdown_immunity() -> bool:
+	var battle := _fixture([0, FIRST_AMBER])
+	var attacker := battle.soldiers[0]
+	var defender := battle.soldiers[FIRST_AMBER]
+	battle._random.seed = 0 # The first heavy hit rolls a knockdown.
+	defender.position = Vector2.ZERO
+	defender.scan_in = 100.0
+	attacker.target = FIRST_AMBER
+	attacker.heavy = true
+	var standing_at := -1.0
+	var phases := {}
+	var hp_after_knockdown := defender.unit.max_hp
+	for tick in range(240):
+		attacker.position = defender.position + Vector2.UP * 1.25
+		attacker.facing = Vector2.DOWN
+		attacker.state = Battle.State.ATTACK
+		attacker.time = Battle.CONTACT - TICK * 0.5
+		battle.step(TICK)
+		if tick == 0:
+			hp_after_knockdown = defender.unit.hp
+			if defender.state != Battle.State.KNOCKDOWN or hp_after_knockdown >= defender.unit.max_hp:
+				return _fail("The triggering knockdown hit did not deal damage.")
+			attacker.heavy = false
+		elif defender.state == Battle.State.IDLE and standing_at < 0.0:
+			standing_at = battle.elapsed
+		phases[defender.state] = true
+		if standing_at < 0.0 or battle.elapsed < standing_at + 0.5:
+			if defender.unit.hp != hp_after_knockdown or battle.hits != 1:
+				return _fail("An attack dealt damage during the knockdown, recovery, or grace period.")
+		else:
+			if defender.unit.hp >= hp_after_knockdown or battle.hits != 2:
+				return _fail("The soldier stayed invulnerable after the grace period.")
+			if not phases.has_all([Battle.State.KNOCKDOWN, Battle.State.DOWN, Battle.State.GET_UP]):
+				return _fail("The immunity test did not cover each phase of recovery.")
+			print("Verified immunity through the complete knockdown and 0.5 seconds after Get Up.")
+			return true
+	return _fail("The defender never finished recovering from a knockdown.")
 
 
 func _check_waiting_cheer() -> bool:

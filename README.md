@@ -47,6 +47,8 @@ In the source clips, **Shield Contact** marks `0.70 s` in **Sword Slash** and `0
 
 **Get Up** starts from the exact final pose and position of **Backward Knockdown**. The soldier rolls onto his shield side, braces on his forearm, and plants a boot to push up from a kneel. He keeps both weapons in hand and finishes in the ready stance. Select **Get Up** in **Unit Test** to preview the recovery from the floor.
 
+In AI Skirmish, the hit that knocks the soldier down deals damage. The soldier is then invulnerable through the fall, time on the ground, and **Get Up**, plus another 0.5 seconds after standing.
+
 **Death Fall** is the Infantry's defeat animation for zero HP. His knees buckle, his weight drops onto his sword side, and his sword arm goes slack. The 1.2-second clip holds the final side-lying pose. In **Unit Test**, use **Restart** to replay it from ready.
 
 **Sword Cheer** is a 1.4-second sword thrust into the air. Infantry waiting at the edge of a full engagement occasionally cheer and return to combat when a target opens up. Once the fight has started, 0.75 seconds with no enemy within 5 meters of any surviving platoon member triggers three cheers per survivor, staggered across the platoon. If the enemy returns to range, Infantry resume combat. **Unit Test** also lets you preview the cheer on its own.

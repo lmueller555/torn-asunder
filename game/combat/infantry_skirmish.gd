@@ -43,6 +43,7 @@ const SLOT_ANGLES := [0.0, -TAU / 3.0, TAU / 3.0]
 const ARENA_LIMIT := Vector2(9.0, 10.0)
 const VICTORY_CLEAR_TIME := 0.75
 const VICTORY_CHEERS := 3
+const KNOCKDOWN_RECOVERY_GRACE := 0.5
 const DURATIONS := {
 	State.ATTACK: (88.0 / 60.0) / Catalog.INFANTRY_SWORD_SLASH_SPEED,
 	State.RAISE: 0.32,
@@ -75,6 +76,7 @@ class Soldier:
 	var position: Vector2
 	var facing: Vector2
 	var knockback_direction := Vector2.ZERO
+	var recovery_protected_until := 0.0
 	var state := State.IDLE
 	var time := 0.0
 	var ready_in := 0.0
@@ -100,6 +102,9 @@ class Soldier:
 		battle_index = platoon * PLATOON_SIZE + index
 		position = spawn
 		facing = Vector2.DOWN if side == 0 else Vector2.UP
+
+	func is_recovering() -> bool:
+		return state == State.KNOCKDOWN or state == State.DOWN or state == State.GET_UP
 
 
 var soldiers: Array[Soldier] = []
@@ -324,7 +329,7 @@ func _update_reinforcement(soldier: Soldier) -> void:
 	var selected := -1
 	for rival in attackers:
 		var enemy := soldiers[rival]
-		if _lost_enemy(soldier, enemy) or enemy.state in [State.KNOCKDOWN, State.DOWN, State.GET_UP]:
+		if _lost_enemy(soldier, enemy) or enemy.is_recovering():
 			continue
 		if not _has_slot(soldier.battle_index, rival):
 			continue
@@ -449,6 +454,8 @@ func _finish_action(soldier: Soldier) -> void:
 				soldier.victory_cheers -= 1
 				soldier.victory_in = _cheer_random.randf_range(0.30, 0.75)
 		_:
+			if soldier.state == State.GET_UP:
+				soldier.recovery_protected_until = elapsed + KNOCKDOWN_RECOVERY_GRACE
 			_set_state(soldier, State.IDLE)
 			soldier.ready_in = _random.randf_range(0.08, 0.36)
 
@@ -659,8 +666,10 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			continue
 		var defender_index := attacker.target
 		var defender := soldiers[defender_index]
+		if not defender.unit.is_alive() or defender.is_recovering() or elapsed < defender.recovery_protected_until:
+			continue
 		var offset := defender.position - attacker.position
-		if not defender.unit.is_alive() or offset.length_squared() > ATTACK_RANGE * ATTACK_RANGE:
+		if offset.length_squared() > ATTACK_RANGE * ATTACK_RANGE:
 			continue
 		var direction := offset.normalized()
 		if attacker.facing.dot(direction) < 0.58:
@@ -688,7 +697,7 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			platoons[soldier.platoon_index].apply_damage(soldier.roster_index, damage[index])
 		if not soldier.unit.is_alive():
 			_set_state(soldier, State.DEAD)
-		elif reactions[index] >= State.RECOIL and soldier.state not in [State.KNOCKDOWN, State.DOWN, State.GET_UP]:
+		elif reactions[index] >= State.RECOIL:
 			var reaction := reactions[index] as State
 			if reaction != soldier.state and knockback_directions.has(index):
 				soldier.knockback_direction = knockback_directions[index]
