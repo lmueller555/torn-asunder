@@ -56,6 +56,22 @@ The clip loops in place every **0.70 seconds**. At **3.0 m/s**, it covers **2.10
 
 The gait is retargeted from a recorded straight jog, subject 35, trial 18. The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217. [Motion capture and reuse terms](https://github.com/una-dinosauria/cmu-mocap/blob/master/READMEFIRST.txt)
 
+## Advancing Diagonal Cut
+
+![The advancing cut from the shield side and the sword side in Godot](review/cut/contact.png)
+
+Select **Advancing Diagonal Cut** under **Unit Test → Humans · Heavy Infantry**. The soldier loads his left leg, raises the sword beside his helmet, then plants his right boot before his hips and chest turn through the diagonal. The shield yields at his left side, and the rear foot steps up as he returns to the opening Shield-Ready Idle pose. [Normal and quarter-speed playback in Godot](review/cut/advancing-diagonal-cut.mp4)
+
+| Time | Pose |
+| --- | --- |
+| 0.00–0.14 s | Load the left leg and raise the sword. |
+| 0.14–0.31 s | Push off, step forward, and plant the right boot. |
+| 0.31–0.45 s | Lead with the hips, then turn the chest and bring the blade through the contact pose. |
+| 0.45–0.60 s | Finish the diagonal below and in front of the shield. |
+| 0.60–0.90 s | Bring the rear boot forward and settle back into the ready stance. |
+
+The one-shot clip advances the root **0.36 m**. The contact pose is at **0.45 s**. The Blender action spans frames 1–28 at 30 fps. Godot imports the model at 120 fps to preserve the sword grip through the fastest part of the cut.
+
 ## Equipment fit tests
 
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)
