@@ -32,6 +32,20 @@ Open **Unit Test → Humans · Heavy Infantry** and select **Shield Walk** for t
 
 The start and stop match the opening pose of **Shield Guard** and the right-boot contact pose in **Shield Walk**. The runway in the video uses 0.44 m marks to show where each step lands.
 
+## Combat Run
+
+![Heavy Infantry in the combat run from the front three-quarter and sword-side views](review/run/stride.png)
+
+Choose **Run Start**, **Combat Run**, or **Run Stop** under **Unit Test → Humans · Heavy Infantry**. The soldier leans into the first step and tucks the shield, then plants a braking step before returning to guard. [Full start-to-stop sequence and 64-soldier formation in Godot](review/run/combat-run.mp4)
+
+| Clip | Duration | Motion |
+| --- | ---: | --- |
+| **Run Start** | 0.45 s | Pushes off from Shield Guard and advances the root 0.429 m into the first right-boot contact. |
+| **Combat Run** | 0.65 s per loop | Runs in place with a brief airborne phase between steps. At 2.2 m/s, each cycle covers 1.43 m in two 0.715 m steps. |
+| **Run Stop** | 0.65 s | Brakes over the right boot, advances the root 0.286 m, and reunites both feet in Shield Guard. |
+
+The run transitions meet the loop at its opening right-boot contact. The source actions use half-frame keys on the 30 fps Blender timeline, and the GLB bakes all three run clips at 60 fps.
+
 ## Equipment fit tests
 
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)
@@ -42,7 +56,7 @@ Open **Unit Test**, select **Humans · Heavy Infantry**, and choose **Shield Fit
 
 ## Blender controls
 
-Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. The shield-ready idle spans frames 1–136 at 30 fps. The shield raise, guard, and lower end on frames 14, 73, and 19. The shield walk start, loop, and stop end on frames 18, 34, and 20. The GLB uses Godot’s `-loop` suffix for the idle, guard, and walk.
+Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. The shield-ready idle spans frames 1–136 at 30 fps. The shield raise, guard, and lower end on frames 14, 73, and 19. The shield walk start, loop, and stop end on frames 18, 34, and 20. The run start, loop, and stop end on frames 14.5, 20.5, and 20.5. The GLB uses Godot’s `-loop` suffix for the idle, guard, walk, and run.
 
 The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. The rig's **Sword in hand** property seats the sword in the scabbard at 0 and in the right-hand socket at 1. **Drawn Sword Fit** also keys the right-hand finger curl.
 
@@ -50,7 +64,7 @@ The coif blends from the head and neck into the chest and clavicles. The two vis
 
 ## Formation check
 
-The Godot export uses 44 bones, 24,352 triangles, three surfaces and one shared material. The runtime clips bake the Blender control rig at 30 frames per second. The model's origin stays planted through the shield fit clip.
+The Godot export uses 44 bones, 24,352 triangles, three surfaces and one shared material. The shield fit, idle, block and walk clips bake the Blender control rig at 30 frames per second. The model's origin stays planted through the shield fit clip.
 
 Run these commands from the project root in Godot 4.7. Each variant uses the same 64-unit camera, lighting and renderer settings. The animated variants stagger playback across the formation.
 

@@ -55,6 +55,8 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 		"role": "Heavy mail infantry",
 		"model": preload("res://assets/models/human_heavy_infantry.glb"),
 		"animation_preview": {
+			&"Run Start": {"travel": 0.429},
+			&"Run Stop": {"travel": 0.286},
 			&"Shield Walk Start": {"travel": 0.176},
 			&"Shield Walk Stop": {"travel": 0.264},
 		},
