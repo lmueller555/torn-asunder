@@ -2,6 +2,10 @@
 
 Open [human_heavy_infantry.blend](../human_heavy_infantry.blend) in Blender 4.3 or later. The soldier stands 1.815 m tall in his helmet and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
 
+## Rig and motion review
+
+The painted model now has a dedicated Heavy Infantry rig. Open **Unit Test** and choose **Humans · Heavy Infantry** for the shield raise and the sword grip pose. [Godot previews, Blender controls and formation measurements](rig.md)
+
 ## Standing posture
 
 ![Before and after in profile, with aligned outlines of the head and shoulders](review/posture/profile.png)
@@ -55,4 +59,4 @@ The anatomy, garments, headgear and equipment are grouped in the Outliner. The h
 
 Enable the **Modeling reference views** collection in the Outliner to use the six packed concept crops. Isolate the desired reference and switch to its orthographic view. The crops share a common scale and floor line.
 
-Press **Space** in the timeline to play the four-second studio rotation. Frame 1 is the front view. Only the turntable parent is animated. The model is an unrigged Blender source asset. Godot’s source-directory ignore file keeps the review materials out of the game.
+Press **Space** in the timeline to play the four-second studio rotation. Frame 1 is the front view. Only the turntable parent is animated. The sculpt serves as the high-resolution source for the [rigged game mesh](rig.md). Godot’s source-directory ignore file keeps the review materials out of the game.

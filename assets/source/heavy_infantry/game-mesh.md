@@ -2,7 +2,7 @@
 
 [Editable Blender game mesh](../human_heavy_infantry_game.blend) · [Godot GLB](../../models/human_heavy_infantry.glb) · [Approved mail sculpt](../human_heavy_infantry.blend)
 
-The game mesh stands 1.815 m in the helmet and uses 24,352 triangles and one shared material. The editable Blender file retains the garment panels and shaping loops at the shoulders, elbows, knees and wrists for a future Heavy Infantry rig. The Godot export batches these pieces into a body, a round shield, and a full sword with grip pivots for the two items. The scabbard stays on the body. The model is ready for its own Heavy Infantry rig and is shown here in its standing, sheathed pose.
+The game mesh stands 1.815 m in the helmet and uses 24,352 triangles and one shared material. The editable Blender file retains the garment panels and shaping loops at the shoulders, elbows, knees and wrists for the Heavy Infantry rig. The Godot export batches these pieces into a body, a round shield, and a full sword with grip pivots for the two items. The scabbard stays on the body. The neutral plates show the original standing study. The [rigged model and motion review](rig.md) use the painted materials and approved posture.
 
 ## Neutral mesh review
 
