@@ -48,7 +48,7 @@ func _unit_at(level: int, ratings: Dictionary = {}) -> Unit:
 
 
 func _rating_cap(level: int) -> int:
-	return mini(Unit.MAX_RATING, (level - 1) * Unit.RATING_PER_POINT)
+	return mini(Unit.MAX_RATING, Unit.MIN_RATING + level - 1)
 
 
 func _level_multiplier(attacking_level: int, defending_level: int) -> float:
@@ -63,9 +63,9 @@ func _scan_melee_ratings() -> bool:
 		var fewest := 100
 		var most := 0
 		var cap := _rating_cap(level)
-		for attacker_rating in range(0, cap + 1, Unit.RATING_PER_POINT):
+		for attacker_rating in range(Unit.MIN_RATING, cap + 1):
 			var attacker := _unit_at(level, {MELEE: attacker_rating})
-			for defender_rating in range(0, cap + 1, Unit.RATING_PER_POINT):
+			for defender_rating in range(Unit.MIN_RATING, cap + 1):
 				var target := _unit_at(level, {MELEE: defender_rating})
 				var dealt := target.receive_hit(attacker, {MELEE: 40.0})
 				if not target.is_alive() or dealt <= 0.0:
@@ -98,8 +98,8 @@ func _check_one_hit_boundaries() -> bool:
 		var rating := _rating_cap(attacking_level)
 		var attacker := _unit_at(attacking_level, {MELEE: rating})
 		for defending_level in range(1, Unit.MAX_LEVEL + 1):
-			# Maximum attainable offense against zero defense is an upper bound for every component of a hit.
-			var factor := Unit.damage_factor(rating, 0) * _level_multiplier(attacking_level, defending_level)
+			# Maximum attainable offense against the minimum rating bounds every damage component.
+			var factor := Unit.damage_factor(rating, Unit.MIN_RATING) * _level_multiplier(attacking_level, defending_level)
 			var threshold := _hp[defending_level] / factor
 			var survivor := _unit_at(defending_level)
 			survivor.receive_hit(attacker, {MELEE: threshold - 0.01})
@@ -194,9 +194,9 @@ func _mixed_components(base: float) -> Dictionary:
 
 
 func _compare_level_fifty() -> void:
-	var attacker := _unit_at(50, {MELEE: 80})
+	var attacker := _unit_at(50, {MELEE: 50})
 	for rating in [10, 40]:
 		var target := _unit_at(50, {MELEE: rating})
 		var damage := target.receive_hit(attacker, {MELEE: 40.0})
 		var hits := ceili(target.max_hp / damage - 1.0e-10)
-		print("Level 50, attacker 80 vs defender %d: %.4f damage, %d hits." % [rating, damage, hits])
+		print("Level 50, attacker 50 vs defender %d: %.4f damage, %d hits." % [rating, damage, hits])

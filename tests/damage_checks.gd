@@ -4,9 +4,6 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 
 const BASE_DAMAGE: Array[float] = [0.0, 0.01, 0.5, 1.0, 25.0, 100.0, 2500.0, 100000.0]
-const REFERENCE_BUILD: Array[Unit.Damage] = [
-	Unit.Damage.MELEE, Unit.Damage.RANGED, Unit.Damage.FIRE, Unit.Damage.LIGHTNING, Unit.Damage.ICE,
-]
 
 
 func _initialize() -> void:
@@ -22,9 +19,9 @@ func _initialize() -> void:
 func _check_matchups() -> bool:
 	var cases := 0
 	for type in Unit.Damage.values():
-		for attacker_rating in range(101):
+		for attacker_rating in range(1, 101):
 			var attacker := Unit.new(100.0, {type: attacker_rating})
-			for defender_rating in range(101):
+			for defender_rating in range(1, 101):
 				var expected_factor := (100.0 + attacker_rating) / (100.0 + 0.2 * defender_rating)
 				for base in BASE_DAMAGE:
 					var target := Unit.new(4.0 * base + 1.0, {type: defender_rating})
@@ -70,10 +67,10 @@ func _check_bounds() -> bool:
 	var low := Unit.new(100.0, {Unit.Damage.CURSE: -25})
 	var high := Unit.new(100.0, {Unit.Damage.CURSE: 250})
 	var hit := {Unit.Damage.CURSE: 0.5, Unit.Damage.FIRE: -10.0}
-	if not _same_damage(high.receive_hit(low, hit), 0.4166666666666667) or low.receive_hit(high, hit) != 1.0:
+	if not _same_damage(high.receive_hit(low, hit), 0.4208333333333333) or not _same_damage(low.receive_hit(high, hit), 0.998003992015968):
 		push_error("Rating clamps or the fractional HP hit were incorrect.")
 		return false
-	if not _same_damage(high.hp, 99.58333333333333) or low.hp != 99.0:
+	if not _same_damage(high.hp, 99.57916666666667) or not _same_damage(low.hp, 99.00199600798403):
 		push_error("Fractional HP was not retained.")
 		return false
 	low.receive_hit(high, {Unit.Damage.CURSE: 100.0})
@@ -88,33 +85,29 @@ func _check_bounds() -> bool:
 func _check_hits_to_defeat() -> bool:
 	var xp := 0
 	for level in range(1, 100):
-		var ratings := {}
-		for point in range(level - 1):
-			var type := REFERENCE_BUILD[point % REFERENCE_BUILD.size()]
-			ratings[type] = int(ratings.get(type, 0)) + 5
+		var ratings := {Unit.Damage.MELEE: level}
 		var attacker := Unit.new(Unit.STARTING_HP, ratings)
 		attacker.award_experience(xp)
 		var previous_hp := 1200.0 * (99.0 + level) / (99.8 + 0.2 * level)
 		var expected_hp := 2.0 * previous_hp - 1200.0
-		for type in REFERENCE_BUILD:
-			var target := Unit.new(Unit.STARTING_HP, ratings)
-			target.award_experience(xp)
-			if target.level != level or not _same_damage(target.max_hp, expected_hp):
-				push_error("The HP curve did not match at level %d." % level)
-				return false
-			var hits := _hits_to_defeat(attacker, target, type)
-			if hits < 30 or hits > 31:
-				push_error("Matched level %d units took %d hits for type %d." % [level, hits, type])
-				return false
+		var target := Unit.new(Unit.STARTING_HP, ratings)
+		target.award_experience(xp)
+		if target.level != level or not _same_damage(target.max_hp, expected_hp):
+			push_error("The HP curve did not match at level %d." % level)
+			return false
+		var hits := _hits_to_defeat(attacker, target, Unit.Damage.MELEE)
+		if hits != 30:
+			push_error("Matched level %d Melee specialists took %d hits." % [level, hits])
+			return false
 		xp += attacker.experience_for_next_level()
 
 	if xp != 128_625:
 		push_error("The XP curve did not reach level 99 at 128,625 XP.")
 		return false
 
-	# Check the endpoints, the first level at which specialization can reach 100, and cap-level builds.
-	for example in [[0, 100, 0, 36], [50, 50, 0, 22], [100, 0, 0, 15],
-			[100, 100, 6_750, 21], [100, 100, 128_625, 30], [0, 0, 128_625, 50]]:
+	# Check custom-rating endpoints plus cap-level builds with unspent or split points.
+	for example in [[1, 100, 0, 36], [50, 50, 0, 22], [100, 1, 0, 16],
+			[20, 20, 128_625, 44], [1, 1, 128_625, 50]]:
 		var attacker := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: example[0]})
 		var target := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: example[1]})
 		attacker.award_experience(example[2])
@@ -125,7 +118,7 @@ func _check_hits_to_defeat() -> bool:
 			])
 			return false
 
-	print("Passed 495 equal-level reference-build matchups, plus extreme and specialist builds.")
+	print("Passed matched Melee specialists at all 99 levels, plus custom-rating and cap-level builds.")
 	return true
 
 
@@ -138,31 +131,33 @@ func _hits_to_defeat(attacker: Unit, target: Unit, type: Unit.Damage) -> int:
 
 
 func _check_progression() -> bool:
-	var unit := Unit.new(Unit.STARTING_HP, {Unit.Damage.FIRE: 98})
+	var unit := Unit.new(Unit.STARTING_HP, {Unit.Damage.FIRE: 99})
 	if unit.spend_stat_point(Unit.Damage.MELEE) or unit.award_experience(-10) != 0:
 		push_error("A new unit accepted an invalid investment or XP reward.")
 		return false
-	unit.receive_hit(Unit.new(), {Unit.Damage.MELEE: 40.0})
+	var wound := unit.receive_hit(Unit.new(), {Unit.Damage.MELEE: 40.0})
 	if unit.award_experience(99) != 0 or unit.level != 1 or unit.experience != 99:
 		push_error("A partial XP reward was handled incorrectly.")
 		return false
 	if unit.award_experience(151) != 2 or unit.level != 3 or unit.experience != 25:
 		push_error("XP did not carry across multiple thresholds.")
 		return false
-	if not _same_damage(unit.max_hp, 1238.2470119521914) or not _same_damage(unit.hp, 1198.2470119521914) or unit.stat_points != 2:
+	if not _same_damage(unit.max_hp, 1238.2470119521914) or not _same_damage(unit.max_hp - unit.hp, wound) or unit.stat_points != 2:
 		push_error("Automatic HP growth, wound preservation, or point awards were incorrect.")
 		return false
-	if unit.rating(Unit.Damage.MELEE) != 0 or unit.rating(Unit.Damage.FIRE) != 98:
-		push_error("Leveling changed combat ratings before points were spent.")
-		return false
+	for type: Unit.Damage in Unit.Damage.values():
+		var starting_rating := 99 if type == Unit.Damage.FIRE else 1
+		if unit.rating(type) != starting_rating:
+			push_error("Leveling changed combat ratings before points were spent.")
+			return false
 	if not unit.spend_stat_point(Unit.Damage.FIRE) or unit.rating(Unit.Damage.FIRE) != 100:
 		push_error("The Fire rating did not reach its cap when trained.")
 		return false
 	if unit.spend_stat_point(Unit.Damage.FIRE) or unit.stat_points != 1:
 		push_error("A maxed rating consumed a point.")
 		return false
-	if not unit.spend_stat_point(Unit.Damage.MELEE) or unit.rating(Unit.Damage.MELEE) != 5 or unit.stat_points != 0:
-		push_error("An allocated point did not increase the selected rating by 5.")
+	if not unit.spend_stat_point(Unit.Damage.MELEE) or unit.rating(Unit.Damage.MELEE) != 2 or unit.stat_points != 0:
+		push_error("An allocated point did not increase Melee from 1 to 2.")
 		return false
 	if unit.award_experience(1_000_000) != 96 or unit.level != 99 or unit.experience != 0:
 		push_error("The level cap was handled incorrectly.")

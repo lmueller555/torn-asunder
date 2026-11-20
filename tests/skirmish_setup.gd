@@ -23,8 +23,12 @@ func _check_setup() -> bool:
 	if setup.sides[0].size() != Setup.MAX_PLATOONS or setup.sides[1].size() != 1:
 		return _fail("Changing Blue platoon count failed to clamp or changed Amber.")
 	var build: Setup.PlatoonBuild = setup.sides[0][0]
+	var recruit := build.make_unit()
+	for type: Unit.Damage in Unit.Damage.values():
+		if build.rating(type) != 1 or recruit.rating(type) != 1:
+			return _fail("Each of the eight ratings must start at 1 in the setup and in battle.")
 	build.set_points(Unit.Damage.MELEE, 1)
-	if build.points_for(Unit.Damage.MELEE) != 0 or build.rating(Unit.Damage.MELEE) != 15:
+	if build.points_for(Unit.Damage.MELEE) != 0 or build.rating(Unit.Damage.MELEE) != 1:
 		return _fail("Level-1 infantry could spend a point it had not earned.")
 	build.set_level(9)
 	build.set_points(Unit.Damage.FIRE, 3)
@@ -37,14 +41,14 @@ func _check_setup() -> bool:
 		return _fail("Lowering level failed to refund the newest investments first.")
 	build.set_points(Unit.Damage.FIRE, -1)
 	build.set_points(Unit.Damage.HOLY, 1)
-	if build.remaining_points() != 2 or build.rating(Unit.Damage.HOLY) != 5:
+	if build.remaining_points() != 2 or build.rating(Unit.Damage.HOLY) != 2:
 		return _fail("Removing an investment failed to make its points spendable elsewhere.")
 	var saved := setup.copy()
 	build.set_level(-10)
 	setup.set_count(0, -1)
 	if build.level != 1 or build.remaining_points() != 0 or setup.sides[0].size() != 1:
 		return _fail("Level or count fell outside the supported lower limit.")
-	if saved.sides[0].size() != Setup.MAX_PLATOONS or saved.sides[0][0].rating(Unit.Damage.HOLY) != 5:
+	if saved.sides[0].size() != Setup.MAX_PLATOONS or saved.sides[0][0].rating(Unit.Damage.HOLY) != 2:
 		return _fail("A later edit leaked into the saved scenario.")
 	setup.set_count(0, 2)
 	if setup.sides[0][1].level != 1 or setup.sides[1][0].level != 1:
@@ -60,9 +64,10 @@ func _check_factory() -> bool:
 	if build.level != Unit.MAX_LEVEL or build.remaining_points() != Unit.MAX_LEVEL - 1:
 		return _fail("Level cap and earned budget differ from CombatUnit.")
 	build.set_points(Unit.Damage.MELEE, 100)
+	if build.rating(Unit.Damage.MELEE) != 99 or build.points_for(Unit.Damage.MELEE) != 98:
+		return _fail("Investing all 98 points should raise Melee from 1 to 99.")
+	build.set_points(Unit.Damage.MELEE, 91)
 	build.set_points(Unit.Damage.CURSE, 6)
-	if build.rating(Unit.Damage.MELEE) != 100 or build.points_for(Unit.Damage.MELEE) != 17:
-		return _fail("A unit with innate melee 15 should reach 100 after 17 points.")
 	var definition: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
 	var trained := Unit.new(definition.starting_hp, definition.ratings)
 	for target_level in range(2, Unit.MAX_LEVEL + 1):

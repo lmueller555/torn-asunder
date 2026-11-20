@@ -43,7 +43,7 @@ const EXERCISES: Array[Dictionary] = [
 	{
 		"id": &"curse",
 		"name": "Curse",
-		"description": "Trade Curse attacks worth 40 base damage with a unit that has a Curse rating of zero.",
+		"description": "Trade Curse attacks worth 40 base damage with a unit that has a Curse rating of 1.",
 		"metrics": ["Damage you deal", "Damage you take"],
 		"damage_rating": true,
 	},

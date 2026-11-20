@@ -44,9 +44,9 @@ func _run_flow() -> bool:
 		return _fail("The running scene ignored the selected roster sizes.")
 	var blue := view.battle.soldiers[n].unit
 	var amber := view.battle.soldiers[2 * n].unit
-	if blue.level != 12 or blue.rating(Unit.Damage.MELEE) != 25 or blue.rating(Unit.Damage.FIRE) != 25 or blue.stat_points != 4:
+	if blue.level != 12 or blue.rating(Unit.Damage.MELEE) != 3 or blue.rating(Unit.Damage.FIRE) != 6 or blue.stat_points != 4:
 		return _fail("The running scene lost Blue platoon 2's build.")
-	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 5 or amber.stat_points != 0 or view.battle.soldiers[0].unit.level != 1:
+	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 2 or amber.stat_points != 0 or view.battle.soldiers[0].unit.level != 1:
 		return _fail("The menu applied one platoon's edits to another.")
 	blue.receive_damage(blue.max_hp)
 	if not _press_all(["Pause", "Restart"]):
@@ -54,7 +54,7 @@ func _run_flow() -> bool:
 	var restarted := view.battle.soldiers[n].unit
 	if view.paused or restarted == blue or restarted.hp != restarted.max_hp or restarted.level != 12:
 		return _fail("Restart did not restore the configured battle with fresh units.")
-	if view.battle.survivors(0) != 2 * n or restarted.rating(Unit.Damage.MELEE) != 25 or restarted.stat_points != 4:
+	if view.battle.survivors(0) != 2 * n or restarted.rating(Unit.Damage.MELEE) != 3 or restarted.stat_points != 4:
 		return _fail("Restart lost platoon membership or allocated points.")
 	# Return to Unit Test, open the editor again, and edit the retained Amber build.
 	if not _press_all(["Back", "Back", "AI Skirmish", "AmberPlatoon1", "IceMinus", "HolyPlus", "StartSkirmish"]):
@@ -63,7 +63,7 @@ func _run_flow() -> bool:
 	if not view or view.battle.team_size(0) != 2 * n:
 		return _fail("Back navigation discarded the configured roster.")
 	amber = view.battle.soldiers[2 * n].unit
-	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 0 or amber.rating(Unit.Damage.HOLY) != 5:
+	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 1 or amber.rating(Unit.Damage.HOLY) != 2:
 		return _fail("Back navigation failed to retain and update the selected build.")
 	print("The title-menu setup, unequal rosters, per-platoon builds, restart and Back navigation work end to end.")
 	return true

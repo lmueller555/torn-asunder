@@ -3,13 +3,12 @@ extends RefCounted
 
 enum Damage { MELEE, RANGED, FIRE, LIGHTNING, ICE, NATURE, HOLY, CURSE }
 
+const MIN_RATING := 1
 const MAX_RATING := 100
 const DEFENSE_WEIGHT := 0.2
 const STARTING_HP := 1200.0
 const REFERENCE_HIT := 40.0
 const MAX_LEVEL := 99
-const RATING_PER_POINT := 5
-const HP_REFERENCE_RATING_COUNT := 5
 const HP_GROWTH_MULTIPLIER := 2.0
 const FIRST_LEVEL_XP := 100
 const LEVEL_XP_STEP := 25
@@ -73,7 +72,8 @@ func award_experience(amount: int) -> int:
 		return 0
 
 	var previous_max_hp := _max_hp
-	var reference_rating := float((_level - 1) * RATING_PER_POINT) / HP_REFERENCE_RATING_COUNT
+	# Use levels gained as the HP curve's reference, independent of rating purchases.
+	var reference_rating := float(_level - 1)
 	var reference_scale := damage_factor(reference_rating, reference_rating)
 	var hp_scale := 1.0 + HP_GROWTH_MULTIPLIER * (reference_scale - 1.0)
 	_max_hp = _starting_hp * hp_scale
@@ -85,7 +85,7 @@ func award_experience(amount: int) -> int:
 
 
 func rating(type: Damage) -> int:
-	return clampi(int(_ratings.get(type, 0)), 0, MAX_RATING)
+	return clampi(int(_ratings.get(type, MIN_RATING)), MIN_RATING, MAX_RATING)
 
 
 func spend_stat_point(type: Damage) -> bool:
@@ -94,7 +94,7 @@ func spend_stat_point(type: Damage) -> bool:
 	var current := rating(type)
 	if current >= MAX_RATING:
 		return false
-	_ratings[type] = mini(current + RATING_PER_POINT, MAX_RATING)
+	_ratings[type] = current + 1
 	_stat_points -= 1
 	return true
 

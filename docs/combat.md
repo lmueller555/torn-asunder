@@ -18,7 +18,7 @@ A platoon contains individual units with their own HP pools and combat ratings. 
 
 ### Damage formulas
 
-The eight combat ratings are **Melee Power, Ranged Power, Fire, Lightning, Ice, Nature, Holy, and Curse**. Each unit has an integer rating from 0 to 100 for each type. An unspecified rating defaults to 0. Values outside the range are clamped to the nearest endpoint.
+The eight combat ratings are **Melee Power, Ranged Power, Fire, Lightning, Ice, Nature, Holy, and Curse**. Each starts at 1. Combat ratings are whole numbers clamped to the range of 1 to 100.
 
 ```text
 Resolved component = max(0, base damage) × (100 + attacker's rating) / (100 + 0.2 × defender's rating)
@@ -26,49 +26,51 @@ Total damage       = sum of resolved components × attacker's level factor² / d
 HP lost            = min(target's current HP, total damage)
 ```
 
-Each component uses the attacker's and defender's ratings for its own damage type. A point in a rating contributes its full value to attack and 20% of its value to defense. As both ratings rise together, the same hit deals more damage. Ratings can scale each component to between 83.33% and 200% of its base damage. The level factor, defined below, then applies to the combined damage. HP retains fractional damage between hits, and a hit can remove only as much HP as the target has left.
+Each component uses the attacker's and defender's ratings for its own damage type. A point in a rating contributes its full value to attack and 20% of its value to defense. As both ratings rise together, the same hit deals more damage. Across the full supported rating range, ratings can scale each component to between 84.17% and 199.60% of its base damage. The level factor then applies to the combined damage. HP retains fractional damage between hits, and a hit can remove only as much HP as the target has left.
 
-Tune ordinary attacks to keep full-health opponents of the same level from dying in one hit. A large level advantage can make a single hit lethal. The examples below use the level-1 factor of 1.
+Tune ordinary attacks to keep full-health opponents of the same level from dying in one hit. A large level advantage can make a single hit lethal. These formula examples use a level factor of 1 to isolate the effect of ratings.
 
 | Base HP damage | Attacker rating | Defender rating | Resolved HP damage |
 |---:|---:|---:|---:|
-| 0.50 | 0 | 100 | 0.42 |
+| 0.50 | 1 | 100 | 0.42 |
 | 40 | 50 | 50 | 54.55 |
-| 40 | 20 | 0 | 48 |
+| 40 | 20 | 1 | 47.90 |
 | 40 | 100 | 80 | 68.97 |
 | 40 | 80 | 20 | 69.23 |
 | 40 | 20 | 80 | 41.38 |
-| 40 | 100 | 0 | 80 |
-| 40 | 0 | 100 | 33.33 |
+| 40 | 100 | 1 | 79.84 |
+| 40 | 1 | 100 | 33.67 |
 | 2,500 | 90 | 10 | 4,656.86 |
 
 A flaming arrow with 60 base Ranged damage at 75 versus 25 deals 100 HP of Ranged damage. Its 40 base Fire damage at 20 versus 80 adds 41.38 HP. The hit resolves to 141.38 HP before the remaining-HP cap. A target with 42 HP loses 42 HP and dies. The displayed examples round to two decimal places.
 
 ### Health and unit progression
 
-A standard unit starts with 1,200 HP. Each level now gives double the HP gain of the previous curve. The HP curve uses a reference build that spends each level's +5 rating across five ratings, averaging one point per rating per level. The unit's real ratings come from where the player spends points.
+A standard unit starts with 1,200 HP. Levels gained determine the automatic HP curve and the level factor for damage. Skill point purchases affect only the selected combat rating.
 
 ```text
-Reference rating R    = (L − 1) × 5 / 5
-Previous HP factor B  = (100 + R) / (100 + 0.2 × R)
-New HP factor H       = 1 + 2 × (B − 1)
+Levels gained R       = L − 1
+Reference HP factor B = (100 + R) / (100 + 0.2 × R)
+HP factor H           = 1 + 2 × (B − 1)
 Maximum HP at level L = starting HP × H
 Level factor          = H / B
 XP to advance from L  = 100 + 25 × (L − 1)
 ```
 
-At equal levels, the multiplier on damage reduces to a single level factor. HP and damage grow by that same proportion, so the share of HP lost per hit stays the same for any pair of same-level builds. Against a level-1 target, a level-99 attack deals about 1.95 times its damage under the previous curve at the same ratings. A level-1 attack against a level-99 target removes about half as much of the target's HP pool as it did under the previous curve.
+At equal levels, the multiplier on damage reduces to a single level factor. The share of HP lost per hit depends on the two builds and their level. Across different levels, a higher-level attacker gains damage and a higher-level defender reduces incoming damage.
 
-XP carries across level thresholds. The first level-up costs 100 XP, level 98 to 99 costs 2,525 XP, and a unit reaches the cap at 128,625 total XP. Each new level automatically increases maximum HP and awards one banked stat point. Living units gain the same amount of current HP and keep their existing wounds. A point can raise any of the eight combat ratings by 5, up to 100. From zero starting ratings, the 98 points earned by level 99 can max four ratings and raise a fifth to 90.
+XP carries across level thresholds. The first level-up costs 100 XP, level 98 to 99 costs 2,525 XP, and a unit reaches the cap at 128,625 total XP. Each new level automatically increases maximum HP and awards one banked stat point. Living units gain the same amount of current HP and keep their existing wounds. Spending one point raises the chosen combat rating by 1. From a starting rating of 1, a level-99 unit can reach 99 by spending all 98 earned points on a single rating.
 
-| Unit level | Standard maximum HP | Damage at matched reference ratings | Hits to defeat |
+These examples use a 40-base hit between equal-level units who both spend every point on the relevant rating.
+
+| Unit level | Standard maximum HP | Damage per hit | Hits to defeat |
 |---:|---:|---:|---:|
-| 1 | 1,200 | 40.00 | 30 |
-| 20 | 1,551.45 | 51.71 | 30 |
-| 50 | 2,056.83 | 68.56 | 30 |
-| 99 | 2,773.24 | 92.44 | 30 |
+| 1 | 1,200 | 40.32 | 30 |
+| 20 | 1,551.45 | 52.05 | 30 |
+| 50 | 2,056.83 | 68.90 | 30 |
+| 99 | 2,773.24 | 92.75 | 30 |
 
-Real builds spend whole points. Distributing them evenly across five ratings produces 30–31 hits across levels 1–99. Two specialists who both reach 100 in the relevant rating at level 21 take 21 hits. At level 99, two units using a rating of zero take 50 hits.
+At level 99, splitting points across five ratings gives each of the three most-trained ratings a value of 21 and each of the other two a value of 20. When both units have a rating of 20, the fight takes 44 hits. When both use an untrained rating of 1, it takes 50 hits.
 
 Open **Unit Progression** from a campaign briefing to award XP and allocate points on a practice unit. The practice unit is temporary. Campaign XP rewards will be connected when playable missions are added.
 
@@ -85,7 +87,7 @@ Each skill has ranks from 0 to 5 and governs its own part of an engagement. **Co
 | **Siegecraft** | Divides the crew's 12-second setup time by `1 + 0.15 × rank` and its 8-second reload time by `1 + 0.10 × rank`. Accuracy starts at 50% and gains 8 percentage points per rank. |
 | **Beast Handling** | War beasts obey at 60 cohesion or higher at rank 0. Each rank lowers that threshold by 8 points. Rallying restores 3 cohesion per second plus 2 per rank. |
 
-Combat Drills is available from every campaign briefing. Select a skill to compare its training ranks against rank 0, or select Curse to compare damage ratings from 0 to 100 in steps of 20. The drills run the combat rules in controlled scenarios, including charging and bracing, reforming after a casualty, scouting through cover, and trading Curse hits. Campaign battles are planned for a later milestone.
+Combat Drills is available from every campaign briefing. Select a skill to compare its training ranks against rank 0, or select Curse to compare combat ratings of 1, 20, 40, 60, 80, and 100 against rating 1. The drills run the combat rules in controlled scenarios, including charging and bracing, reforming after a casualty, scouting through cover, and trading Curse hits. Campaign battles are planned for a later milestone.
 
 ## 3D battlefield presentation
 

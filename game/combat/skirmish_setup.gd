@@ -23,7 +23,7 @@ class PlatoonBuild:
 		return _investments.count(type)
 
 	func rating(type: Unit.Damage) -> int:
-		return mini(Unit.MAX_RATING, _base_rating(type) + points_for(type) * Unit.RATING_PER_POINT)
+		return _base_rating(type) + points_for(type)
 
 	func remaining_points() -> int:
 		return level - 1 - _investments.size()
@@ -32,7 +32,7 @@ class PlatoonBuild:
 		if not Unit.Damage.values().has(type):
 			return
 		var current := points_for(type)
-		var cap := ceili(float(Unit.MAX_RATING - _base_rating(type)) / Unit.RATING_PER_POINT)
+		var cap := Unit.MAX_RATING - _base_rating(type)
 		var target := clampi(value, 0, mini(cap, current + remaining_points()))
 		for i in range(current, target):
 			_investments.append(type)
@@ -55,7 +55,7 @@ class PlatoonBuild:
 		return result
 
 	func _base_rating(type: Unit.Damage) -> int:
-		return Catalog.TYPES[Catalog.HUMAN_INFANTRY].ratings.get(type, 0)
+		return Catalog.TYPES[Catalog.HUMAN_INFANTRY].ratings.get(type, Unit.MIN_RATING)
 
 
 var sides: Array[Array] = []

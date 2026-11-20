@@ -606,16 +606,17 @@ func _update_drill() -> void:
 	var exercise := Drills.EXERCISES[_drill_index]
 	var metrics: Array = exercise.metrics
 	var uses_rating: bool = exercise.get("damage_rating", false)
+	var baseline_level := Unit.MIN_RATING if uses_rating else 0
 	var level := _drill_rank
 	if uses_rating:
-		level = roundi(float(_drill_rank) / Platoon.MAX_RANK * Unit.MAX_RATING)
+		level = maxi(baseline_level, roundi(float(_drill_rank) / Platoon.MAX_RANK * Unit.MAX_RATING))
 	var scale_label := "Rating" if uses_rating else "Rank"
-	var baseline := Drills.run(exercise.id, 0)
+	var baseline := Drills.run(exercise.id, baseline_level)
 	var results := Drills.run(exercise.id, level)
 	_drill_title.text = exercise.name
 	_drill_description.text = exercise.description
 	_drill_rank_label.text = "%s %d" % ["Curse rating" if uses_rating else "Training rank", level]
-	_drill_baseline_heading.text = "%s 0" % scale_label
+	_drill_baseline_heading.text = "%s %d" % [scale_label, baseline_level]
 	_drill_rank_heading.text = "%s %d" % [scale_label, level]
 	for row in range(_drill_metrics.size()):
 		var has_metric := row < metrics.size()
