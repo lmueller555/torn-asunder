@@ -10,6 +10,7 @@ func _initialize() -> void:
 	passed = _check_enemy_scan() and passed
 	passed = _check_slots() and passed
 	passed = _check_passing() and passed
+	passed = _check_slash_timing() and passed
 	passed = _check_trade() and passed
 	passed = _check_reactions() and passed
 	passed = _check_waiting_cheer() and passed
@@ -155,6 +156,40 @@ func _passing_yield(stance: Battle.State) -> float:
 	if runner.position.x <= blocker.position.x + 0.40:
 		return -1.0
 	return absf(blocker.position.y)
+
+
+func _check_slash_timing() -> bool:
+	var battle := _fixture([0, FIRST_AMBER])
+	var attacker := battle.soldiers[0]
+	var defender := battle.soldiers[FIRST_AMBER]
+	var start := Vector2(0, -1.45)
+	attacker.position = start
+	attacker.target = FIRST_AMBER
+	attacker.state = Battle.State.ATTACK
+	defender.position = Vector2.ZERO
+	defender.state = Battle.State.LOWER
+	defender.time = -10.0
+
+	var hit_time := -1.0
+	var finish_time := -1.0
+	for tick in range(1, 70):
+		battle.step(TICK)
+		var time := tick * TICK
+		if time <= 0.22 and not attacker.position.is_equal_approx(start):
+			return _fail("The slash moved before the retimed forward step.")
+		if time >= 0.64 and not attacker.position.is_equal_approx(start + Vector2(0, 0.52)):
+			return _fail("The slash did not finish its forward movement on the retimed advance.")
+		if battle.hits == 1 and hit_time < 0.0:
+			hit_time = time
+		if attacker.state != Battle.State.ATTACK:
+			finish_time = time
+			break
+	if battle.hits != 1 or absf(hit_time - 0.50) > TICK + 0.0001:
+		return _fail("The retimed slash did not make exactly one contact at 0.50 seconds.")
+	if absf(finish_time - 1.047619) > TICK + 0.0001:
+		return _fail("The retimed slash did not finish at about 1.05 seconds.")
+	print("Verified the faster slash's contact, forward movement, and finish.")
+	return true
 
 
 func _check_trade() -> bool:

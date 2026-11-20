@@ -147,7 +147,9 @@ func _sync_models(delta: float) -> void:
 					speed = player.get_animation(clip).length / Battle.DURATIONS[soldier.state]
 				player.play(clip, 0.075 if delta > 0.0 else 0.0, speed)
 		if soldier.state != Battle.State.DOWN:
-			player.advance(delta)
+			# The attack is chosen at the end of the simulation step, with its clock still at zero.
+			var attack_just_started := soldier.state == Battle.State.ATTACK and soldier.time == 0.0
+			player.advance(0.0 if attack_just_started else delta)
 
 
 func _frame_battle(delta: float) -> void:

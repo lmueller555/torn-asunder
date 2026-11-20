@@ -14,7 +14,9 @@ const PLATOON_SPACING := 13.5
 const MAX_ENGAGEMENTS := 3
 const LIVE := -2
 const DRAW := -1
-const CONTACT := 0.70
+const CONTACT := 0.70 / Catalog.INFANTRY_SWORD_SLASH_SPEED
+const ATTACK_ADVANCE_START := 0.33 / Catalog.INFANTRY_SWORD_SLASH_SPEED
+const ATTACK_ADVANCE_END := 0.88 / Catalog.INFANTRY_SWORD_SLASH_SPEED
 const ATTACK_RANGE := 1.48
 const WAIT_DISTANCE := 2.16
 const ENGAGEMENT_RANGE := 5.0
@@ -39,7 +41,7 @@ const ARENA_LIMIT := Vector2(9.0, 10.0)
 const VICTORY_CLEAR_TIME := 0.75
 const VICTORY_CHEERS := 3
 const DURATIONS := {
-	State.ATTACK: 88.0 / 60.0,
+	State.ATTACK: (88.0 / 60.0) / Catalog.INFANTRY_SWORD_SLASH_SPEED,
 	State.RAISE: 0.32,
 	State.GUARD: 0.54,
 	State.LOWER: 0.30,
@@ -350,9 +352,9 @@ func _finish_action(soldier: Soldier) -> void:
 
 
 func _move_action(soldier: Soldier, before: float) -> void:
-	if soldier.state == State.ATTACK and soldier.target >= 0 and soldier.time <= 0.88:
-		var advance := clampf((soldier.time - 0.33) / 0.55, 0.0, 1.0)
-		var previous := clampf((before - 0.33) / 0.55, 0.0, 1.0)
+	if soldier.state == State.ATTACK and soldier.target >= 0 and before < ATTACK_ADVANCE_END:
+		var advance := clampf(inverse_lerp(ATTACK_ADVANCE_START, ATTACK_ADVANCE_END, soldier.time), 0.0, 1.0)
+		var previous := clampf(inverse_lerp(ATTACK_ADVANCE_START, ATTACK_ADVANCE_END, before), 0.0, 1.0)
 		var enemy := soldiers[soldier.target]
 		var space := maxf(0.0, (enemy.position - soldier.position).dot(soldier.facing) - 0.86)
 		soldier.position += soldier.facing * minf(space, 0.52 * (advance - previous))

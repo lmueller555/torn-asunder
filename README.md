@@ -29,7 +29,7 @@ Choose **Start Skirmish** to watch the armies fight. **Restart** replays the sam
 
 Free soldiers scan every 0.35 to 0.70 seconds, pick a random eligible enemy within 5 meters, and run over to try to engage. Each soldier can engage up to three opponents at separate positions around them. Runners steer around soldiers in their way and nudge them sideways. A soldier in the middle of a swing or guard is harder to move. When a scan finds no available target, the soldier follows the nearest enemy and idles at the edge of the fight until a slot opens or the enemy moves. The health bars show current HP in green, missing HP on survivors in red, and HP lost to casualties in black.
 
-The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances 0.52 meters into an overhead cut and ends in guard. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
+The Human Infantry has a four-second **Idle**, a 1.2-second **Walk**, and a 0.8-second **Run**. Walk and Run loop in place and match forward travel at 1.02 m/s and 2.7 m/s, respectively. **Sword Slash** advances up to 0.52 meters into an overhead cut and ends in guard. It plays at 1.4× speed in AI Skirmish and Unit Test, taking about 1.05 seconds. Its preview marks the start and finish on a fixed floor. **Restart** returns the Infantry to the starting mark.
 
 The shield block starts with **Shield Raise**, stays up in the looping **Shield Guard**, and returns to the ready pose with **Shield Lower**. All three clips are available in **Unit Test**.
 
@@ -37,7 +37,7 @@ The shield block starts with **Shield Raise**, stays up in the looping **Shield 
 
 **Sword Recoil** is the attacker's reaction to a blocked overhead slash. The blade rebounds as the elbow folds and the torso carries forward over the planted lead boot. The trailing boot steps up as the soldier returns to the same ready pose and position as the end of Sword Slash.
 
-In Blender and Godot, **Shield Contact** marks `0.70 s` in **Sword Slash** and `0.0 s` in both **Sword Recoil** and **Blocked Hit Stagger**. Start both reactions on the contact frame to pair the attacker and defender.
+In the source clips, **Shield Contact** marks `0.70 s` in **Sword Slash** and `0.0 s` in both **Sword Recoil** and **Blocked Hit Stagger**. With 1.4× playback, the skirmish resolves the strike at `0.50 s` and starts both reactions there if it is blocked.
 
 **Hit Stagger** is the reaction to an unblocked frontal hit. The torso jerks back, the sword arm drops, and the rear boot catches the soldier's weight. He brings the other foot back and finishes in the ready pose 0.26 meters behind his starting position. **Unit Test** previews the 0.9-second clip from ready on a marked floor.
 

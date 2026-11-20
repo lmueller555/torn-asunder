@@ -365,15 +365,16 @@ func _show_unit_test() -> void:
 		var clip: StringName = animation_choice.get_item_metadata(index)
 		var definition := units[unit_choice.selected]
 		var previews: Dictionary = definition.get("animation_preview", {})
-		var framing: Dictionary = previews.get(clip, {})
+		var preview: Dictionary = previews.get(clip, {})
 		studio.set_preview_framing(
-			framing.get("headroom", 0.0),
-			framing.get("travel", 0.0),
-			framing.get("floor_scale", 1.0),
-			framing.get("start_offset", 0.0),
-			framing.get("side_offset", 0.0)
+			preview.get("headroom", 0.0),
+			preview.get("travel", 0.0),
+			preview.get("floor_scale", 1.0),
+			preview.get("start_offset", 0.0),
+			preview.get("side_offset", 0.0)
 		)
 		player.stop()
+		player.speed_scale = preview.get("speed", 1.0)
 		player.play(clip)
 		player.advance(0.0)
 		playback.text = "Pause"
