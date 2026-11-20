@@ -34,7 +34,7 @@ func mark_played(id: String) -> Error:
 
 
 func setting(key: String) -> bool:
-	return bool(_config.get_value(SETTINGS, key, false))
+	return bool(_config.get_value(SETTINGS, key, key == "fullscreen"))
 
 
 func set_setting(key: String, enabled: bool) -> Error:
