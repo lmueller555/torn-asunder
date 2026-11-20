@@ -23,6 +23,9 @@ const ENGAGEMENT_RANGE := 5.0
 const PURSUIT_RANGE := ENGAGEMENT_RANGE * 1.3
 const SCAN_MIN_INTERVAL := 0.35
 const SCAN_MAX_INTERVAL := 0.70
+const RETARGET_MAX_WAIT := 7.0
+const REINFORCE_RANGE := 45.72 # 50 yards
+const REINFORCE_CHOICES := 5
 const RUN_SPEED := 2.7
 const BODY_SPACING := 0.82
 const BODY_CORE := 0.60
@@ -81,6 +84,8 @@ class Soldier:
 	var slot_axis := Vector2.ZERO
 	var approach := -1
 	var pursuit := -1
+	var retarget_at := -1.0
+	var reinforce_ally := -1
 	var heavy := false
 	var cheer_in := 0.0
 	var victory_cheers := 0
@@ -109,6 +114,7 @@ var _first_amber_platoon: int
 var _body_cells: Dictionary[Vector2i, Array] = {}
 var _random := RandomNumberGenerator.new()
 var _cheer_random := RandomNumberGenerator.new()
+var _retarget_random := RandomNumberGenerator.new()
 var _attack: Dictionary
 var _battle_engaged := false
 var _clear_time := 0.0
@@ -117,8 +123,8 @@ var _celebrating := false
 
 func _init(seed_value: int = 8, setup: Setup = null) -> void:
 	_random.seed = seed_value
-	# Celebration timings are independent of target selection and combat rolls.
 	_cheer_random.seed = seed_value ^ 0x494E46
+	_retarget_random.seed = seed_value ^ 0x524554
 	var infantry: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
 	_attack = infantry.basic_attack
 	if setup == null:
@@ -200,11 +206,16 @@ func _assign_targets() -> void:
 		group.clear()
 	for index in range(soldiers.size()):
 		var soldier := soldiers[index]
-		if not soldier.unit.is_alive() or (soldier.target >= 0 and not soldiers[soldier.target].unit.is_alive()):
+		if not soldier.unit.is_alive():
 			soldier.target = -1
 			soldier.slot = -1
-		if soldier.target >= 0:
-			_link_engagement(index, soldier.target)
+			continue
+		if soldier.target < 0:
+			continue
+		if _lost_enemy(soldier, soldiers[soldier.target]):
+			_begin_retarget(soldier)
+			continue
+		_link_engagement(index, soldier.target)
 	# Set the first arrival's bearing as the reference. Keep it fixed while the fight turns.
 	for index in range(soldiers.size()):
 		var enemy := soldiers[index]
@@ -222,6 +233,18 @@ func _assign_targets() -> void:
 			continue
 		if not _is_mobile(soldier) and soldier.state != State.CHEER:
 			continue
+		if soldier.retarget_at >= 0.0:
+			if elapsed < soldier.retarget_at or not _is_mobile(soldier):
+				continue
+			soldier.retarget_at = -1.0
+			if _retarget_random.randf() < 0.5:
+				soldier.reinforce_ally = _choose_ally_to_reinforce(soldier)
+				if soldier.reinforce_ally < 0:
+					_begin_retarget(soldier)
+					continue
+		if soldier.reinforce_ally >= 0:
+			_update_reinforcement(soldier)
+			continue
 		if soldier.approach < 0 and soldier.scan_in <= 0.0:
 			_scan_for_enemy(index)
 		if soldier.state == State.CHEER:
@@ -230,17 +253,95 @@ func _assign_targets() -> void:
 		if soldier.approach < 0:
 			continue
 		var enemy := soldiers[soldier.approach]
-		var distance := soldier.position.distance_squared_to(enemy.position)
-		if not enemy.unit.is_alive() or distance > PURSUIT_RANGE * PURSUIT_RANGE:
-			soldier.approach = -1
-			soldier.scan_in = 0.0
-		elif distance <= ATTACK_RANGE * ATTACK_RANGE:
+		if _lost_enemy(soldier, enemy):
+			_begin_retarget(soldier)
+		elif soldier.position.distance_squared_to(enemy.position) <= ATTACK_RANGE * ATTACK_RANGE:
 			if _has_slot(index, soldier.approach):
-				soldier.slot = _choose_attack_slot(soldier, soldier.approach)
-				soldier.target = soldier.approach
-				_link_engagement(index, soldier.target)
+				_engage(soldier, soldier.approach)
 			soldier.approach = -1
 	_align_reciprocal_slots()
+
+
+func _lost_enemy(soldier: Soldier, enemy: Soldier) -> bool:
+	return not enemy.unit.is_alive() or soldier.position.distance_squared_to(enemy.position) > PURSUIT_RANGE * PURSUIT_RANGE
+
+
+func _begin_retarget(soldier: Soldier) -> void:
+	soldier.target = -1
+	soldier.slot = -1
+	soldier.approach = -1
+	soldier.pursuit = -1
+	soldier.reinforce_ally = -1
+	soldier.scan_in = 0.0
+	soldier.retarget_at = elapsed + _retarget_random.randf_range(0.0, RETARGET_MAX_WAIT)
+
+
+func _choose_ally_to_reinforce(soldier: Soldier) -> int:
+	var candidates: Array[int] = []
+	var most_attackers := 0
+	var first_amber := team_size(0)
+	var first_ally := 0 if soldier.team == 0 else first_amber
+	var end_ally := first_amber if soldier.team == 0 else soldiers.size()
+	for index in range(first_ally, end_ally):
+		var ally := soldiers[index]
+		if ally == soldier or not ally.unit.is_alive():
+			continue
+		if soldier.position.distance_squared_to(ally.position) > REINFORCE_RANGE * REINFORCE_RANGE:
+			continue
+		var attackers := _incoming_attackers(index).size()
+		if attackers == 0 or attackers < most_attackers:
+			continue
+		if attackers > most_attackers:
+			most_attackers = attackers
+			candidates.clear()
+		candidates.append(index)
+	if candidates.is_empty():
+		return -1
+	candidates.sort_custom(func(a: int, b: int) -> bool:
+		return soldier.position.distance_squared_to(soldiers[a].position) > soldier.position.distance_squared_to(soldiers[b].position)
+	)
+	return candidates[_retarget_random.randi_range(0, mini(candidates.size(), REINFORCE_CHOICES) - 1)]
+
+
+func _incoming_attackers(index: int) -> Array[int]:
+	var attackers: Array[int] = []
+	for rival: int in engagements[index]:
+		if soldiers[rival].target == index and soldiers[rival].unit.is_alive():
+			attackers.append(rival)
+	return attackers
+
+
+func _update_reinforcement(soldier: Soldier) -> void:
+	var ally := soldiers[soldier.reinforce_ally]
+	var attackers := _incoming_attackers(soldier.reinforce_ally)
+	if not ally.unit.is_alive() or attackers.is_empty():
+		_begin_retarget(soldier)
+		return
+	if soldier.position.distance_squared_to(ally.position) > ATTACK_RANGE * ATTACK_RANGE:
+		return
+	var nearest := INF
+	var selected := -1
+	for rival in attackers:
+		var enemy := soldiers[rival]
+		if _lost_enemy(soldier, enemy) or enemy.state in [State.KNOCKDOWN, State.DOWN, State.GET_UP]:
+			continue
+		if not _has_slot(soldier.battle_index, rival):
+			continue
+		var distance := soldier.position.distance_squared_to(enemy.position)
+		if distance < nearest:
+			nearest = distance
+			selected = rival
+	if selected < 0:
+		_begin_retarget(soldier)
+		return
+	soldier.reinforce_ally = -1
+	_engage(soldier, selected)
+
+
+func _engage(soldier: Soldier, rival: int) -> void:
+	soldier.slot = _choose_attack_slot(soldier, rival)
+	soldier.target = rival
+	_link_engagement(soldier.battle_index, rival)
 
 
 func _scan_for_enemy(index: int) -> void:
@@ -371,6 +472,13 @@ func _update_ai(delta: float) -> void:
 	for soldier in soldiers:
 		if not _is_mobile(soldier) or not soldier.unit.is_alive() or soldier.victory_cheers > 0:
 			continue
+		if soldier.retarget_at >= 0.0:
+			_wait_to_retarget(soldier, delta)
+			continue
+		if soldier.reinforce_ally >= 0:
+			var ally := soldiers[soldier.reinforce_ally]
+			_run_toward(soldier, ally.position - soldier.position, delta)
+			continue
 		var assigned := soldier.target >= 0
 		var pursuing_target := soldier.approach >= 0
 		var goal := soldier.target if assigned else (soldier.approach if pursuing_target else soldier.pursuit)
@@ -393,20 +501,43 @@ func _update_ai(delta: float) -> void:
 		if distance > 0.001:
 			soldier.facing = offset / distance
 		if _waiting_for_slot(soldier):
-			soldier.cheer_in -= delta
-			if soldier.cheer_in <= 0.0:
-				soldier.cheer_in = _cheer_random.randf_range(8.0, 16.0)
-				_set_state(soldier, State.CHEER)
+			_try_cheer(soldier, delta)
 			continue
 		if not assigned or soldier.ready_in > 0.0:
 			continue
-		if soldier.think_in <= 0.0 and _threatened(soldier):
-			soldier.think_in = _random.randf_range(0.30, 0.48)
-			if _random.randf() < 0.50:
-				_set_state(soldier, State.RAISE)
-				continue
+		if _incoming_slash(soldier, enemy) and _try_raise_shield(soldier):
+			continue
 		soldier.heavy = _random.randf() < 0.28
 		_set_state(soldier, State.ATTACK)
+
+
+func _wait_to_retarget(soldier: Soldier, delta: float) -> void:
+	_set_state(soldier, State.IDLE)
+	for rival in _incoming_attackers(soldier.battle_index):
+		var enemy := soldiers[rival]
+		var offset := enemy.position - soldier.position
+		if offset.length_squared() <= ATTACK_RANGE * ATTACK_RANGE and _incoming_slash(soldier, enemy):
+			if _try_raise_shield(soldier) and not offset.is_zero_approx():
+				soldier.facing = offset.normalized()
+			return
+	_try_cheer(soldier, delta)
+
+
+func _try_cheer(soldier: Soldier, delta: float) -> void:
+	soldier.cheer_in -= delta
+	if soldier.cheer_in <= 0.0:
+		soldier.cheer_in = _cheer_random.randf_range(8.0, 16.0)
+		_set_state(soldier, State.CHEER)
+
+
+func _try_raise_shield(soldier: Soldier) -> bool:
+	if soldier.think_in > 0.0:
+		return false
+	soldier.think_in = _random.randf_range(0.30, 0.48)
+	if _random.randf() >= 0.50:
+		return false
+	_set_state(soldier, State.RAISE)
+	return true
 
 
 func _update_celebration(delta: float) -> void:
@@ -507,9 +638,8 @@ func _run_toward(soldier: Soldier, offset: Vector2, delta: float) -> void:
 	soldier.facing = soldier.facing.slerp(direction, minf(12.0 * delta, 1.0)).normalized()
 
 
-func _threatened(soldier: Soldier) -> bool:
-	var enemy := soldiers[soldier.target]
-	return enemy.target >= 0 and soldiers[enemy.target] == soldier and enemy.state == State.ATTACK and enemy.time < CONTACT - DURATIONS[State.RAISE]
+func _incoming_slash(soldier: Soldier, enemy: Soldier) -> bool:
+	return enemy.target == soldier.battle_index and enemy.state == State.ATTACK and enemy.time < CONTACT - DURATIONS[State.RAISE]
 
 
 func _resolve_contacts(contacts: Array[int]) -> void:
@@ -651,6 +781,8 @@ func _check_winner() -> void:
 		soldier.slot = -1
 		soldier.approach = -1
 		soldier.pursuit = -1
+		soldier.retarget_at = -1.0
+		soldier.reinforce_ally = -1
 		if soldier.unit.is_alive() and _is_mobile(soldier):
 			_set_state(soldier, State.IDLE)
 

@@ -8,6 +8,10 @@ const FIRST_AMBER := Battle.PLATOON_SIZE
 func _initialize() -> void:
 	var passed := _check_waiting()
 	passed = _check_enemy_scan() and passed
+	passed = _check_retarget_delay() and passed
+	passed = _check_retarget_choice() and passed
+	passed = _check_reinforcement_priorities() and passed
+	passed = _check_reinforcement_arrival() and passed
 	passed = _check_slots() and passed
 	passed = _check_passing() and passed
 	passed = _check_slash_timing() and passed
@@ -88,6 +92,161 @@ func _check_enemy_scan() -> bool:
 	if selections.size() != 2:
 		return _fail("Repeated scans always chose the same enemy despite multiple eligible targets.")
 	print("Verified periodic scans, radius filtering, random target selection, and pursuit.")
+	return true
+
+
+func _check_retarget_delay() -> bool:
+	var battle := _fixture([0, FIRST_AMBER, FIRST_AMBER + 1])
+	var soldier := battle.soldiers[0]
+	var defeated := battle.soldiers[FIRST_AMBER]
+	var attacker := battle.soldiers[FIRST_AMBER + 1]
+	soldier.position = Vector2.ZERO
+	soldier.target = FIRST_AMBER
+	soldier.cheer_in = 0.0
+	attacker.position = Vector2(0, 1.25)
+	attacker.scan_in = 100.0
+	defeated.unit.receive_damage(defeated.unit.hp)
+	battle._assign_targets()
+	if soldier.target != -1 or soldier.retarget_at < battle.elapsed or soldier.retarget_at > battle.elapsed + 7.0:
+		return _fail("A casualty did not release its opponent and start a 0–7 second retarget delay.")
+	soldier.retarget_at = battle.elapsed + 5.0
+	var deadline := soldier.retarget_at
+	battle.step(TICK)
+	if soldier.state != Battle.State.CHEER or soldier.approach != -1 or soldier.reinforce_ally != -1:
+		return _fail("A waiting soldier could not cheer or looked for a new target too soon.")
+	attacker.target = 0
+	attacker.state = Battle.State.ATTACK
+	attacker.time = Battle.CONTACT - TICK * 0.5
+	battle.step(TICK)
+	if soldier.unit.hp >= soldier.unit.max_hp or soldier.retarget_at != deadline:
+		return _fail("An attack on a waiting soldier was ignored or restarted the delay.")
+	soldier.state = Battle.State.STAGGER
+	soldier.time = 0.0
+	soldier.retarget_at = battle.elapsed
+	battle.step(TICK)
+	if soldier.retarget_at < 0.0 or soldier.approach != -1 or soldier.reinforce_ally != -1:
+		return _fail("Retargeting ran during a stagger.")
+	soldier.state = Battle.State.IDLE
+	soldier.target = FIRST_AMBER + 1
+	soldier.retarget_at = -1.0
+	attacker.position = Vector2(0, Battle.PURSUIT_RANGE + 1.0)
+	battle.step(TICK)
+	if soldier.target != -1 or soldier.retarget_at < battle.elapsed:
+		return _fail("A focused enemy outside pursuit range did not trigger retargeting.")
+	print("Verified the delay on target loss, cheering, incoming hits and deferred retargeting during stagger.")
+	return true
+
+
+func _check_retarget_choice() -> bool:
+	var battle := _fixture([0, 1, FIRST_AMBER, FIRST_AMBER + 1])
+	var soldier := battle.soldiers[0]
+	var ally := battle.soldiers[1]
+	var nearby := battle.soldiers[FIRST_AMBER]
+	var attacker := battle.soldiers[FIRST_AMBER + 1]
+	soldier.position = Vector2.ZERO
+	ally.position = Vector2(6.0, 0)
+	nearby.position = Vector2(0, 2.5)
+	attacker.position = Vector2(7.0, 0)
+	attacker.target = 1
+	for other in [ally, nearby, attacker]:
+		other.scan_in = 100.0
+	var normal_choices := 0
+	for attempt in range(200):
+		battle._begin_retarget(soldier)
+		soldier.retarget_at = battle.elapsed
+		battle._assign_targets()
+		if soldier.approach == FIRST_AMBER and soldier.reinforce_ally == -1:
+			normal_choices += 1
+		elif soldier.reinforce_ally != 1 or soldier.approach != -1:
+			return _fail("A retarget roll ran both branches or selected the wrong goal.")
+		if soldier.retarget_at != -1.0:
+			return _fail("A successful retarget roll left the delay pending.")
+	if normal_choices < 80 or normal_choices > 120:
+		return _fail("The two targeting branches were not selected with roughly equal frequency.")
+	print("Verified both retarget branches in 200 rolls (%d normal, %d reinforce)." % [normal_choices, 200 - normal_choices])
+	return true
+
+
+func _check_reinforcement_priorities() -> bool:
+	var living: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+	for index in range(FIRST_AMBER, FIRST_AMBER + 16):
+		living.append(index)
+	var battle := _fixture(living)
+	var soldier := battle.soldiers[0]
+	soldier.position = Vector2.ZERO
+	var rival := FIRST_AMBER
+	for index in range(1, 9):
+		var ally := battle.soldiers[index]
+		ally.position = Vector2(4.0 * index, 0.0)
+		var attackers := 2
+		if index == 7:
+			ally.position.x = 40.0
+			attackers = 1
+		elif index == 8:
+			ally.position.x = 45.8
+			attackers = 3
+		for incoming in range(attackers):
+			battle.soldiers[rival].target = index
+			battle._link_engagement(rival, index)
+			rival += 1
+	# This ally's outgoing target does not count as a second attacker.
+	battle.soldiers[7].target = FIRST_AMBER
+	battle._link_engagement(7, FIRST_AMBER)
+	var choices := {}
+	for attempt in range(40):
+		var ally := battle._choose_ally_to_reinforce(soldier)
+		if ally not in [2, 3, 4, 5, 6]:
+			return _fail("Reinforcement ignored the 50-yard radius, incoming attack count, or farthest-five limit.")
+		choices[ally] = true
+	if choices.size() < 2:
+		return _fail("Reinforcement always selected the same equally threatened ally.")
+	print("Verified reinforcement range, incoming-only priority and random choice among the five farthest tied allies.")
+	return true
+
+
+func _check_reinforcement_arrival() -> bool:
+	var battle := _fixture([0, 1, 2, 3, FIRST_AMBER, FIRST_AMBER + 1, FIRST_AMBER + 2])
+	var runner := battle.soldiers[0]
+	var ally := battle.soldiers[1]
+	var near_enemy := battle.soldiers[FIRST_AMBER]
+	var far_enemy := battle.soldiers[FIRST_AMBER + 1]
+	runner.position = Vector2.ZERO
+	runner.reinforce_ally = 1
+	ally.position = Vector2(4.0, 0.0)
+	near_enemy.position = Vector2(3.0, -0.9)
+	far_enemy.position = Vector2(4.0, 1.2)
+	battle.soldiers[FIRST_AMBER + 2].position = Vector2(2.7, 2.5)
+	near_enemy.target = 1
+	far_enemy.target = 1
+	battle.soldiers[2].position = Vector2(4.4, -2.0)
+	battle.soldiers[3].position = Vector2(4.8, -1.4)
+	for index in [2, 3]:
+		battle.soldiers[index].target = FIRST_AMBER
+	for index in [1, 2, 3, FIRST_AMBER, FIRST_AMBER + 1, FIRST_AMBER + 2]:
+		var other := battle.soldiers[index]
+		other.state = Battle.State.LOWER
+		other.time = -10.0
+	battle.step(TICK)
+	if runner.state != Battle.State.RUN or runner.target != -1 or runner.position.x <= 0.0:
+		return _fail("The reinforcing soldier did not run toward the ally before selecting an enemy.")
+	for tick in range(120):
+		battle.step(TICK)
+		if runner.target >= 0:
+			break
+	if runner.target != FIRST_AMBER + 1 or runner.reinforce_ally != -1:
+		return _fail("The reinforcing soldier ignored eligibility or chose an enemy attacking somebody else.")
+	if runner.position.distance_to(ally.position) > Battle.ATTACK_RANGE + 0.1 or battle.engagements[FIRST_AMBER].size() != 3:
+		return _fail("Reinforcement assigned early or bypassed a full engagement.")
+
+	battle._begin_retarget(runner)
+	runner.retarget_at = -1.0
+	runner.reinforce_ally = 1
+	runner.position = Vector2(2.8, 0.0)
+	far_enemy.state = Battle.State.DOWN
+	battle.step(TICK)
+	if runner.target != -1 or runner.reinforce_ally != -1 or runner.retarget_at < battle.elapsed:
+		return _fail("Reinforcement with no eligible attacker did not start a fresh delay.")
+	print("Verified reinforcement movement, arrival, the engagement cap and failed-attempt retries.")
 	return true
 
 
