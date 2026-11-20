@@ -4,7 +4,7 @@
 
 The game mesh stands 1.815 m in the helmet and uses 24,352 triangles and one shared material. The editable Blender file retains the garment panels and shaping loops at the shoulders, elbows, knees and wrists for a future Heavy Infantry rig. The Godot export batches these pieces into a body, a round shield, and a full sword with grip pivots for the two items. The scabbard stays on the body. The model is ready for its own Heavy Infantry rig and is shown here in its standing, sheathed pose.
 
-## Visual review
+## Neutral mesh review
 
 ![Heavy Infantry at full height and the baked mail in Godot 4.7](review/game-mesh/in-engine.png)
 
@@ -20,13 +20,13 @@ The front silhouette overlaps the approved sculpt by 99.55% at 96 pixels tall. T
 
 ## Painting and baking
 
-The body and equipment use a single, unmirrored paint UV set. The facial surface, shield front, and central surcoat panel each have a continuous island. The central crest area has approximately 232 × 255 pixels at 2048 × 2048. The atlas has 879 islands with at least eight pixels between islands at that resolution. The UV overlap check found zero intersecting triangle interiors. The [runtime maps](../../models/heavy_infantry/) are also packed into the Blender game mesh.
+The body and equipment use a single, unmirrored paint UV set. The facial surface, shield front, and central surcoat panel each have a continuous island. The central crest area has approximately 232 × 255 pixels at 2048 × 2048. The atlas has 879 islands with at least eight pixels between islands at that resolution. The UV overlap check found zero intersecting triangle interiors. The [current painted maps](../../models/heavy_infantry/) are also packed into the Blender game mesh. The [painted material review](README.md#painted-heavy-infantry) shows the same model with its painted materials.
 
 | Texture | Use |
 | --- | --- |
-| `neutral_base_color.png` | 2048 × 2048, sRGB. Neutral material colors from the sculpt. The projected wire mask darkens the backing and recesses where the links meet. |
+| `painted_base_color.png` | 2048 × 2048, sRGB. Skin, dyed cloth, heraldry, painted and exposed steel, and leather. The projected wire mask separates links from the backing. |
 | `armor_normal.png` | 2048 × 2048, linear data. Tangent-space surface detail in OpenGL +Y convention. Import as normal data. |
-| `neutral_roughness_metallic.png` | 1024 × 1024, linear data. Green contains roughness and blue contains metallic. |
+| `painted_roughness_metallic.png` | 1024 × 1024, linear data. Green contains roughness and blue contains metallic. |
 
 The normal bake projects each mail receiver against its corresponding sculpted shell and wire courses. The six regions cover the coif, both upper sleeves, both forearms and the skirt. Baking them separately keeps the nearby shield, cloth and other sleeves out of the projection. The high-detail sculpt contains the editable wire instances for rebaking. At battle distance the baked mail reads slightly finer and more evenly than the individual rings on the sculpt. The helmet, shield boss, nasal guard and rim keep their geometry as the camera turns.
 

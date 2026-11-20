@@ -2,6 +2,16 @@
 
 Open [human_heavy_infantry.blend](../human_heavy_infantry.blend) in Blender 4.3 or later. The soldier stands 1.815 m tall in his helmet and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
 
+## Painted Heavy Infantry
+
+![Painted Heavy Infantry beside the neutral model in Godot](review/materials/comparison.png)
+
+The faded blue surcoat carries the approved concept’s pale gold rampant lion. Chipped blue paint exposes the steel shield face, and the mail backing stays dark between links.
+
+[Approved concept](reference/approved-concept.png) · [Face and equipment details](review/materials/details.png) · [96-pixel figures and 64-soldier formation](review/materials/formation.png)
+
+Open [heavy_infantry_formation.tscn](../../../tests/heavy_infantry_formation.tscn) in Godot 4.7 and press **F6** to see two platoons of the painted Heavy Infantry. The 64-soldier formation used 386 draw calls in Godot 4.7 Compatibility, with 24,352 triangles and one shared material per soldier. For texture painting in Blender, open the [editable game mesh](../human_heavy_infantry_game.blend).
+
 ## Game mesh
 
 Open the [game mesh and Godot comparison](game-mesh.md) for the paintable Blender model, runtime GLB, baked mail, and 64-unit review. The [approved high-resolution sculpt](../human_heavy_infantry.blend) remains the source for the bake.
