@@ -2,6 +2,14 @@
 
 Open [human_heavy_infantry.blend](../human_heavy_infantry.blend) in Blender 4.3 or later. The soldier stands 1.815 m tall in his helmet and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
 
+## Standing posture
+
+![Before and after in profile, with aligned outlines of the head and shoulders](review/posture/profile.png)
+
+In the revised pose the neck leans 7° forward from vertical, measured between cross-section centers 98 mm apart in the underlying anatomy. The head sits 17 mm farther forward with the same eye line. The mail fits closer under the jaw and opens out over the upper back. The inner shoulder rises into the neck and tapers toward the shoulder cap. The helmet brow and nasal guard project forward of the face.
+
+[Front, rear three-quarter and native 96-pixel comparisons](review/posture/fit.png)
+
 ## Painted Heavy Infantry
 
 ![Painted Heavy Infantry beside the neutral model in Godot](review/materials/comparison.png)
