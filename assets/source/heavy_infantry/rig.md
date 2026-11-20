@@ -60,7 +60,7 @@ The gait is retargeted from a recorded straight jog, subject 35, trial 18. The d
 
 ![The advancing cut from the shield side and the sword side in Godot](review/cut/contact.png)
 
-Select **Advancing Diagonal Cut** under **Unit Test → Humans · Heavy Infantry**. The soldier loads his left leg, raises the sword beside his helmet, then plants his right boot before his hips and chest turn through the diagonal. The shield yields at his left side, and the rear foot steps up as he returns to the opening Shield-Ready Idle pose. [Normal and quarter-speed playback in Godot](review/cut/advancing-diagonal-cut.mp4)
+Select **Advancing Diagonal Cut** under **Unit Test → Humans · Heavy Infantry**. The soldier loads his left leg and raises the sword beside his helmet. As the right boot plants, the shoulder brings the arm forward and the elbow opens on one hinge. The forearm turns through the cut. The rear foot steps up as he returns to the opening Shield-Ready Idle pose. [Normal and quarter-speed playback in Godot](review/cut/advancing-diagonal-cut.mp4)
 
 | Time | Pose |
 | --- | --- |
@@ -70,7 +70,7 @@ Select **Advancing Diagonal Cut** under **Unit Test → Humans · Heavy Infantry
 | 0.45–0.60 s | Finish the diagonal below and in front of the shield. |
 | 0.60–0.90 s | Bring the rear boot forward and settle back into the ready stance. |
 
-The one-shot clip advances the root **0.36 m**. The contact pose is at **0.45 s**. The Blender action spans frames 1–28 at 30 fps. Godot imports the model at 120 fps to preserve the sword grip through the fastest part of the cut.
+The one-shot clip advances the root **0.36 m**. The contact pose is at **0.45 s**. The Blender action spans frames 1–28 at 30 fps. Godot imports the model at 120 fps. Run `godot --headless --script tests/heavy_infantry_cut.gd` to check the elbow hinge, drawn grip, and sheathed clips at and between imported keys.
 
 ## Equipment fit tests
 
@@ -84,7 +84,7 @@ Open **Unit Test**, select **Humans · Heavy Infantry**, and choose **Shield Fit
 
 Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. The shield-ready idle spans frames 1–136 at 30 fps. The shield raise, guard, and lower end on frames 14, 73, and 19. The shield walk start, loop, and stop end on frames 18, 34, and 20. The run start, loop, and stop end on frames 14.5, 20.5, and 20.5. The GLB uses Godot’s `-loop` suffix for the idle, guard, walk, and run.
 
-The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. The rig's **Sword in hand** property seats the sword in the scabbard at 0 and in the right-hand socket at 1. **Drawn Sword Fit** also keys the right-hand finger curl.
+The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. In Blender, **Sword in hand** seats the sword in the scabbard at 0 and in the right-hand socket at 1. The advancing cut keys the right upper arm and forearm directly. In Godot, drawn clips use a fixed sword transform under the right hand and share one closed grip. **Shield Fit Test** and **Travel Run** place the sword in the scabbard.
 
 The coif blends from the head and neck into the chest and clavicles. The two visible mail sleeve pieces use the same bend weights at their overlap. Front and rear skirt bones on each side follow the thighs and move the surcoat, mail and lining together. The boot soles follow the feet, with ankle weights blended into the leather uppers.
 
