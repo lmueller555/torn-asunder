@@ -46,12 +46,12 @@ A flaming arrow with 60 base Ranged damage at 75 versus 25 deals 100 HP of Range
 
 ### Health and unit progression
 
-A standard unit starts with 1,200 HP. Levels gained determine the automatic HP curve and the level factor for damage. Skill point purchases affect only the selected combat rating.
+A standard unit starts with 1,200 HP and gains three times as much HP per level as it did on the previous curve. The level factor scales same-level damage in proportion to that increase. Skill point purchases affect only the selected combat rating.
 
 ```text
 Levels gained R       = L − 1
 Reference HP factor B = (100 + R) / (100 + 0.2 × R)
-HP factor H           = 1 + 2 × (B − 1)
+HP factor H           = 1 + 6 × (B − 1)
 Maximum HP at level L = starting HP × H
 Level factor          = H / B
 XP to advance from L  = 100 + 25 × (L − 1)
@@ -61,16 +61,16 @@ At equal levels, the multiplier on damage reduces to a single level factor. The 
 
 XP carries across level thresholds. The first level-up costs 100 XP, level 98 to 99 costs 2,525 XP, and a unit reaches the cap at 128,625 total XP. Each new level automatically increases maximum HP and awards one banked stat point. Living units gain the same amount of current HP and keep their existing wounds. Spending one point raises the chosen combat rating by 1. From a starting rating of 1, a level-99 unit can reach 99 by spending all 98 earned points on a single rating.
 
-These examples use a 40-base hit between equal-level units who both spend every point on the relevant rating.
+These examples use regular Human Infantry's 37-base sword hit. Both soldiers are the same level and spend every earned point on Melee Power.
 
 | Unit level | Standard maximum HP | Damage per hit | Hits to defeat |
 |---:|---:|---:|---:|
-| 1 | 1,200 | 40.32 | 30 |
-| 20 | 1,551.45 | 52.05 | 30 |
-| 50 | 2,056.83 | 68.90 | 30 |
-| 99 | 2,773.24 | 92.75 | 30 |
+| 1 | 1,200.00 | 37.30 | 33 |
+| 20 | 2,254.34 | 69.96 | 33 |
+| 50 | 3,770.49 | 116.82 | 33 |
+| 99 | 5,919.73 | 183.14 | 33 |
 
-At level 99, splitting points across five ratings gives each of the three most-trained ratings a value of 21 and each of the other two a value of 20. When both units have a rating of 20, the fight takes 44 hits. When both use an untrained rating of 1, it takes 50 hits.
+At level 99, splitting points across five ratings gives each of the three most-trained ratings a value of 21 and each of the other two a value of 20. When both soldiers have Melee Power 20, it takes 47 sword hits to defeat one soldier. When both have Melee Power 1, it takes 54.
 
 Open **Unit Progression** from a campaign briefing to award XP and allocate points on a practice unit. The practice unit is temporary. Campaign XP rewards will be connected when playable missions are added.
 
