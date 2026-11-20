@@ -18,6 +18,20 @@ Choose **Shield Raise**, **Shield Guard**, or **Shield Lower** under **Unit Test
 | **Shield Guard** | 2.40 s per loop | Holds full guard with a small breath and shield adjustment. |
 | **Shield Lower** | 0.60 s | Returns from full guard to the opening idle pose. |
 
+## Shield Walk
+
+![Heavy Infantry mid-stride from the front three-quarter and sword-side views](review/walk/stride.png)
+
+Open **Unit Test → Humans · Heavy Infantry** and select **Shield Walk** for the looping gait. The soldier takes two short steps per cycle, keeps the shield in front of his chest, and carries the sword low. [Guard entry, two strides, return to guard, and a 64-soldier formation in Godot](review/walk/shield-walk.mp4)
+
+| Clip | Duration | Motion |
+| --- | ---: | --- |
+| **Shield Walk Start** | 0.57 s | Loads the left boot, takes the first step with the right, and comes up to walking speed. The root advances 0.176 m. |
+| **Shield Walk** | 1.10 s per loop | Walks in place. Match the loop to 0.8 m/s of forward travel for two 0.44 m steps. |
+| **Shield Walk Stop** | 0.63 s | Slows over the right boot, brings the trailing foot forward, and returns to standing guard. The root advances 0.264 m. |
+
+The start and stop match the opening pose of **Shield Guard** and the right-boot contact pose in **Shield Walk**. The runway in the video uses 0.44 m marks to show where each step lands.
+
 ## Equipment fit tests
 
 ![Standing pose, raised shield and drawn sword in Godot](review/rig/preview.png)
@@ -28,7 +42,7 @@ Open **Unit Test**, select **Humans · Heavy Infantry**, and choose **Shield Fit
 
 ## Blender controls
 
-Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. At 30 fps, **Shield-Ready Idle** spans frames 1–136, **Shield Raise** 1–14, **Shield Guard** 1–73, and **Shield Lower** 1–19. The GLB uses Godot’s `-loop` suffix for the idle and guard.
+Select **Heavy Infantry Rig** and enter Pose Mode. The **Hands, feet and joint targets** bone collection contains the hand and foot targets plus elbow and knee poles. The **Body controls** collection exposes the pelvis, spine, chest, clavicles, neck and head. The **Deform bones** collection exposes the weighted skeleton, including skirt panels and right-hand finger joints. Select a clip by name in the Action Editor. The shield-ready idle spans frames 1–136 at 30 fps. The shield raise, guard, and lower end on frames 14, 73, and 19. The shield walk start, loop, and stop end on frames 18, 34, and 20. The GLB uses Godot’s `-loop` suffix for the idle, guard, and walk.
 
 The left-hand grip carries the shield as a rigid piece. The scabbard follows the pelvis, with its hangers weighted across the belt and scabbard. The rig's **Sword in hand** property seats the sword in the scabbard at 0 and in the right-hand socket at 1. **Drawn Sword Fit** also keys the right-hand finger curl.
 
