@@ -398,10 +398,11 @@ func _show_unit_test() -> void:
 		animation_choice.clear()
 		var player := studio.animation_player
 		var initial_clip := 0
+		var preferred_clip: StringName = definition.get("preview_clip", &"Idle")
 		if player:
 			for clip in player.get_animation_list():
 				if clip != "RESET":
-					if clip == "Idle":
+					if clip == preferred_clip:
 						initial_clip = animation_choice.item_count
 					animation_choice.add_item(clip)
 					animation_choice.set_item_metadata(animation_choice.item_count - 1, StringName(clip))

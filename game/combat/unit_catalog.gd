@@ -4,6 +4,7 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 
 const HUMAN_INFANTRY := &"human_infantry"
+const HUMAN_HEAVY_INFANTRY := &"human_heavy_infantry"
 
 const TYPES: Dictionary[StringName, Dictionary] = {
 	HUMAN_INFANTRY: {
@@ -46,5 +47,12 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 			Platoon.Skill.SIEGECRAFT: 0,
 			Platoon.Skill.BEAST_HANDLING: 0,
 		},
+	},
+	HUMAN_HEAVY_INFANTRY: {
+		"name": "Heavy Infantry",
+		"faction": "Humans",
+		"role": "Heavy mail infantry · Rig preview",
+		"model": preload("res://assets/models/human_heavy_infantry.glb"),
+		"preview_clip": &"Shield Fit Test",
 	},
 }

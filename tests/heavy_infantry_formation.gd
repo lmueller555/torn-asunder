@@ -2,6 +2,7 @@ extends Node3D
 
 const REGULAR := "res://assets/models/human_infantry.glb"
 const HEAVY := "res://assets/models/human_heavy_infantry.glb"
+const FIT_CLIP := &"Shield Fit Test"
 
 const WARMUP_FRAMES := 20
 const SAMPLE_FRAMES := 60
@@ -16,15 +17,15 @@ func _run() -> void:
 	var window := tree.root
 	var args := OS.get_cmdline_user_args()
 	var unit := "heavy" if args.is_empty() else args[0]
-	if unit not in ["heavy", "regular"] or args.size() > 2:
-		push_error("Expected heavy or regular, followed by an optional PNG output path.")
+	if unit not in ["heavy", "heavy-animated", "regular"] or args.size() > 2:
+		push_error("Expected heavy, heavy-animated, or regular, followed by an optional PNG output path.")
 		tree.quit(1)
 		return
 	if DisplayServer.get_name() == "headless":
 		push_error("Run the render comparison with a display and a 3D renderer.")
 		tree.quit(1)
 		return
-	var model := load(HEAVY if unit == "heavy" else REGULAR) as PackedScene
+	var model := load(REGULAR if unit == "regular" else HEAVY) as PackedScene
 	if model == null:
 		tree.quit(1)
 		return
@@ -36,6 +37,7 @@ func _run() -> void:
 	window.mesh_lod_threshold = 0.0
 	_set_studio()
 	var geometry: Dictionary
+	var soldier_count := 0
 	for side in [-1, 1]:
 		for rank in range(4):
 			for file in range(8):
@@ -46,6 +48,18 @@ func _run() -> void:
 					float(side) * (1.8 + 1.38 * rank), 0.0, (file - 3.5) * 1.12
 				)
 				add_child(soldier)
+				if unit == "heavy-animated":
+					var players := soldier.find_children("*", "AnimationPlayer", true, false)
+					if players.is_empty() or not (players[0] as AnimationPlayer).has_animation(FIT_CLIP):
+						push_error("The Heavy Infantry model is missing the shield fit clip.")
+						tree.quit(1)
+						return
+					var player := players[0] as AnimationPlayer
+					var clip := player.get_animation(FIT_CLIP)
+					clip.loop_mode = Animation.LOOP_LINEAR
+					player.play(FIT_CLIP)
+					player.seek(clip.length * soldier_count / 64.0, true)
+				soldier_count += 1
 				if geometry.is_empty():
 					geometry = _model_geometry(soldier)
 
@@ -64,7 +78,7 @@ func _run() -> void:
 	samples.sort()
 	draws.sort()
 	var result := {
-		"unit": unit, "instances": 64, "per_model": geometry,
+		"unit": unit, "instances": soldier_count, "per_model": geometry,
 		"viewport": str(window.get_visible_rect().size), "warmup": WARMUP_FRAMES,
 		"samples": SAMPLE_FRAMES, "frame_ms_median": (samples[(SAMPLE_FRAMES - 1) / 2] + samples[SAMPLE_FRAMES / 2]) / 2.0,
 		"frame_ms_p95": samples[ceili(0.95 * SAMPLE_FRAMES) - 1],
