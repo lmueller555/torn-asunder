@@ -59,8 +59,8 @@ const DURATIONS := {
 }
 const DISPLACEMENTS := {
 	State.RECOIL: Vector2(0, 0.155),
-	State.STAGGER: Vector2(0, -0.26),
-	State.KNOCKDOWN: Vector2(0, -0.625),
+	State.STAGGER: Vector2(0, 0.78),
+	State.KNOCKDOWN: Vector2(0, 1.875),
 	State.GET_UP: Vector2(0, 0.345),
 	State.DEAD: Vector2(-0.52, 0.121),
 }
@@ -74,6 +74,7 @@ class Soldier:
 	var battle_index: int
 	var position: Vector2
 	var facing: Vector2
+	var knockback_direction := Vector2.ZERO
 	var state := State.IDLE
 	var time := 0.0
 	var ready_in := 0.0
@@ -464,8 +465,11 @@ func _move_action(soldier: Soldier, before: float) -> void:
 		var fraction := smoothstep(0.0, 0.85, soldier.time / duration)
 		var previous := smoothstep(0.0, 0.85, before / duration)
 		var travel: Vector2 = DISPLACEMENTS[soldier.state]
-		var right := Vector2(soldier.facing.y, -soldier.facing.x)
-		soldier.position += (right * travel.x + soldier.facing * travel.y) * (fraction - previous)
+		var travel_axis := soldier.facing
+		if soldier.state == State.STAGGER or soldier.state == State.KNOCKDOWN:
+			travel_axis = soldier.knockback_direction
+		var right := Vector2(travel_axis.y, -travel_axis.x)
+		soldier.position += (right * travel.x + travel_axis * travel.y) * (fraction - previous)
 
 
 func _update_ai(delta: float) -> void:
@@ -646,13 +650,15 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 	# Evaluate every strike against the same pre-impact state so lethal hits can trade.
 	var damage := PackedFloat64Array()
 	var reactions := PackedInt32Array()
+	var knockback_directions: Dictionary[int, Vector2] = {}
 	damage.resize(soldiers.size())
 	reactions.resize(soldiers.size())
 	for index in contacts:
 		var attacker := soldiers[index]
 		if attacker.target < 0 or not attacker.unit.is_alive():
 			continue
-		var defender := soldiers[attacker.target]
+		var defender_index := attacker.target
+		var defender := soldiers[defender_index]
 		var offset := defender.position - attacker.position
 		if not defender.unit.is_alive() or offset.length_squared() > ATTACK_RANGE * ATTACK_RANGE:
 			continue
@@ -663,13 +669,16 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 		if guarding and defender.facing.dot(-direction) >= 0.56:
 			blocks += 1
 			reactions[index] = maxi(reactions[index], State.RECOIL)
-			reactions[attacker.target] = maxi(reactions[attacker.target], State.BLOCKED)
+			reactions[defender_index] = maxi(reactions[defender_index], State.BLOCKED)
 			continue
 		hits += 1
-		damage[attacker.target] += defender.unit.damage_from(attacker.unit, _attack)
+		damage[defender_index] += defender.unit.damage_from(attacker.unit, _attack)
 		if attacker.heavy:
 			var reaction := State.KNOCKDOWN if _random.randf() < 0.22 else State.STAGGER
-			reactions[attacker.target] = maxi(reactions[attacker.target], reaction)
+			# Push away from the strike that wins reaction priority. Keep the first strike on ties.
+			if reaction > reactions[defender_index]:
+				reactions[defender_index] = reaction
+				knockback_directions[defender_index] = direction
 
 	for index in range(soldiers.size()):
 		var soldier := soldiers[index]
@@ -679,9 +688,11 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			platoons[soldier.platoon_index].apply_damage(soldier.roster_index, damage[index])
 		if not soldier.unit.is_alive():
 			_set_state(soldier, State.DEAD)
-		elif reactions[index] >= State.RECOIL:
-			if soldier.state not in [State.KNOCKDOWN, State.DOWN, State.GET_UP]:
-				_set_state(soldier, reactions[index] as State)
+		elif reactions[index] >= State.RECOIL and soldier.state not in [State.KNOCKDOWN, State.DOWN, State.GET_UP]:
+			var reaction := reactions[index] as State
+			if reaction != soldier.state and knockback_directions.has(index):
+				soldier.knockback_direction = knockback_directions[index]
+			_set_state(soldier, reaction)
 
 
 func _yield_weight(soldier: Soldier) -> float:

@@ -41,9 +41,9 @@ The shield block starts with **Shield Raise**, stays up in the looping **Shield 
 
 In the source clips, **Shield Contact** marks `0.70 s` in **Sword Slash** and `0.0 s` in both **Sword Recoil** and **Blocked Hit Stagger**. With 1.4× playback, the skirmish resolves the strike at `0.50 s` and starts both reactions there if it is blocked.
 
-**Hit Stagger** is the reaction to an unblocked frontal hit. The torso jerks back, the sword arm drops, and the rear boot catches the soldier's weight. He brings the other foot back and finishes in the ready pose 0.26 meters behind his starting position. **Unit Test** previews the 0.9-second clip from ready on a marked floor.
+**Hit Stagger** is a reaction to an unblocked hit. The torso jerks back, the sword arm drops, and the rear boot catches the soldier's weight. In AI Skirmish, the soldier moves **0.78 meters directly away from the attacker** during the reaction. **Unit Test** previews the 0.9-second clip from ready on a marked floor.
 
-**Backward Knockdown** starts from ready. The rear boot tries to catch the soldier, his knee folds, and his hips land before his upper back. He keeps his sword and shield in hand. The 1.15-second clip holds a face-up pose at the end. In **Unit Test**, select **Restart** to return to the standing pose.
+**Backward Knockdown** starts from ready. The rear boot tries to catch the soldier, his knee folds, and his hips land before his upper back. He keeps his sword and shield in hand. In AI Skirmish, the fall moves the soldier **1.875 meters directly away from the attacker**. The 1.15-second clip holds a face-up pose at the end. In **Unit Test**, select **Restart** to return to the standing pose.
 
 **Get Up** starts from the exact final pose and position of **Backward Knockdown**. The soldier rolls onto his shield side, braces on his forearm, and plants a boot to push up from a kneel. He keeps both weapons in hand and finishes in the ready stance. Select **Get Up** in **Unit Test** to preview the recovery from the floor.
 

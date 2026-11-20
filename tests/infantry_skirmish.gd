@@ -17,6 +17,7 @@ func _initialize() -> void:
 	passed = _check_slash_timing() and passed
 	passed = _check_trade() and passed
 	passed = _check_reactions() and passed
+	passed = _check_knockback() and passed
 	passed = _check_waiting_cheer() and passed
 	passed = _check_victory_cheers() and passed
 	passed = _check_full_matches() and passed
@@ -401,6 +402,54 @@ func _check_reactions() -> bool:
 	if attacker.unit.hp != attacker.unit.max_hp:
 		return _fail("An interrupted swing still dealt damage.")
 	print("Verified block reactions and heavy-hit interruption before contact.")
+	return true
+
+
+func _check_knockback() -> bool:
+	# The first heavy-hit roll is a stagger for seed 1 and a knockdown for seed 0.
+	var cases := {Battle.State.STAGGER: [1, 0.78], Battle.State.KNOCKDOWN: [0, 1.875]}
+	for reaction: int in cases:
+		for away: Vector2 in [Vector2.DOWN, Vector2.RIGHT, Vector2.UP]:
+			var battle := _fixture([0, FIRST_AMBER])
+			var attacker := battle.soldiers[0]
+			var defender := battle.soldiers[FIRST_AMBER]
+			battle._random.seed = cases[reaction][0]
+			attacker.position = -away * 1.25
+			attacker.facing = away
+			attacker.target = FIRST_AMBER
+			attacker.heavy = true
+			attacker.state = Battle.State.ATTACK
+			attacker.time = Battle.CONTACT - TICK * 0.5
+			defender.position = Vector2.ZERO
+			defender.facing = Vector2.UP
+			defender.scan_in = 100.0
+			battle.step(TICK)
+			if defender.state != reaction:
+				return _fail("The directional knockback fixture did not trigger its expected reaction.")
+			# Move the attacker after contact to verify the push uses the original hit direction.
+			attacker.position = Vector2(6, 6)
+			attacker.scan_in = 100.0
+			var duration: float = Battle.DURATIONS[reaction]
+			for tick in range(ceili(duration * 0.90 / TICK)):
+				battle.step(TICK)
+			var distance: float = cases[reaction][1]
+			if not defender.position.is_equal_approx(away * distance):
+				return _fail("The defender did not move %s meters away from the original hit %s." % [distance, away])
+
+	var simultaneous := _fixture([0, 1, FIRST_AMBER])
+	var target := simultaneous.soldiers[FIRST_AMBER]
+	target.position = Vector2.ZERO
+	for index in range(2):
+		var attacker := simultaneous.soldiers[index]
+		attacker.facing = Vector2.DOWN if index == 0 else Vector2.RIGHT
+		attacker.position = -attacker.facing * 1.25
+		attacker.target = FIRST_AMBER
+		attacker.heavy = true
+	simultaneous._random.seed = 9 # Stagger from the first strike, knockdown from the second.
+	simultaneous._resolve_contacts([0, 1])
+	if target.state != Battle.State.KNOCKDOWN or target.knockback_direction != Vector2.RIGHT:
+		return _fail("The knockback direction did not follow the highest-priority hit.")
+	print("Verified tripled stagger and knockdown movement on front, side and rear hits, including simultaneous strikes.")
 	return true
 
 
