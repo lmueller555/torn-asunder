@@ -2,6 +2,10 @@
 
 Open [human_heavy_infantry.blend](../human_heavy_infantry.blend) in Blender 4.3 or later. The soldier stands 1.815 m tall in his helmet and faces −Y. His planted boots span 0.574 m at their widest point, about 32% of his height. His left hand carries the round shield. The sword hangs sheathed at his left hip.
 
+## Game mesh
+
+Open the [game mesh and Godot comparison](game-mesh.md) for the paintable Blender model, runtime GLB, baked mail, and 64-unit review. The [approved high-resolution sculpt](../human_heavy_infantry.blend) remains the source for the bake.
+
 ## Armor and clothing sculpt
 
 ![Shoulder of the Heavy Infantry before and after the sculpt pass](review/sculpt/preview.png)
