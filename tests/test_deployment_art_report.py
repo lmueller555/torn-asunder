@@ -1,15 +1,18 @@
 """The export is read-only and never promotes a kit receipt to map approval."""
 
 from contextlib import redirect_stderr, redirect_stdout
+import hashlib
 from io import StringIO
 import json
 from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from tools.report_deployment_art import (
-    CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, DEVELOPMENT, KITS,
+    CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
+    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS,
     _battlefield, _deployments, _verify_custody_case, _verify_kit, build_report, main,
 )
 
@@ -49,8 +52,17 @@ class DeploymentArtReportTest(unittest.TestCase):
                          "shared_battlefield")
         cut = rows["sereth_voices_at_the_cut"]
         self.assertEqual(cut["battlefield_scene"], KITS[1].battlefield)
-        self.assertEqual(cut["verified_kit_receipts"][0]["receipt"], KITS[1].receipt)
-        self.assertEqual(cut["verified_kit_receipts"][0]["verified_files"], 6)
+        stair = cut["verified_kit_receipts"][0]
+        previous = json.loads((ROOT / CUT_KIT.receipt).read_text())["files"][CUT_KIT.battlefield]
+        current = hashlib.sha256((ROOT / CUT_KIT.battlefield).read_bytes()).hexdigest()
+        self.assertEqual(stair["receipt"], CUT_KIT.receipt if current == previous else CUT_CONTINUITY_RECEIPT)
+        if current != previous:
+            self.assertEqual(stair["previous_receipt"], CUT_KIT.receipt)
+        self.assertEqual(stair["verified_files"], 6)
+        self.assertEqual([item["receipt"] for item in cut["verified_kit_receipts"][1:]],
+                         ["docs/audits/cut-record-room-v31.json"])
+        self.assertEqual(cut["verified_kit_receipts"][1]["verified_files"], 6)
+        self.assertEqual(cut["verified_kit_receipts"][1]["placement_scope"], "shared_battlefield")
         self.assertEqual(rows["sereth_pass_writ"]["verified_kit_receipts"], [])
 
     def test_release_check_rejects_every_development_deployment_even_with_a_passed_kit(self):
@@ -96,7 +108,9 @@ class DeploymentArtReportTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             original = json.loads((ROOT / kit.receipt).read_text())
-            for path in [kit.receipt, *original["files"]]:
+            stair = next(row for row in build_report(ROOT)["deployments"]
+                         if row["mission_id"] == "sereth_voices_at_the_cut")["verified_kit_receipts"][0]
+            for path in {kit.receipt, stair["receipt"], *original["files"]}:
                 (root / path).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(ROOT / path, root / path)
             # A legitimate receipt stops certifying the export after one byte changes.
@@ -105,10 +119,10 @@ class DeploymentArtReportTest(unittest.TestCase):
                 asset.write(b"\x00")
             with self.assertRaisesRegex(ValueError, "SHA-256 differs"):
                 _verify_kit(root, kit)
-            # The expected reviewed set cannot silently lose a supporting file.
+            # The historical approval cannot silently lose a supporting file.
             original["files"].pop(next(path for path in original["files"] if path.endswith(".uid")))
             (root / kit.receipt).write_text(json.dumps(original))
-            with self.assertRaisesRegex(ValueError, "expected all 6 reviewed files"):
+            with self.assertRaisesRegex(ValueError, "receipt bytes do not match the pinned review"):
                 _verify_kit(root, kit)
             # A map dependency needs an actual instance, not just an ext_resource.
             scene = root / kit.battlefield
@@ -140,3 +154,83 @@ class DeploymentArtReportTest(unittest.TestCase):
                 _verify_custody_case(root, deployments)
             with self.assertRaisesRegex(ValueError, "reviewed deployment scene is not registered"):
                 _verify_custody_case(root, {CASE_MISSION: CASE_BASE})
+
+    @staticmethod
+    def _cut_fixture(root: Path) -> dict:
+        # No PASS fixture: the only approval copied is the real historical receipt.
+        for relative in (CUT_KIT.receipt, CUT_KIT.battlefield):
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, target)
+        host = root / CUT_KIT.battlefield
+        host.write_bytes(host.read_bytes() + b"\n; test-only unapproved host change\n")
+        files = json.loads((root / CUT_KIT.receipt).read_text())["files"]
+        return {
+            "result": "REWORK",
+            "continuity": {
+                "previous_receipt": CUT_KIT.receipt,
+                "previous_receipt_sha256": CUT_ORIGINAL_RECEIPT_SHA256,
+                "battlefield": CUT_KIT.battlefield,
+                "previous_battlefield_sha256": files[CUT_KIT.battlefield],
+            },
+            "evidence": {"continuity": "Test-only description; not a review or an approval."},
+            "files": files | {CUT_KIT.battlefield: hashlib.sha256(host.read_bytes()).hexdigest()},
+        }
+
+    @staticmethod
+    def _write_cut_candidate(root: Path, document: dict) -> str:
+        payload = json.dumps(document).encode()
+        (root / CUT_CONTINUITY_RECEIPT).write_bytes(payload)
+        return hashlib.sha256(payload).hexdigest()
+
+    def test_changed_cut_host_requires_review_pin_and_immutable_original(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            document = self._cut_fixture(root)
+            pin = self._write_cut_candidate(root, document)
+            with patch("tools.report_deployment_art.CUT_CONTINUITY_RECEIPT_SHA256", None):
+                with self.assertRaisesRegex(ValueError, "no pinned continuity review"):
+                    _verify_kit(root, CUT_KIT)
+            (root / CUT_KIT.receipt).write_bytes((root / CUT_KIT.receipt).read_bytes() + b"\n")
+            with patch("tools.report_deployment_art.CUT_CONTINUITY_RECEIPT_SHA256", pin):
+                with self.assertRaisesRegex(ValueError, "receipt bytes do not match the pinned review"):
+                    _verify_kit(root, CUT_KIT)
+
+    def test_cut_continuation_rejects_wrong_scope_or_payload(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for case, reason in [
+                ("wrong context", "does not anchor the original Cut placement"),
+                ("missing scope evidence", "evidence.continuity must be recorded"),
+                ("reapproved durable", "may replace only the reviewed host digest"),
+                ("stale host", "differs from the exact continuity review host"),
+                ("unrelated payload", "may replace only the reviewed host digest"),
+            ]:
+                document = self._cut_fixture(root)
+                if case == "wrong context":
+                    document["continuity"]["battlefield"] = KITS[0].battlefield
+                elif case == "missing scope evidence":
+                    document["evidence"].clear()
+                elif case == "reapproved durable":
+                    document["files"][CUT_KIT.asset] = "a" * 64
+                elif case == "stale host":
+                    document["files"][CUT_KIT.battlefield] = "b" * 64
+                else:
+                    document["files"]["assets/unrelated.glb"] = "c" * 64
+                pin = self._write_cut_candidate(root, document)
+                with self.subTest(case=case), patch("tools.report_deployment_art.CUT_CONTINUITY_RECEIPT_SHA256", pin):
+                    with self.assertRaisesRegex(ValueError, reason):
+                        _verify_kit(root, CUT_KIT)
+
+    def test_cut_continuation_still_requires_full_pass_and_exact_new_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            document = self._cut_fixture(root)
+            document["schema_version"] = 1
+            pin = self._write_cut_candidate(root, document)
+            with patch("tools.report_deployment_art.CUT_CONTINUITY_RECEIPT_SHA256", pin):
+                with self.assertRaisesRegex(ValueError, "must record an overall PASS"):
+                    _verify_kit(root, CUT_KIT)
+                (root / CUT_CONTINUITY_RECEIPT).write_bytes(b"{}")
+                with self.assertRaisesRegex(ValueError, "receipt bytes do not match the pinned review"):
+                    _verify_kit(root, CUT_KIT)

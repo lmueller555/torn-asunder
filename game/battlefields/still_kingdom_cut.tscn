@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/environment/record_room.glb" id="2_recordroom"]
 [ext_resource type="PackedScene" path="res://assets/models/environment/cut_cemetery_stair.glb" id="1_stair"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_banklow"]
@@ -908,6 +909,7 @@ shape = SubResource("Shape_6_1p32_1p05")
 position = Vector3(89.3, 2.15, 5.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordRoomBack"]
+cast_shadow = 3
 mesh = SubResource("Mesh_1p4_4p3_15p8")
 material_override = SubResource("Mat_wall")
 
@@ -918,6 +920,7 @@ shape = SubResource("Shape_1p4_4p3_15p8")
 position = Vector3(76, 2.15, -2)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordNorthWall"]
+cast_shadow = 3
 mesh = SubResource("Mesh_28_4p3_1p25")
 material_override = SubResource("Mat_wall")
 
@@ -928,6 +931,7 @@ shape = SubResource("Shape_28_4p3_1p25")
 position = Vector3(76, 2.15, 13)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordSouthWall"]
+cast_shadow = 3
 mesh = SubResource("Mesh_28_4p3_1p25")
 material_override = SubResource("Mat_wall")
 
@@ -938,6 +942,7 @@ shape = SubResource("Shape_28_4p3_1p25")
 position = Vector3(62.3, 2.15, -0.05)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordDoorNorthJamb"]
+cast_shadow = 3
 mesh = SubResource("Mesh_1p4_4p3_4p25")
 material_override = SubResource("Mat_wall")
 
@@ -948,6 +953,7 @@ shape = SubResource("Shape_1p4_4p3_4p25")
 position = Vector3(62.3, 2.15, 10.95)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordDoorSouthJamb"]
+cast_shadow = 3
 mesh = SubResource("Mesh_1p4_4p3_4p25")
 material_override = SubResource("Mat_wall")
 
@@ -958,6 +964,7 @@ shape = SubResource("Shape_1p4_4p3_4p25")
 position = Vector3(62.3, 3.95, 5.3)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordEntryLintel"]
+cast_shadow = 3
 mesh = SubResource("Mesh_1p5_0p7_8p55")
 material_override = SubResource("Mat_stone")
 
@@ -968,6 +975,7 @@ shape = SubResource("Shape_1p5_0p7_8p55")
 position = Vector3(75.7, 4.65, 5.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordRoomRoof"]
+visible = false
 mesh = SubResource("Mesh_30p2_0p7_17p5")
 material_override = SubResource("Mat_roof")
 
@@ -1008,6 +1016,7 @@ shape = SubResource("Shape_5_1p82_1p32")
 position = Vector3(62, 3.17, 8.4)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/RecordRoom/RecordRoomSign"]
+cast_shadow = 3
 mesh = SubResource("Mesh_0p44_0p53_1p48")
 material_override = SubResource("Mat_record")
 
@@ -1724,6 +1733,22 @@ visibility_range_begin = 60.0
 [node name="FOOTING_SILT_LOD_ANY" parent="Geometry/Cemetery/CemeteryCutVisual" index="2"]
 cast_shadow = 0
 
+[node name="RecordRoomVisual" parent="Geometry/RecordRoom" instance=ExtResource("2_recordroom")]
+position = Vector3(75.7, 0, 5.5)
+
+[node name="RECORD_ROOM_HERO" parent="Geometry/RecordRoom/RecordRoomVisual" index="0"]
+cast_shadow = 0
+custom_aabb = AABB(-15.1, 0, -8.75, 30.2, 5.0, 17.5)
+visibility_parent = NodePath("../RECORD_ROOM_TACTICAL")
+
+[node name="RECORD_ROOM_TACTICAL" parent="Geometry/RecordRoom/RecordRoomVisual" index="1"]
+cast_shadow = 0
+custom_aabb = AABB(-15.1, 0, -8.75, 30.2, 5.0, 17.5)
+visibility_range_begin = 60.0
+
+[node name="RECORD_ROOM_CAST" parent="Geometry/RecordRoom/RecordRoomVisual" index="2"]
+cast_shadow = 3
+
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="Spawns" type="Node3D" parent="Markers"]
@@ -1970,3 +1995,5 @@ gizmo_extents = 1.5
 metadata/box_size = Vector3(221, 3, 16)
 
 [editable path="Geometry/Cemetery/CemeteryCutVisual"]
+
+[editable path="Geometry/RecordRoom/RecordRoomVisual"]

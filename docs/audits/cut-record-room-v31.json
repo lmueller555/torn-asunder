@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "scope": "Record Room V3.1 exterior and doorway assembly in Sereth's Still Kingdom Cut battlefield. Does not approve interior props, adjoining village, terrain, units, or the deployment.",
+  "author": "Torn Asunder terrain asset author",
+  "reviewer": "Dot, independent render review",
+  "evidence": {
+    "godot_context": "Same native hero approach, open doorway and reverse at both jambs, supplementary north-oblique and close sign, ordinary command sector and overview. Matched V2.3/V3.1 verified corrected construction.",
+    "close_up": "Native projected stone supports, separate timber header, inset recessed lettering, modeled channel and shaped shadow witness. Extreme detail supplements rather than replaces gameplay cameras.",
+    "reproduction": "Godot 4.7.2 GL Compatibility. Run game/battlefield/sereth_cut_playtest.tscn. Approach the record room entry near XZ (60.6, 5.34) from the west, enter and back out, and follow the south wall. Look back from inside. Hold Shift and press Home for tactical sector; press M for full overview. Compare both versions at the same camera and lighting.",
+    "measurements": "Two compressed resident texture RIDs with mips, 3,495,280 bytes; 1,010 hero / 614 tactical / 102 shadow-only triangles. Whole view added 1,184/556/594 primitives and removed seven draws per lens. ABBA, 8 warm/42 timed frames per block at 1280×720, software only."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "The modeled timber bearing and profiled jambs now read as structural at ordinary hero distance. Drip edge and channel have continuous joints. Zero positive-area visible mesh coplanars at the tested tolerance."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "The inset title and distinct stone, slate and wood respond to actual scene lighting. The local modeled shadow-only silhouette replaces the old flat roof caster without overlaying it."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Entry aperture remains clear both ways. At command distance the building roof and approach read together. Thirty native perspective/orthographic samples verified exactly one visible variant through the 60 m change."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact clean import and unchanged collision/ground, objectives and occupancy. Live in/out/south-side route matches the historical pose checkpoints; roof order still rejects. Per-lens added primitives fit the isolated kit budget (1,250/650/650), no draw increase, memory below 4 MiB. No hardware frame-rate claim."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Static prop, no authored skeletal motion or live effects. Actual hero movement, camera and LOD checks appear separately as integration evidence."
+    }
+  },
+  "files": {
+    "assets/models/environment/record_room.glb": "7c3e8ab6bce627891fc5ff309e4c20de864d751f3bacd2d9d5404e48daf5444e",
+    "assets/models/environment/record_room.glb.import": "a0876b3d564fc01dad79ae2ac777abdb7aec4eac51d06be5448162db6e28e98f",
+    "assets/models/environment/record_room_import.gd": "15af9cc582b8e4b550b2d55f4b3ed9f8ca1d9e7a75418849e7421a74748d9cbc",
+    "assets/models/environment/record_room_import.gd.uid": "818eec6603e680f5ccdc750e972083e25c56ecdcb38416c52434bf10e42fa7fe",
+    "assets/source/still_kingdom_cut/record_room.blend": "9d9449a25a8e06ee66f0c68effe3c74cd74c95643e28856f93b16abe34739a9a",
+    "game/battlefields/still_kingdom_cut.tscn": "fbdb67cd244f23b96185212910cd6a7e6fd49c61b444a9f64f4c073f8e0c5070"
+  },
+  "review_manifest_sha256": "80a78c3a011a6a0dd246e522d22fec373ab8895e1548ce63af3d4fbfd20b4e9c",
+  "offline_evidence_sha256": {
+    "matched-focal-comparison.jpg": "e0df53b0a2b53fe7f700a6520842bbb6ec9a05009b29ba828a61e24307ee58c7",
+    "candidate-front-north-oblique.png": "d4b34cff478e49da87414b5c9cb51666249eb9b6c8916ab41f3a1e0233bae339",
+    "candidate-hero-reverse.png": "23f53391056665d84c2d356242c540588615cec94bf1459d2612de6dff4d6401",
+    "candidate-command-sector.png": "470bbc9bdd66e62a9f28df9add376179635c0b2b28466ea74c1bbf38503373f3",
+    "candidate-command-overview.png": "d9f41636986c994fce556e8560c82c1e8a081e4ec692a2f466f4d01c25eb15f5",
+    "entrance-route-v31.mp4": "8f028df3443d83021414b1ab45f042e540c90b58fa3f7e2b459bf6d1ab439ea0",
+    "modeled-shadow-proof.txt": "d048986a62b542daee550b925c0b1aa01e8b4dbff13b6f0d5128ba16762f04fd",
+    "integration-tests-clean.txt": "88b1408b6b01d9d33dc4bb0c97a3757f1adad6efa654ed2dd566a67eda195121"
+  },
+  "measurements": {
+    "compressed_mipped_texture_bytes": 3495280,
+    "unique_textures": 2,
+    "triangles_hero_tactical_shadow": [
+      1010,
+      614,
+      102
+    ],
+    "additional_primitives_hero_sector_overview": [
+      1184,
+      556,
+      594
+    ],
+    "draw_call_deltas": [
+      -7,
+      -7,
+      -7
+    ],
+    "hero_baseline_block_medians_ms": [
+      74.116,
+      71.493
+    ],
+    "hero_candidate_block_medians_ms": [
+      75.862,
+      75.85
+    ],
+    "hardware_fps_claim": false
+  },
+  "tests": [
+    "Clean Godot 4.7.2 headless editor import",
+    "still_kingdom_cut.gd",
+    "sereth_cut_playtest.gd",
+    "sereth_voices_at_the_cut.gd",
+    "sector_camera.gd",
+    "sereth_campaign_flow.gd",
+    "Physical hero doorway and surrounding wall route, unchanged roof pick and nearby ground target",
+    "30 native switching samples and modeled shadow diagnostic"
+  ]
+}

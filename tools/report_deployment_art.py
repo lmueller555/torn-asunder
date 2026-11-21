@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import re
 import sys
 
-from .check_visual_audit_receipt import verify_receipt
+from .check_visual_audit_receipt import _text, verify_receipt
 
 
 @dataclass(frozen=True)
@@ -28,7 +29,15 @@ KITS = (
         "assets/models/mine_timber_portal/mine_timber_portal.tscn", 30),
     Kit("Cut cemetery stair and retaining walls (V7)", "docs/audits/cut-cemetery-stair-v7.json",
         "game/battlefields/still_kingdom_cut.tscn", "assets/models/environment/cut_cemetery_stair.glb", 6),
+    Kit("Cut Record Room exterior (V3.1)", "docs/audits/cut-record-room-v31.json",
+        "game/battlefields/still_kingdom_cut.tscn", "assets/models/environment/record_room.glb", 6),
 )
+CUT_KIT = KITS[1]
+CUT_ORIGINAL_RECEIPT_SHA256 = "cebadd861eab16ddcbb773f75bf7b5014b967d9db7479ceaf4e4d53ce66868c6"
+CUT_CONTINUITY_RECEIPT = "docs/audits/cut-cemetery-stair-v7-continuity.json"
+# Pin only after independent sign-off on the replacement host and continuity evidence.
+CUT_CONTINUITY_RECEIPT_SHA256: str | None = "17c488b20a6b180823516640bc9955a4186211c2eb1a2ba2dc14c0cfbed6cfd8"
+
 CASE_MISSION = "mara_mine_escort"
 CASE_DEPLOYMENT = "game/battlefield/mara_mine_escort_campaign.tscn"
 CASE_BASE = "game/battlefield/mara_mine_escort.tscn"
@@ -87,14 +96,62 @@ def _battlefield(root: Path, deployment: str) -> str:
 
 
 def _verify_kit(root: Path, kit: Kit) -> dict:
-    scene = (root / kit.battlefield).read_text(encoding="utf-8")
+    scene_bytes = (root / kit.battlefield).read_bytes()
+    scene = scene_bytes.decode("utf-8")
     keys = [key for path, key in PACKED_RESOURCE.findall(scene) if path == kit.asset]
     if len(keys) != 1 or not re.search(
         rf'^\[node [^\n]*instance=ExtResource\("{re.escape(keys[0])}"\)\]$', scene, re.M,
     ):
         raise ValueError(f"{kit.name}: reviewed kit is not instanced in its stated battlefield")
-    return _receipt_record(root, kit.name, kit.receipt, kit.file_count, {kit.asset, kit.battlefield},
-                           "shared_battlefield", kit.battlefield)
+    receipt = _cut_receipt(root, scene_bytes) if kit == CUT_KIT else kit.receipt
+    record = _receipt_record(root, kit.name, receipt, kit.file_count, {kit.asset, kit.battlefield},
+                             "shared_battlefield", kit.battlefield)
+    if receipt != kit.receipt:
+        record["previous_receipt"] = kit.receipt
+    return record
+
+
+def _pinned_receipt(root: Path, relative: str, expected: str) -> dict:
+    path = root.resolve() / relative
+    if path.resolve(strict=True) != path or not path.is_file():
+        raise ValueError(f"{relative}: expected a regular, non-symlink review record")
+    payload = path.read_bytes()
+    if hashlib.sha256(payload).hexdigest() != expected:
+        raise ValueError(f"{relative}: receipt bytes do not match the pinned review")
+    document = json.loads(payload)
+    if not isinstance(document, dict):
+        raise ValueError(f"{relative}: expected a JSON object")
+    return document
+
+
+def _cut_receipt(root: Path, scene_bytes: bytes) -> str:
+    original = _pinned_receipt(root, CUT_KIT.receipt, CUT_ORIGINAL_RECEIPT_SHA256)
+    original_files = original["files"]
+    host = CUT_KIT.battlefield
+    scene_digest = hashlib.sha256(scene_bytes).hexdigest()
+    if scene_digest == original_files[host]:
+        return CUT_KIT.receipt
+    if CUT_CONTINUITY_RECEIPT_SHA256 is None:
+        raise ValueError(f"{host}: SHA-256 differs from the original approved host; no pinned continuity review")
+    continuation = _pinned_receipt(root, CUT_CONTINUITY_RECEIPT, CUT_CONTINUITY_RECEIPT_SHA256)
+    if continuation.get("continuity") != {
+        "previous_receipt": CUT_KIT.receipt,
+        "previous_receipt_sha256": CUT_ORIGINAL_RECEIPT_SHA256,
+        "battlefield": host,
+        "previous_battlefield_sha256": original_files[host],
+    }:
+        raise ValueError(f"{CUT_CONTINUITY_RECEIPT}: continuity does not anchor the original Cut placement")
+    evidence = continuation.get("evidence")
+    _text(evidence.get("continuity") if isinstance(evidence, dict) else None, "evidence.continuity")
+    files = continuation.get("files")
+    if not isinstance(files, dict) or files.keys() != original_files.keys() or any(
+        files[path] != expected for path, expected in original_files.items() if path != host
+    ):
+        raise ValueError(f"{CUT_CONTINUITY_RECEIPT}: continuity may replace only the reviewed host digest")
+    if files[host] != scene_digest:
+        raise ValueError(f"{host}: SHA-256 differs from the exact continuity review host")
+    # The caller applies the unmodified full PASS verifier to this entire file set.
+    return CUT_CONTINUITY_RECEIPT
 
 
 def _verify_custody_case(root: Path, deployments: dict[str, str]) -> dict:
