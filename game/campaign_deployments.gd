@@ -11,6 +11,14 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.MARA_MINE_DEBRIEF,
 		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
 	},
+	"mara_grain_crossing": {
+		"scene": preload("res://game/battlefield/mara_grain_crossing_playtest.tscn"),
+		"dispatch": Beats.MARA_GRAIN_DISPATCH,
+		"briefing_dispatch": true,
+		"result_debrief": true,
+		"battlefield_label": "MARCHES CROSSING · BRIDGE AND FORD",
+		"orders": "Deliver at least one grain load and resolve both carts. The rival reserve moves against the first cart to commit to a crossing. Screen the threatened lane with a holding platoon, or turn back that cart and get the other through.",
+	},
 	"orc_mine_witness": {
 		"scene": preload("res://game/battlefield/raska_mine_witness_campaign.tscn"),
 		"dispatch": Beats.RASKA_MINE_DISPATCH,

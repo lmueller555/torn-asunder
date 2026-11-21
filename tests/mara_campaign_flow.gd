@@ -10,10 +10,16 @@ const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const GrainScene := preload("res://game/battlefield/mara_grain_crossing_playtest.gd")
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const CLEAR_ID := "mara_mine_escort"
 const MINE := "year_one_mine"
 const CAMP := "marches_camp"
 const ROAD := "marches_road"
+const CROSSING := "marches_crossing"
+const MOONWASH := "moonwash_road"
+const GRAIN_ID := "mara_grain_crossing"
 const DT := 1.0 / 60.0
 
 var _title: Title
@@ -33,14 +39,17 @@ func _run() -> void:
 	var configured := _title._profile.set_setting("fullscreen", false) == OK \
 		and _title._profile.set_setting("reduced_motion", true) == OK
 	root.add_child(_title)
+	var main_path := _profile_path
 	var passed := configured and await _flow()
+	if passed:
+		passed = await _fresh_bread_flow(main_path + ".bread")
 	_title.queue_free()
 	await process_frame
-	for path in [_profile_path, _profile_path + ".tmp"]:
+	for path in [main_path, main_path + ".tmp", main_path + ".bread", main_path + ".bread.tmp"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Mara campaign: camp dispatch, linked map, briefing, cancel, campaign-scale deployment, defeat, retry, real clear, debrief, replay and Continue passed.")
+		print("Mara campaign: real Mine escort, linked Grain briefing, both blockade lanes, all debriefs, defeat, immutable first result, replay and Continue passed.")
 	quit(0 if passed else 1)
 
 
@@ -110,6 +119,10 @@ func _flow() -> bool:
 	_read_dialogue()
 	if not _on_map(MINE):
 		return _fail("Finishing debrief did not return to the mine on the campaign map.")
+	_map().select_waypoint(CROSSING)
+	_joy(JOY_BUTTON_A)
+	if not _on_map(MINE) or not _map()._confirm_button.disabled:
+		return _fail("The first clear let the party skip the linked Marches Road.")
 	_map().select_waypoint(ROAD)
 	if _map()._confirm_button.disabled:
 		return _fail("A persisted victory did not open the onward link.")
@@ -135,7 +148,176 @@ func _flow() -> bool:
 	_joy(JOY_BUTTON_B)
 	if not _press("Continue") or not _on_map(ROAD) or _saved_clears() != PackedStringArray([CLEAR_ID]):
 		return _fail("Continue did not restore Mara's last arrived point and existing clear.")
-	return true
+	return await _grain_flow()
+
+
+func _grain_flow() -> bool:
+	_map().select_waypoint(CROSSING)
+	if not _press("ConfirmTravel") or not _on_briefing() or _saved_world() != CROSSING:
+		return _fail("The new linked Crossing did not stop at its briefing and save its own waypoint.")
+	if not _press("Read Dispatch") or not _finish_grain_beat(Beats.MARA_GRAIN_DISPATCH) or not _on_briefing():
+		return _fail("Grain dispatch did not return to the battlefield briefing without deploying.")
+	_joy(JOY_BUTTON_B)
+	if not _on_map(CROSSING):
+		return _fail("Cancel did not keep the party at the Crossing.")
+	_map().select_waypoint(MOONWASH)
+	_joy(JOY_BUTTON_A)
+	if not _on_map(CROSSING) or not _map()._detail.text.contains("Grain on Credit"):
+		return _fail("The old Mine clear unlocked Moonwash without a Grain victory.")
+	_map().select_waypoint(CROSSING)
+	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
+		return false
+	var grain := _title._campaign_battle as GrainScene
+	if not grain:
+		return _fail("The Crossing deployed the wrong scene.")
+	grain.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	var before := FileAccess.get_file_as_string(_profile_path)
+	_key(KEY_T)
+	_key(KEY_C)
+	_key(KEY_T)
+	grain._physics_process(0.07)
+	if grain.objective.outcome != Grain.Outcome.FAILED or FileAccess.get_file_as_string(_profile_path) != before:
+		return _fail("Turning back both carts did not fail without saving.")
+	_key(KEY_BACKSPACE)
+	if not _win_single_grain(grain, Grain.Cart.BREAD):
+		return false
+	await process_frame
+	if (
+		_saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID])
+		or _saved_grain() != Grain.SEED_ONLY
+		or not _finish_grain_beat(Beats.MARA_GRAIN_SEED_DEBRIEF)
+		or not _on_map(CROSSING)
+	):
+		return _fail("The first seed-only win did not save its actual result and debrief.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(CROSSING) or _saved_grain() != Grain.SEED_ONLY:
+		return _fail("Continue did not preserve the first delivery result and Crossing waypoint.")
+	before = FileAccess.get_file_as_string(_profile_path)
+	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
+		return false
+	grain = _title._campaign_battle as GrainScene
+	grain.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _win_both_grain(grain):
+		return false
+	await process_frame
+	if (
+		FileAccess.get_file_as_string(_profile_path) != before
+		or _saved_grain() != Grain.SEED_ONLY
+		or not _finish_grain_beat(Beats.MARA_GRAIN_BOTH_DEBRIEF)
+		or not _on_map(CROSSING)
+	):
+		return _fail("A two-cart replay did not get its own debrief or overwrote the saved seed-only result.")
+	_map().select_waypoint(MOONWASH)
+	return (_press("ConfirmTravel") and _on_map(MOONWASH) and _saved_world() == MOONWASH
+		and _title._campaign_battle == null and _button("Confirm Deployment") == null) or _fail("The new road was not saved, or exposed an unbuilt Moonwash battle.")
+
+
+func _fresh_bread_flow(path: String) -> bool:
+	_profile_path = path
+	var profile := Profile.new(path)
+	_title._profile = profile
+	if profile.set_setting("reduced_motion", true) != OK or profile.record_mission_clear("mara", CLEAR_ID) != OK:
+		return _fail("Could not seed the alternate profile with only the Mine clear.")
+	var world := profile.load_campaign_world("mara")
+	var clears := profile.completed_missions("mara")
+	world.travel_to(MINE, clears)
+	world.travel_to(ROAD, clears)
+	if profile.record_world_waypoint(world) != OK:
+		return _fail("Could not seed an independent arrival on Marches Road.")
+	_title._show_title()
+	if not _press("New Game") or not _press("mara") or not _on_map(ROAD):
+		return _fail("Alternate profile did not open on its independently saved road.")
+	_map().select_waypoint(CROSSING)
+	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):
+		return false
+	var grain := _title._campaign_battle as GrainScene
+	grain.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _win_single_grain(grain, Grain.Cart.SEED):
+		return false
+	await process_frame
+	return (_saved_grain() == Grain.BREAD_ONLY and _finish_grain_beat(Beats.MARA_GRAIN_BREAD_DEBRIEF)
+		and _on_map(CROSSING)) or _fail("The independent first bread-only clear did not save its own outcome and dialogue.")
+
+
+func _win_single_grain(grain: GrainScene, blocked: Grain.Cart) -> bool:
+	_grain_dispatch(grain, blocked)
+	if (
+		not _grain_wait(grain, func() -> bool: return grain._blocked_cart == blocked)
+		or grain.committed_cart != blocked or grain.rival.status != Rival.Status.BLOCKING
+	):
+		return _fail("The physically first committed cart was not blocked by the enemy reserve.")
+	var delivered := Grain.Cart.SEED if blocked == Grain.Cart.BREAD else Grain.Cart.BREAD
+	_grain_dispatch(grain, delivered)
+	if (
+		not _grain_wait(grain, func() -> bool: return grain.objective.cart_state(delivered) == Grain.CartState.SECURED)
+		or grain._blocked_cart != blocked
+	):
+		return _fail("The other cart did not reach its yard while the first stayed blocked.")
+	if grain.objective.outcome != Grain.Outcome.ACTIVE:
+		return _fail("Delivery alone completed before the other cart was resolved.")
+	_key(KEY_C)
+	_key(KEY_T)
+	grain._physics_process(0.07)
+	var result := Grain.SEED_ONLY if delivered == Grain.Cart.SEED else Grain.BREAD_ONLY
+	return grain.objective.clear_result == result or _fail("Actual cart arrival plus turn-back gave the wrong result.")
+
+
+func _win_both_grain(grain: GrainScene) -> bool:
+	_grain_dispatch(grain, Grain.Cart.BREAD)
+	if not _grain_wait(grain, func() -> bool: return grain._blocked_cart == Grain.Cart.BREAD):
+		return false
+	_grain_dispatch(grain, Grain.Cart.SEED)
+	_key(KEY_SHIFT)
+	var formation: Battle.Formation = grain.battle.formations[0]
+	for id: String in ["ReserveFork", "ShelteredTurn", "FordApproachWest", "FordWestBank", "FordShallows", "FordEastBank", "StoreApproach"]:
+		var point := grain.battlefield_marker(NodePath("Markers/Routes/" + id)).global_position
+		grain.cursor = Vector2(point.x, point.z)
+		_joy(JOY_BUTTON_X)
+		if id == "StoreApproach":
+			if not _grain_wait(grain, func() -> bool: return formation.position.distance_to(grain.cursor) < Rival.SCREEN_RADIUS - 0.6):
+				return false
+		elif not _grain_wait(grain, func() -> bool: return formation.order != Battle.Order.MOVE):
+			return false
+	_joy(JOY_BUTTON_A)
+	grain._physics_process(0.07)
+	_key(KEY_SHIFT, false)
+	if formation.order != Battle.Order.HOLD or grain.rival.status != Rival.Status.SCREENED:
+		return _fail("The real Hold at the blockade did not reopen the ford for replay.")
+	return (_grain_wait(grain, func() -> bool: return grain.objective.outcome == Grain.Outcome.SUCCEEDED)
+		and grain.objective.clear_result == Grain.BOTH) or _fail("The screened replay never delivered both carts.")
+
+
+func _grain_dispatch(grain: GrainScene, cart: Grain.Cart) -> void:
+	if grain.selected_cart != cart:
+		_key(KEY_C)
+	_key(KEY_G)
+	grain._physics_process(0.07)
+
+
+func _grain_wait(grain: GrainScene, condition: Callable) -> bool:
+	for _step in range(1100):
+		if condition.call():
+			return true
+		grain._physics_process(0.07)
+	return _fail("A Grain route event did not occur within the fixed simulation steps.")
+
+
+func _finish_grain_beat(id: StringName) -> bool:
+	if not _is_dialogue(id):
+		return false
+	for _line in Beats.get_beat(id).lines:
+		_key(KEY_ENTER)
+	return _title._page != Title.Page.CAMPAIGN_DIALOGUE
+
+
+func _saved_grain() -> StringName:
+	return Profile.new(_profile_path).grain_clear_result()
 
 
 func _win_escort() -> bool:

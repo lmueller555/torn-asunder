@@ -205,7 +205,7 @@ func _refresh_selection() -> void:
 			_confirm_button.text = "Current Waypoint"
 	else:
 		var route := _route_to_selection()
-		var required_clear := _blocking_clear_for_selection()
+		var required_clear: String = _blocking_clear_for_selection() if route.is_empty() else route.required_clear_id
 		if not route.is_empty() and route.is_open:
 			_detail.text = "Connected route. Confirm to move your party to this waypoint."
 			if selected.kind == World.WaypointKind.BATTLEFIELD:
@@ -221,7 +221,8 @@ func _refresh_selection() -> void:
 
 func _blocking_clear_for_selection() -> String:
 	for edge in _world.routes():
-		if _selected_id == edge.to_id or _selected_id == edge.from_id:
+		# For a distant waypoint, describe its inbound gate, not an onward gate.
+		if _selected_id == edge.to_id:
 			var clear: String = edge.get("required_clear_id", "")
 			if not clear.is_empty() and not _completed.has(clear):
 				return clear
