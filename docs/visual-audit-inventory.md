@@ -14,9 +14,11 @@ This inventory tracks visual assets already in Torn Asunder. It is a working rev
 | [Human Infantry](../assets/models/human_infantry.glb) | User-approved reference. The [Mine integration](https://github.com/lmueller555/torn-asunder/pull/122) has a reproducible 1280 × 720 capture of its existing armor, shield and motion in both campaign cameras. |
 | [Human Heavy Infantry](../assets/models/human_heavy_infantry.glb) | User-approved reference. The [unit workflow](unit-art-workflow.md) records construction, painted materials, readable silhouette and rig-fit evidence. |
 
-## Approved Mine entrance
+## Approved Mine assets
 
 The [V10 audit receipt](audits/mine-timber-portal-v10.json) passes the front Mine timber portal and connected stone shoulders in the large Mine scene. It covers the exact reviewed files, both gameplay cameras, close and reverse views, and the detail-to-distance transition. The evacuation arch, mountain, nearby buildings, and other props remain unapproved. The technical result is a scene-relative asset budget, not a console frame-rate benchmark.
+
+The [V3 audit receipt](audits/godbridle-custody-case-v3.json) passes the sealed Godbridle case only in Mara’s campaign Mine. The case replaces the old exposed symbolic bridle in those ground and carry states, keeps the pickup and navigation cues, and does not replace any other mission’s artifact art.
 
 ## Inspected: first Mine pass
 
@@ -62,7 +64,7 @@ Use one audit per shared asset or kit, with every distinct gameplay use recorded
 
 | Scope | Status | Start here |
 |---|---|---|
-| Remaining Mine props, artifact, guard and alternate hero / unit visuals | Unapproved | [Both Mine layouts](../game/battlefields/) and [escort visual code](../game/battlefield/mara_mine_escort.gd). Check the artifact while on the ground and carried; review each non-benchmark character silhouette. |
+| Remaining Mine props, other artifact depictions, guard and alternate hero / unit visuals | Unapproved | [Both Mine layouts](../game/battlefields/) and [escort visual code](../game/battlefield/mara_mine_escort.gd). Review remaining artifact depictions at their actual in-game placements and check each non-benchmark character silhouette. |
 | Marches crossing and remaining Red Basin assets | Unapproved | [Crossing](../game/battlefields/marches_crossing.tscn) and [well road](../game/battlefields/red_basin_well_road.tscn). Inspect the crossing and its bridge/ford; confirm the Red Basin carts, well hardware and outlying buildings in actual missions. |
 | Remaining Moonwash harbor and survey shore families | Unapproved | [Harbor](../game/battlefields/moonwash_harbor_campaign.tscn) and [survey shore](../game/battlefields/moonwash_survey_shore.tscn). Review water, shoreline, quays, rigs, boats, signals and character visuals independently. |
 | Remaining Spanwater Lock and nursery families | Unapproved | [Lock](../game/battlefields/spanwater_lock_campaign.tscn) and [grove](../game/battlefields/isolated_grove_nursery.tscn). Review both lock layouts, water channels and control props, then the nursery, sled, tree and supporting figures. |
