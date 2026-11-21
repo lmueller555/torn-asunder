@@ -32,12 +32,13 @@ func _run() -> void:
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
 	passed = _check_raska_well_road_beats() and passed
+	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road and Sova hearing continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road, Spanwater, and Sova hearing continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -334,6 +335,43 @@ func _check_raska_well_road_beats() -> bool:
 		if not portrait_seen or _panel.visible or _completions.back() != id:
 			return _fail("Well Road dialogue did not finish under its own ID: %s" % id)
 	return _completions.size() == initial_count + cases.size() or _fail("Well Road emitted duplicate completions.")
+
+
+func _check_raska_spanwater_beats() -> bool:
+	var cases := [
+		[Beats.RASKA_SPANWATER_DISPATCH, ["spillway sends water down the old riverbed", "assembly town stands below that waterline", "counted the last barrels", "The assembly sent me for the river", "The sea gate stays shut", "our companies go home", "get to the high bank", "low crossing won't stay open"]],
+		[Beats.RASKA_SPANWATER_DEBRIEF, ["Water reached the mark", "The sea gate stayed shut", "the assembly town is safe", "Boats at the low landing", "People on the feeder path", "Leave those lanes to them", "left by the causeway"]],
+		[Beats.RASKA_SPANWATER_CODA, ["saw Mara hand the Godbridle to Sova", "The Elven witness saw it too", "Sova took custody", "Separate page"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		ids.append(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A Spanwater beat was missing or invalid: %s" % id)
+		var words := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			words += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.RASKA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.RASKA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Raska's portrait did not render at Spanwater.")
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[1]:
+			if not phrase in words:
+				return _fail("Spanwater dialogue lost an order, cost, or witness fact: %s" % id)
+		if (id != Beats.RASKA_SPANWATER_CODA and "Godbridle" in words) or "Orrun," in words:
+			return _fail("Spanwater introduced a bridle action into the river operation.")
+		if not portrait_seen or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size() - 1:
+			return _fail("Spanwater completion fired before an explicit Finish: %s" % id)
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("A Spanwater beat did not finish under its own ID: %s" % id)
+	return _completions.slice(start) == ids or _fail("Spanwater dialogue emitted duplicate or out-of-order completions.")
 
 
 func _check_sova_public_record_beats() -> bool:
