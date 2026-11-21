@@ -11,6 +11,11 @@ const BLOCKED := Color("#bb8e77")
 
 enum RouteCue { DISTANT, REACHABLE, SELECTED_REACHABLE, LOCKED }
 
+const LABEL_MARGIN := 12.0
+const LABEL_HEIGHT := 26.0
+const LABEL_TEXT_INSET := Vector2(7.0, 20.0)
+const LABEL_FONT_SIZE := 20
+
 var world: World
 var selected_id := ""
 var token_position := Vector2.ZERO
@@ -187,11 +192,23 @@ func _draw_waypoint(node: Dictionary) -> void:
 		_:
 			draw_polyline(PackedVector2Array([p + Vector2(-10, 0), p + Vector2(8, 0), p + Vector2(2, -6)]), tint, 2.0, true)
 			draw_line(p + Vector2(8, 0), p + Vector2(2, 6), tint, 2.0, true)
-	var label: String = node.label
-	var label_width := TYPE.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20).x
-	var label_origin := Vector2(clampf(p.x - label_width * 0.5, 11.0, size.x - label_width - 11.0), p.y + 49.0)
-	draw_rect(Rect2(label_origin + Vector2(-7, -20), Vector2(label_width + 14.0, 26.0)), Color(0.085, 0.1, 0.08, 0.84))
-	draw_string(TYPE, label_origin, label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, tint)
+	var bounds := waypoint_label_bounds(node)
+	draw_rect(bounds, Color(0.085, 0.1, 0.08, 0.84))
+	draw_string(TYPE, bounds.position + LABEL_TEXT_INSET, node.label, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		LABEL_FONT_SIZE, tint)
+
+
+func waypoint_label_bounds(node: Dictionary) -> Rect2:
+	var p := point_at(node.map_position)
+	var width := TYPE.get_string_size(node.label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, LABEL_FONT_SIZE).x \
+		+ 2.0 * LABEL_TEXT_INSET.x
+	var x := clampf(p.x - width * 0.5, LABEL_MARGIN, maxf(LABEL_MARGIN, size.x - width - LABEL_MARGIN))
+	var top := p.y + 29.0
+	# At the southern edge put the plaque above the entire party badge, not on the
+	# pin or token. Reserve that space whether the party is here or not.
+	if top + LABEL_HEIGHT > size.y - LABEL_MARGIN:
+		top = p.y - 82.0
+	return Rect2(x, maxf(LABEL_MARGIN, top), width, LABEL_HEIGHT)
 
 
 func _draw_token() -> void:

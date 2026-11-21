@@ -88,7 +88,7 @@ Both decks were reached on the authored pier route. Rigging the fore transfer br
 
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
-| [Vareth campaign board](../game/campaign_map_board.gd) | Rework | Native Godot captures on Mara’s and Ilyra’s routes show the same flat schematic terrain: repeated peak silhouettes, angular river and coastline, and no authored settlement or shoreline detail. At a smaller window the whole board shrinks rather than reflowing, with Moonwash Harbor’s label nearly touching the lower frame. On Mara's locked road, gold also highlights an onward leg that the party cannot take from its current location. |
+| [Vareth campaign board](../game/campaign_map_board.gd) | Rework | Native Godot captures on Mara’s and Ilyra’s routes show the same flat schematic terrain: repeated peak silhouettes, angular river and coastline, and no authored settlement or shoreline detail. The flat board still shrinks at a smaller window rather than providing real zoom. The live board’s route cue now highlights only a reachable selected leg, and its lower labels clear the frame and party badge; these interaction fixes do not approve the terrain. |
 
 Keep the current-location marker distinct from selection; keep explicit lock icons and reasons, travel separate from deployment, and mouse, keyboard and controller input. Audit the 3D replacement in the live campaign shell at ordinary view and real close zoom, including locked, available and in-transit states. These observations apply to the existing board, not to an unmerged art candidate.
 
