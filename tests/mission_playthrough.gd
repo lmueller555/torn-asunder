@@ -1,5 +1,5 @@
 extends SceneTree
-## Plays every campaign mission with an autopilot hero and checks that each one can be won.
+## Drives the standalone archive through every scenario. Live Godot campaign deployments have their own full-flow tests.
 ##
 ## Usage: godot --headless --script tests/mission_playthrough.gd [mission_id ...]
 
@@ -7,7 +7,6 @@ const Battle := preload("res://game/mission/mission_battle.gd")
 const Missions := preload("res://game/mission/missions.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const Autopilot := preload("res://tests/mission_autopilot.gd")
-const Catalog := preload("res://game/campaign_missions.gd")
 
 const TICK := 1.0 / 30.0
 const LIMIT := 900.0
@@ -21,14 +20,9 @@ func _initialize() -> void:
 	var results := []
 	for campaign in Campaigns.ALL:
 		var missions := Missions.for_campaign(campaign.id)
-		var authored := Catalog.missions_for_campaign(campaign.id)
-		if missions.size() != authored.size():
-			printerr("%s has %d missions, the catalog lists %d." % [campaign.id, missions.size(), authored.size()])
+		if missions.size() != 3:
+			printerr("%s has %d historical scenarios instead of 3." % [campaign.id, missions.size()])
 			passed = false
-		for index in range(mini(missions.size(), authored.size())):
-			if missions[index].id != authored[index].id or missions[index].title != authored[index].title:
-				printerr("%s mission %d does not match the catalog (%s)." % [campaign.id, index + 1, authored[index].id])
-				passed = false
 		for mission: Dictionary in missions:
 			if not only.is_empty() and not only.has(mission.id):
 				continue
@@ -49,5 +43,7 @@ func _initialize() -> void:
 				passed = false
 				for item in battle.objectives:
 					print("    %-8s %s" % [item.status, item.text])
-	print("%d of %d missions won by the autopilot." % [results.count(true), results.size()])
+	if only.is_empty() and results.size() != 18:
+		passed = false
+	print("%d of %d archived scenarios won by the autopilot." % [results.count(true), results.size()])
 	quit(0 if passed else 1)

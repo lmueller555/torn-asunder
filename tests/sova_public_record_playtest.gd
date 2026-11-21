@@ -20,6 +20,8 @@ func _run() -> void:
 	_mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
+	var header := _mission.get_node("HearingHUD/Panel/Margin/Readout/Title") as Label
+	_check("YEAR THREE" in header.text, "The deployed hearing still uses a pre-Greyhollow date.")
 	_mission.mission_cleared.connect(func() -> void: _clears += 1)
 	var spawn := _marker(^"Markers/Spawns/SovaHearing")
 	_check(_mission.hero_world_position().is_equal_approx(spawn), "Sova did not start at the authored hearing approach.")
