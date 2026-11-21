@@ -20,6 +20,8 @@ func _initialize() -> void:
 func _run() -> void:
 	var passed := _timing_and_rewards()
 	passed = _targeting_and_interrupts() and passed
+	passed = _longbow_range_and_cover() and passed
+	passed = _longbow_reposition() and passed
 	passed = (await _ridge_and_tunnel(MINE, "RoadJunction", Vector3(-15.0, 0.0, 21.0))) and passed
 	passed = (await _ridge_and_tunnel(CAMPAIGN_MINE, "RoadCut", Vector3(-53.0, 0.0, 54.0))) and passed
 	quit(0 if passed else 1)
@@ -149,6 +151,83 @@ func _targeting_and_interrupts() -> bool:
 	if volley.advance(20.0, true, aim) != null or volley.phase != Archer.Phase.IDLE or pool.balance != bp_before:
 		return _fail("A defeated shooter left a pending shot.")
 	print("Verified range boundaries, friendly-fire rejection, cover resampling, target lock and melee interruption.")
+	return true
+
+
+func _longbow_range_and_cover() -> bool:
+	var foe := Unit.new()
+	var pool := Points.new()
+	var bp_before := pool.balance
+	var archer := Archer.new(Archer.make_unit(), 0, pool, _lane)
+	var longbows := Archer.for_marches_longbows(Archer.make_unit(), 0, pool, _lane)
+	var aim := Archer.Aim.new(Vector3.ZERO, foe, 1, Vector3(66.01, 0.0, 0.0))
+	if longbows.status(true, aim) != Archer.Status.TOO_FAR:
+		return _fail("Marches Longbows should not reach beyond 66 m.")
+	aim.target_feet.x = 66.0
+	if archer.status(true, aim) != Archer.Status.TOO_FAR or longbows.status(true, aim) != Archer.Status.READY:
+		return _fail("Only Marches Longbows should reach the end of the longer lane.")
+	aim.target_feet.x = 3.49
+	if longbows.status(true, aim) != Archer.Status.TOO_CLOSE:
+		return _fail("The longer range removed the Archer's near dead zone.")
+	aim.target_feet.x = 3.5
+	if longbows.status(true, aim) != Archer.Status.READY:
+		return _fail("The longer range changed the Archer's minimum range.")
+	aim.target_feet.x = 66.0
+	_lane_open = false
+	var blocked_start := longbows.start(true, aim)
+	_lane_open = true
+	if blocked_start != Archer.Status.BLOCKED or longbows.start(true, aim) != Archer.Status.READY:
+		return _fail("The longer shot should require a clear lane at admission.")
+	_lane_open = false
+	var shot := longbows.advance(1.25, true, aim)
+	_lane_open = true
+	if not shot or shot.status != Archer.Status.BLOCKED or foe.hp != foe.max_hp or pool.balance != bp_before:
+		return _fail("Cover at release should stop the longer shot without awarding BP.")
+	if longbows.phase != Archer.Phase.RELOAD or longbows.advance(0.95, true) != null \
+			or not is_equal_approx(longbows.phase_progress(), 0.5):
+		return _fail("Longbow reload must still begin after release and keep the same duration.")
+	longbows.advance(0.951, true)
+	if longbows.start(true, aim) != Archer.Status.READY:
+		return _fail("Marches Longbows could not draw again after a normal reload.")
+	aim.melee_engaged = true
+	shot = longbows.advance(0.01, true, aim)
+	aim.melee_engaged = false
+	if not shot or shot.status != Archer.Status.PINNED or longbows.start(true, aim) != Archer.Status.BUSY \
+			or foe.hp != foe.max_hp or pool.balance != bp_before:
+		return _fail("Melee should interrupt the long draw and force a full reload without a hit.")
+	longbows.advance(1.9, true)
+	if longbows.start(true, aim) != Archer.Status.READY:
+		return _fail("A fresh long-range shot should be available after recovering from the pin.")
+	shot = longbows.advance(1.25, true, aim)
+	if not shot or shot.status != Archer.Status.HIT or shot.hp_lost <= 0.0 or pool.balance != bp_before + 4:
+		return _fail("A clear 66 m shot should land and use the same confirmed-hit reward.")
+	return true
+
+
+func _longbow_reposition() -> bool:
+	var foe := Unit.new()
+	var archer := Archer.new(Archer.make_unit(), 0, null, _lane)
+	var longbows := Archer.for_marches_longbows(Archer.make_unit(), 0, null, _lane)
+	var aim := Archer.Aim.new(Vector3.ZERO, foe, 1, Vector3(25.0, 0.0, 0.0))
+	for volley: Archer in [archer, longbows]:
+		if volley.start(true, aim) != Archer.Status.READY or volley.advance(0.5, true, aim) != null:
+			return _fail("Both formations should be able to start a draw before moving.")
+		volley.cancel_windup()
+		if volley.phase_progress() != 0.0 or volley.advance(5.0, true) != null:
+			return _fail("Replacing a draw with movement should discard the queued shot.")
+	aim.shooter_feet = Vector3(12.0, 0.0, 0.0)
+	for volley: Archer in [archer, longbows]:
+		if volley.start(true, aim) != Archer.Status.READY:
+			return _fail("Both profiles should be able to start a fresh draw after repositioning.")
+	var arrow := archer.advance(0.70, true, aim)
+	if not arrow or arrow.status != Archer.Status.HIT or longbows.advance(0.70, true, aim) != null \
+			or not is_equal_approx(longbows.phase_progress(), 0.56) \
+			or longbows.advance(0.549, true, aim) != null:
+		return _fail("The ordinary Archer's draw is quicker after a move; Longbows must draw again from zero.")
+	var long_arrow := longbows.advance(0.002, true, aim)
+	if not long_arrow or long_arrow.status != Archer.Status.HIT or not is_equal_approx(long_arrow.hp_lost, arrow.hp_lost):
+		return _fail("The longer draw should deal standard bow damage when it completes.")
+	print("Verified Marches Longbows reach, unchanged cover and melee checks, and slower setup after relocation.")
 	return true
 
 

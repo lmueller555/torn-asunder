@@ -1,6 +1,6 @@
 class_name HumanArcherVolley
 extends RefCounted
-## First Human Archer combat profile and target-locked shot, independent of either camera.
+## Human bow volley profiles and target-locked shots, independent of either camera.
 
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Points := preload("res://game/combat/battle_points.gd")
@@ -18,6 +18,8 @@ const BASIC_ATTACK := {Unit.Damage.RANGED: 52.0}
 const HIT_BP := 4
 const RELEASE_HEIGHT := 1.45
 const IMPACT_HEIGHT := 0.90
+const LONGBOW_MAX_RANGE := 66.0
+const LONGBOW_WINDUP_SECONDS := 1.25
 
 
 class Aim:
@@ -55,6 +57,8 @@ var _clear_lane: Callable
 var _locked_target: Unit
 var _phase := Phase.IDLE
 var _time := 0.0
+var _max_range := MAX_RANGE
+var _windup_seconds := WINDUP_SECONDS
 
 
 ## The battlefield supplies a clear-lane query (release -> impact) using the same
@@ -64,6 +68,14 @@ func _init(archer: Unit, team: int, shared_points: Points, clear_lane: Callable)
 	_team = team
 	_shared_points = shared_points
 	_clear_lane = clear_lane
+
+
+## Opt-in, provisional resolver profile only. No campaign or promotion uses it.
+static func for_marches_longbows(archer: Unit, team: int, shared_points: Points, clear_lane: Callable) -> HumanArcherVolley:
+	var volley := HumanArcherVolley.new(archer, team, shared_points, clear_lane)
+	volley._max_range = LONGBOW_MAX_RANGE
+	volley._windup_seconds = LONGBOW_WINDUP_SECONDS
+	return volley
 
 
 static func make_unit() -> Unit:
@@ -90,7 +102,7 @@ func start(battle_live: bool, aim: Aim) -> Status:
 
 
 ## The controller may call this when a move/hold order replaces the attack.
-## It cannot skip reload after a release.
+## A new shot takes a full draw from the new position. This cannot skip reload.
 func cancel_windup() -> void:
 	if _phase == Phase.WINDUP:
 		_reset()
@@ -100,9 +112,9 @@ func cancel_windup() -> void:
 func phase_progress() -> float:
 	match _phase:
 		Phase.WINDUP:
-			return clampf(_time / WINDUP_SECONDS, 0.0, 1.0)
+			return clampf(_time / _windup_seconds, 0.0, 1.0)
 		Phase.RELOAD:
-			return clampf((_time - WINDUP_SECONDS) / RELOAD_SECONDS, 0.0, 1.0)
+			return clampf((_time - _windup_seconds) / RELOAD_SECONDS, 0.0, 1.0)
 	return 0.0
 
 
@@ -123,14 +135,14 @@ func advance(delta: float, battle_live: bool, aim: Aim = null) -> Shot:
 		# Being engaged in melee breaks the draw immediately. Readying again
 		# takes a full reload even if the enemy steps away on the next tick.
 		shot = Shot.new(Status.PINNED)
-		_time = WINDUP_SECONDS
+		_time = _windup_seconds
 		_begin_reload()
 	else:
 		_time += delta
-		if _phase == Phase.WINDUP and _time >= WINDUP_SECONDS:
+		if _phase == Phase.WINDUP and _time >= _windup_seconds:
 			shot = _release(aim)
 			_begin_reload()
-	if _time >= WINDUP_SECONDS + RELOAD_SECONDS:
+	if _time >= _windup_seconds + RELOAD_SECONDS:
 		_reset()
 	return shot
 
@@ -150,7 +162,7 @@ func _check_aim(aim: Aim) -> Status:
 	var distance_squared := aim.shooter_feet.distance_squared_to(aim.target_feet)
 	if distance_squared < MIN_RANGE * MIN_RANGE:
 		return Status.TOO_CLOSE
-	if distance_squared > MAX_RANGE * MAX_RANGE:
+	if distance_squared > _max_range * _max_range:
 		return Status.TOO_FAR
 	if not _clear_lane.is_valid() or not _clear_lane.call(
 		aim.shooter_feet + Vector3.UP * RELEASE_HEIGHT, aim.target_feet + Vector3.UP * IMPACT_HEIGHT,
