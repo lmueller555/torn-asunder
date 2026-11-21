@@ -38,6 +38,8 @@ const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
 const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
 const NERIS_SPANWATER_FEEDER_DEBRIEF := &"neris_spanwater_feeder_debrief"
+const NERIS_CAIRNSPINE_PASSAGE_DISPATCH := &"neris_cairnspine_passage_dispatch"
+const NERIS_CAIRNSPINE_PASSAGE_DEBRIEF := &"neris_cairnspine_passage_debrief"
 const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
@@ -72,6 +74,8 @@ const INLET_PILOT := "Fishing Inlet Pilot"
 const NERIS := "Rootspeaker Neris Alder"
 const GROVE_ENVOY := "Grove Envoy"
 const FEEDER_KEEPER := "Town Feeder Keeper"
+const REFUGEE_GUIDE := "Refugee Guide"
+const WITNESS_GUIDE := "Witness Guide"
 const SERETH := "High Executor Sereth Vale"
 const IREN := "Iren"
 const VILLAGE_CLERK := "Village Clerk"
@@ -425,6 +429,28 @@ const BEATS := {
 			{"speaker": FEEDER_KEEPER, "text": "I'll take the morning reading. The wells stay in town hands. The nursery plot stays yours, as agreed."},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Have someone show our volunteers how to read the mark. Put us on the rack patrol after storms. That tree will need water long after our platoons leave."},
 			{"speaker": GROVE_ENVOY, "text": "I'll take the first turn. It used to take me all morning to carry enough water for one tree."},
+		],
+	},
+	NERIS_CAIRNSPINE_PASSAGE_DISPATCH: {
+		"title": "A Road We Can Share",
+		"location": "Cairnspine valley assembly · Year Five, before the ascent",
+		"lines": [
+			{"speaker": REFUGEE_GUIDE, "text": "My grove sent me to walk these families to the terrace. It didn't send me to answer for the other groves."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The groves refused the crossing. That answer stands. Sova has his own escort. I'm here for the people on the road."},
+			{"speaker": REFUGEE_GUIDE, "text": "Meet me at staging. We can take the shelf or the side path. If the road ahead turns bad, we'll wait at the last safe marker."},
+			{"speaker": WITNESS_GUIDE, "text": "The witnesses are with me. Give me a signal, then tell us which lane to take. We can wait under cover until you're ready."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll confirm each route at the fork. If the rivals get to the rejoin, have the volunteers hold it. We need the road to the terrace, not the vault gate."},
+		],
+	},
+	NERIS_CAIRNSPINE_PASSAGE_DEBRIEF: {
+		"title": "Room by the Stove",
+		"location": "Cairnspine witness terrace · Year Five, after the escort",
+		"lines": [
+			{"speaker": REFUGEE_GUIDE, "text": "Both groups are here. A few of the families are asking where they can go when the terrace empties."},
+			{"speaker": WITNESS_GUIDE, "text": "My people will wait here. They'll speak to what they see at the vault, not before."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The last volunteers stay with the witnesses. I'll walk back with anyone who wants to come. That nursery tree still needs watering."},
+			{"speaker": REFUGEE_GUIDE, "text": "My grove has a room by the stove. I'll ask the family with the baby whether they'd like it."},
+			{"speaker": WITNESS_GUIDE, "text": "I can take the man with the wet bedroll and his father. I'll ask them while we wait."},
 		],
 	},
 	SERETH_CUT_DISPATCH: {
