@@ -111,11 +111,49 @@ func _run() -> void:
 		"Re-entering command view centers on the hero's current location.")
 	_check(infantry.position.distance_to(local_target) < 0.01, "The original order completed after view changes and camera navigation.")
 
+	_check_overview_fit(camera, screen)
+
 	_harness.queue_free()
 	await process_frame
 	if _failures == 0:
-		print("Large field: tactical sector, stick and edge pan, full overview, long-range picking, recenter, bounds and persistent orders passed.")
+		print("Large field: tactical sector, stick and edge pan, full and HUD-framed overview, long-range picking, recenter, bounds and persistent orders passed.")
 	quit(0 if _failures == 0 else 1)
+
+
+func _check_overview_fit(camera: Camera3D, screen: Rect2) -> void:
+	var fit := Rect2(0.46, 0.13, 0.52, 0.57)
+	var sector := _harness._sector
+	_harness.overview_safe_frame = fit
+	_check(camera.size == 58.0 and not sector.overview, "Opting in does not change the local tactical camera.")
+	_button(JOY_BUTTON_RIGHT_STICK)
+	var safe := Rect2(screen.position + fit.position * screen.size, fit.size * screen.size)
+	for yaw: float in [0.0, PI * 0.25, PI * 0.5, PI, PI * 1.5]:
+		_harness._command_yaw = yaw
+		_harness._update_cameras()
+		for corner: Vector2 in [FIELD.position, Vector2(FIELD.end.x, FIELD.position.y),
+				FIELD.end, Vector2(FIELD.position.x, FIELD.end.y)]:
+			var projected := camera.unproject_position(Vector3(corner.x, 0.0, corner.y))
+			_check(safe.has_point(projected), "Rotated overview stays in the area clear of the HUD.")
+	var target := Vector2(185, 125)
+	_harness._command_yaw = 0.0
+	_harness._update_cameras()
+	_point(target, MOUSE_BUTTON_RIGHT)
+	_check(_harness.battle.formations[1].destination.distance_to(target) < 0.01,
+		"Projected pointer orders still target the same terrain under a translated camera.")
+	_axis(JOY_AXIS_RIGHT_Y, 1.0)
+	_tick(24)
+	_axis(JOY_AXIS_RIGHT_Y, 0.0)
+	var tilted := camera.rotation.x
+	_axis(JOY_AXIS_RIGHT_Y, -1.0)
+	_tick(24)
+	_axis(JOY_AXIS_RIGHT_Y, 0.0)
+	_check(not is_equal_approx(camera.rotation.x, tilted), "Framed overview still honors controller pitch.")
+	var bad := Rect2(0.9, 0.9, 0.14, 0.14)
+	var stock := sector.projection(16.0 / 9.0, 0.0, 1.0, Rect2())
+	_check(stock == sector.projection(16.0 / 9.0, 0.0, 1.0, bad), "An invalid frame falls back to stock.")
+	_key(KEY_M)
+	_check(not sector.overview and camera.size == 58.0 and sector.view_center().distance_to(target) < 0.01,
+		"Returning to the ordinary sector clears the projection offset.")
 
 
 func _ground_fixture() -> PackedScene:

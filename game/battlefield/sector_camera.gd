@@ -3,6 +3,8 @@ extends RefCounted
 ## a whole-field overview. Coordinates are local to the battlefield scene.
 
 const SAFE_FRACTION := 0.30
+const FULL_SCREEN := Rect2(0.0, 0.0, 1.0, 1.0)
+const MIN_FRAME_SIDE := 0.40
 
 var bounds: Rect2
 var sector_size: float
@@ -36,6 +38,33 @@ func view_size(aspect: float) -> float:
 		return sector_size
 	# Fit the field at any orbit yaw, including a narrow or portrait viewport.
 	return maxf(sector_size, bounds.size.length() * 1.06 / minf(maxf(aspect, 0.1), 1.0))
+
+
+## Returns (vertical span, effective pitch, horizontal shift, vertical shift).
+## Authored bounds are X/Z. The safe frame is in normalized upper-left-origin
+## viewport coordinates. An absent or invalid frame keeps ordinary overview.
+func projection(aspect: float, yaw: float, pitch: float, safe_frame: Rect2) -> Vector4:
+	var usual := Vector4(view_size(aspect), pitch, 0.0, 0.0)
+	if not overview or not safe_frame.position.is_finite() or not safe_frame.size.is_finite() \
+			or not FULL_SCREEN.encloses(safe_frame) or minf(safe_frame.size.x, safe_frame.size.y) < MIN_FRAME_SIDE \
+			or safe_frame == FULL_SCREEN:
+		return usual
+	# Keep the same right-stick pitch input; shift its neutral point nearly
+	# overhead on long fields so near cliffs don't obscure the far playable bank.
+	var degrees := clampf(rad_to_deg(pitch), 50.0, 75.0)
+	var overview_pitch := deg_to_rad(remap(degrees, 50.0, 59.0, 70.0, 84.0) if degrees < 59.0
+		else remap(degrees, 59.0, 75.0, 84.0, 88.0))
+	var ux := absf(cos(yaw))
+	var uz := absf(sin(yaw))
+	var width := ux * bounds.size.x + uz * bounds.size.y
+	var depth := uz * bounds.size.x + ux * bounds.size.y
+	var ratio := maxf(aspect, 0.1)
+	var vertical_span := 1.06 * maxf(width / (ratio * safe_frame.size.x),
+		depth * sin(overview_pitch) / safe_frame.size.y)
+	vertical_span = maxf(sector_size, vertical_span)
+	var center := safe_frame.get_center()
+	return Vector4(vertical_span, overview_pitch,
+		(0.5 - center.x) * ratio * vertical_span, (center.y - 0.5) * vertical_span)
 
 
 func clamp_to_field(point: Vector2) -> Vector2:
