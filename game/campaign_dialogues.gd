@@ -44,6 +44,8 @@ const NERIS_CAIRNSPINE_PASSAGE_DISPATCH := &"neris_cairnspine_passage_dispatch"
 const NERIS_CAIRNSPINE_PASSAGE_DEBRIEF := &"neris_cairnspine_passage_debrief"
 const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
+const SERETH_PASS_WRIT_DISPATCH := &"sereth_pass_writ_dispatch"
+const SERETH_PASS_WRIT_DEBRIEF := &"sereth_pass_writ_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
@@ -83,6 +85,7 @@ const SERETH := "High Executor Sereth Vale"
 const IREN := "Iren"
 const VILLAGE_CLERK := "Village Clerk"
 const HOUSEHOLD_GUARD := "Household Guard"
+const COURT_COURIER := "Court Courier"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -499,6 +502,28 @@ const BEATS := {
 			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Seal the bundle for cataloging. Don't send the court a list of names to call back. Hearing a name doesn't tell us who wants to return."},
 			{"speaker": VILLAGE_CLERK, "text": "The court's courier is at the door. They want you to secure the Godbridle before anyone gives another command."},
 			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll go. If you come across a letter for me, put it in the register with everything else. It can wait."},
+		],
+	},
+	SERETH_PASS_WRIT_DISPATCH: {
+		"title": "An Audience, Not a Seizure",
+		"location": "Cairnspine west road · Year Four, before the handover",
+		"lines": [
+			{"speaker": COURT_COURIER, "text": "Mara has handed the bridle to Sova. The court wants a hearing before the vault closes. Its seal is on this writ."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The seal makes me a messenger. It doesn't give me leave to seize the bridle. I'll take the writ to the Keeper myself."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "We can screen the open road or take the sheep track on foot. There's a lookout where the track comes back into the open."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Keep the post clear while I offer the writ and wait for an answer. Once the Keeper grants the hearing, fall back to the west rally. Don't chase the riders."},
+			{"speaker": COURT_COURIER, "text": "Bring me the terms in writing. The court will ask what the Keeper's signature buys us."},
+		],
+	},
+	SERETH_PASS_WRIT_DEBRIEF: {
+		"title": "A Hearing Only",
+		"location": "Cairnspine west rally · Year Four, after the withdrawal",
+		"lines": [
+			{"speaker": HOUSEHOLD_GUARD, "text": "You're back at the west rally. Did the Keeper answer?"},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The Keeper wrote 'a hearing only, at the valley assembly.' I countersigned those terms so nobody could say I'd heard different."},
+			{"speaker": COURT_COURIER, "text": "The Keeper's name and yours, then. Will that get our speaker through the vault gate?"},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "No entry to the vault. No right to take or use the bridle. And neither signature can answer for the dead."},
+			{"speaker": COURT_COURIER, "text": "I'll tell them they may send someone to be heard. I can't promise that's all they'll ask for."},
 		],
 	},
 }
