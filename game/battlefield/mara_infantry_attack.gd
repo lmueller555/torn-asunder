@@ -17,9 +17,16 @@ const BP_PER_HIT := 6
 const PROTOTYPE_HP := 310.0
 const MIN_FORWARD_DOT := 0.50
 
-var attacker := Unit.new(PROTOTYPE_HP)
+var attacker: Unit
+var _base_damage: float
 var phase := Phase.APPROACH
 var _remaining := 0.0
+
+
+
+func _init(hp := PROTOTYPE_HP, base_damage := BASE_DAMAGE) -> void:
+	attacker = Unit.new(hp)
+	_base_damage = base_damage
 
 
 func issue(group: Battle.Formation, enemy: Unit, target: Vector2) -> bool:
@@ -58,7 +65,7 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 				_remaining = WINDUP_TIME
 			else:
 				var remaining := distance - STOP_RANGE if distance > REACH else distance
-				var next := battle.clamp_to_field(group.position + direction * minf(remaining, Battle.FORMATION_SPEED * delta))
+				var next := battle.clamp_to_field(group.position + direction * minf(remaining, group.move_speed * delta))
 				if next.is_equal_approx(group.position) or not can_move.call(group.position, next, true):
 					group.order = Battle.Order.BLOCKED
 					_reset()
@@ -72,7 +79,7 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 				_remaining = RECOVERY_TIME
 				if distance <= REACH and (distance == 0.0 or direction.dot(group.heading) >= MIN_FORWARD_DOT) \
 					and clear_contact.call(group.position, target):
-					var lost := enemy.receive_hit(attacker, {Unit.Damage.MELEE: BASE_DAMAGE})
+					var lost := enemy.receive_hit(attacker, {Unit.Damage.MELEE: _base_damage})
 					if not enemy.is_alive():
 						group.hold()
 						_reset()
