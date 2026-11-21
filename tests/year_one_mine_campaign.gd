@@ -3,6 +3,18 @@ extends SceneTree
 const MAP := preload("res://game/battlefields/year_one_mine_campaign.tscn")
 const POCKET := preload("res://game/battlefields/year_one_mine.tscn")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
+const Battle := preload("res://game/battlefield/command_battle.gd")
+const MarchScale := preload("res://game/battlefield/battlefield_march_scale.gd")
+
+const CAMPAIGN_BOUNDS := Rect2(-160, -108, 320, 224)
+const MARCH_DT := 1.0 / 60.0
+const MARCH_MAX_TICKS := 180 * 60
+# Supported feet of the valley crags, not the road exit or playable-window clamp.
+const WEST_RIM := Vector2(-152, -17)
+const EAST_RIM := Vector2(157, -30)
+const MARCH_KNOTS := [
+	"WestAssembly", "QuarryTurn", "RoadWest", "RoadJunction", "RoadCut", "EastPass", "PassRelease",
+]
 
 const PATHS := {
 	"Escort approach": ["HumanEscort", "WestAssembly", "QuarryTurn", "RoadWest", "MineYard", "GodbridlePickup"],
@@ -127,10 +139,95 @@ func _run() -> void:
 		_fail("The clear gap at RidgeOverlook should see the road.")
 		return
 
+	if not _measure_edge_march():
+		return
+
 	print("Verified %d markers, %d hero/formation routes, and solid terrain. Delivery %.0f m, evacuation %.0f m." % [
 		_markers.size(), PATHS.size(), distances["Godbridle delivery"], distances["Miner evacuation"],
 	])
 	quit()
+
+
+func _measure_edge_march() -> bool:
+	for edge: Array in [
+		[WEST_RIM, Vector2(-157, -17), Vector2(-157, -17)],
+		[EAST_RIM, Vector2(159.5, -30), Vector2(163, -30)],
+	]:
+		var rim: Vector2 = edge[0]
+		var outside: Vector2 = edge[1]
+		var ray_end: Vector2 = edge[2]
+		var hit: Dictionary = _ray(Vector3(rim.x, 0.7, rim.y), Vector3(ray_end.x, 0.7, ray_end.y))
+		var crag := hit.get("collider") as StaticBody3D
+		# The blocked destination is still inside the move clamp. A center-floor
+		# hit at the east crag is insufficient: the formation footprint clips it.
+		if not _supports_formation(rim) or _supports_formation(outside) \
+				or not CAMPAIGN_BOUNDS.has_point(outside) or crag == null \
+				or not String(crag.name).begins_with("ValleyEdge"):
+			_fail("Measured Mine rim no longer meets the valley crag at %s." % rim)
+			return false
+		var probe := _march_battle(rim)
+		probe.order_move(0, outside)
+		for tick in range(ceili(rim.distance_to(outside) / Battle.FORMATION_SPEED / MARCH_DT) + 2):
+			if probe.formations[0].order != Battle.Order.MOVE:
+				break
+			probe.step(MARCH_DT, Vector2.ZERO, _terrain.can_move)
+		if probe.formations[0].order != Battle.Order.BLOCKED:
+			_fail("Infantry can march through the Mine rim from %s toward %s." % [rim, outside])
+			return false
+
+	var route: Array[Vector2] = [WEST_RIM]
+	for id: String in MARCH_KNOTS:
+		var point := _markers[id]
+		route.append(Vector2(point.x, point.z))
+	route.append(EAST_RIM)
+	if not _march_route(route, "west → east"):
+		return false
+	route.reverse()
+	return _march_route(route, "east → west")
+
+
+func _march_route(route: Array[Vector2], direction: String) -> bool:
+	var battle := _march_battle(route[0])
+	var infantry := battle.formations[0]
+	var ticks := 0
+	var distance := 0.0
+	for i in range(1, route.size()):
+		var destination := route[i]
+		battle.order_move(0, destination)
+		while infantry.order == Battle.Order.MOVE and ticks < MARCH_MAX_TICKS:
+			var before := infantry.position
+			battle.step(MARCH_DT, Vector2.ZERO, _terrain.can_move)
+			distance += before.distance_to(infantry.position)
+			ticks += 1
+			if not _supports_formation(infantry.position):
+				_fail("Mine march lost walkable formation clearance at %s." % infantry.position)
+				return false
+		if infantry.order != Battle.Order.HOLD or infantry.position != destination:
+			_fail("Mine march %s could not reach %s; stopped at %s." % [direction, destination, infantry.position])
+			return false
+	var seconds := ticks * MARCH_DT
+	if not MarchScale.within_target_band(seconds) or MarchScale.classify(seconds) != MarchScale.Tier.SMALL:
+		_fail("Expected a Small Mine march %s; marched %.3f m in %.2f s." % [direction, distance, seconds])
+		return false
+	print("Year One Mine (%s): infantry marched %.3f m from %s to %s in %.2f s (%d ticks, Small)." % [
+		direction, distance, route.front(), route.back(), seconds, ticks,
+	])
+	return true
+
+
+func _march_battle(start: Vector2) -> Battle:
+	var battle := Battle.new()
+	battle.bounds = CAMPAIGN_BOUNDS
+	battle.formations[0].position = start
+	battle.formations[0].hold()
+	return battle
+
+
+func _supports_formation(point: Vector2) -> bool:
+	var surface: Variant = _terrain.destination_from_ray(
+		Vector3(point.x, 32.0, point.y), Vector3(point.x, -8.0, point.y)
+	)
+	return surface != null and _terrain.formation_fits_at(point)
 
 
 func _check_segment(from: Vector3, to: Vector3) -> bool:
