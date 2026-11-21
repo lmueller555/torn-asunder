@@ -9,6 +9,9 @@ const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
 const EXIT_RADIUS := 3.8
 const CUE_RADIUS := 12.0
 const LANDING_RADIUS := 8.0
+const FOLLOW_MAX_SHIFT := 14.0
+const FOLLOW_SPEED := 24.0
+const AIM_KEYS := [KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_R, KEY_F]
 const SAFE_COLOR := Color("#a3ebda")
 const HAZARD_COLOR := Color("#ffb179")
 const SAFE_ROUTE := ["QuaySafeTurn", "InlandBypass", "InlandApproach", "InlandStairTop", "UpperQuay", "UpperQuayExit"]
@@ -34,6 +37,7 @@ var _bypass_open := false
 var _landing_reached := false
 var _warned_in_prior_step := false
 var _hero_down := false
+var _follow_shift := Vector3.ZERO
 
 @onready var _goal: Label = $WithdrawalHUD/Panel/Margin/Readout/Goal
 @onready var _roster: Label = $WithdrawalHUD/Panel/Margin/Readout/Roster
@@ -85,9 +89,83 @@ func _physics_process(delta: float) -> void:
 	# A warning and a physical closure must not happen in the same update.
 	_warned_in_prior_step = objective.lower_quay == Quay.LowerQuay.WARNED
 	_refresh_withdrawal()
+	_frame_levy_follow(delta)
 	if objective.phase != Quay.Phase.WITHDRAWING:
 		_levy_status.hide()
 		mission_finished.emit(objective.phase == Quay.Phase.SUCCEEDED)
+
+
+func _frame_levy_follow(delta: float) -> void:
+	# Called only after the harness writes its normal orthographic pose.
+	# Follow changes that frame's camera position, never the sector state.
+	var previous := _follow_shift
+	_follow_shift = Vector3.ZERO
+	if not command_view or not _sector or _sector.overview or not _command_camera.is_current() \
+			or objective.phase != Quay.Phase.WITHDRAWING or not levy or _mouse_cursor_active:
+		return
+	var group := battle.formations[selected_index]
+	# ENGAGE is the levy adapter's current, unobstructed same-level body
+	# contact, not a pursuit or memory. No follow for hero or another platoon.
+	if not group.can_receive_orders() or levy.decision.intent != Patrol.Intent.ENGAGE \
+			or levy.decision.contact_id != StringName(group.title):
+		return
+	if not _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y).is_zero_approx() \
+			or not _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y).is_zero_approx():
+		return
+	for key: int in AIM_KEYS:
+		if _keys.has(key):
+			return
+	var window := get_viewport().get_visible_rect()
+	if not window.has_area():
+		return
+	var safe := window.grow(-0.06 * minf(window.size.x, window.size.y))
+	var camera := _command_camera
+	var normal := camera.position
+	var toward := (group.position - _sector.view_center()).limit_length(FOLLOW_MAX_SHIFT)
+	var offset := previous.move_toward(Vector3(toward.x, 0, toward.y), FOLLOW_SPEED * delta)
+	camera.position = normal + offset
+	for point: Vector2 in [cursor, group.position, levy.position]:
+		var at := to_global(_ground(point))
+		if camera.is_position_behind(at) or not safe.has_point(camera.unproject_position(at)):
+			camera.position = normal
+			return
+	_follow_shift = offset
+
+
+func _restore_levy_follow() -> void:
+	if _follow_shift != Vector3.ZERO:
+		_follow_shift = Vector3.ZERO
+		_update_cameras()
+
+
+func _input(event: InputEvent) -> void:
+	if _follow_shift == Vector3.ZERO:
+		return
+	if event is InputEventMouse or event is InputEventKey:
+		_restore_levy_follow()
+	elif event is InputEventJoypadButton and event.pressed and event.device == _input_device:
+		_restore_levy_follow()
+	elif event is InputEventJoypadMotion and event.device == _input_device:
+		var axis: JoyAxis = event.axis
+		if axis == JOY_AXIS_TRIGGER_LEFT:
+			if event.axis_value <= L2_RELEASE:
+				_restore_levy_follow()
+		elif axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
+			# Use the same radial deadzone for the incoming stick pair. Do not
+			# bounce off the follow lens on neutral stick noise.
+			var x_axis := JOY_AXIS_LEFT_X if axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y] else JOY_AXIS_RIGHT_X
+			var y_axis := JOY_AXIS_LEFT_Y if x_axis == JOY_AXIS_LEFT_X else JOY_AXIS_RIGHT_Y
+			var input := Vector2(event.axis_value, _axis(y_axis)) if axis == x_axis \
+				else Vector2(_axis(x_axis), event.axis_value)
+			if input.length() > STICK_DEADZONE:
+				_restore_levy_follow()
+	# Do not consume anything: inherited ray picking and inputs remain in charge.
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+		_restore_levy_follow()
+	super._notification(what)
 
 
 func _after_battle_step(delta: float) -> void:
@@ -225,6 +303,7 @@ func report_platoon_wiped(slot: Quay.Platoon) -> void:
 
 
 func restart_mission() -> void:
+	_restore_levy_follow()
 	objective.restart()
 	_hero_down = false
 	_checked_bypass = false
