@@ -7,6 +7,7 @@ const CampaignMissions := preload("res://game/campaign_missions.gd")
 const CampaignDeployments := preload("res://game/campaign_deployments.gd")
 const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
+const DevelopmentOverworld := preload("res://game/campaign_overworld_3d.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
@@ -94,6 +95,7 @@ var _selection_region: Label
 var _selection_summary: Label
 var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
+var _development_overworld_factory: Callable
 var _campaign_warning := ""
 var _campaign_battle: Node3D
 var _pause_menu: PauseMenu
@@ -313,8 +315,17 @@ func _open_campaign(campaign: Dictionary) -> void:
 		_show_campaign_warning()
 
 
+## An explicit development harness can supply a fresh map for supported campaign locations.
+func set_development_overworld_factory(factory: Callable) -> void:
+	if OS.is_debug_build():
+		_development_overworld_factory = factory
+
+
 func _show_world_map() -> void:
 	_replace_stage(Page.WORLD_MAP)
+	if _add_development_overworld():
+		_show_campaign_warning()
+		return
 	var map: CampaignMap = CAMPAIGN_MAP_SCENE.instantiate()
 	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
 	map.return_requested.connect(_show_title)
@@ -323,6 +334,24 @@ func _show_world_map() -> void:
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
 	_show_campaign_warning()
+
+
+func _add_development_overworld() -> bool:
+	if not _development_overworld_factory.is_valid():
+		return false
+	var map := _development_overworld_factory.call(_campaign_world) as DevelopmentOverworld
+	if not map:
+		return false
+	if not map.can_present(_campaign_world):
+		map.free()
+		return false
+	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
+	map.return_requested.connect(_show_title)
+	map.camp_operations_requested.connect(_show_briefing)
+	map.waypoint_arrived.connect(_on_waypoint_arrived)
+	map.briefing_requested.connect(_show_campaign_mission_briefing)
+	_stage.add_child(map)
+	return true
 
 
 func _on_waypoint_arrived(_id: String) -> void:
