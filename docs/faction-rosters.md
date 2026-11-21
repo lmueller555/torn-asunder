@@ -81,4 +81,10 @@ The [Undead campaign](campaigns/undead.md) names the **Household Guard** and **S
 
 These **provisional data** add no spells or special abilities, do not change the fixed campaign rosters, and reveal nothing about the voices at the Cut. Iren, the clerk, the witnesses and the court speaker are not troop entries. No rating, including Curse, supplies consent.
 
-Run `godot --headless --script tests/faction_roster.gd`.
+## Inspecting the next advancement
+
+`UnitCatalog.faction_roster().inspect_advances(source_id, faction_id, unit.rating, platoon.rank)` reports all **direct** choices in authored order for that unit and faction. Each row contains `target`, `eligible`, and separate `ratings` and `training` dictionaries keyed by their existing enums. E.g., Melee 8 on the Human Infantry → Heavy Infantry edge gives `{current: 8, minimum: 10, missing: 2}` under ratings and no training entry. A reached gate reports zero missing. An absent or invalid read reports `null` for both current and missing; it does not qualify the branch. Wrong-faction, unknown, and terminal unit IDs have no rows.
+
+The missing values are rating points or training ranks to meet existing thresholds, not an XP, Battle Point, or funding quote. Reading a plan does not spend points, change a composition, make a promotion playable, or add a class to skirmish.
+
+Run `godot --headless --script tests/faction_roster.gd` and `godot --headless --script tests/roster_advancement_inspection.gd`.
