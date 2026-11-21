@@ -8,6 +8,7 @@ Run `tests/red_basin_well_road_preview.tscn` with F6. Keys **1**, **2**, and **3
 godot tests/red_basin_well_road_preview.tscn
 godot tests/red_basin_well_road_preview.tscn -- --hero
 godot --headless --script tests/red_basin_well_road.gd
+godot --headless --script tests/red_basin_march_scale.gd
 ```
 
 ## The route choice
@@ -22,6 +23,18 @@ The basin support plane is **340 × 240 m**, one unit per meter, **+X east to th
 | --- | ---: | ---: |
 | Upper cart, from its well to Basin exit | 302 m | 424 m |
 | Lower cart, via boarding to Basin exit | 350 m | 378 m |
+
+## Operational march in the deployed mission
+
+The live *The Second Bucket* deployment uses the terrain above. Measured at 3 m/s with the actual Brace Infantry platoon and terrain clearance, no combat, waiting, or cart timers:
+
+| Infantry route | Planar march | Time |
+| --- | ---: | ---: |
+| West well approach to the east apron tip by the exposed salt road | 321.8 m | 107.3 s |
+| Same endpoints by the covered wash, using its bends and east ramp | 443.1 m | 147.8 s |
+| Covered wash ending at the actual Basin exit marker | 438.1 m | 146.2 s |
+
+The west endpoint is the last supported infantry position before a solid basin wall. To the east, the original extraction marker is at X=157 and the visibly marked apron reaches the live command limit at X=162. The shelf still physically supports the infantry footprint beyond that limit (center X=168.25 on the exit lane); an order there clamps to X=162. These are operational routes, not two physical terrain edges. The covered wash is **nearest to Large** in the [march scale](campaigns/mission-events.md#scale-and-interception), not a 155-second classification for the whole field.
 
 ## Scene contract
 
