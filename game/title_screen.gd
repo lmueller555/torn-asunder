@@ -420,6 +420,7 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	_victory_pending = false
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
 		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
+		mission.configure_campaign_lead_melee(confirmed_clears.has(mission_id) and _profile.mara_lead_melee_invested())
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
 		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))

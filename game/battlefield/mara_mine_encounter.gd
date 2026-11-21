@@ -27,7 +27,7 @@ const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
 const INTERCEPTION_SPEED := 5.4
 
-var hero := Unit.new(HERO_HP)
+var hero: Unit
 var points: Points
 var infantry_attack: InfantryAttack
 var archer_attack: ArcherAttack
@@ -49,11 +49,13 @@ var _interception_leg := 0
 
 
 func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable(), lead_level := 1,
-		infantry: InfantryAttack = null) -> void:
+		infantry: InfantryAttack = null, lead_melee_invested := false) -> void:
 	infantry_attack = infantry if infantry else InfantryAttack.new()
 	enemy_position = spawn
 	_feet = feet
 	points = Points.new(lead_level)
+	# The launch choice affects only Mara's existing combat proxy, not its level or HP.
+	hero = Unit.new(HERO_HP, {Unit.Damage.MELEE: Unit.MIN_RATING + int(lead_melee_invested)})
 	defense = Defense.new(hero, HERO_TEAM, points)
 	archer_attack = ArcherAttack.new(points, HERO_TEAM, ENEMY_TEAM, clear_ranged)
 
