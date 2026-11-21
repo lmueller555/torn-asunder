@@ -125,5 +125,13 @@ func receive_damage(damage: float) -> float:
 	return lost
 
 
+func heal(amount: float) -> float:
+	if not is_alive():
+		return 0.0
+	var gained := minf(_max_hp - _hp, maxf(0.0, amount))
+	_hp += gained
+	return gained
+
+
 static func damage_factor(attacking_rating: float, defending_rating: float) -> float:
 	return (MAX_RATING + attacking_rating) / (MAX_RATING + DEFENSE_WEIGHT * defending_rating)
