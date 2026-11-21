@@ -29,7 +29,7 @@ const OTHER_SAVES := {
 	"raska": ["orc_mine_witness", ["year_one_mine", "basin_well_road"]],
 	"sova": ["sova_mine_tunnels", ["year_one_mine", "cairnspine_assembly"]],
 	"ilyra": ["ilyra_moonwash_rescue", ["moonwash_harbor", "moonwash_survey_shore"]],
-	"neris": ["neris_failing_grove", ["isolated_grove_nursery", "spanwater_lock"]],
+	"neris": ["neris_failing_grove", ["isolated_grove_nursery", "cairnspine_boundary_post"]],
 }
 const DT := 1.0 / 60.0
 const TO_WITNESS := ["Routes/ApproachRoadWest", "Routes/WestLaneRoadJunction", "Routes/WestLaneEntrance",

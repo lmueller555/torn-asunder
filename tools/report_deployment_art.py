@@ -85,7 +85,7 @@ VAULT_WRAPPER = "game/battlefields/cairnspine_vault_road_sova_jamb.tscn"
 VAULT_BASE = "game/battlefields/cairnspine_vault_road.tscn"
 VAULT_ASSET = "assets/models/environment/vault_jamb.glb"
 VAULT_RECEIPT = "docs/audits/sova-vault-jambs-v1.json"
-VAULT_STOCK_DEPLOYMENTS = ("sova_public_record", "neris_cairnspine_passage", "sereth_no_proxy")
+VAULT_STOCK_DEPLOYMENTS = ("sova_public_record", "sereth_no_proxy")
 STOREHOUSE_FIELD = "game/battlefields/year_one_mine_campaign.tscn"
 STOREHOUSE_BINDING = "game/battlefield/mara_mine_storehouse_art.gd"
 STOREHOUSE_SOURCE = "assets/models/environment/mara_mine_storehouse/works_shell.gd"
@@ -301,7 +301,7 @@ def _verify_sova_vault_jambs(root: Path, deployments: dict[str, str], battlefiel
     ] != [VAULT_MISSION]:
         raise ValueError("Sova Vault jambs: wrapper is not isolated to its reviewed placement")
     if any(battlefields.get(mission) != VAULT_BASE for mission in VAULT_STOCK_DEPLOYMENTS):
-        raise ValueError("Sova Vault jambs: the other three missions must still use the shared Cairnspine field")
+        raise ValueError("Sova Vault jambs: the other registered Vault missions must still use the shared Cairnspine field")
     return _receipt_record(root, "Sova’s fixed Vault jambs and capitals (V1)", VAULT_RECEIPT, 7,
                            {VAULT_ASSET, VAULT_WRAPPER, VAULT_BASE}, "mission_deployment", VAULT_DEPLOYMENT)
 

@@ -39,8 +39,9 @@ func _run() -> void:
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
 	passed = _check_sova_vault_return_beats() and passed
-	passed = _check_neris_beats() and passed
-	passed = _check_neris_passage_beats() and passed
+	passed = _check_neris_grove_and_historical_feeder_beats() and passed
+	passed = _check_neris_survey_and_greyhollow_beats() and passed
+	passed = _check_neris_historical_passage_beats() and passed
 	passed = _check_sereth_cut_beats() and passed
 	passed = _check_sereth_pass_writ_beats() and passed
 	passed = _check_sereth_no_proxy_beats() and passed
@@ -48,7 +49,7 @@ func _run() -> void:
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad and Undead finales), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, Greyhollow chronology, Dryad and Undead continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -613,15 +614,16 @@ func _check_sova_vault_return_beats() -> bool:
 	return _completions.slice(start) == ids or _fail("Vault dialogue emitted duplicate or out-of-order completions.")
 
 
-func _check_neris_beats() -> bool:
+func _check_neris_grove_and_historical_feeder_beats() -> bool:
+	# Spanwater remains a historical sandbox beat; only the Grove belongs to this campaign route.
 	var cases := [
 		[Beats.NERIS_FAILING_GROVE_DISPATCH, "What We Planted Here",
-			["The grove said no", "keep the old feeder open", "The well is still the town's",
+			["Two winters without rain", "The grove said no", "keep the old feeder open", "The well is still the town's",
 				"No crossing", "call the volunteers", "sunken track", "raised road"]],
 		[Beats.NERIS_FAILING_GROVE_DEBRIEF, "Room for the First Tree",
 			["The first tree is upright", "soil is wet", "can't fit the whole grove here today",
-				"send a crew to the feeder", "Their ground is still dry", "still ask to hold it",
-				"your answer about the crossing stands"]],
+				"send a crew to the feeder", "go back for the other trees", "my grandmother knew a verse",
+				"there'd be no world left to root in", "I want the words she heard"]],
 		[Beats.NERIS_SPANWATER_FEEDER_DISPATCH, "Water at the Town Gauge",
 			["first tree is still on well water", "opening the spillway, not the sea gate",
 				"full river won't help", "clear the rack", "work screen", "raised path",
@@ -663,7 +665,57 @@ func _check_neris_beats() -> bool:
 	return _completions.slice(start) == ids or _fail("Dryad dialogue emitted duplicate or out-of-order completions.")
 
 
-func _check_neris_passage_beats() -> bool:
+func _check_neris_survey_and_greyhollow_beats() -> bool:
+	var cases := [
+		[Beats.NERIS_SURVEY_DISPATCH, "Where the Road Goes", "Cairnspine boundary", 3,
+			["haul stone uphill before dawn", "drops into the Marches", "wheel ruts first", "next stop on the slate"]],
+		[Beats.NERIS_SURVEY_DEBRIEF, "An Address, Not Proof", "Cairnspine boundary", 3,
+			["Greyhollow is the next stop", "doesn't tell us what anybody found", "warn the wrong mine"]],
+		[Beats.NERIS_GREYHOLLOW_DISPATCH, "Before They Reach It", "Greyhollow", 4,
+			["There are miners down there", "haven't seen the thing", "And if you're wrong?", "Leave the east track open"]],
+		[Beats.NERIS_GREYHOLLOW_DEBRIEF, "Out of Our Hands", "Greyhollow", 6,
+			["Both our companies are here", "miners took the south tunnel", "western shelter", "did not see what was in it",
+				"putting soldiers between people and a way out", "Only what we saw"]],
+	]
+	var start := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title") != fixture[1] or not beat.get("location", "").begins_with(fixture[2]) \
+				or beat.lines.size() != fixture[3] or not _panel.present(id, beat, true):
+			return _fail("The Dryad survey or finale did not open with its own authored content: %s" % id)
+		if (beat.get("presentation", &"") == &"cinematic") != (id == Beats.NERIS_GREYHOLLOW_DEBRIEF):
+			return _fail("Only the final Dryad withdrawal should use the cinematic presentation.")
+		var spoken := ""
+		var speakers := {}
+		for index in beat.lines.size():
+			var speaker := _label("SpeakerName").text
+			if speaker != beat.lines[index].speaker:
+				return _fail("The Dryad route played a line under the wrong speaker.")
+			speakers[speaker] = true
+			spoken += _label("DialogueLine").text + "\n"
+			if speaker == Beats.NERIS and (not _portrait().visible or _portrait().texture != Beats.NERIS_PORTRAIT):
+				return _fail("Neris's existing portrait did not render: %s" % id)
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[4]:
+			if not phrase in spoken:
+				return _fail("The Dryad route lost an objective or an uncertainty: " + phrase)
+		for spoiler in ["Godbridle", "Orrun", "bridle in the bundle", "sealed case"]:
+			if spoiler in spoken:
+				return _fail("The Dryads were shown knowledge they did not have at Greyhollow: " + spoiler)
+		if not speakers.has(Beats.NERIS) or not speakers.has(Beats.GROVE_ENVOY) \
+				or _button("AdvanceButton").text != "Finish" or _completions.size() != start:
+			return _fail("A Dryad route scene lost its testimony or skipped explicit Finish.")
+		_send_key(KEY_SPACE)
+		start += 1
+		if _panel.visible or _completions.size() != start or _completions.back() != id:
+			return _fail("A Dryad route scene did not complete once under its authored ID.")
+	return true
+
+
+func _check_neris_historical_passage_beats() -> bool:
+	# The Year Five passage lives in the historical sandbox, not as an ending for revised Neris.
 	var cases := [
 		[Beats.NERIS_CAIRNSPINE_PASSAGE_DISPATCH, "A Road We Can Share", "Cairnspine valley assembly",
 			[Beats.REFUGEE_GUIDE, Beats.NERIS, Beats.REFUGEE_GUIDE, Beats.WITNESS_GUIDE, Beats.NERIS],

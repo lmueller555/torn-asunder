@@ -28,9 +28,9 @@ const EXPECTED := {
 		["ilyra_spanwater_evacuation", 4, "spanwater_lock"],
 	],
 	"neris": [
-		["neris_failing_grove", 3, "isolated_grove_nursery"],
-		["neris_spanwater_feeder", 4, "spanwater_lock"],
-		["neris_cairnspine_passage", 5, "cairnspine_vault_road"],
+		["neris_failing_grove", 1, "isolated_grove_nursery"],
+		["neris_cairnspine_survey", 2, "cairnspine_boundary_post"],
+		["neris_greyhollow", 3, "year_one_mine"],
 	],
 	"sereth": [
 		["sereth_voices_at_the_cut", 3, "still_kingdom_cut"],

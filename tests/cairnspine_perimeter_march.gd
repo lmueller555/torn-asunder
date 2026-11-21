@@ -6,6 +6,7 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Scale := preload("res://game/battlefield/battlefield_march_scale.gd")
 
+const LEGACY := preload("res://game/battlefield/neris_cairnspine_passage_playtest.tscn")
 const MISSION_IDS := ["neris_cairnspine_passage", "sereth_no_proxy", "sova_vault_return"]
 const DT := 1.0 / 60.0
 # Battlefield-local XZ, north perimeter to south perimeter around the west
@@ -25,7 +26,8 @@ func _initialize() -> void:
 func _run() -> void:
 	for mission_id: String in MISSION_IDS:
 		var deployment := Deployments.for_mission(mission_id)
-		var scene: PackedScene = deployment.get("scene")
+		# Neris's later mission is retained as a standalone historical prototype.
+		var scene: PackedScene = LEGACY if mission_id == "neris_cairnspine_passage" else deployment.get("scene")
 		if scene == null:
 			_fail("Missing registered Year Five deployment: %s" % mission_id)
 			return

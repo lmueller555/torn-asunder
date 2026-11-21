@@ -24,9 +24,9 @@ const _BY_CAMPAIGN := {
 		{"id": "ilyra_spanwater_evacuation", "title": "Last Boat at Spanwater", "year": 4, "battlefield_id": "spanwater_lock"},
 	],
 	"neris": [
-		{"id": "neris_failing_grove", "title": "What We Planted Here", "year": 3, "battlefield_id": "isolated_grove_nursery"},
-		{"id": "neris_spanwater_feeder", "title": "Water at the Town Gauge", "year": 4, "battlefield_id": "spanwater_lock"},
-		{"id": "neris_cairnspine_passage", "title": "A Road We Can Share", "year": 5, "battlefield_id": "cairnspine_vault_road"},
+		{"id": "neris_failing_grove", "title": "What We Planted Here", "year": 1, "battlefield_id": "isolated_grove_nursery"},
+		{"id": "neris_cairnspine_survey", "title": "Where the Road Goes", "year": 2, "battlefield_id": "cairnspine_boundary_post"},
+		{"id": "neris_greyhollow", "title": "Before They Reach It", "year": 3, "battlefield_id": "year_one_mine"},
 	],
 	"sereth": [
 		{"id": "sereth_voices_at_the_cut", "title": "The Names at the Cut", "year": 3, "battlefield_id": "still_kingdom_cut"},
