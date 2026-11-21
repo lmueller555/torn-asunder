@@ -2,6 +2,7 @@ extends RefCounted
 ## Authored conversations. A route may replay a beat without mutating its source.
 
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
 const MARA_MINE_DISPATCH := &"mara_mine_dispatch"
 const MARA_MINE_DEBRIEF := &"mara_mine_debrief"
@@ -16,9 +17,13 @@ const MARA_GRAIN_BOTH_DEBRIEF := &"mara_grain_debrief_both"
 const MARA_WATER_REQUEST := &"mara_water_request"
 const MARA_HIGH_QUAY_DISPATCH := &"mara_high_quay_dispatch"
 const MARA_HIGH_QUAY_DEBRIEF := &"mara_high_quay_debrief"
+const ILYRA_MOONWASH_DISPATCH := &"ilyra_moonwash_dispatch"
+const ILYRA_MOONWASH_CARGO_DEBRIEF := &"ilyra_moonwash_debrief_cargo_recovered"
+const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
+const ILYRA_PORTRAIT := preload("res://assets/art/ilyra.webp")
 const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
 const RASKA := "War Marshal Raska Vennor"
@@ -31,6 +36,10 @@ const MILLER := "Mill Steward"
 const BAKER := "Town Baker"
 const JUDGE := "Marches Judge"
 const ENVOY := "Allied Envoy"
+const ILYRA := "Tide Speaker Ilyra Venn"
+const PILOT := "Moonwash Pilot"
+const SIGNALLER := "Fleet Signaller"
+const PORT_CLERK := "Harbor Clerk"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -168,6 +177,36 @@ const BEATS := {
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Leave your report beside his. Close the case and leave my seal on it. There won't be a second order."},
 		],
 	},
+	ILYRA_MOONWASH_DISPATCH: {
+		"title": "Hulls on Stone",
+		"location": "Moonwash moorings · Before the rescue",
+		"lines": [
+			{"speaker": PILOT, "text": "Stone's rising under the moorings. The hull won't come free. There are people cut off at both ends."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "That corner under the hull is where I grew up. Rig a line at either end and bring them across to our receiving deck."},
+			{"speaker": SIGNALLER, "text": "One of the ports is signalling its pledged ships to leave. They want us to go after the Godbridle."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Signal back that we're staying. Take the forward or aft line, whichever you can get to. Bring stores across if you can, but don't make anyone wait for a bundle."},
+		],
+	},
+	ILYRA_MOONWASH_CARGO_DEBRIEF: {
+		"title": "Stores Aboard",
+		"location": "Moonwash receiving deck · After the rescue",
+		"lines": [
+			{"speaker": PILOT, "text": "Both crews are aboard. We got some stores across too. Enough to provision a few survey boats ourselves."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Keep those stores for the survey. Ask the village pilots to come anyway. They know which inlets are still open."},
+			{"speaker": PORT_CLERK, "text": "A scribe sent a copy of Sova's public account. He read the record of the Druid command that drowned the old coast."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Lay it beside my old chart. I can mark where the streets were. Have the pilots mark where their boats land now."},
+		],
+	},
+	ILYRA_MOONWASH_CREWS_DEBRIEF: {
+		"title": "Stores on Loan",
+		"location": "Moonwash receiving deck · After the rescue",
+		"lines": [
+			{"speaker": PILOT, "text": "Both crews are aboard. The cargo stayed with the hulls. We can get the survey boats out if the fishing villages lend us stores."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Ask them what they can spare. Put every sack we borrow in the log, and ask their pilots to take us along the shore."},
+			{"speaker": PORT_CLERK, "text": "Sova read the sealed record in public. This is a copy. It names the old Druid command that drowned the coast."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Bring it when the pilots come in. I know where my street was. I want the chart to show where their villages fish and land now."},
+		],
+	},
 }
 
 
@@ -180,6 +219,16 @@ static func grain_debrief_id(result: StringName) -> StringName:
 			return MARA_GRAIN_BREAD_DEBRIEF
 		Grain.BOTH:
 			return MARA_GRAIN_BOTH_DEBRIEF
+	return &""
+
+
+## The successful rescue outcome affects stores, not whether the next survey happens.
+static func moonwash_debrief_id(result: StringName) -> StringName:
+	match result:
+		Moonwash.CARGO_RECOVERED:
+			return ILYRA_MOONWASH_CARGO_DEBRIEF
+		Moonwash.CREWS_ONLY:
+			return ILYRA_MOONWASH_CREWS_DEBRIEF
 	return &""
 
 
