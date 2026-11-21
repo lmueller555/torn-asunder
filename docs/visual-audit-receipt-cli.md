@@ -1,6 +1,6 @@
 # Check a visual audit receipt before publication
 
-Use this optional local check **after the independent human review** in the [visual asset quality gate](asset-quality-gate.md), while the candidate is still outside the repository. It only checks the recorded decision, required fields, and file bytes. A successful run does not assess craft, authenticate a reviewer, open the evidence, or replace review in Godot.
+Use this optional local check **after independent visual review** in the [visual asset quality gate](asset-quality-gate.md), while the candidate is still outside the repository. It only checks the recorded decision, required fields, and file bytes. A successful run does not assess craft, authenticate a reviewer, open the evidence, or replace review in Godot.
 
 With Python 3.10 or later, run:
 
