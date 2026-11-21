@@ -9,6 +9,12 @@ godot --headless --script tests/moonwash_harbor_campaign.gd
 
 The preview opens above the battlefield. In the Godot editor, select the saved `HumanQuayView` or `ElvenDeckView` camera to inspect the two starts closer to ground level.
 
+## Human withdrawal playtest
+
+Run `godot game/battlefield/mara_moonwash_playtest.tscn` to try Mara's standalone withdrawal on the same geometry. Guide the hero and both royal platoons to the upper exit. Hold L2 to direct a platoon to the stair landing, move the others up, then bring the covering formation out. If warned about the lower stair, units still below can take the signed inland bypass. The lower stair only closes after an allied unit reaches the landing, the gate itself is empty, and the shared inland route is still passable. The prototype has no levy combat, rescue interaction, or campaign launch wiring.
+
+The live input check is `godot --headless --script tests/mara_moonwash_playtest.gd`.
+
 ## Tactical geography
 
 Local coordinates are meters, **+X east**, **−Z inland**, **+Z seaward**. The suggested active command bounds are **288 × 242 m**, with headlands framing the west and east edges and the inland gate breaking the north escarpment.
