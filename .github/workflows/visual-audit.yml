@@ -1,0 +1,28 @@
+name: Visual asset receipts
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  receipts:
+    name: Verify visual asset receipts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out proposed merge
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify changed tracked visual files
+        env:
+          AUDIT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: python3 -B -m tools.check_changed_art --base "$AUDIT_BASE"
+      - name: Verify active placements and exact reviewed files
+        run: python3 -B -m tools.report_deployment_art > /dev/null
+      - name: Test the audit tools
+        run: python3 -B -m unittest discover -s tests -p 'test_*.py'
