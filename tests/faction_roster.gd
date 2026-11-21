@@ -11,8 +11,9 @@ func _initialize() -> void:
 	_check_taxonomy()
 	_check_branches()
 	_check_live_catalog()
+	_check_orc_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc branches and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -106,6 +107,63 @@ func _check_live_catalog() -> void:
 		_check(roster.can_advance(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating)
 			== Catalog.can_promote_with_ratings(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating),
 			"New metadata matches the live Heavy Infantry rule at rating %d." % rating)
+
+
+func _check_orc_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var regulars := Catalog.ORC_BASIN_REGULARS
+	var brace := Catalog.ORC_BRACE_INFANTRY
+	var archers := Catalog.ORC_BASIN_ARCHERS
+	_check(roster.units_for_faction(Roster.ORCS) == [regulars, brace, archers],
+		"The Orc slice has only the three initial canon field roles.")
+	for fixture: Array in [
+		[regulars, "Basin Regulars", Roster.MELEE, []],
+		[brace, "Brace Infantry", Roster.ANTI_RIDING, [Roster.MELEE]],
+		[archers, "Basin Archers", Roster.RANGED, []],
+	]:
+		var entry := roster.unit(fixture[0])
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == fixture[2]
+			and entry.get("secondary_tags") == fixture[3] and entry.get("elite_support") == false,
+			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
+		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
+			"No Orc prototype should become an art entry or a live Human promotion.")
+	for faction in [Roster.ELVES, Roster.DRUIDS, Roster.DRYADS, Roster.UNDEAD]:
+		_check(roster.units_for_faction(faction).is_empty(), "An unrelated faction was inadvertently populated.")
+	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
+		and not roster.has_label(archers, Roster.ANTI_RIDING),
+		"Each specialist has an independent role rather than replacing all the regulars' jobs.")
+
+	# Melee, Ranged, Charge & Brace, Scouting; use the actual rating and training readers.
+	var expectations := [
+		[[1, 1, 0, 0], []],
+		[[5, 6, 0, 0], []],
+		[[1, 1, 5, 5], []],
+		[[4, 6, 2, 2], [archers]],
+		[[5, 5, 2, 2], [brace]],
+		[[5, 6, 1, 2], [archers]],
+		[[5, 6, 2, 1], [brace]],
+		[[5, 6, 2, 2], [brace, archers]],
+	]
+	for fixture: Array in expectations:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {
+			Unit.Damage.MELEE: values[0], Unit.Damage.RANGED: values[1],
+		})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[2], Platoon.Skill.SCOUTING: values[3],
+		})
+		_check(roster.eligible_advances(regulars, soldier.rating, platoon.rank) == fixture[1],
+			"Orc branches must honor their own exact rating and training gate: %s." % str(values))
+		_check(not roster.can_advance(brace, archers, soldier.rating, platoon.rank)
+			and not roster.can_advance(archers, brace, soldier.rating, platoon.rank)
+			and not roster.can_advance(regulars, Catalog.HUMAN_HEAVY_INFANTRY, soldier.rating, platoon.rank),
+			"High ratings do not authorize a sibling switch or a foreign faction's edge.")
+		_check(soldier.level == 1 and soldier.stat_points == 0 and platoon.cohesion == Platoon.FULL_COHESION,
+			"Eligibility is a read-only inquiry.")
+	var exported := roster.unit(regulars)
+	exported.display_name = "Not a canon name"
+	_check(Catalog.faction_roster().unit(regulars).display_name == "Basin Regulars"
+		and roster.unit(regulars).display_name == "Basin Regulars", "Roster consumers can't rename the canon entry through a snapshot.")
 
 
 func _check(ok: bool, title: String) -> void:
