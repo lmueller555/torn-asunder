@@ -90,10 +90,21 @@ Reviewed in hero, local tactical and overview views of [Hulls on Stone](../game/
 |---|---|---|
 | [Receiving and stranded ships](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | The two hulls read as long colored slabs. Flat deck fills and bare cross-shaped masts lack built planking, rail joins, bulwarks or visible working rigging. Preserve each vessel’s distinct deck elevation and the two independent receiving positions. |
 | [Pier and boarding gangways](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Broad stepped blocks lack timber joints and look like incidental terrain rather than a supported access route. Keep the actual receiving gangway, pier turns, open mooring and climb to the stranded deck fully traversable. |
-| [Fore and aft transfer visuals](../game/battlefield/ilyra_moonwash_rescue_campaign.gd) | Rework | The placed spans are plain strips with thin colored lines; their attachment and safe walkway are difficult to see from Ilyra’s rig view, where large labels dominate. Keep state-dependent visibility, both route positions, independent rigging and clear fore-contested versus aft-open feedback. |
+| [Fore and aft transfer visuals](../game/battlefield/ilyra_moonwash_rescue_campaign.gd) | Rework | The spans are plain strips with thin colored rails; floating names obscure both source and receiving points. These are crew-only transfers, not player walkways. In the baseline, each 0.83 m span has 1.007 m solid signal boxes centered on its route. The scripted groups visibly pass through those boxes. Clear the crew routes without opening the water to hero movement or tactical picks before attempting a more realistic skin. Keep independent rigging and the fore-contested versus aft-open cue. |
 | [Crews and shore salvagers](../game/battlefield/ilyra_moonwash_rescue_campaign.gd) | Rework | Unanimated grouped box figures and floating names do not read as crews walking a rescue span. Preserve each party’s boarding order, independent position, and the visible actual salvager approach. |
 
-Both decks were reached on the authored pier route. Rigging the fore transfer brought the salvagers to the mooring and paused the fore party. The aft crew landed independently; a Shore Marine Hold then allowed the fore crew to land. The optional cargo visual and the alternate approach contexts still need their own review.
+Both decks were reached on the permanent pier route. Rigging the fore transfer brought the salvagers to the mooring and paused the fore party. The aft crew landed independently; a Shore Marine Hold then allowed the fore crew to land. Neither line became a valid hero route or command target after rigging. The optional cargo visual and alternate approach contexts still need their own art review.
+
+## Inspected: Mara’s High Quay withdrawal
+
+Reviewed the actual [High Quay deployment](../game/battlefield/mara_moonwash_playtest.tscn) in hero, 110 m command sector, and overview. This is a separate use of the harbor, not the Ilyra rescue or a review of the fleet.
+
+| Existing asset or family | Status | What blocks a pass |
+|---|---|---|
+| [Lower approach, stair landing and shoulder blocks](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Smooth, untextured slabs and square ends do not read as a built harbor stair and retaining structure. Preserve the real ramp support, blocked shoulder and clear landing center. Keep the warning, later lower-stair closure and physically usable inland bypass distinct. |
+| [Upper causeway threshold piers and caps](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Two undetailed pale boxes and flat caps do not frame the objective. Rework both as one fixed kit, without a gate leaf or lintel. The middle lane is already open (13.6 m between solid faces); both pier bodies block side rays and their tops are not command targets. |
+
+The mint exit ring is about six meters in front of the piers. Extraction occurs when Mara and both royal platoons physically reach the exit, not when the player presses Cross/Space or touches the stonework. Preserve the ring, existing floor and sightline, and do not tie completion to the visual threshold. Use the [live withdrawal test](../tests/mara_moonwash_playtest.gd) to exercise the warning, closure, bypass and extraction again after any replacement.
 
 ## Inspected: Vareth overworld
 
