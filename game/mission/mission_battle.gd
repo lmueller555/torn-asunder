@@ -1206,6 +1206,11 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 		if wait > 0.0 and hero.is_alive() and hero.position.distance_to(squad.anchor) > wait:
 			return
 		# Civilians wait while their destination is contested.
+		var guard_radius: float = squad.order.get("pause_if_threatened", 0.0)
+		if guard_radius > 0.0:
+			var near := _nearest_enemy(squad.team, squad.anchor, false)
+			if near >= 0 and fighters[near].position.distance_to(squad.anchor) < guard_radius:
+				return
 		var pause_zone: String = squad.order.get("pause_zone", "")
 		if pause_zone != "" and _team_in_zone(ENEMY_TEAM, pause_zone) > 0:
 			return
@@ -1226,6 +1231,7 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 	var speed := float(squad.info.get("speed", 2.7)) * ANCHOR_SPEED_FACTOR
 	if squad.info.get("role") == Units.Role.HERO:
 		speed = 2.6
+	speed = float(squad.order.get("speed", speed))
 	var travel := speed * delta
 	if offset.length() <= travel:
 		squad.anchor = waypoint
@@ -1685,6 +1691,11 @@ func hazard_phase(hazard: Dictionary) -> String:
 
 
 func _update_interaction(delta: float) -> void:
+	for item in interactables:
+		if item.has("attach"):
+			var at := _entity_position(item.attach)
+			if at != Vector2.INF:
+				item.pos = at
 	interact_target = active_interactable()
 	if interact_target < 0 or not hero.is_alive():
 		interact_progress = 0.0
@@ -1706,6 +1717,8 @@ func _update_interaction(delta: float) -> void:
 
 ## Some interactions only work while another object is in place, such as a ship in view.
 func interact_available(item: Dictionary) -> bool:
+	if item.has("clear_zone") and _team_in_zone(ENEMY_TEAM, item.clear_zone) > 0:
+		return false
 	var needs: Dictionary = item.get("requires", {})
 	if needs.is_empty():
 		return true
@@ -1962,6 +1975,9 @@ func _check(condition: Dictionary) -> bool:
 			"flag":
 				if not flags.has(value):
 					return false
+			"not_done":
+				if objective(value).get("status", "") == "done":
+					return false
 			"no_flag":
 				if flags.has(value):
 					return false
@@ -2053,6 +2069,11 @@ func _perform(actions: Array) -> void:
 				_finish(Outcome.VICTORY, action[1] if action.size() > 1 else "")
 			"defeat":
 				_finish(Outcome.DEFEAT, action[1])
+			"hide_interact":
+				for entry in interactables:
+					if entry.id == action[1]:
+						entry.active = false
+						entry.done = true
 			"reveal":
 				for entry in interactables:
 					if entry.id == action[1] and not entry.done:
@@ -2123,6 +2144,15 @@ func _perform(actions: Array) -> void:
 					target.commandable = false
 					target.aggro = 0.0
 					_apply_order(target, {"kind": "move", "to": action[2], "despawn": true})
+			"turn":
+				var target := squad(action[1])
+				if target:
+					target.team = ENEMY_TEAM
+					target.commandable = false
+					for member in target.members:
+						fighters[member].team = ENEMY_TEAM
+						fighters[member].target = -1
+					_apply_order(target, action[2] if action.size() > 2 else {"kind": "hunt"})
 			"release":
 				var target := squad(action[1])
 				if target:

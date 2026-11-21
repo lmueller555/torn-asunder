@@ -28,7 +28,12 @@ func drive() -> void:
 		var other: Battle.Fighter = battle.fighters[index]
 		if other.kind != Battle.Kind.STRUCTURE and other.position.distance_to(hero.position) < 6.0:
 			close += 1
-	if interact_here >= 0 and close < 3:
+	var blocked := interact_here >= 0 and not battle.interact_available(battle.interactables[interact_here])
+	if blocked and nearest >= 0:
+		input.move = (battle.fighters[nearest].position - hero.position).normalized()
+		if battle.fighters[nearest].position.distance_to(hero.position) < 2.6:
+			input.light = true
+	elif interact_here >= 0 and close < 3:
 		input.interact = true
 	elif nearest >= 0 and battle.fighters[nearest].position.distance_to(hero.position) < 2.6:
 		var offset: Vector2 = battle.fighters[nearest].position - hero.position
@@ -53,6 +58,11 @@ func _command() -> void:
 		if not cart.moving or cart.halted:
 			battle.command_structure(cart.structure_id, "advance", Vector2.INF)
 	for item in battle.objectives:
+		if item.status == "active" and item.type == "reach" and item.who != "hero":
+			var squad := battle.squad(item.who)
+			if squad and squad.commandable and squad.spawned and squad.order.get("kind") == "hold" and not squad.order.get("arrived", false):
+				battle.command(squad.index, {"kind": "move", "to": item.zone})
+	for item in battle.objectives:
 		if item.status == "active" and item.type == "extract":
 			for who: String in item.squads:
 				var squad := battle.squad(who)
@@ -71,6 +81,25 @@ func _steer(from: Vector2, to: Vector2) -> Vector2:
 
 
 func _goal() -> Vector2:
+	# Defend protected civilians under attack.
+	for item in battle.objectives:
+		if item.status != "active" or item.type != "protect":
+			continue
+		for who: String in item.who:
+			var squad := battle.squad(who)
+			if squad and squad.spawned and not squad.departed and squad.alive_count(battle) > 0:
+				var threat := _nearest_enemy(squad.centroid(battle), 10.0)
+				if threat >= 0:
+					return battle.fighters[threat].position
+	# Clear threats that have stopped an escorted group.
+	for squad in battle.squads:
+		if not squad.spawned or squad.departed or squad.team != Battle.PLAYER_TEAM or squad.order.get("kind") != "path":
+			continue
+		var guard_radius: float = squad.order.get("pause_if_threatened", 0.0)
+		if guard_radius > 0.0 and squad.alive_count(battle) > 0:
+			var threat := _nearest_enemy(squad.anchor, guard_radius + 4.0)
+			if threat >= 0:
+				return battle.fighters[threat].position
 	# Escorted civilians only move while the hero is close, so stay with them first.
 	for squad in battle.squads:
 		if not squad.spawned or squad.departed or squad.team != Battle.PLAYER_TEAM:
@@ -131,11 +160,20 @@ func _goal() -> Vector2:
 					if cart.is_alive() and not cart.delivered and not cart.turned_back:
 						return cart.position
 			"hold":
+				if item.get("seconds", INF) == INF:
+					continue
 				if item.has("zone"):
 					return battle.zones[item.zone].pos
 				var guard := _most_threatened()
 				if guard != Vector2.INF:
 					return guard
+	var nearest := Vector2.INF
+	for entry in battle.interactables:
+		if entry.active and not entry.done:
+			if nearest == Vector2.INF or entry.pos.distance_to(battle.hero.position) < nearest.distance_to(battle.hero.position):
+				nearest = entry.pos
+	if nearest != Vector2.INF:
+		return nearest
 	return _most_threatened()
 
 

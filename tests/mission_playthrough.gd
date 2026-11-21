@@ -7,6 +7,7 @@ const Battle := preload("res://game/mission/mission_battle.gd")
 const Missions := preload("res://game/mission/missions.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const Autopilot := preload("res://tests/mission_autopilot.gd")
+const Catalog := preload("res://game/campaign_missions.gd")
 
 const TICK := 1.0 / 30.0
 const LIMIT := 900.0
@@ -20,9 +21,14 @@ func _initialize() -> void:
 	var results := []
 	for campaign in Campaigns.ALL:
 		var missions := Missions.for_campaign(campaign.id)
-		if missions.size() != 3:
-			printerr("%s has %d missions, expected 3." % [campaign.id, missions.size()])
+		var authored := Catalog.missions_for_campaign(campaign.id)
+		if missions.size() != authored.size():
+			printerr("%s has %d missions, the catalog lists %d." % [campaign.id, missions.size(), authored.size()])
 			passed = false
+		for index in range(mini(missions.size(), authored.size())):
+			if missions[index].id != authored[index].id or missions[index].title != authored[index].title:
+				printerr("%s mission %d does not match the catalog (%s)." % [campaign.id, index + 1, authored[index].id])
+				passed = false
 		for mission: Dictionary in missions:
 			if not only.is_empty() and not only.has(mission.id):
 				continue
