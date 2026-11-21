@@ -31,4 +31,4 @@ The first shared battle takes place at the mine. A Human commander must evacuate
 
 The [combat system](combat.md#year-one-battle-at-the-mine) describes how each side plays through that battle.
 
-Faction campaigns enter the war at different points and can revisit the same battle from opposing sides. An Elven campaign could open in **Year Two** with a harbor rising out of the sea while its ships are still moored. An Undead campaign could begin in **Year Three** when a village starts hearing the voices of its unburied dead. Each campaign reveals a different consequence of the same struggle. By **Year Five**, the factions know enough to give Orrun a command deliberately, and each has people it would keep safe at someone else’s expense.
+Faction campaigns enter the war at different points and can revisit the same battle with different orders. See [the shared war timeline and campaign windows](war-timeline.md) for the five-year account, each leader's part in it, and the outcomes the campaigns share. That reference contains story spoilers.
