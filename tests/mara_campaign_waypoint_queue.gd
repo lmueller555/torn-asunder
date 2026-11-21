@@ -213,8 +213,12 @@ func _pickup_unchanged() -> bool:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
 	_key(KEY_G)
+	var marker_route := _hud.pending_waypoints(0)
+	if marker_route.size() != 1 or not marker_route[0].is_equal_approx(_mission.march_marker):
+		return _fail("Hero R1 did not add the waypoint marker once, or G duplicated it.")
+	_mission.clear_march_route()
 	if not _hud.pending_waypoints(0).is_empty():
-		return _fail("Hero R1/G issued a route.")
+		return _fail("Clearing the marker route left waypoints behind.")
 	_button(JOY_BUTTON_A)
 	_tick()
 	if _mission.objective.phase != Escort.Phase.ESCORTING or not visual._case.is_visible_in_tree() \

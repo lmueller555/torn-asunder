@@ -4,15 +4,16 @@ The PlayStation 5 DualSense is the primary controller for *Torn Asunder*. Hold *
 
 | Input | Hero combat | Command view while holding L2 |
 |---|---|---|
-| Left stick | In combat, move the hero. Marching, no effect: the leader travels with their platoon | Move the battlefield cursor |
+| Left stick | Marching: move the waypoint marker out from the selected platoon. In combat: move the hero | Move the battlefield cursor |
 | Right stick | Control the camera | Rotate and tilt the command camera |
-| D-pad left / right | Cycle allied units for a quick status check | Select the previous or next allied unit, starting with the leader's own **Lead Platoon** |
+| D-pad left / right | Select the platoon the waypoint marker extends from, starting with the leader's own **Lead Platoon** | Select the previous or next allied unit |
+| D-pad up | Marching: clear the selected platoon's route and hold | Aim on the minimap (where available) |
+| R1 | Marching: add the marker as a waypoint. In combat: officer ability | Append the cursor as a waypoint (where available) |
 | Square | Light attack | Order the selected unit to move to the cursor |
 | Triangle | Heavy attack | Order the selected unit to attack the highlighted enemy |
 | Circle | Dodge | Clear the current target |
 | Cross | Interact with an objective | Order the selected unit to hold its current position |
 | L1 | Guard | — |
-| R1 | Use an officer ability | — |
 
 At the mine, hold **L2**, select the archers with the **D-pad**, move the cursor over the Orc company approaching the escort, and press **Triangle**. Release **L2** to return to the hero while the archers carry out the order.
 
@@ -22,13 +23,13 @@ The first playtest should check whether the player can redirect a unit mid-fight
 
 The leader is part of their own **Lead Platoon**, a full platoon that travels with them. Every battlefield built on the command harness uses it.
 
-- **Marching (no enemy in contact).** The Lead Platoon is ordered like every other platoon. Hold **L2 / Shift**, select **Lead Platoon** with the D-pad or Z / X (it is first in the cycle) or click it, and press **Square / right-click** for a Move. Where the battlefield has waypoint routes, **R1 / G** appends a waypoint, up to eight. The leader walks at the head of the platoon along the route. The left stick and WASD do not move the leader; the hero view shows **MARCHING**.
-- **Combat.** When a hostile comes within **8 m** of the leader or their platoon, the hero view shows **COMBAT** and the left stick, WASD or D-pad-style movement steers the leader directly. Attacks, guard, dodge and officer abilities work as before. The platoon fights around the leader instead of holding a separate post. Combat cancels the Lead Platoon's pending waypoints.
+- **Marching (no enemy in contact).** You steer a tall **waypoint marker** rather than the leader. It extends out from the selected platoon, and a tether on the ground links the two. The left stick or WASD moves the marker left, right, away from the platoon and back toward it, and the camera stays fixed on the marker and follows it. The right stick or Q E R F still orbits and tilts the camera, and the stick moves the marker relative to that view. Press **R1 / G** to add the marker's spot as the selected platoon's next waypoint, up to eight. With no route pending, the platoon sets off at once. Numbered pins show the pending route. **D-pad Up / T** clears the route and holds. **D-pad left / right** or **Z / X** changes which platoon the marker extends from. The leader's own **Lead Platoon** is selected when a battle starts, and the leader walks at its head. The marker stays within 60 m of its platoon. The hero view shows **MARCHING**. Command view (**L2 / Shift**) still works as before for cursor orders and the minimap, and the marker and minimap share one route per platoon.
+- **Combat.** When a hostile comes within **8 m** of the leader or their platoon, the marker disappears, the camera returns to the leader, and the hero view shows **COMBAT**. The left stick or WASD steers the leader directly. Attacks, guard, dodge and officer abilities work as before. The platoon fights around the leader instead of holding a separate post. Combat cancels the Lead Platoon's pending waypoints.
 - **After combat.** Once every hostile has been beyond **12 m** for **1.5 seconds**, the platoon re-forms where the leader finished and holds. Plot the next move or route from there.
 
 Other platoons keep their own orders and routes throughout. A battlefield reports its hostiles through `_hostile_positions()`. A scene with no hostiles keeps the leader on orders the whole time. A scene that models its own hero platoon, such as the engagement camera preview, sets `lead_platoon_enabled` to false to keep the free-walking leader.
 
-The design follows the *Kingdom Under Fire: Heroes* Xbox manual's split between movement/tactics mode and combat mode, with troop movement issued as waypoints from the minimap (pp. 12–17, cited below for the eight-waypoint limit). It is an original implementation, not a reproduction of that game's code or interface. Run `godot --headless --script tests/lead_platoon.gd` to check the march, the waypoint route, and the switch into and out of combat.
+The design follows the *Kingdom Under Fire: Heroes* Xbox manual's split between movement/tactics mode and combat mode, with troop movement issued as waypoints from the minimap (pp. 12–17, cited below for the eight-waypoint limit). It is an original implementation, not a reproduction of that game's code or interface. Run `godot --headless --script tests/lead_platoon.gd` to check the march, the waypoint marker and its camera, and the switch into and out of combat.
 
 ## Command harness playtest
 

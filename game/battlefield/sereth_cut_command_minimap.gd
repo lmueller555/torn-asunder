@@ -134,7 +134,10 @@ func _bind_routes(battle: Battle) -> void:
 	if battle:
 		_routes.reset(battle)
 		battle.formation_commanded.connect(_on_formation_commanded)
+		_field.march_route_provider = self
 	else:
+		if _field and _field.march_route_provider == self:
+			_field.march_route_provider = null
 		_routes = Routes.new()
 		_route_overlay.hide()
 		_route_overlay.clear_route()
@@ -173,6 +176,23 @@ func _append_waypoint(point: Vector2) -> void:
 
 func _waypoint_fits(point: Vector2) -> bool:
 	return _usable(point) and _walkable_hit(point) != null and _field._terrain.formation_fits_at(point)
+
+
+## The hero-view waypoint marker plots through these route queues.
+func march_issue(index: int, point: Vector2, append: bool) -> int:
+	if _route_battle == null:
+		return Queue.Result.INVALID_FOR_BATTLEFIELD
+	_sending_route_order = true
+	var result := _routes.issue(_route_battle, index, point, append, _waypoint_fits)
+	_sending_route_order = false
+	_route_note_index = index
+	return result
+
+
+func march_clear(index: int) -> void:
+	_routes.clear(index)
+	if _route_note_index == index:
+		_route_note = ""
 
 
 func advance_routes() -> void:

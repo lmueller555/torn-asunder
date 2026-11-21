@@ -267,6 +267,23 @@ func _bind_route_battle() -> void:
 		_route_battle.formations[index].order_changed.connect(_on_formation_order_changed.bind(index))
 
 
+## The hero-view waypoint marker plots through this minimap's route queues, so a
+## marker waypoint and a minimap waypoint share one route per platoon.
+func march_issue(index: int, point: Vector2, append: bool) -> int:
+	_bind_route_battle()
+	_sending_route_order = true
+	var result := _routes.issue(_route_battle, index, point, append, _waypoint_fits)
+	_sending_route_order = false
+	_route_note_index = index
+	if index == _mission.selected_index:
+		_refresh_selected_route()
+	return result
+
+
+func march_clear(index: int) -> void:
+	_clear_waypoints(index)
+
+
 func pending_waypoints(index: int) -> PackedVector2Array:
 	return _routes.snapshot(index) if _route_battle == _mission.battle else PackedVector2Array()
 
@@ -427,6 +444,11 @@ func _physics_process(delta: float) -> void:
 
 
 func refresh() -> void:
+	if _mission and _mission.march_route_provider != self:
+		_mission.march_route_provider = self
+	# "Focus Mara" keeps the hero camera on her instead of the waypoint marker.
+	if _mission:
+		_mission.march_camera_suppressed = _lead_action.focused
 	# Child controls are readied before their parent mission has loaded terrain.
 	if not _mission.is_node_ready():
 		return

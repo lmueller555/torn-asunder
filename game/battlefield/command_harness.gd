@@ -1,6 +1,8 @@
 extends Node3D
 
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const MarchRoutes := preload("res://game/battlefield/command_platoon_routes.gd")
+const MarchQueue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const SectorCamera := preload("res://game/battlefield/sector_camera.gd")
 
@@ -15,6 +17,14 @@ const LEAD_ENGAGE_RADIUS := 8.0
 ## Combat ends once every hostile is beyond this range for LEAD_RELEASE_SECONDS.
 const LEAD_RELEASE_RADIUS := 12.0
 const LEAD_RELEASE_SECONDS := 1.5
+## Outside combat the stick moves a tall waypoint marker out from the selected platoon.
+const MARKER_SPEED := 16.0
+## The marker stays within this distance of the selected platoon.
+const MARKER_LEASH := 60.0
+## The marker starts this far ahead of the platoon when it is (re)selected.
+const MARKER_START := 4.0
+const MARKER_CAMERA_DISTANCE := 11.0
+const MARKER_BEAM_HEIGHT := 9.0
 
 @export var battlefield_scene: PackedScene
 ## Optional authored terrain. Joined before the terrain adapter indexes
@@ -47,6 +57,22 @@ var _lead_model: Node3D
 var _lead_members: Array[Node3D] = []
 var _lead_banner: Label3D
 var _calm_seconds := 0.0
+## The waypoint marker steered with the stick outside combat (battlefield XZ).
+var march_marker := Vector2.ZERO
+## Route queues used by the marker. A scene with its own route store registers an
+## object with march_issue(index, point, append), pending_waypoints(index) and
+## march_clear(index) here; otherwise the harness keeps its own queues.
+var march_route_provider: Object
+## Scenes set this while the player has asked the camera to stay on the leader.
+var march_camera_suppressed := false
+var routes := MarchRoutes.new()
+var _marker_owner := 999
+var _marker_active := false
+var _march_beam: Node3D
+var _march_tether: MeshInstance3D
+var _route_pins: Array[Node3D] = []
+var _march_note := ""
+var _camera_pivot := Vector3.INF
 var _formation_models: Array[Node3D] = []
 var _formation_members: Array[Array] = []
 var _field: Node3D
@@ -74,8 +100,11 @@ func _ready() -> void:
 			_axes[axis] = Input.get_joy_axis(_input_device, axis)
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
 	battle.lead_platoon_enabled = lead_platoon_enabled
+	routes.reset(battle)
+	selected_index = 0
 	_configure_field()
 	_build_placeholders()
+	_reset_march_marker()
 	_update_cameras()
 	_update_mode()
 	_sync_view()
@@ -95,11 +124,14 @@ func _physics_process(delta: float) -> void:
 	else:
 		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
+		_step_march_marker(movement, delta)
 	_update_lead_engagement(delta)
 	# Stick and D-pad steer the leader only in combat; otherwise the lead platoon
 	# follows its Move order or waypoints. Formations always advance.
 	var steering := not command_view and battle.direct_hero_control()
 	battle.step(delta, movement.rotated(-_hero_yaw) * _hero_move_factor() if steering else Vector2.ZERO, _movement_check())
+	if march_route_provider == null:
+		routes.advance(battle)
 	_after_battle_step(delta)
 	_update_cameras()
 	if not repoint or not _point_cursor(_mouse_position, true):
@@ -108,6 +140,87 @@ func _physics_process(delta: float) -> void:
 
 func _after_battle_step(_delta: float) -> void:
 	pass
+
+
+## True outside combat in hero view: the stick steers the waypoint marker.
+func march_mode() -> bool:
+	return battle.lead_platoon_enabled and not command_view and not battle.direct_hero_control()
+
+
+func _step_march_marker(movement: Vector2, delta: float) -> void:
+	var active := march_mode()
+	var selected := battle.formation_at(selected_index)
+	if not active or selected == null:
+		_marker_active = false
+		return
+	if not _marker_active or _marker_owner != selected_index:
+		_reset_march_marker()
+	_marker_active = true
+	if movement != Vector2.ZERO:
+		march_marker += movement.rotated(-_hero_yaw) * MARKER_SPEED * delta
+		_march_note = ""
+	var origin := selected.position
+	if march_marker.distance_to(origin) > MARKER_LEASH:
+		march_marker = origin + (march_marker - origin).normalized() * MARKER_LEASH
+	march_marker = battle.clamp_to_field(march_marker)
+
+
+func _reset_march_marker() -> void:
+	var selected := battle.formation_at(selected_index)
+	_marker_owner = selected_index
+	_march_note = ""
+	if selected:
+		var forward := Vector2(-sin(_hero_yaw), -cos(_hero_yaw))
+		march_marker = battle.clamp_to_field(selected.position + forward * MARKER_START)
+
+
+## R1 / G: add the marker as the selected platoon's next waypoint. With no route
+## pending, the platoon sets off for it at once.
+func add_march_waypoint() -> int:
+	if not march_mode() or not battle.is_valid_command_index(selected_index):
+		return MarchQueue.Result.INVALID_FOR_BATTLEFIELD
+	var result: int
+	if march_route_provider and march_route_provider.has_method("march_issue"):
+		result = march_route_provider.march_issue(selected_index, march_marker, true)
+	else:
+		result = routes.issue(battle, selected_index, march_marker, true, _march_point_fits)
+	match result:
+		MarchQueue.Result.ACCEPTED: _march_note = ""
+		MarchQueue.Result.DUPLICATE: _march_note = "Already a waypoint"
+		MarchQueue.Result.FULL: _march_note = "Route full (%d waypoints)" % MarchQueue.MAX_WAYPOINTS
+		_: _march_note = "Can't march there"
+	_sync_view()
+	return result
+
+
+## D-pad Up / T: drop the selected platoon's route and hold where it stands.
+func clear_march_route() -> void:
+	if not march_mode() or not battle.is_valid_command_index(selected_index):
+		return
+	# Nothing to cancel: leave a halted platoon's orders alone.
+	if march_waypoints(selected_index).is_empty() and battle.formation_at(selected_index).order != Battle.Order.MOVE:
+		return
+	if march_route_provider and march_route_provider.has_method("march_clear"):
+		march_route_provider.march_clear(selected_index)
+	else:
+		routes.clear(selected_index)
+	battle.order_hold(selected_index)
+	_march_note = ""
+	_sync_view()
+
+
+func march_waypoints(index: int) -> PackedVector2Array:
+	if march_route_provider and march_route_provider.has_method("pending_waypoints"):
+		return march_route_provider.pending_waypoints(index)
+	return routes.snapshot(index)
+
+
+func _march_point_fits(point: Vector2) -> bool:
+	if not battle.clamp_to_field(point).is_equal_approx(point):
+		return false
+	if not _terrain:
+		return true
+	return _terrain.destination_from_ray(Vector3(point.x, 30.0, point.y), Vector3(point.x, -12.0, point.y)) != null
 
 
 ## Hostile battlefield positions that can engage the leader's platoon. Scenes with
@@ -216,6 +329,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_H: _hold_selected()
 				KEY_M: _toggle_overview()
 				KEY_HOME: _center_on_hero()
+				KEY_G: if march_mode(): add_march_waypoint()
+				KEY_T: if march_mode(): clear_march_route()
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
 		if event.axis == JOY_AXIS_TRIGGER_LEFT:
@@ -230,6 +345,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			JOY_BUTTON_A: _hold_selected()
 			JOY_BUTTON_RIGHT_STICK: _toggle_overview()
 			JOY_BUTTON_LEFT_STICK: _center_on_hero()
+			JOY_BUTTON_RIGHT_SHOULDER: if march_mode(): add_march_waypoint()
+			JOY_BUTTON_DPAD_UP: if march_mode(): clear_march_route()
 	elif command_view and event is InputEventMouseMotion:
 		_mouse_cursor_active = true
 		_mouse_position = event.position
@@ -333,11 +450,25 @@ func _point_cursor(screen: Vector2, allow_clamp: bool) -> bool:
 
 
 func _update_cameras() -> void:
-	var hero := _ground(battle.hero_position, 1.15)
-	var hero_offset := Vector3(0.0, sin(_hero_pitch), cos(_hero_pitch)) * 6.1
+	# Outside combat the camera fixes on the waypoint marker and follows it; in
+	# combat it frames the leader. The pivot eases between the two.
+	var marching := march_mode() and _marker_active and not march_camera_suppressed
+	var goal := _ground(march_marker, 1.0) if marching else _ground(battle.hero_position, 1.15)
+	var step := get_physics_process_delta_time()
+	# Ease only while following the marker; the leader's camera keeps its exact framing.
+	if not marching or not _camera_pivot.is_finite() or step <= 0.0:
+		_camera_pivot = goal
+	else:
+		_camera_pivot = _camera_pivot.lerp(goal, minf(1.0, 12.0 * step))
+	var hero := _camera_pivot
+	var distance := MARKER_CAMERA_DISTANCE if marching else 6.1
+	var hero_offset := Vector3(0.0, sin(_hero_pitch), cos(_hero_pitch)) * distance
 	var desired := hero + hero_offset.rotated(Vector3.UP, _hero_yaw)
 	_hero_camera.position = _terrain.camera_position(hero, desired) if _terrain else desired
-	_hero_camera.look_at(to_global(hero + Vector3(0.0, 0.0, -2.0).rotated(Vector3.UP, _hero_yaw)))
+	var look_ahead := 0.0 if marching else -2.0
+	var focus := to_global(hero + Vector3(0.0, 0.0, look_ahead).rotated(Vector3.UP, _hero_yaw))
+	if _hero_camera.global_position.distance_squared_to(focus) > 0.0001:
+		_hero_camera.look_at(focus)
 	if _sector:
 		_command_camera.size = _sector.view_size(_viewport_aspect())
 	var overview := _world(_sector.view_center() if _sector else battle.bounds.get_center())
@@ -352,6 +483,7 @@ func _sync_view() -> void:
 	_hero.position = _ground(battle.hero_position)
 	_hero.rotation.y = atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_sync_lead_platoon()
+	_sync_march_marker()
 	for index in range(battle.formations.size()):
 		var formation := battle.formations[index]
 		var model := _formation_models[index]
@@ -389,7 +521,9 @@ func _sync_view() -> void:
 		if battle.direct_hero_control():
 			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nHold L2 / Shift to command other platoons"
 		else:
-			_controls_label.text = "MARCHING · the leader moves with their platoon\nHold L2 / Shift, select Lead Platoon, and set a move or waypoints   ·   Right stick / Q E R F: camera"
+			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon   ·   Right stick / Q E R F: camera" % selected.title
+			if not _march_note.is_empty():
+				_controls_label.text += "\n" + _march_note
 
 
 func _configure_field() -> void:
@@ -417,6 +551,9 @@ func restart_battle() -> void:
 	battle = Battle.new()
 	battle.bounds = field_bounds
 	battle.lead_platoon_enabled = lead_platoon_enabled
+	routes.reset(battle)
+	_marker_active = false
+	_camera_pivot = Vector3.INF
 	_calm_seconds = 0.0
 	selected_index = 0
 	cursor = Vector2.ZERO
@@ -431,6 +568,7 @@ func restart_battle() -> void:
 	_command_yaw = 0.0
 	_command_pitch = deg_to_rad(59.0)
 	_place_at_spawns()
+	_reset_march_marker()
 	_update_cameras()
 	_update_mode()
 
@@ -518,6 +656,7 @@ func _build_placeholders() -> void:
 		group.add_child(banner)
 
 	_build_lead_platoon(troop, equipment)
+	_build_march_marker()
 	_selection = _mesh(self, _ring(1.84, 1.97), _material(Color("#77dcfa"), true))
 	_cursor_marker = _mesh(self, _ring(0.35, 0.48), _material(Color("#fff1bb"), true))
 	_destination_marker = _mesh(self, _ring(0.49, 0.62), _material(Color("#77dcfa"), true))
@@ -557,6 +696,72 @@ func _build_lead_platoon(troop: Mesh, equipment: Mesh) -> void:
 	_lead_banner.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_lead_banner.outline_size = 9
 	_lead_model.add_child(_lead_banner)
+
+
+func _build_march_marker() -> void:
+	_march_beam = Node3D.new()
+	_march_beam.name = "WaypointMarker"
+	add_child(_march_beam)
+	var glow := _material(Color(1.0, 0.86, 0.48, 0.55), true)
+	glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glow.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	glow.no_depth_test = true
+	var beam := CylinderMesh.new()
+	beam.top_radius = 0.10
+	beam.bottom_radius = 0.30
+	beam.height = MARKER_BEAM_HEIGHT
+	_mesh(_march_beam, beam, glow, Vector3(0.0, MARKER_BEAM_HEIGHT * 0.5, 0.0))
+	var cap := SphereMesh.new()
+	cap.radius = 0.45
+	cap.height = 0.9
+	_mesh(_march_beam, cap, _material(Color("#ffe39a"), true), Vector3(0.0, MARKER_BEAM_HEIGHT, 0.0))
+	_mesh(_march_beam, _ring(0.9, 1.15), _material(Color("#ffe39a"), true), Vector3(0.0, 0.06, 0.0))
+	var tether_material := _material(Color(1.0, 0.86, 0.48, 0.45), true)
+	tether_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_march_tether = _mesh(self, _box(Vector3(0.12, 0.02, 1.0)), tether_material)
+	for index in range(MarchQueue.MAX_WAYPOINTS):
+		var pin := Node3D.new()
+		add_child(pin)
+		var post := CylinderMesh.new()
+		post.top_radius = 0.06
+		post.bottom_radius = 0.18
+		post.height = 2.6
+		_mesh(pin, post, _material(Color("#77dcfa"), true), Vector3(0.0, 1.3, 0.0))
+		var number := Label3D.new()
+		number.text = str(index + 1)
+		number.position.y = 3.0
+		number.pixel_size = 0.02
+		number.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		number.outline_size = 8
+		pin.add_child(number)
+		pin.hide()
+		_route_pins.append(pin)
+
+
+func _sync_march_marker() -> void:
+	if not _march_beam:
+		return
+	var showing := march_mode() and _marker_active
+	var selected := battle.formation_at(selected_index)
+	_march_beam.visible = showing
+	_march_tether.visible = showing and selected != null
+	if showing:
+		_march_beam.position = _ground(march_marker)
+		if selected:
+			var from := _ground(selected.position, 0.08)
+			var to := _ground(march_marker, 0.08)
+			var length := from.distance_to(to)
+			_march_tether.visible = length > 0.3
+			if _march_tether.visible:
+				_march_tether.position = (from + to) * 0.5
+				_march_tether.look_at_from_position(_march_tether.position, to, Vector3.UP)
+				_march_tether.scale = Vector3(1.0, 1.0, length)
+	var pending := march_waypoints(selected_index) if showing or command_view else PackedVector2Array()
+	for index in range(_route_pins.size()):
+		var pin := _route_pins[index]
+		pin.visible = index < pending.size()
+		if pin.visible:
+			pin.position = _ground(pending[index])
 
 
 ## Scenes with rigged soldier art return it here for the leader's platoon.

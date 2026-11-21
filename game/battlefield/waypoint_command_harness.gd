@@ -38,6 +38,7 @@ func route_for(index: int) -> PackedVector2Array:
 
 func _reset_routes() -> void:
 	_routes.reset(battle)
+	march_route_provider = self
 	_waypoint_feedback = ""
 	_feedback_index = -1
 
@@ -105,3 +106,16 @@ func _sync_view() -> void:
 		if selected_index == _feedback_index and not _waypoint_feedback.is_empty():
 			_formation_label.text += "  ·  " + _waypoint_feedback
 		_controls_label.text += "\nR1 / G: append waypoint   ·   Move replaces the route"
+
+
+## The hero-view waypoint marker shares this scene's route queues.
+func march_issue(index: int, point: Vector2, append: bool) -> int:
+	return _routes.issue(battle, index, point, append, Callable())
+
+
+func march_clear(index: int) -> void:
+	_routes.clear(index)
+
+
+func pending_waypoints(index: int) -> PackedVector2Array:
+	return route_for(index)

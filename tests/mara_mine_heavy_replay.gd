@@ -150,6 +150,9 @@ func _capture_carry_and_rig() -> bool:
 	await _checkpoint("02-heavy-tactical-carry")
 	_aim(_position("Routes/WestAssembly"))
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	# Back in hero view the camera follows the selected platoon's waypoint marker;
+	# select Mara's own platoon so the marker, and the camera, start at her.
+	_button(JOY_BUTTON_DPAD_LEFT)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0)
 	_tick(12)
 	if _mission._infantry_animators[0].current_animation != &"Combat Run" or not _case_projects(false):

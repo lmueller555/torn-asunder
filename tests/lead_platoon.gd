@@ -21,8 +21,9 @@ func _run() -> void:
 	_check_simulation()
 	_check_routes()
 	await _check_harness_engagement()
+	await _check_waypoint_marker()
 	if _failures == 0:
-		print("Lead platoon: waypoint march outside combat, direct control only in combat, and re-forming on release passed.")
+		print("Lead platoon: waypoint march, the steerable waypoint marker and its camera, direct control only in combat, and re-forming on release passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -117,6 +118,69 @@ func _check_harness_engagement() -> void:
 	_check(not battle.lead_engaged and battle.lead.position == battle.hero_position, "Combat ends after a calm period and the platoon re-forms on the leader.")
 	harness.queue_free()
 	await process_frame
+
+
+func _check_waypoint_marker() -> void:
+	var harness = HarnessScene.instantiate()
+	root.add_child(harness)
+	await physics_frame
+	var battle: Battle = harness.battle
+	_button(JOY_BUTTON_DPAD_LEFT)
+	await _frames(2)
+	_check(harness.selected_index == Battle.LEAD_INDEX and harness.march_mode(), "D-pad left selects the leader's platoon and the stick drives the waypoint marker.")
+	var hero := battle.hero_position
+	var start: Vector2 = harness.march_marker
+	_check(start.distance_to(battle.lead.position) <= harness.MARKER_START + 0.01, "The marker starts just ahead of the selected platoon.")
+	_axis(JOY_AXIS_LEFT_Y, -1.0)
+	await _frames(30)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	await _frames(20)
+	var marker: Vector2 = harness.march_marker
+	_check(marker.distance_to(start) > 5.0 and battle.hero_position == hero, "The stick moves the marker away from the platoon without moving the leader.")
+	var pivot: Vector3 = harness._camera_pivot
+	_check(Vector2(pivot.x, pivot.z).distance_to(marker) < 0.5, "The camera fixes on the marker and follows it.")
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(harness.march_waypoints(Battle.LEAD_INDEX).size() == 1 and battle.lead.order == Battle.Order.MOVE, "R1 adds a waypoint and the lead platoon sets off for it.")
+	_axis(JOY_AXIS_LEFT_X, 1.0)
+	await _frames(15)
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	var second: Vector2 = harness.march_marker
+	_check(harness.march_waypoints(Battle.LEAD_INDEX).size() == 2, "A second R1 queues another waypoint.")
+	await _frames(240)
+	_check(battle.hero_position.distance_to(second) < 0.2 and harness.march_waypoints(Battle.LEAD_INDEX).is_empty(), "The leader marches through both waypoints and halts at the last.")
+	_axis(JOY_AXIS_LEFT_Y, -1.0)
+	await _frames(400)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	_check(harness.march_marker.distance_to(battle.lead.position) <= harness.MARKER_LEASH + 0.01, "The marker stays leashed to the selected platoon.")
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	await _frames(2)
+	var infantry := battle.formations[0]
+	_check(harness.selected_index == 0 and harness.march_marker.distance_to(infantry.position) <= harness.MARKER_START + 0.01, "Changing platoon moves the marker out from the newly selected platoon.")
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(infantry.order == Battle.Order.MOVE, "Other platoons take marker waypoints the same way.")
+	_button(JOY_BUTTON_DPAD_UP)
+	_check(infantry.order == Battle.Order.HOLD and harness.march_waypoints(0).is_empty(), "D-pad Up clears the route and holds.")
+	battle.lead_engaged = true
+	await _frames(2)
+	_check(not harness.march_mode() and not harness._march_beam.visible, "Combat hides the marker and returns the stick to the leader.")
+	harness.queue_free()
+	await process_frame
+
+
+func _axis(code: JoyAxis, amount: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = code
+	event.axis_value = amount
+	root.push_input(event, true)
+
+
+func _button(code: JoyButton) -> void:
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = code
+		event.pressed = pressed
+		root.push_input(event, true)
 
 
 func _frames(count: int) -> void:

@@ -20,7 +20,10 @@ func _run() -> void:
 	var start := infantry.position
 	var head := start + Vector2(1.0, 0.0)
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
-	_check(_scene.route_for(0).is_empty(), "Append outside command view does not issue an order.")
+	_check(_scene.route_for(0).size() == 1 and _scene.route_for(0)[0].is_equal_approx(_scene.march_marker),
+		"In hero view R1 appends the waypoint marker to the selected platoon's route.")
+	_scene.clear_march_route()
+	_check(_scene.route_for(0).is_empty() and infantry.order == Battle.Order.HOLD, "Clearing the marker route holds the platoon.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_scene.cursor = head
 	_button(JOY_BUTTON_X)
