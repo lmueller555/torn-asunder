@@ -2,6 +2,7 @@ extends "res://game/campaign_overworld_3d.gd"
 ## Concrete composition for the authored three-waypoint Marches review slice.
 ## The title screen's private factory controls whether this scene is mounted.
 
+const CampSite := preload("res://game/overworld/marches_camp_site.gd")
 const RendererScene := preload("res://game/overworld/marches_overworld_renderer.tscn")
 const DisplayFont := preload("res://assets/fonts/Cinzel.ttf")
 const BODY := Color("#f2e6cb")
@@ -10,7 +11,7 @@ const PANEL := Color(0.067,0.092,0.078,0.91)
 const ACCENT := Color("#bb925e")
 const DATA := "res://assets/overworld/marches/anchors.json"
 const MARKERS := {
-	"marches_camp": "FIELD CAMP", "year_one_mine": "STORY MISSION", "marches_road": "ROAD LINK",
+	"marches_camp": "FIELD CAMP", "year_one_mine": "STORY MISSION", "marches_road": "ROAD LINK", "marches_road_camp": "FORWARD CAMP",
 }
 
 var _pins: Pins
@@ -32,6 +33,16 @@ func build() -> bool:
 		for data: Array in row.points:
 			curve.add_point(Vector3(data[0],data[1],data[2]))
 		curves[route_key(row.start,row.end)]=curve
+	var spur := CampSite.route()
+	if spur.size()>1 and points.has(CampSite.ROAD_ID) and spur[0].is_equal_approx(points[CampSite.ROAD_ID]) \
+			and ResourceLoader.exists(CampSite.ASSETS+"marches-road-camp-fit.glb","PackedScene") \
+			and ResourceLoader.exists(CampSite.ASSETS+"marches-road-camp-fit-regional.glb","PackedScene"):
+		var camp_curve:=Curve3D.new()
+		camp_curve.bake_interval=1.15
+		for point in spur:
+			camp_curve.add_point(point)
+		points[CampSite.CAMP_ID]=spur[-1]
+		curves[route_key(CampSite.ROAD_ID,CampSite.CAMP_ID)]=camp_curve
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	map_surface = SubViewportContainer.new()
 	map_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -57,9 +68,9 @@ func build() -> bool:
 
 
 func configure(world: World, completed_ids: PackedStringArray, reduced_motion: bool) -> void:
-	if is_instance_valid(_renderer):
-		_renderer.configure_overworld_art(world,completed_ids,reduced_motion)
 	super.configure(world,completed_ids,reduced_motion)
+	if is_instance_valid(_renderer):
+		_renderer.configure_overworld_art(_world,completed_ids,reduced_motion)
 
 
 func _process(delta: float) -> void:
@@ -184,8 +195,12 @@ class Pins extends Control:
 			else:
 				draw_arc(point,9 if map._navigation.selected_waypoint_id()==id else 7,0,TAU,20,color,2,true)
 				draw_circle(point,2,color)
-			var pos:=point+Vector2(13,-27)
 			var width:=_face.get_string_size(site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16).x
+			var y_offset := 17.0 if id==CampSite.CAMP_ID else -27.0
+			var x_offset := -width-28.0 if id==CampSite.ROAD_ID and projected.has(CampSite.CAMP_ID) else 13.0
+			var pos:=Vector2(clampf(point.x+x_offset,12.0,size.x-width-29.0),point.y+y_offset)
+			if id==CampSite.CAMP_ID:
+				draw_line(point+Vector2(4,6),Vector2(pos.x+5,pos.y),color,1.3,true)
 			draw_rect(Rect2(pos,Vector2(width+16,40)),map.PANEL)
 			draw_string(_face,pos+Vector2(8,15),kind,HORIZONTAL_ALIGNMENT_LEFT,-1,11,color)
 			draw_string(_face,pos+Vector2(8,32),site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16,map.BODY)

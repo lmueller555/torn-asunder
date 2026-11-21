@@ -104,6 +104,12 @@ func greyhollow_reveal_pending() -> bool:
 	return pending is bool and pending and completed_missions(MARA).has(MARA_MINE)
 
 
+## Saves with a clear but no reveal record must still complete the actual reveal.
+func greyhollow_reveal_completed() -> bool:
+	var pending: Variant = _config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, "")
+	return pending is bool and not pending and completed_missions(MARA).has(MARA_MINE)
+
+
 func finish_greyhollow_reveal() -> Error:
 	if not greyhollow_reveal_pending():
 		return OK
