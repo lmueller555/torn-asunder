@@ -60,8 +60,8 @@ const _MAPS := {
 				"map_position": Vector2(0.83, 0.65), "mission_id": "orc_well_road",
 			},
 			"spanwater_lock": {
-				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.69, 0.87),
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.69, 0.87), "mission_id": "orc_spanwater_release",
 			},
 		},
 		"routes": [

@@ -41,6 +41,15 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "RED BASIN · SALT ROAD AND COVERED WASH",
 		"orders": "Get both well carts to the Basin exit. The upper cart can leave now. Send Raska to the lower storehouse to board the households before ordering their cart. Screen the mounted reserve or take the covered wash.",
 	},
+	"orc_spanwater_release": {
+		"scene": preload("res://game/battlefield/raska_spanwater.tscn"),
+		"dispatch": Beats.RASKA_SPANWATER_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.RASKA_SPANWATER_DEBRIEF,
+		"victory_coda": Beats.RASKA_SPANWATER_CODA,
+		"battlefield_label": "SPANWATER LOCK · BASIN SPILLWAY",
+		"orders": "Secure the wheel and send Raska to open the spillway. The lower-town companies will leave. Hold the wheel with the Basin Regulars until the river reaches its mark, then take Raska to the high-bank exit. Leave the sea gate shut.",
+	},
 	"sova_mine_tunnels": {
 		"scene": preload("res://game/battlefield/sova_mine_evacuation_campaign.tscn"),
 		"dispatch": Beats.SOVA_MINE_DISPATCH,
