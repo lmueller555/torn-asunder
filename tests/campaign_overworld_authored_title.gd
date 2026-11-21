@@ -8,13 +8,14 @@ const CampaignMap := preload("res://game/campaign_map.gd")
 const World := preload("res://game/campaign_world.gd")
 const Profile := preload("res://game/profile_store.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Mission := preload("res://game/battlefield/mara_greyhollow_rescue.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const CAMP := "marches_camp"
 const MINE := "year_one_mine"
 const ROAD := "marches_road"
-const CROSSING := "marches_crossing"
+const MOONWASH_ROAD := "moonwash_road"
 const CLEAR := "mara_mine_escort"
 
 var _title: Title
@@ -144,11 +145,14 @@ func _reload_and_return() -> bool:
 	_joy(JOY_BUTTON_A)
 	if not _on_pilot(MINE) or _location() != MINE:
 		return _fail("The same authored curve must support reverse traversal.")
-	var outside := World.new("mara", CROSSING, PackedStringArray([CLEAR]))
-	if _title._profile.record_world_waypoint(outside) != OK:
+	if _title._profile.record_grain_clear(Grain.BOTH) != OK:
+		return _fail("Could not seed the normal Grain clear to reach the next sector.")
+	var outside := World.new("mara", MOONWASH_ROAD, _title._profile.completed_missions("mara"))
+	if outside.current_waypoint_id()!=MOONWASH_ROAD or _title._profile.record_world_waypoint(outside) != OK:
 		return _fail("Could not prepare an existing save outside pilot coverage.")
+	_title._profile.record_intermission_seen("mara",Beats.MARA_WATER_REQUEST)
 	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or _pilot() or not _title._stage.get_child(0) is CampaignMap or _location() != CROSSING:
+	if not _press("Continue") or _pilot() or not _title._stage.get_child(0) is CampaignMap or _location() != MOONWASH_ROAD:
 		return _fail("A save outside the pilot must reopen on the existing 2D map.")
 	if _title._profile.record_world_waypoint(World.new("mara", MINE)) != OK:
 		return _fail("Could not prepare a saved position inside the pilot area.")
