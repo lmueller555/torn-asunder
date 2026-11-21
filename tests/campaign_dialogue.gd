@@ -37,13 +37,13 @@ func _run() -> void:
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
 	passed = _check_sova_vault_return_beats() and passed
-	passed = _check_neris_failing_grove_beats() and passed
+	passed = _check_neris_beats() and passed
 	passed = _check_sereth_cut_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including Sereth’s opening), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad feeder), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -533,7 +533,7 @@ func _check_sova_vault_return_beats() -> bool:
 	return _completions.slice(start) == ids or _fail("Vault dialogue emitted duplicate or out-of-order completions.")
 
 
-func _check_neris_failing_grove_beats() -> bool:
+func _check_neris_beats() -> bool:
 	var cases := [
 		[Beats.NERIS_FAILING_GROVE_DISPATCH, "What We Planted Here",
 			["The grove said no", "keep the old feeder open", "The well is still the town's",
@@ -542,6 +542,13 @@ func _check_neris_failing_grove_beats() -> bool:
 			["The first tree is upright", "soil is wet", "can't fit the whole grove here today",
 				"send a crew to the feeder", "Their ground is still dry", "still ask to hold it",
 				"your answer about the crossing stands"]],
+		[Beats.NERIS_SPANWATER_FEEDER_DISPATCH, "Water at the Town Gauge",
+			["first tree is still on well water", "opening the spillway, not the sea gate",
+				"full river won't help", "clear the rack", "work screen", "raised path",
+				"The gauge at the town end"]],
+		[Beats.NERIS_SPANWATER_FEEDER_DEBRIEF, "Take the Gauge",
+			["water's at the town mark and holding", "stayed in place through the crest", "your gauge book",
+				"wells stay in town hands", "nursery plot stays yours", "rack patrol after storms"]],
 	]
 	var start := _completions.size()
 	var ids: Array[StringName] = []
@@ -562,16 +569,18 @@ func _check_neris_failing_grove_beats() -> bool:
 				_send_pad(JOY_BUTTON_A)
 		for phrase: String in fixture[2]:
 			if not phrase in spoken:
-				return _fail("A grove beat lost a local choice or objective: %s" % phrase)
+				return _fail("A Dryad beat lost a local choice or objective: %s" % phrase)
 		if not speakers.has(Beats.NERIS) or not speakers.has(Beats.GROVE_ENVOY) or not speakers.has(Beats.FEEDER_KEEPER):
 			return _fail("Neris, the grove, and the town did not all speak for themselves.")
+		if id == Beats.NERIS_SPANWATER_FEEDER_DEBRIEF and ("jam" in spoken or "Godbridle" in spoken or "boats" in spoken):
+			return _fail("The feeder report assumed optional debris or a different campaign's outcome.")
 		if "Orrun," in spoken or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
-			return _fail("A grove beat issued a new command or skipped explicit Finish: %s" % id)
+			return _fail("A Dryad beat issued a new command or skipped explicit Finish: %s" % id)
 		_send_key(KEY_SPACE)
 		if _panel.visible or _completions.back() != id:
-			return _fail("A grove beat did not finish under its own ID: %s" % id)
+			return _fail("A Dryad beat did not finish under its own ID: %s" % id)
 		ids.append(id)
-	return _completions.slice(start) == ids or _fail("Grove dialogue emitted duplicate or out-of-order completions.")
+	return _completions.slice(start) == ids or _fail("Dryad dialogue emitted duplicate or out-of-order completions.")
 
 
 func _check_sereth_cut_beats() -> bool:

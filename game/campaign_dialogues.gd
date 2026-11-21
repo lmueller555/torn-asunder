@@ -36,6 +36,8 @@ const ILYRA_COAST_SURVEY_BEACH_DEBRIEF := &"ilyra_coast_survey_debrief_beach"
 const ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF := &"ilyra_coast_survey_debrief_headland"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
+const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
+const NERIS_SPANWATER_FEEDER_DEBRIEF := &"neris_spanwater_feeder_debrief"
 const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
@@ -403,6 +405,26 @@ const BEATS := {
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
 			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
+		],
+	},
+	NERIS_SPANWATER_FEEDER_DISPATCH: {
+		"title": "Water at the Town Gauge",
+		"location": "Spanwater feeder path · Before the release",
+		"lines": [
+			{"speaker": FEEDER_KEEPER, "text": "The first tree is still on well water. Raska's opening the spillway, not the sea gate. A full river won't help that tree if the feeder fills with silt."},
+			{"speaker": GROVE_ENVOY, "text": "The crew has the guide boards. The inlet rack is already clogged, and March troops have been seen on the maintenance path."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll clear the rack. Hold a platoon at the work screen so the crew can fit the boards. If the first rush brings more debris, call me back to the rack."},
+			{"speaker": FEEDER_KEEPER, "text": "Follow the raised path when the ford goes under. The gauge at the town end tells us whether water actually made it through."},
+		],
+	},
+	NERIS_SPANWATER_FEEDER_DEBRIEF: {
+		"title": "Take the Gauge",
+		"location": "Town feeder gauge · After the crest",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "The water's at the town mark and holding. The boards stayed in place through the crest. Here's your gauge book."},
+			{"speaker": FEEDER_KEEPER, "text": "I'll take the morning reading. The wells stay in town hands. The nursery plot stays yours, as agreed."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Have someone show our volunteers how to read the mark. Put us on the rack patrol after storms. That tree will need water long after our platoons leave."},
+			{"speaker": GROVE_ENVOY, "text": "I'll take the first turn. It used to take me all morning to carry enough water for one tree."},
 		],
 	},
 	SERETH_CUT_DISPATCH: {
