@@ -426,8 +426,9 @@ func _build_placeholders() -> void:
 				member.position = Vector3((x - 1.5) * 0.85, 0.0, (z - 1.0) * 0.78)
 				group.add_child(member)
 				members.append(member)
-				_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
-				_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+				if not _add_formation_member_visual(member, index):
+					_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
+					_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
 		_formation_members.append(members)
 		var banner := Label3D.new()
 		banner.text = battle.formations[index].title
@@ -440,6 +441,11 @@ func _build_placeholders() -> void:
 	_selection = _mesh(self, _ring(1.84, 1.97), _material(Color("#77dcfa"), true))
 	_cursor_marker = _mesh(self, _ring(0.35, 0.48), _material(Color("#fff1bb"), true))
 	_destination_marker = _mesh(self, _ring(0.49, 0.62), _material(Color("#77dcfa"), true))
+
+
+## Scenes may fill the existing feet anchor without changing simulation or formations.
+func _add_formation_member_visual(_member: Node3D, _formation_index: int) -> bool:
+	return false
 
 
 static func _world(point: Vector2, height: float = 0.0) -> Vector3:
