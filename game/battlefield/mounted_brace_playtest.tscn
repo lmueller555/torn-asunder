@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/red_basin_well_road.tscn" id="2_basin"]
+[ext_resource type="Script" path="res://game/battlefield/mounted_brace_playtest.gd" id="3_playtest"]
+[ext_resource type="Script" path="res://game/battlefield/marches_rival_reserve.gd" id="4_riders"]
+
+[node name="MountedBracePlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_playtest")
+battlefield_scene = ExtResource("2_basin")
+field_bounds = Rect2(-154, -98, 316, 199)
+enable_sector_camera = true
+local_sector_size = 100.0
+hero_spawn = NodePath("Markers/Routes/SaltChargeGate")
+formation_spawns = Array[NodePath]([NodePath("Markers/Routes/SaltChargeGate")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 480.0
+
+[node name="Riders" type="Node3D" parent="."]
+script = ExtResource("4_riders")
