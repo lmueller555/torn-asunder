@@ -1,0 +1,83 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/red_basin_well_road.tscn" id="2_basin"]
+[ext_resource type="Script" path="res://game/battlefield/raska_well_road_playtest.gd" id="3_mission"]
+[ext_resource type="Script" path="res://game/battlefield/marches_rival_reserve.gd" id="4_reserve"]
+
+[node name="RaskaWellRoadPlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_mission")
+battlefield_scene = ExtResource("2_basin")
+field_bounds = Rect2(-154, -98, 316, 199)
+enable_sector_camera = true
+local_sector_size = 110.0
+hero_spawn = NodePath("Markers/Spawns/RaskaHero")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/BraceInfantry"), NodePath("Markers/Spawns/BasinArchers")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 480.0
+
+[node name="MountedReserve" type="Node3D" parent="."]
+script = ExtResource("4_reserve")
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -186.0
+offset_right = 880.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "RASKA · THE SECOND BUCKET · WELL ROAD PROTOTYPE"
+theme_override_colors/font_color = Color(0.67, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 20
+
+[node name="Status" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Cue" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.78, 0.62, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 2
+
+[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.81, 0.90, 0.91, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 2
+
+[node name="Actions" type="HBoxContainer" parent="ObjectiveHUD/Panel/Margin/Readout"]
+mouse_filter = 2
+
+[node name="Select" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+
+[node name="Salt" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Salt road  [G / R1]"
+
+[node name="Wash" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Wash  [T / Triangle]"
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Restart  [Backspace / Options]"
