@@ -1,0 +1,93 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/marches_crossing.tscn" id="2_marches"]
+[ext_resource type="Script" path="res://game/battlefield/mara_grain_crossing_playtest.gd" id="3_playtest"]
+
+[ext_resource type="Script" path="res://game/battlefield/marches_rival_reserve.gd" id="4_rival"]
+
+[node name="MaraGrainCrossingPlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_playtest")
+battlefield_scene = ExtResource("2_marches")
+field_bounds = Rect2(-171, -146, 342, 292)
+enable_sector_camera = true
+local_sector_size = 70.0
+hero_spawn = NodePath("Markers/Spawns/RoyalHero")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/InfantryReserve"), NodePath("Markers/Spawns/EscortArchers")])
+
+[node name="RivalApproach" type="Node3D" parent="."]
+
+[node name="ReserveMuster" type="Marker3D" parent="RivalApproach"]
+position = Vector3(59, 0, 8)
+
+[node name="NorthTurn" type="Marker3D" parent="RivalApproach"]
+position = Vector3(46, 0, -20)
+
+[node name="MillTrack" type="Marker3D" parent="RivalApproach"]
+position = Vector3(43, 0, -44)
+
+[node name="SouthTrack" type="Marker3D" parent="RivalApproach"]
+position = Vector3(61, 0, 53)
+
+[node name="RivalReserve" type="Node3D" parent="."]
+script = ExtResource("4_rival")
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -192.0
+offset_right = 710.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "GRAIN ON CREDIT  /  CROSSING PLAYTEST"
+theme_override_colors/font_color = Color(0.95, 0.80, 0.60, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 20
+
+[node name="Status" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Cue" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.79, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Scope" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "A held allied formation can screen the rival. The other lane remains open."
+theme_override_font_sizes/font_size = 14
+
+[node name="Actions" type="HBoxContainer" parent="ObjectiveHUD/Panel/Margin/Readout"]
+mouse_filter = 2
+
+[node name="Select" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+
+[node name="Dispatch" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Dispatch  [G / R1]"
+
+[node name="Withdraw" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Turn back  [T / Triangle]"
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
+focus_mode = 0
+text = "Restart  [Backspace / Options]"

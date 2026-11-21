@@ -1,6 +1,14 @@
 extends Control
 
 const Campaigns := preload("res://game/campaigns.gd")
+const CampaignMissions := preload("res://game/campaign_missions.gd")
+const CampaignDeployments := preload("res://game/campaign_deployments.gd")
+const CampaignWorld := preload("res://game/campaign_world.gd")
+const CampaignMap := preload("res://game/campaign_map.gd")
+const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
+const DialogueBeats := preload("res://game/campaign_dialogues.gd")
+const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
+const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
 const Drills := preload("res://game/combat/drills.gd")
@@ -25,7 +33,11 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL }
+enum Page {
+	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
+	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
+	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE,
+}
 
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
@@ -51,6 +63,10 @@ var _selection_title: Label
 var _selection_region: Label
 var _selection_summary: Label
 var _active_campaign: Dictionary
+var _campaign_world: CampaignWorld
+var _campaign_warning := ""
+var _campaign_battle: Node3D
+var _victory_pending := false
 var _drill_index := 0
 var _drill_rank := Platoon.MAX_RANK
 var _drill_buttons: Array[Button] = []
@@ -77,6 +93,7 @@ var _skirmish_setup := SkirmishSetup.new()
 
 
 func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_body_face.base_font = UI_FACE
 	var weight_axis := TextServerManager.get_primary_interface().name_to_tag("wght")
 	_body_face.variation_opentype = {weight_axis: 465}
@@ -95,6 +112,16 @@ func _map_controller_button(action: StringName, button: JoyButton) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _page == Page.WORLD_MAP or _page == Page.CAMPAIGN_DIALOGUE:
+		return # These scenes own navigation, including Back.
+	if _page == Page.CAMPAIGN_BATTLE:
+		var key_back := event is InputEventKey and event.is_action_pressed("ui_cancel")
+		var pad_back: bool = event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_BACK
+		# Circle belongs to the hero's dodge; keyboard Escape and controller Create return.
+		if key_back or pad_back:
+			get_viewport().set_input_as_handled()
+			_return_from_campaign_battle()
+		return
 	var controller_button := event is InputEventJoypadButton and event.is_pressed()
 	var controller_stick: bool = event is InputEventJoypadMotion and absf(event.axis_value) > 0.65
 	if controller_button or controller_stick:
@@ -119,6 +146,13 @@ func _go_back() -> void:
 	match _page:
 		Page.TITLE:
 			_show_quit()
+		Page.BRIEFING:
+			if _campaign_world:
+				_show_world_map()
+			else:
+				_show_title()
+		Page.MISSION_BRIEFING:
+			_show_world_map()
 		Page.DRILLS:
 			_show_briefing()
 		Page.UNIT_PROGRESSION:
@@ -215,15 +249,122 @@ func _begin_selected() -> void:
 func _open_campaign(campaign: Dictionary) -> void:
 	_active_campaign = campaign
 	var result := _profile.mark_played(campaign.id)
-	_show_briefing()
-	if result != OK:
-		_show_notice("The campaign selection could not be saved.")
+	_campaign_world = null
+	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
+	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
+		_campaign_world = _profile.load_campaign_world(campaign.id)
+		_show_world_map()
+	else:
+		_show_briefing()
+		_show_campaign_warning()
+
+
+func _show_world_map() -> void:
+	_replace_stage(Page.WORLD_MAP)
+	var map: CampaignMap = CAMPAIGN_MAP_SCENE.instantiate()
+	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
+	map.return_requested.connect(_show_title)
+	map.camp_operations_requested.connect(_show_briefing)
+	map.waypoint_arrived.connect(_on_waypoint_arrived)
+	map.briefing_requested.connect(_show_campaign_mission_briefing)
+	_stage.add_child(map)
+	_show_campaign_warning()
+
+
+func _on_waypoint_arrived(_id: String) -> void:
+	if _profile.record_world_waypoint(_campaign_world) != OK:
+		_campaign_warning = "The arrived waypoint could not be saved."
+		# A battlefield arrival immediately switches to a briefing; display the warning there.
+		if _campaign_world.mission_at_current_waypoint().is_empty():
+			_show_campaign_warning()
+
+
+func _show_campaign_mission_briefing(mission_id: String) -> void:
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	var mission := CampaignMissions.mission_for_campaign(_active_campaign.id, mission_id)
+	if deployment.is_empty() or mission.is_empty():
+		return
+	_open_page(Page.MISSION_BRIEFING)
+	var back := _heading("Battlefield Briefing", "%s  /  Year One" % mission.title)
+	_label(_stage, "THE MINE · MARCHES BORDER", Rect2(76, 248, 1120, 44), 25, GOLD)
+	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
+	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label(_stage, "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 475, 1080, 32), 21, MUTED)
+	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
+	_link_focus(back, SIDE_BOTTOM, deploy)
+	_link_focus(deploy, SIDE_TOP, back)
+	back.grab_focus()
+	_show_campaign_warning()
+
+
+func _deploy_campaign_mission(mission_id: String) -> void:
+	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != mission_id:
+		return
+	var campaign_id: String = _active_campaign.id
+	if not CampaignMissions.is_unlocked(campaign_id, mission_id, _profile.completed_missions(campaign_id)):
+		return
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	if deployment.is_empty():
+		return
+	var scene: PackedScene = deployment.scene
+	_replace_stage(Page.CAMPAIGN_BATTLE)
+	_victory_pending = false
+	var mission: Node3D = scene.instantiate()
+	_campaign_battle = mission
+	mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
+	_stage.add_child(mission)
+	var back := _button("Return to Campaign Map", Rect2(1079, 735, 330, 48), _return_from_campaign_battle)
+	back.name = "ReturnToMap"
+	back.focus_mode = Control.FOCUS_NONE
+	back.tooltip_text = "Escape or DualSense Create"
+
+
+func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: String, mission_id: String) -> void:
+	if not won or mission != _campaign_battle:
+		return
+	_victory_pending = true
+	if _profile.record_mission_clear(campaign_id, mission_id) != OK:
+		_campaign_warning = "The mission was completed, but its clear could not be saved."
+	elif _profile.record_world_waypoint(_campaign_world) != OK:
+		_campaign_warning = "The mission cleared, but the current waypoint could not be saved."
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	_finish_campaign_battle.call_deferred(mission, deployment.debrief)
+
+
+func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
+	if mission == _campaign_battle:
+		_present_campaign_dialogue(debrief, _show_world_map)
+
+
+func _return_from_campaign_battle() -> void:
+	if _page == Page.CAMPAIGN_BATTLE and not _victory_pending:
+		_show_world_map()
+
+
+func _present_campaign_dialogue(beat: StringName, then: Callable) -> void:
+	_replace_stage(Page.CAMPAIGN_DIALOGUE)
+	var dialogue: CampaignDialogue = CAMPAIGN_DIALOGUE_SCENE.instantiate()
+	dialogue.completed.connect(func(_id: StringName) -> void: then.call())
+	dialogue.cancelled.connect(func(_id: StringName) -> void: then.call())
+	_stage.add_child(dialogue)
+	if not dialogue.present(beat, DialogueBeats.get_beat(beat)):
+		then.call()
+
+
+func _show_campaign_warning() -> void:
+	if _campaign_warning.is_empty():
+		return
+	if _page == Page.WORLD_MAP:
+		_label(_stage, _campaign_warning, Rect2(525, 83, 720, 38), 19, Color("#fbb89b"))
+	else:
+		_show_notice(_campaign_warning)
+	_campaign_warning = ""
 
 
 func _show_briefing() -> void:
 	var campaign := _active_campaign
 	_open_page(Page.BRIEFING)
-	var back := _heading("Campaign Briefing", campaign.opening)
+	var back := _heading("Camp Operations" if _campaign_world else "Campaign Briefing", campaign.opening)
 	_portrait(campaign, Rect2(76, 230, 320, 448), false)
 	_label(_stage, campaign.faction.to_upper(), Rect2(442, 255, 736, 32), 20, campaign.accent)
 	_label(
@@ -242,6 +383,13 @@ func _show_briefing() -> void:
 	_link_focus(drills, SIDE_RIGHT, progression)
 	_link_focus(progression, SIDE_TOP, back)
 	_link_focus(progression, SIDE_LEFT, drills)
+	var deployment := CampaignDeployments.opening_for_campaign(campaign.id)
+	if _campaign_world and not deployment.is_empty():
+		var dispatch := _button("Read Dispatch", Rect2(442, 636, 274, 57),
+			_present_campaign_dialogue.bind(deployment.dispatch, _show_briefing))
+		_link_focus(drills, SIDE_BOTTOM, dispatch)
+		_link_focus(progression, SIDE_BOTTOM, dispatch)
+		_link_focus(dispatch, SIDE_TOP, drills)
 	back.grab_focus()
 
 
@@ -775,8 +923,11 @@ func _show_quit() -> void:
 	cancel.grab_focus()
 
 
-func _open_page(page: Page) -> void:
+func _replace_stage(page: Page) -> void:
 	_page = page
+	_hint = null
+	_notice = null
+	_campaign_battle = null
 	if is_instance_valid(_stage):
 		remove_child(_stage)
 		_stage.queue_free()
@@ -785,6 +936,9 @@ func _open_page(page: Page) -> void:
 	_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+
+func _open_page(page: Page) -> void:
+	_replace_stage(page)
 	var is_title := page == Page.TITLE
 	var background := _texture(
 		_stage, TITLE_ART if is_title else VAULT_ART, Rect2(0, 0, 1440, 810)

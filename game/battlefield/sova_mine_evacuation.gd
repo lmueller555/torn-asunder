@@ -1,5 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
 
+## Emitted once when an attempt reaches a terminal result.
+signal mission_finished(won: bool)
+
 const Evacuation := preload("res://game/battlefield/sova_mine_tunnels.gd")
 const ROUTE_NAMES := ["TunnelEntrance", "TunnelMidpoint", "TunnelExit", "EvacuationTrail", "MinerEvacuation"]
 const EXIT_WAYPOINT := 2
@@ -8,6 +11,9 @@ const WORKER_SPEED := 2.55
 const GROUP_TITLES := ["Mouth group", "Bend group"]
 const GROUP_COLORS := [Color("#f3c681"), Color("#a0e8d1")]
 const GUARD_TITLES := ["Tunnel Guard", "Outlet Screen"]
+
+## Larger terrain can require a straight approach clear of the portal before the trail turns.
+@export var outlet_turn: NodePath
 
 var objective := Evacuation.new()
 var _route := PackedVector3Array()
@@ -30,6 +36,12 @@ func _ready() -> void:
 		var prefix := "Markers/Objectives/" if index == ROUTE_NAMES.size() - 1 else "Markers/Routes/"
 		var marker := battlefield_marker(NodePath(prefix + ROUTE_NAMES[index]))
 		_route.append(marker.global_position)
+	if not outlet_turn.is_empty():
+		var turn := battlefield_marker(outlet_turn)
+		if turn:
+			_route.insert(EXIT_WAYPOINT + 1, turn.global_position)
+		else:
+			push_error("Sova evacuation outlet turn is not a Marker3D: %s" % outlet_turn)
 	for group in range(GROUP_TITLES.size()):
 		_stages.append(_stage_marker(group))
 		_groups.append(_worker_group(group))
@@ -61,6 +73,8 @@ func _physics_process(delta: float) -> void:
 	frame.witness_waiting_under_truce = _witness_at_truce
 	objective.advance(frame)
 	_refresh_view()
+	if objective.outcome != Evacuation.Outcome.ACTIVE:
+		mission_finished.emit(objective.outcome == Evacuation.Outcome.SUCCEEDED)
 
 
 func _unhandled_input(event: InputEvent) -> void:

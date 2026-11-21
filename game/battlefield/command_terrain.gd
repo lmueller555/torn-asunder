@@ -54,6 +54,11 @@ func clear_melee_contact(a: Vector2, b: Vector2) -> bool:
 	return _ray(Vector3(a.x, ay + 0.9, a.y), Vector3(b.x, by + 0.9, b.y), SOLID_MASK).is_empty()
 
 
+## Release and impact are already at the archer resolver's shot heights.
+func clear_ranged_lane(from: Vector3, to: Vector3) -> bool:
+	return _ray(from, to, SOLID_MASK).is_empty()
+
+
 func can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 	if from == to:
 		return true

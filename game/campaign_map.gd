@@ -3,9 +3,11 @@ extends Control
 
 signal waypoint_arrived(waypoint_id: String)
 signal briefing_requested(mission_id: String)
+signal camp_operations_requested
 signal return_requested
 
 const World := preload("res://game/campaign_world.gd")
+const Missions := preload("res://game/campaign_missions.gd")
 const Board := preload("res://game/campaign_map_board.gd")
 const DISPLAY := preload("res://assets/fonts/Cinzel.ttf")
 const BODY := preload("res://assets/fonts/SourceSans3.ttf")
@@ -84,7 +86,10 @@ func confirm_selection() -> void:
 	if _is_travelling or _selected_id.is_empty():
 		return
 	if _selected_id == _world.current_waypoint_id():
-		_offer_briefing()
+		if _world.waypoint(_selected_id).get("kind") == World.WaypointKind.CAMP:
+			camp_operations_requested.emit()
+		else:
+			_offer_briefing()
 		return
 	var route := _route_to_selection()
 	if route.is_empty() or not route.is_open:
@@ -191,31 +196,43 @@ func _refresh_selection() -> void:
 			_detail.text = "Your party is at the battlefield. Review the briefing before deploying."
 			_confirm_button.text = "Open Battlefield Briefing"
 			_confirm_button.disabled = false
+		elif selected.kind == World.WaypointKind.CAMP:
+			_detail.text = "Visit camp for dispatch and preparations, or select the Mine to travel."
+			_confirm_button.text = "Open Camp Operations"
+			_confirm_button.disabled = false
 		else:
 			_detail.text = "Your party is here. Select a connected waypoint to travel."
 			_confirm_button.text = "Current Waypoint"
 	else:
 		var route := _route_to_selection()
+		var required_clear := _blocking_clear_for_selection()
 		if not route.is_empty() and route.is_open:
 			_detail.text = "Connected route. Confirm to move your party to this waypoint."
 			if selected.kind == World.WaypointKind.BATTLEFIELD:
 				_detail.text += " Arriving opens the battlefield briefing."
 			_confirm_button.disabled = false
-		elif _road_lock_applies():
-			_detail.text = "Complete the Mine Escort to open the road into the Marches."
+		elif not required_clear.is_empty():
+			_detail.text = _locked_route_detail(required_clear, selected.label)
 			_confirm_button.text = "Road Locked"
 		else:
 			_detail.text = "No direct route from your party's current waypoint."
 			_confirm_button.text = "No Direct Route"
 
 
-func _road_lock_applies() -> bool:
+func _blocking_clear_for_selection() -> String:
 	for edge in _world.routes():
 		if _selected_id == edge.to_id or _selected_id == edge.from_id:
 			var clear: String = edge.get("required_clear_id", "")
 			if not clear.is_empty() and not _completed.has(clear):
-				return true
-	return false
+				return clear
+	return ""
+
+
+func _locked_route_detail(clear: String, destination: String) -> String:
+	if clear == "mara_mine_escort":
+		return "Complete the Mine Escort to open the road into the Marches."
+	var mission := Missions.mission_for_campaign(_world.campaign_id(), clear)
+	return "Complete %s to open the route to %s." % [mission.get("title", "the required mission"), destination]
 
 
 func _route_to_selection() -> Dictionary:
@@ -256,6 +273,7 @@ func _map_input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or not event.is_pressed() or event.is_echo():
 		return
+	var viewport := get_viewport()
 	var direction := Vector2.ZERO
 	if event is InputEventKey:
 		match event.keycode if event.keycode != KEY_NONE else event.physical_keycode:
@@ -279,7 +297,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if direction != Vector2.ZERO:
 		_select_in_direction(direction)
-	get_viewport().set_input_as_handled()
+	# Confirm or Back can replace the map synchronously in the campaign shell.
+	viewport.set_input_as_handled()
 
 
 func _select_in_direction(direction: Vector2) -> void:

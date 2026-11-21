@@ -7,9 +7,11 @@ const Defense := preload("res://game/combat/hero_defense.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
+const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
+const Archer := preload("res://game/combat/human_archer_volley.gd")
 
-enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED }
-enum Target { NONE, HERO, INFANTRY }
+enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED, AT_RESERVE, INTERCEPTING }
+enum Target { NONE, HERO, INFANTRY, ARCHERS }
 
 const HERO_TEAM := 0
 const ENEMY_TEAM := 1
@@ -23,9 +25,12 @@ const AGGRO_RANGE := 8.0
 const WINDUP_TIME := 0.66
 const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
+const INTERCEPTION_SPEED := 5.4
 
 var points := Points.new()
 var infantry_attack := InfantryAttack.new()
+var archer_attack: ArcherAttack
+var _feet: Callable
 var hero := Unit.new(HERO_HP)
 var enemy := Unit.new(ENEMY_HP)
 var defense := Defense.new(hero, HERO_TEAM, points)
@@ -39,10 +44,27 @@ var windup_target: Target:
 var _windup_target := Target.NONE
 var _enemy_seconds := 0.0
 var _feedback_seconds := 0.0
+var _interception_route := PackedVector2Array()
+var _interception_leg := 0
 
 
-func _init(spawn: Vector2) -> void:
+func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable()) -> void:
 	enemy_position = spawn
+	_feet = feet
+	archer_attack = ArcherAttack.new(points, HERO_TEAM, ENEMY_TEAM, clear_ranged)
+
+
+func stage_interception(route: PackedVector2Array) -> void:
+	if not route.is_empty():
+		_interception_route = route.duplicate()
+		enemy_phase = EnemyPhase.AT_RESERVE
+
+
+func begin_interception() -> bool:
+	if enemy_phase != EnemyPhase.AT_RESERVE or not enemy.is_alive():
+		return false
+	enemy_phase = EnemyPhase.INTERCEPTING
+	return true
 
 
 func target_at(point: Vector2) -> bool:
@@ -54,13 +76,27 @@ func order_infantry_attack(battle: Battle, selected: int, point: Vector2) -> boo
 		and infantry_attack.issue(battle.formations[selected], enemy, enemy_position)
 
 
+func order_archer_attack(battle: Battle, selected: int, point: Vector2, clear_contact: Callable) -> bool:
+	if not _feet.is_valid() or selected != ArcherAttack.ARCHER_INDEX or not target_at(point):
+		return false
+	var status := archer_attack.issue(battle.formations[selected], enemy, enemy_position, _feet, clear_contact)
+	if status != Archer.Status.READY:
+		_feedback(_archer_denial(status))
+		return false
+	# A new, legal draw supersedes stale range or cover feedback.
+	_feedback_seconds = 0.0
+	return true
+
+
 func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Callable) -> void:
 	_feedback_seconds -= delta
 	var sight := bool(clear_contact.call(battle.hero_position, enemy_position))
 	var contact := defense.advance_attack(delta, true, battle.hero_position, battle.hero_heading,
 		enemy if sight else null, ENEMY_TEAM, enemy_position)
 	if contact:
-		if contact.hp_lost > 0.0:
+		if contact.attack == Attack.Attack.SUNDERING_STRIKE:
+			_feedback("Sundering Strike hit" if contact.hp_lost > 0.0 else "Sundering Strike missed")
+		elif contact.hp_lost > 0.0:
 			_feedback("%s hit · +%d BP" % ["Light" if contact.attack == Attack.Attack.LIGHT else "Heavy", contact.bp_credited])
 		else:
 			_feedback("Attack missed")
@@ -70,6 +106,15 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 	if infantry_damage > 0.0:
 		var credited := points.award_confirmed_hit(InfantryAttack.BP_PER_HIT)
 		_feedback("Shield Infantry hit · +%d BP" % credited)
+	# Archers share the same HP target and pool, and do not claim killing blows twice.
+	if _feet.is_valid():
+		var shot := archer_attack.advance(delta, hero.is_alive(), battle.formations[ArcherAttack.ARCHER_INDEX],
+			enemy, enemy_position, _feet, clear_contact)
+		if shot:
+			if shot.hp_lost > 0.0:
+				_feedback("Archers volley hit · −%d HP · +%d BP" % [roundi(shot.hp_lost), shot.bp_credited])
+			else:
+				_feedback(_archer_denial(shot.status))
 	if not enemy.is_alive():
 		enemy_phase = EnemyPhase.DEFEATED
 		_windup_target = Target.NONE
@@ -78,6 +123,10 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 		return
 
 	match enemy_phase:
+		EnemyPhase.AT_RESERVE:
+			pass
+		EnemyPhase.INTERCEPTING:
+			_advance_interception(delta, battle, can_move)
 		EnemyPhase.WATCHING:
 			if _nearest_visible_target(battle, sight, clear_contact) != Target.NONE:
 				enemy_phase = EnemyPhase.PURSUING
@@ -112,22 +161,49 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 				enemy_phase = EnemyPhase.PURSUING
 
 
+func _advance_interception(delta: float, battle: Battle, can_move: Callable) -> void:
+	var destination := battle.clamp_to_field(_interception_route[_interception_leg])
+	var next := enemy_position.move_toward(destination, INTERCEPTION_SPEED * delta)
+	if next.distance_to(battle.hero_position) < BODY_CLEARANCE \
+		or not can_move.call(enemy_position, next, false):
+		# The guard can fight where he is, but never warp across a blocked approach.
+		enemy_phase = EnemyPhase.PURSUING
+		return
+	if next != enemy_position:
+		enemy_heading = (next - enemy_position).normalized()
+		enemy_position = next
+	if enemy_position == destination:
+		_interception_leg += 1
+		if _interception_leg == _interception_route.size():
+			enemy_phase = EnemyPhase.WATCHING
+
+
 func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: Callable) -> Target:
-	var hero_distance := enemy_position.distance_to(battle.hero_position) if hero_visible and hero.is_alive() else INF
+	var nearest := enemy_position.distance_to(battle.hero_position) if hero_visible and hero.is_alive() else INF
+	var target := Target.HERO if nearest <= AGGRO_RANGE else Target.NONE
 	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
 	var infantry_distance := enemy_position.distance_to(infantry.position)
-	# The guard reacts to a formation actively threatening him. Ties favor Mara
-	# to keep targeting deterministic; a chosen swing will not retarget.
+	# Ties preserve Mara's priority, then Shield Infantry. Ranged pressure
+	# attracts the guard only locally, when he can really reach the archers.
 	if infantry.order == Battle.Order.ATTACK and infantry_attack.attacker.is_alive() \
-		and infantry_distance <= AGGRO_RANGE and infantry_distance < hero_distance \
+		and infantry_distance <= AGGRO_RANGE and infantry_distance < nearest \
 		and clear_contact.call(enemy_position, infantry.position):
-		return Target.INFANTRY
-	return Target.HERO if hero_distance <= AGGRO_RANGE else Target.NONE
+		nearest = infantry_distance
+		target = Target.INFANTRY
+	var archers := battle.formations[ArcherAttack.ARCHER_INDEX]
+	var archer_distance := enemy_position.distance_to(archers.position)
+	if archers.order == Battle.Order.ATTACK and archer_attack.attacker.is_alive() \
+		and archer_distance <= AGGRO_RANGE and archer_distance < nearest \
+		and clear_contact.call(enemy_position, archers.position):
+		return Target.ARCHERS
+	return target
 
 
 func _target_position(battle: Battle, target: Target) -> Vector2:
-	return battle.formations[InfantryAttack.INFANTRY_INDEX].position if target == Target.INFANTRY else battle.hero_position
-
+	match target:
+		Target.INFANTRY: return battle.formations[InfantryAttack.INFANTRY_INDEX].position
+		Target.ARCHERS: return battle.formations[ArcherAttack.ARCHER_INDEX].position
+	return battle.hero_position
 
 func _resolve_enemy_contact(battle: Battle, clear_contact: Callable) -> void:
 	var target := _target_position(battle, _windup_target)
@@ -151,6 +227,24 @@ func _resolve_enemy_contact(battle: Battle, clear_contact: Callable) -> void:
 			_feedback("Shield Infantry defeated")
 		elif lost > 0.0:
 			_feedback("Shield Infantry hit · −%d HP" % roundi(lost))
+	elif _windup_target == Target.ARCHERS and archer_attack.attacker.is_alive():
+		var lost := archer_attack.attacker.receive_hit(enemy, hit_profile)
+		if not archer_attack.attacker.is_alive():
+			battle.formations[ArcherAttack.ARCHER_INDEX].defeat()
+			_feedback("Archers defeated")
+		elif lost > 0.0:
+			_feedback("Archers struck · −%d HP" % roundi(lost))
+
+
+func _archer_denial(status: Archer.Status) -> String:
+	match status:
+		Archer.Status.BLOCKED: return "Archers: line of sight blocked"
+		Archer.Status.TOO_FAR: return "Archers: out of range"
+		Archer.Status.TOO_CLOSE: return "Archers: target too close"
+		Archer.Status.PINNED: return "Archers pinned in melee"
+		Archer.Status.BUSY: return "Archers reloading"
+		Archer.Status.INACTIVE: return "Archers unavailable"
+		_: return "Archers: no valid target"
 
 
 func active_feedback() -> String:

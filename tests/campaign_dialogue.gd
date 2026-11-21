@@ -2,6 +2,7 @@ extends SceneTree
 
 const PanelScene := preload("res://game/campaign_dialogue.tscn")
 const Beats := preload("res://game/campaign_dialogues.gd")
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 
 var _panel: Control
 var _underlay: Button
@@ -26,11 +27,12 @@ func _run() -> void:
 	passed = (await _check_advancement()) and passed
 	passed = _check_cancellation_and_replay() and passed
 	passed = _check_other_mine_beats() and passed
+	passed = _check_grain_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue content, mixed-device input, explicit completion, cancel, and fresh replay.")
+		print("Verified campaign dialogue, Grain branches, mixed-device input, completion, cancel, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -159,6 +161,69 @@ func _check_other_mine_beats() -> bool:
 	if _completions.size() != start_completions + cases.size():
 		return _fail("New beats did not send exactly one completion each.")
 	return true
+
+
+func _check_grain_beats() -> bool:
+	var dispatch := Beats.get_beat(Beats.MARA_GRAIN_DISPATCH)
+	if not _panel.present(Beats.MARA_GRAIN_DISPATCH, dispatch):
+		return _fail("Grain dispatch was missing or invalid.")
+	var dispatch_text := _read_grain_beat(dispatch)
+	if not "mill yard" in dispatch_text or not "lower ford" in dispatch_text or not "town store" in dispatch_text:
+		return _fail("The dispatch lost a delivery destination.")
+	var cases := [
+		[true, false, Beats.MARA_GRAIN_SEED_DEBRIEF, ["plant the south fields", "bread cart never reached the town store"]],
+		[false, true, Beats.MARA_GRAIN_BREAD_DEBRIEF, ["keep the ovens lit this week", "mill yard got no seed"]],
+		[true, true, Beats.MARA_GRAIN_BOTH_DEBRIEF, ["growers are coming for their shares", "bread grain made the town store"]],
+	]
+	var seen := {}
+	for fixture: Array in cases:
+		var result := _simulate_grain_result(fixture[0], fixture[1])
+		var id := Beats.grain_debrief_id(result)
+		var beat := Beats.get_beat(id)
+		if id != fixture[2] or seen.has(id) or not _panel.present(id, beat):
+			return _fail("A real delivery result did not select its own council beat: %s" % result)
+		seen[id] = true
+		var account := _read_grain_beat(beat)
+		for detail: String in fixture[3]:
+			if not detail in account:
+				return _fail("Council testimony lost a delivered or missing load: %s" % result)
+		if _completions.back() != id or not "speak to Orrun" in account:
+			return _fail("A council beat changed the shared handoff or signalled the wrong completion.")
+		beat.lines[0].text = ""
+		if not _has_grain_source(id):
+			return _fail("A retrieved council beat mutated the authored result.")
+	for invalid: StringName in [_simulate_grain_result(false, false), &"mara_grain_crossing", &"BOTH", &"unknown"]:
+		if Beats.grain_debrief_id(invalid) != &"" or not Beats.get_beat(Beats.grain_debrief_id(invalid)).is_empty():
+			return _fail("An invalid or failed mission result selected a success debrief.")
+	return true
+
+
+func _simulate_grain_result(seed_delivers: bool, bread_delivers: bool) -> StringName:
+	var grain := Grain.new()
+	var dispatch := Grain.Observation.new()
+	dispatch.seed.dispatch_ordered = true
+	dispatch.bread.dispatch_ordered = true
+	grain.advance(dispatch)
+	var finish := Grain.Observation.new()
+	finish.seed.at_receiving_yard = seed_delivers
+	finish.seed.turn_back_ordered = not seed_delivers
+	finish.bread.at_receiving_yard = bread_delivers
+	finish.bread.turn_back_ordered = not bread_delivers
+	grain.advance(finish)
+	return grain.clear_result
+
+
+func _read_grain_beat(beat: Dictionary) -> String:
+	var text := ""
+	for index in range(beat.lines.size()):
+		text += _label("DialogueLine").text + "\n"
+		_panel.advance()
+	return text
+
+
+func _has_grain_source(id: StringName) -> bool:
+	var source := Beats.get_beat(id)
+	return not source.lines[0].text.is_empty()
 
 
 func _send_key(key_code: Key, echo := false) -> void:

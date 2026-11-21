@@ -1,10 +1,13 @@
 extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 
 const PATH := "user://profile.cfg"
 const CAMPAIGNS := "campaigns"
 const MISSION_PROGRESS := "mission_progress"
+const MISSION_RESULTS := "mission_results"
+const MARA := "mara"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 
@@ -51,11 +54,44 @@ func completed_missions(id: String) -> PackedStringArray:
 func record_mission_clear(id: String, mission_id: String) -> Error:
 	if id.strip_edges().is_empty() or mission_id.strip_edges().is_empty():
 		return ERR_INVALID_PARAMETER
+	# A new Grain clear needs its delivery result in the same transaction.
+	if mission_id == Grain.MISSION_ID:
+		return ERR_INVALID_PARAMETER
 	var completed := completed_missions(id)
 	if completed.has(mission_id):
 		return OK
 	completed.append(mission_id)
 	return _set_value(MISSION_PROGRESS, id, completed)
+
+
+## The saved council outcome, not the latest attempt. Legacy clears may have no result.
+func grain_clear_result() -> StringName:
+	if not completed_missions(MARA).has(Grain.MISSION_ID):
+		return &""
+	var stored: Variant = _config.get_value(MISSION_RESULTS, Grain.MISSION_ID, "")
+	if not (stored is String or stored is StringName):
+		return &""
+	var result := StringName(stored)
+	return result if _is_grain_result(result) else &""
+
+
+## Call only on the Grain objective's successful terminal event.
+## Keep the first clear's result; a replay must not fill an unknown legacy result.
+func record_grain_clear(result: StringName) -> Error:
+	if not _is_grain_result(result):
+		return ERR_INVALID_PARAMETER
+	var completed := completed_missions(MARA)
+	if completed.has(Grain.MISSION_ID):
+		return OK
+	completed.append(Grain.MISSION_ID)
+	return _set_values({
+		MISSION_PROGRESS: {MARA: completed},
+		MISSION_RESULTS: {Grain.MISSION_ID: String(result)},
+	})
+
+
+func _is_grain_result(result: StringName) -> bool:
+	return result in [Grain.SEED_ONLY, Grain.BREAD_ONLY, Grain.BOTH]
 
 
 ## Restore only position. An invalid/old save falls back to the authored start without a write.
@@ -91,21 +127,31 @@ func _saved_order(id: String) -> int:
 
 
 func _set_value(section: String, key: String, value: Variant) -> Error:
-	var existed := _config.has_section_key(section, key)
-	var previous: Variant
-	if existed:
-		previous = _config.get_value(section, key)
+	return _set_values({section: {key: value}})
 
-	_config.set_value(section, key, value)
+
+# All changed keys share the existing temp-file/rename transaction and rollback.
+func _set_values(values: Dictionary) -> Error:
+	var previous: Array[Dictionary] = []
+	for section: String in values:
+		for key: String in values[section]:
+			var existed := _config.has_section_key(section, key)
+			previous.append({
+				"section": section, "key": key, "existed": existed,
+				"value": _config.get_value(section, key) if existed else null,
+			})
+			_config.set_value(section, key, values[section][key])
+
 	var temporary := _path + ".tmp"
 	var result := _config.save(temporary)
 	if result == OK:
 		result = DirAccess.rename_absolute(temporary, _path)
 	if result != OK:
-		if existed:
-			_config.set_value(section, key, previous)
-		else:
-			_config.erase_section_key(section, key)
+		for entry in previous:
+			if entry.existed:
+				_config.set_value(entry.section, entry.key, entry.value)
+			else:
+				_config.erase_section_key(entry.section, entry.key)
 		if FileAccess.file_exists(temporary):
 			DirAccess.remove_absolute(temporary)
 	return result

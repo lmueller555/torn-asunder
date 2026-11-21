@@ -9,9 +9,11 @@ func _initialize() -> void:
 	var escort_ok := _check_escort()
 	var failures_ok := _check_failures()
 	var restart_ok := _check_restart()
-	var passed := escort_ok and failures_ok and restart_ok
+	var interception_ok := _check_interception()
+	var interception_priority_ok := _check_interception_priority()
+	var passed := escort_ok and failures_ok and restart_ok and interception_ok and interception_priority_ok
 	if passed:
-		print("Passed mine escort pickup, delivery, defeat, terminal state and restart checks.")
+		print("Passed mine escort pickup, delivery, defeat, interception, terminal state and restart checks.")
 	quit(0 if passed else 1)
 
 
@@ -93,6 +95,63 @@ func _check_restart() -> bool:
 	objective.restart()
 	if objective.advance(frame) != Phase.AWAITING_PICKUP or objective.failure != Failure.NONE:
 		return _fail("Restart after victory retained ownership or completion.")
+	return true
+
+
+func _check_interception() -> bool:
+	var objective := Objective.new()
+	var requests: Array[bool] = []
+	objective.interception_requested.connect(func() -> void: requests.append(true))
+	var approach := Objective.Observation.new()
+	approach.carrier_in_interception_approach = true
+	for tick in range(90):
+		if objective.advance(approach) != Phase.AWAITING_PICKUP or not requests.is_empty():
+			return _fail("The approach requested an interception before actual pickup.")
+	var pickup := _pickup_frame()
+	pickup.carrier_in_interception_approach = true
+	if objective.advance(pickup) != Phase.ESCORTING or objective.interception_triggered or not requests.is_empty():
+		return _fail("The pickup frame also requested an interception.")
+	var outside := Objective.Observation.new()
+	for tick in range(90):
+		objective.advance(outside)
+	if objective.interception_triggered or not requests.is_empty():
+		return _fail("Waiting with the bridle outside the approach requested an interception.")
+	if objective.advance(approach) != Phase.ESCORTING or not objective.interception_triggered or requests != [true]:
+		return _fail("The carrier entering the approach did not request one non-terminal interception.")
+	objective.advance(approach)
+	objective.advance(outside)
+	objective.advance(approach)
+	if requests != [true] or not objective.interception_triggered:
+		return _fail("Holding or re-entering the approach repeated the interception.")
+	objective.restart()
+	if objective.interception_triggered or objective.advance(approach) != Phase.AWAITING_PICKUP:
+		return _fail("Restart retained the old trigger or pickup.")
+	objective.advance(_pickup_frame())
+	if objective.advance(approach) != Phase.ESCORTING or requests != [true, true]:
+		return _fail("Retry did not allow one fresh interception after pickup.")
+	approach.carrier_in_road_exit = true
+	if objective.advance(approach) != Phase.SUCCEEDED or requests != [true, true]:
+		return _fail("Delivery after interception required another event or repeated the warning.")
+	return true
+
+
+func _check_interception_priority() -> bool:
+	for terminal_reason: Objective.Failure in [Failure.NONE, Failure.HERO_INCAPACITATED, Failure.BRIDLE_LOST]:
+		var objective := Objective.new()
+		var requests: Array[bool] = []
+		objective.interception_requested.connect(func() -> void: requests.append(true))
+		objective.advance(_pickup_frame())
+		var frame := Objective.Observation.new()
+		frame.carrier_in_interception_approach = true
+		frame.carrier_in_road_exit = true
+		frame.hero_incapacitated = terminal_reason == Failure.HERO_INCAPACITATED
+		frame.bridle_lost = terminal_reason == Failure.BRIDLE_LOST
+		var expected := Phase.SUCCEEDED if terminal_reason == Failure.NONE else Phase.FAILED
+		if objective.advance(frame) != expected or objective.failure != terminal_reason:
+			return _fail("An approach report changed terminal priority or became a delivery requirement.")
+		objective.advance(frame)
+		if not requests.is_empty() or objective.interception_triggered:
+			return _fail("A fresh interception fired on or after a terminal frame.")
 	return true
 
 

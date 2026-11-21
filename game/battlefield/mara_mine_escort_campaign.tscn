@@ -2,12 +2,18 @@
 
 [ext_resource type="PackedScene" path="res://game/battlefield/mara_mine_escort.tscn" id="1_mara"]
 [ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine_campaign.tscn" id="2_valley"]
+[ext_resource type="Script" path="res://game/battlefield/mara_campaign_minimap.gd" id="3_adapter"]
+[ext_resource type="Script" path="res://game/battlefield/battlefield_minimap.gd" id="4_widget"]
 
 [node name="MaraMineEscortCampaign" instance=ExtResource("1_mara")]
 battlefield_scene = ExtResource("2_valley")
 field_bounds = Rect2(-160, -108, 320, 224)
 enable_sector_camera = true
+sundering_strike_enabled = true
 local_sector_size = 116.0
+road_guard_spawn = NodePath("Markers/Routes/EastReserve")
+interception_approach = NodePath("Markers/Routes/PassRelease")
+interception_route = Array[NodePath]([NodePath("Markers/Routes/InterceptMouth"), NodePath("Markers/Routes/InterceptRoadMerge")])
 hero_spawn = NodePath("Markers/Spawns/HumanEscort")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HumanInfantry"), NodePath("Markers/Spawns/HumanArchers")])
 
@@ -16,3 +22,49 @@ directional_shadow_max_distance = 480.0
 
 [node name="Title" parent="ObjectiveHUD/Panel/Margin/Readout" index="0"]
 text = "MARA / YEAR ONE MINE ESCORT · PROTOTYPE"
+
+
+[node name="MinimapHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="MinimapHUD"]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -322.0
+offset_right = -20.0
+offset_top = -248.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("3_adapter")
+
+[node name="Margin" type="MarginContainer" parent="MinimapHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_bottom = 8
+
+[node name="Readout" type="VBoxContainer" parent="MinimapHUD/Panel/Margin"]
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Status" type="Label" parent="MinimapHUD/Panel/Margin/Readout"]
+mouse_filter = 2
+text = "YEAR ONE MINE"
+theme_override_colors/font_color = Color(0.72, 0.85, 0.88, 1)
+theme_override_font_sizes/font_size = 15
+
+[node name="Map" type="Control" parent="MinimapHUD/Panel/Margin/Readout"]
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("4_widget")
+
+[node name="Key" type="Label" parent="MinimapHUD/Panel/Margin/Readout"]
+mouse_filter = 2
+text = "▲ Mara    ■ Formation    ◆ Pickup    ⊓ Exit"
+theme_override_colors/font_color = Color(0.76, 0.84, 0.85, 1)
+theme_override_font_sizes/font_size = 13
