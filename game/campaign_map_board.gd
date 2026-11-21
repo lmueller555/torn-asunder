@@ -9,6 +9,8 @@ const PALE := Color("#e7dfc7")
 const QUIET := Color("#afb5a3")
 const BLOCKED := Color("#bb8e77")
 
+enum RouteCue { DISTANT, REACHABLE, SELECTED_REACHABLE, LOCKED }
+
 var world: World
 var selected_id := ""
 var token_position := Vector2.ZERO
@@ -120,13 +122,35 @@ func _draw_tree(p: Vector2, height: float) -> void:
 	draw_line(p, p + Vector2(0, 4), Color("#354336"), 1.5)
 
 
+## Only a one-leg route from the party to the selected pin earns strong emphasis.
+func route_cue(edge: Dictionary) -> RouteCue:
+	var required: String = edge.get("required_clear_id", "")
+	if not required.is_empty() and not completed_ids.has(required):
+		return RouteCue.LOCKED
+	var origin := world.current_waypoint_id()
+	if edge.from_id == origin or edge.to_id == origin:
+		var destination: String = edge.to_id if edge.from_id == origin else edge.from_id
+		if selected_id == destination:
+			return RouteCue.SELECTED_REACHABLE
+		return RouteCue.REACHABLE
+	return RouteCue.DISTANT
+
+
 func _draw_route(edge: Dictionary) -> void:
 	var source := point_at(world.waypoint(edge.from_id).map_position)
 	var target := point_at(world.waypoint(edge.to_id).map_position)
-	var required: String = edge.get("required_clear_id", "")
-	var blocked := not required.is_empty() and not completed_ids.has(required)
-	var highlighted: bool = selected_id == edge.to_id or selected_id == edge.from_id
-	var tint := BLOCKED if blocked else GOLD if highlighted else QUIET
+	var cue := route_cue(edge)
+	var tint := QUIET
+	var radius := 1.6
+	match cue:
+		RouteCue.DISTANT:
+			tint = Color(QUIET, 0.48)
+			radius = 1.35
+		RouteCue.SELECTED_REACHABLE:
+			tint = GOLD
+			radius = 2.45
+		RouteCue.LOCKED:
+			tint = BLOCKED
 	var distance := source.distance_to(target)
 	if distance < 60.0:
 		return
@@ -134,8 +158,8 @@ func _draw_route(edge: Dictionary) -> void:
 	var steps := maxi(1, roundi((distance - 50.0) / 12.0))
 	for i in range(steps + 1):
 		var p := source + vector * lerpf(25.0, distance - 25.0, float(i) / steps)
-		draw_circle(p, 2.05 if highlighted else 1.6, tint, true, -1.0, true)
-	if blocked:
+		draw_circle(p, radius, tint, true, -1.0, true)
+	if cue == RouteCue.LOCKED:
 		var lock_point := (source + target) * 0.5
 		draw_circle(lock_point, 13.0, Color("#242523"), true, -1.0, true)
 		draw_arc(lock_point + Vector2(0, -2), 4.2, PI, TAU, 12, BLOCKED, 1.5, true)

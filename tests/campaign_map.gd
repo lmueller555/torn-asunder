@@ -1,11 +1,13 @@
 extends SceneTree
 
 const Map := preload("res://game/campaign_map.gd")
+const Board := preload("res://game/campaign_map_board.gd")
 const MapScene := preload("res://game/campaign_map.tscn")
 const World := preload("res://game/campaign_world.gd")
 const CAMP := "marches_camp"
 const MINE := "year_one_mine"
 const ROAD := "marches_road"
+const CROSSING := "marches_crossing"
 const MISSION := "mara_mine_escort"
 
 var _view: Map
@@ -38,7 +40,7 @@ func _run() -> void:
 	_view.queue_free()
 	await process_frame
 	if passed:
-		print("Campaign map: pointer, keys and DualSense, animated arrival, locked route, reduced motion, and briefing-only signals passed.")
+		print("Campaign map: pointer, keys and DualSense, animated arrival, next-leg emphasis, locked route, reduced motion, and briefing-only signals passed.")
 	quit(0 if passed else 1)
 
 
@@ -53,6 +55,8 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	if _view.selected_waypoint_id() != MINE or _world.current_waypoint_id() != CAMP \
 			or not _arrivals.is_empty() or not _briefings.is_empty() or _view.token_map_position() != camp:
 		return _fail("Pointer selection moved the player or raised a briefing.")
+	if _route_cue(CAMP, MINE) != Board.RouteCue.SELECTED_REACHABLE:
+		return _fail("Selecting an adjacent, open destination did not emphasize its leg.")
 	_key(KEY_ENTER)
 	if not _view.is_travelling() or _world.current_waypoint_id() != CAMP or not _briefings.is_empty():
 		return _fail("Confirm did not begin distinct travel before exposing the briefing.")
@@ -60,6 +64,8 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	_view._tween.custom_step(0.12)
 	if _view.token_map_position().is_equal_approx(camp) or _view.token_map_position().is_equal_approx(mine):
 		return _fail("The token did not visibly interpolate between waypoints.")
+	if _route_cue(CAMP, MINE) != Board.RouteCue.SELECTED_REACHABLE:
+		return _fail("The outgoing leg stopped being emphasized before arrival.")
 	_view._tween.custom_step(0.56)
 	if _view.is_travelling() or not _view.token_map_position().is_equal_approx(mine) \
 			or _world.current_waypoint_id() != MINE or _arrivals != PackedStringArray([MINE]) \
@@ -69,6 +75,10 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	if _view.selected_waypoint_id() != ROAD or not _view._confirm_button.disabled \
 			or not _view._detail.text.contains("Complete the Mine Escort"):
 		return _fail("The controller could not inspect the visible road and its reason for being locked.")
+	if _route_cue(MINE, ROAD) != Board.RouteCue.LOCKED \
+			or _route_cue(ROAD, CROSSING) != Board.RouteCue.DISTANT \
+			or _route_cue(CAMP, MINE) != Board.RouteCue.REACHABLE:
+		return _fail("Selecting the locked road confused a locked, distant, or unselected available leg.")
 	_joy(JOY_BUTTON_A)
 	_click(_view._confirm_button, _view._confirm_button.size * 0.5)
 	if _world.current_waypoint_id() != MINE or _arrivals.size() != 1 or _briefings.size() != 1 or not clears.is_empty():
@@ -81,6 +91,9 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	if _view.selected_waypoint_id() != ROAD or _view._confirm_button.disabled \
 			or _world.current_waypoint_id() != MINE:
 		return _fail("A real clear did not present the neighboring road without auto-travelling.")
+	if _route_cue(MINE, ROAD) != Board.RouteCue.SELECTED_REACHABLE \
+			or _route_cue(ROAD, CROSSING) != Board.RouteCue.DISTANT:
+		return _fail("A clear highlighted the wrong leg from the current location.")
 	_joy(JOY_BUTTON_A)
 	if _view.is_travelling() or _view.token_map_position() != road or _world.current_waypoint_id() != ROAD \
 			or _arrivals != PackedStringArray([MINE, ROAD]) or _briefings.size() != 1:
@@ -97,6 +110,14 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	_key(KEY_ESCAPE)
 	_joy(JOY_BUTTON_B)
 	return _returns == 2 or _fail("Escape and Circle were not offered to the shell as return requests.")
+
+
+func _route_cue(first: String, second: String) -> Board.RouteCue:
+	for edge in _world.routes():
+		if (edge.from_id == first and edge.to_id == second) or (edge.from_id == second and edge.to_id == first):
+			return _view._board.route_cue(edge)
+	push_error("Missing route %s to %s." % [first, second])
+	return -1 as Board.RouteCue
 
 
 func _push_click(point: Vector2, pressed: bool) -> void:
