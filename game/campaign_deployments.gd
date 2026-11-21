@@ -104,6 +104,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
 		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
 	},
+	"neris_cairnspine_passage": {
+		"scene": preload("res://game/battlefield/neris_cairnspine_passage_playtest.tscn"),
+		"dispatch": Beats.NERIS_CAIRNSPINE_PASSAGE_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.NERIS_CAIRNSPINE_PASSAGE_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE PASS · ROAD TO THE WITNESS TERRACE",
+		"orders": "Meet the refugee guide and signal the witness guide. Confirm a route for each party. Hold the contested rejoin or guide a waiting party back to take the other path. Both parties must reach the terrace. Leave the vault to its own escort.",
+	},
 	"sereth_voices_at_the_cut": {
 		"scene": preload("res://game/battlefield/sereth_cut_playtest.tscn"),
 		"dispatch": Beats.SERETH_CUT_DISPATCH,
