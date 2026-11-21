@@ -280,6 +280,8 @@ func _clear_waypoints(index: int) -> void:
 	_routes.clear(index)
 	if _route_note_index == index:
 		_route_note = ""
+	if index == _mission.selected_index:
+		_refresh_selected_route()
 
 
 func _close_controller() -> void:
@@ -313,28 +315,36 @@ func _step_draft(offset: Vector2) -> void:
 	_refresh_controller_overlay()
 
 
-func _refresh_controller_overlay() -> void:
-	_reticle.visible = _draft_battle != null
-	_route_overlay.visible = _reticle.visible
+func _refresh_selected_route() -> void:
+	# Show the selected friendly plan in either command cursor mode. The
+	# controller draft and enemy intelligence are separate from accepted orders.
 	var index := _mission.selected_index
 	var pending := pending_waypoints(index)
+	_route_overlay.visible = _can_open_controller() and not pending.is_empty()
+	if not _route_overlay.visible:
+		_route_overlay.clear_route()
+		return
+	var formation := _mission.battle.formations[index]
+	var active_from: Variant = null
+	if formation.order == Battle.Order.MOVE and formation.destination.is_equal_approx(pending[0]):
+		active_from = formation.position
+	_route_overlay.show_route(map, pending, active_from)
+
+
+func _refresh_controller_overlay() -> void:
+	_refresh_selected_route()
+	_reticle.visible = _draft_battle != null
 	if _draft_battle:
-		var formation := _mission.battle.formations[index]
-		var active_from: Variant = null
-		if not pending.is_empty() and formation.order == Battle.Order.MOVE and formation.destination.is_equal_approx(pending[0]):
-			active_from = formation.position
-		_route_overlay.show_route(map, pending, active_from)
 		_reticle.pixel = map.project(_draft_point)
 		_reticle.queue_redraw()
 		_key.text = "Stick: Aim  ·  Cross: Move  ·  Circle: Back"
 		if _draft_denied:
 			_key.text += "\nNot a walkable point"
 	else:
-		_route_overlay.clear_route()
 		_key.text = _legend + ("\nD-pad Up: minimap cursor" if _mission.command_view else "")
 	if _mission.command_view:
-		_key.text += "\nR1 / G: Append waypoint  ·  %d/%d" % [pending.size(), Queue.MAX_WAYPOINTS]
-		if _route_note_index == index and not _route_note.is_empty():
+		_key.text += "\nR1 / G: Append waypoint  ·  %d/%d" % [pending_waypoints(_mission.selected_index).size(), Queue.MAX_WAYPOINTS]
+		if _route_note_index == _mission.selected_index and not _route_note.is_empty():
 			_key.text += "\n" + _route_note
 
 
