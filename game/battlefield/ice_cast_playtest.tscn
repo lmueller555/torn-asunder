@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine.tscn" id="1_mine"]
+[ext_resource type="Script" path="res://game/battlefield/ice_cast_playtest.gd" id="2_playtest"]
+
+[node name="IceCastPlaytest" type="Node3D"]
+script = ExtResource("2_playtest")
+
+[node name="Mine" parent="." instance=ExtResource("1_mine")]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-53, -28, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(-29, 32, 35)
+projection = 1
+size = 35.0
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+mouse_filter = 2
+
+[node name="Readout" type="Label" parent="HUD/Panel/Margin"]
+theme_override_font_sizes/font_size = 16
