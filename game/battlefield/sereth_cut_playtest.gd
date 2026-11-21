@@ -29,7 +29,7 @@ const ROOM_TO_ROAD := ["Routes/RecordRoomInside", "Routes/RecordRoomDoor", "Rout
 	"Objectives/DroppedBundleRecovery", "Routes/OpenRecordApproach", "Routes/RoadRecordFork"]
 const EAST_EXIT := ["Routes/RoadEastReveal", "Objectives/EnemyRetreatExit"]
 
-enum Raid { WAITING, WARNING, APPROACH_CUT, APPROACH_ROOM, AT_ROOM, TAKE_IN_ROOM, EXTRACTING, DISPERSED }
+enum Raid { WAITING, WARNING, APPROACH_CUT, APPROACH_ROOM, AT_ROOM, TAKE_IN_ROOM, EXTRACTING, DISPERSED, RETREATING_EMPTY }
 
 var objective := Cut.new()
 var _iren: Node3D
@@ -98,6 +98,10 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if objective.outcome == Cut.Outcome.ACTIVE:
 		super._physics_process(delta)
+	elif objective.outcome == Cut.Outcome.SUCCEEDED and _raid == Raid.RETREATING_EMPTY:
+		# A standalone victory can finish before the empty party leaves. Only
+		# its presentation continues, not input, interactions or objectives.
+		_step_empty_retreat(delta)
 
 
 func _after_battle_step(delta: float) -> void:
@@ -140,6 +144,9 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 	match _raid:
 		Raid.WAITING, Raid.DISPERSED:
 			return
+		Raid.RETREATING_EMPTY:
+			_step_empty_retreat(delta)
+			return
 		Raid.WARNING:
 			_warning_left = maxf(0.0, _warning_left - delta)
 			if _warning_left == 0.0:
@@ -153,8 +160,13 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 			frame.hero_interaction = Action.NONE
 			_drop_at = raider_feet
 			frame.enemy_dropped_bundle = objective.bundle_status == Bundle.WITH_ENEMY
-			_raid = Raid.DISPERSED
-			_raider.hide()
+			if frame.enemy_dropped_bundle and _raid == Raid.EXTRACTING:
+				# Keep this actor's current route/cursor; the dropped bundle
+				# stays at contact while the now-unarmed party withdraws.
+				_raid = Raid.RETREATING_EMPTY
+			else:
+				_raid = Raid.DISPERSED
+				_raider.hide()
 		return
 	if _near(hero, raider_feet):
 		_contact_time += delta
@@ -185,6 +197,12 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 		Raid.EXTRACTING:
 			frame.enemy_carrier_at_retreat_exit = _walk_raider(CARRIER_SPEED * delta) \
 				and _raider.global_position.is_equal_approx(_retreat_at)
+
+
+func _step_empty_retreat(delta: float) -> void:
+	if _walk_raider(CARRIER_SPEED * delta):
+		_raid = Raid.DISPERSED
+		_raider.hide()
 
 
 func _room_contested() -> bool:
@@ -330,6 +348,12 @@ func _refresh_readout() -> void:
 		return
 	if _raid == Raid.DISPERSED:
 		_pressure.text = "March party driven back"
+		return
+	if _raid == Raid.RETREATING_EMPTY:
+		_raider_label.text = "Retreating"
+		_pressure.text = "March party withdrawing without the records."
+		if objective.bundle_status == Bundle.DROPPED:
+			_hint.text = "Recover the dropped bundle here. There is no need to pursue."
 		return
 	if _screened():
 		_raider_label.text = "March records party · screened"
