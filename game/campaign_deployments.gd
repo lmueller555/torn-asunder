@@ -136,6 +136,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "KEEPER BOUNDARY POST · OPEN ROAD AND SHEEP TRACK",
 		"orders": "Carry the writ to the neutral Keeper. Use the sheep track for cover or screen the open road. Protect the post, offer the writ in person, and wait for the Keeper's reply. Once the hearing is granted, withdraw to the west rally. You do not need to defeat the riders.",
 	},
+	"sereth_no_proxy": {
+		"scene": preload("res://game/battlefield/sereth_no_proxy_playtest.tscn"),
+		"dispatch": Beats.SERETH_NO_PROXY_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_NO_PROXY_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE · ASSEMBLY, CUSTODY LINE AND TERRACE",
+		"orders": "Refuse the escort before the assembly witnesses. Hold the court speaker on either route with the Household Guard, then challenge him before the custody line. Drive back the rival company and reach the terrace approach. Leave the vault and the witnesses' journey to their own escorts.",
+	},
 }
 
 

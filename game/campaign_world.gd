@@ -169,8 +169,8 @@ const _MAPS := {
 				"map_position": Vector2(0.62, 0.46), "mission_id": "sereth_pass_writ",
 			},
 			"cairnspine_assembly": {
-				"id": "cairnspine_assembly", "label": "Valley Assembly", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.76, 0.62),
+				"id": "cairnspine_assembly", "label": "Valley Assembly", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.78, 0.55), "mission_id": "sereth_no_proxy",
 			},
 		},
 		"routes": [

@@ -7,11 +7,12 @@ const World := preload("res://game/campaign_world.gd")
 const Profile := preload("res://game/profile_store.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
-const Deployment := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/sereth_cut_playtest.gd")
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
 const WritScene := preload("res://game/battlefield/sereth_pass_writ_playtest.gd")
 const Writ := preload("res://game/battlefield/sereth_pass_writ.gd")
+const FinaleScene := preload("res://game/battlefield/sereth_no_proxy_playtest.gd")
+const Finale := preload("res://game/battlefield/sereth_no_proxy.gd")
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Account := Cut.AccountStatus
@@ -22,6 +23,14 @@ const POST := "cairnspine_boundary_post"
 const ASSEMBLY := "cairnspine_assembly"
 const CLEAR := "sereth_voices_at_the_cut"
 const WRIT_CLEAR := "sereth_pass_writ"
+const FINALE_CLEAR := "sereth_no_proxy"
+const OTHER_SAVES := {
+	"mara": ["mara_mine_escort", ["year_one_mine", "marches_road"]],
+	"raska": ["orc_mine_witness", ["year_one_mine", "basin_well_road"]],
+	"sova": ["sova_mine_tunnels", ["year_one_mine", "cairnspine_assembly"]],
+	"ilyra": ["ilyra_moonwash_rescue", ["moonwash_harbor", "moonwash_survey_shore"]],
+	"neris": ["neris_failing_grove", ["isolated_grove_nursery", "spanwater_lock"]],
+}
 const DT := 1.0 / 60.0
 const TO_WITNESS := ["Routes/ApproachRoadWest", "Routes/WestLaneRoadJunction", "Routes/WestLaneEntrance",
 	"Routes/GateInnerTurn", "Routes/GateOuterTurn", "Objectives/WitnessAccount"]
@@ -63,31 +72,33 @@ func _run() -> void:
 	if passed:
 		passed = await _play_and_retry()
 	if passed:
-		passed = await _check_return_and_saves()
+		passed = await _play_boundary_route()
+	if passed:
+		passed = await _play_finale_route()
 	_title.queue_free()
 	await process_frame
 	for path in [_path, _path + ".tmp"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Sereth campaign: real Cut and writ, physical defeat/retry, hearing-only debrief, independent saves, replay and travel-only Valley Assembly passed.")
+		print("Sereth campaign: all three actual clears, physical defeats/retry, both finale routes, lamp ending, completion, replay, Continue and five independent saves passed.")
 	quit(0 if passed else 1)
 
 
 func _seed_other_saves(profile: Profile) -> bool:
-	if profile.record_mission_clear("mara", "mara_mine_escort") != OK \
-			or profile.record_mission_clear("neris", "neris_failing_grove") != OK:
-		return _fail("Could not prepare independent saved campaigns.")
-	var mara := profile.load_campaign_world("mara")
-	var neris := profile.load_campaign_world("neris")
-	for id in ["year_one_mine", "marches_road"]:
-		if mara.travel_to(id, profile.completed_missions("mara")) != World.TravelResult.ARRIVED:
-			return _fail("Could not seed Mara's separate route.")
-	for id in ["isolated_grove_nursery", "spanwater_lock"]:
-		if neris.travel_to(id, profile.completed_missions("neris")) != World.TravelResult.ARRIVED:
-			return _fail("Could not seed Neris's separate route.")
-	return profile.record_world_waypoint(mara) == OK and profile.record_world_waypoint(neris) == OK
-
+	for campaign_id: String in OTHER_SAVES:
+		var fixture: Array = OTHER_SAVES[campaign_id]
+		var result := profile.record_ilyra_moonwash_clear(&"crews_only") if campaign_id == "ilyra" \
+			else profile.record_mission_clear(campaign_id, fixture[0])
+		if result != OK:
+			return _fail("Could not prepare the independent clear for " + campaign_id)
+		var world := profile.load_campaign_world(campaign_id)
+		for id: String in fixture[1]:
+			if world.travel_to(id, profile.completed_missions(campaign_id)) != World.TravelResult.ARRIVED:
+				return _fail("Could not seed the independent route for " + campaign_id)
+		if profile.record_world_waypoint(world) != OK:
+			return _fail("Could not seed the independent waypoint for " + campaign_id)
+	return true
 
 func _begin_route() -> bool:
 	if not _press("New Game") or not _press("sereth") or not _on_map(CAMP) or _button("Confirm Deployment"):
@@ -170,7 +181,7 @@ func _play_and_retry() -> bool:
 		or _fail("Reality-based victory did not persist its own mission and reached waypoint before debrief.")
 
 
-func _check_return_and_saves() -> bool:
+func _play_boundary_route() -> bool:
 	_finish_dialogue()
 	if not _on_map(VILLAGE):
 		return _fail("The authored debrief did not return to the Cut.")
@@ -225,30 +236,177 @@ func _check_return_and_saves() -> bool:
 	if not replay or replay.objective.phase != Writ.Phase.CARRYING_WRIT or replay.objective.audience_granted \
 			or not _press("ReturnToMap") or not _on_map(POST) or FileAccess.get_file_as_string(_path) != completed_writ:
 		return _fail("The replay did not start fresh or changed the existing writ clear.")
-	if not _map().select_waypoint(ASSEMBLY) or not _press("ConfirmTravel") or not _on_map(ASSEMBLY) \
-			or not _title._campaign_world.mission_at_current_waypoint().is_empty() \
-			or not Deployment.for_mission("sereth_no_proxy").is_empty():
-		return _fail("The writ did not open the next waypoint as travel only.")
+	if not _map().select_waypoint(ASSEMBLY) or not _press("ConfirmTravel") or not _on_briefing(FINALE_CLEAR):
+		return _fail("The writ did not open a distinct briefing at the shared Valley Assembly.")
+	return true
+
+
+func _play_finale_route() -> bool:
 	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or not _on_map(ASSEMBLY) or not _button("ConfirmTravel").disabled:
-		return _fail("Continue did not restore the unfinished campaign at the Valley Assembly.")
+	if not _on_map(ASSEMBLY) or _map()._heading.text == "Campaign Complete":
+		return _fail("Cancel did not keep the unfinished campaign at the reached assembly.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(ASSEMBLY) or not _press("ConfirmTravel") \
+			or not _on_briefing(FINALE_CLEAR) or not _press("Read Dispatch") or not _is_dialogue(Beats.SERETH_NO_PROXY_DISPATCH):
+		return _fail("Continue did not restore the assembly or its distinct Year Five dispatch.")
+	_finish_dialogue()
+	if not _on_briefing(FINALE_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("The finale dispatch did not return to an explicit deployment.")
+	var finale := _title._campaign_battle as FinaleScene
+	if not finale or finale._field.name != &"CairnspineVaultRoad":
+		return _fail("The briefing did not deploy Sereth's real finale on the shared Cairnspine.")
+	finale.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	var at_assembly := FileAccess.get_file_as_string(_path)
+
+	if not _finale_refuse(finale) or not _wait_for(finale, func() -> bool:
+		return finale.objective.phase == Finale.Phase.FAILED, 10600
+	):
+		return false
+	if finale.objective.failure != Finale.Failure.SPEAKER_CROSSED_CUSTODY_LINE \
+			or not finale._inside(finale._custody_zone, finale._speaker.position) \
+			or _title._page != Title.Page.CAMPAIGN_BATTLE or FileAccess.get_file_as_string(_path) != at_assembly:
+		return _fail("Actual custody crossing did not produce a local defeat without saving.")
+	_joy(JOY_BUTTON_START)
+	if finale.objective.phase != Finale.Phase.AT_ASSEMBLY or finale._speaker.marker.visible \
+			or FileAccess.get_file_as_string(_path) != at_assembly:
+		return _fail("Retry did not reset the assembly or preserve its unfinished save.")
+	if not _win_finale(finale, Finale.Route.SHELF, at_assembly):
+		return false
+	await process_frame
+	if not _finish_finale_debrief():
+		return false
+	var complete := PackedStringArray([CLEAR, WRIT_CLEAR, FINALE_CLEAR])
+	var profile := Profile.new(_path)
+	if not _on_completed_map() or profile.completed_missions("sereth") != complete \
+			or profile.load_campaign_world("sereth").current_waypoint_id() != ASSEMBLY:
+		return _fail("The actual finale did not save exactly once and mark the campaign complete.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_completed_map():
+		return _fail("Continue did not restore the completed Undead campaign at the assembly.")
+	var saved := FileAccess.get_file_as_string(_path)
+	if not _press("ConfirmTravel") or not _on_briefing(FINALE_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("Completing the campaign disabled the finale replay.")
+	finale = _title._campaign_battle as FinaleScene
+	if not finale or finale.objective.refused_escort:
+		return _fail("Finale replay did not begin a fresh scene.")
+	finale.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _win_finale(finale, Finale.Route.SIDE, saved):
+		return false
+	await process_frame
+	if not _finish_finale_debrief() or not _on_completed_map() or FileAccess.get_file_as_string(_path) != saved:
+		return _fail("The alternate route replay was not idempotent.")
 	profile = Profile.new(_path)
-	return (profile.completed_missions("mara") == PackedStringArray(["mara_mine_escort"]) \
-		and profile.load_campaign_world("mara").current_waypoint_id() == "marches_road" \
-		and profile.completed_missions("neris") == PackedStringArray(["neris_failing_grove"]) \
-		and profile.load_campaign_world("neris").current_waypoint_id() == "spanwater_lock" \
-		and profile.completed_missions("sova").is_empty() \
-		and profile.completed_missions("sereth") == PackedStringArray([CLEAR, WRIT_CLEAR])) \
-		or _fail("Sereth's hearing or travel contaminated or needed another campaign's clear.")
+	for campaign_id: String in OTHER_SAVES:
+		var fixture: Array = OTHER_SAVES[campaign_id]
+		if profile.completed_missions(campaign_id) != PackedStringArray([fixture[0]]) \
+				or profile.load_campaign_world(campaign_id).current_waypoint_id() != fixture[1][-1]:
+			return _fail("Playing Sereth changed the independently saved progress for " + campaign_id)
+	return profile.ilyra_moonwash_clear_result() == &"crews_only" \
+		or _fail("Playing Sereth overwrote another leader's saved branch.")
+
+
+func _finale_refuse(finale: FinaleScene) -> bool:
+	if not _walk(["Routes/ValleyAssembly"], finale):
+		return false
+	_joy(JOY_BUTTON_A)
+	finale._physics_process(DT)
+	if finale.objective.phase != Finale.Phase.RELEASING_COURT_TROOPS or finale._speaker.marker.visible:
+		return _fail("The actual assembly refusal did not visibly precede the roster split.")
+	return (_wait_for(finale, func() -> bool: return finale.objective.phase == Finale.Phase.INTERCEPTING, 170)
+		and finale._speaker.marker.visible and finale.battle.formations[FinaleScene.COURT].order == Battle.Order.EXTRACTED) \
+		or _fail("The physical court departure did not leave Sereth with only the Household Guard.")
+
+
+func _win_finale(finale: FinaleScene, route: Finale.Route, unchanged: String) -> bool:
+	var shelf := route == Finale.Route.SHELF
+	var initial := ["ValleyAssembly", "SafeStaging", "ShelfDecision"]
+	if shelf:
+		initial.append("ShelfFoot")
+	if not _command_household(finale, initial) or not _finale_refuse(finale):
+		return false
+	if not _wait_for(finale, func() -> bool: return finale.objective.speaker_route != Finale.Route.NONE, 1900) \
+			or finale.objective.speaker_route != route:
+		return _fail("The Household's actual fork occupation did not lead to the expected approach.")
+	if not shelf and not _command_household(finale, ["SafeStaging"] + FinaleScene.SIDE.slice(0, 5)):
+		return false
+	var approach := FinaleScene.SHELF.slice(0, 1) if shelf else FinaleScene.SIDE.slice(0, 4)
+	if not _wait_for(finale, func() -> bool: return finale._escort_stalled, 2350) \
+			or not _walk(_route_markers(["SafeStaging"] + approach), finale) \
+			or not _walk_to(finale._speaker.marker.global_position, finale, 0.16):
+		return _fail("The Household Hold did not let Sereth physically reach the stalled speaker.")
+	_key(KEY_SPACE)
+	finale._physics_process(DT)
+	if finale.objective.phase != Finale.Phase.CLEARING_TERRACE or not finale.objective.bid_halted \
+			or FileAccess.get_file_as_string(_path) != unchanged:
+		return _fail("Challenging the speaker alone counted as victory.")
+	var onward := FinaleScene.SHELF.slice(2) + ["Forecourt", "TerraceApproach"] \
+		if shelf else FinaleScene.SIDE.slice(5) + ["TerraceApproach"]
+	if not _command_household(finale, onward):
+		return false
+	var from_stall := (["ShelfFoot"] if shelf else ["SideBlindBend"]) + onward
+	if not _walk(_route_markers(from_stall), finale) or not _wait_for(finale, func() -> bool:
+		return finale._rival_cleared, 4300
+	):
+		return _fail("The physical guard did not drive the rival back from the approach.")
+	if finale.objective.phase != Finale.Phase.CLEARING_TERRACE or FileAccess.get_file_as_string(_path) != unchanged:
+		return _fail("A guard clearing the approach counted as Sereth's arrival.")
+	return (_walk(["Routes/TerraceEntry"], finale, FinaleScene.INTERACTION_RADIUS) \
+		and finale.objective.phase == Finale.Phase.SUCCEEDED) or _fail("Sereth's separate actual terrace arrival did not win.")
+
+
+func _command_household(finale: FinaleScene, ids: Array) -> bool:
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	var guard := finale.battle.formations[FinaleScene.HOUSEHOLD]
+	for id: String in ids:
+		var target := finale._route(id)
+		finale.cursor = target
+		_joy(JOY_BUTTON_X)
+		var budget := ceili(guard.position.distance_to(target) / Battle.FORMATION_SPEED / DT) + 90
+		if not _wait_for(finale, func() -> bool: return guard.order == Battle.Order.HOLD and guard.position == target, budget):
+			return _fail("The Household Guard did not physically reach " + id)
+		_joy(JOY_BUTTON_A)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	return true
+
+
+func _route_markers(ids: Array) -> Array:
+	var markers := []
+	for id: String in ids:
+		markers.append("Routes/" + id)
+	return markers
+
+
+func _finish_finale_debrief() -> bool:
+	if not _is_dialogue(Beats.SERETH_NO_PROXY_DEBRIEF):
+		return _fail("The real Year Five clear did not open its own debrief.")
+	var dialogue := _title._stage.get_node("CampaignDialogue") as Dialogue
+	var lines: Label = dialogue.find_child("DialogueLine", true, false)
+	_key(KEY_ENTER)
+	if not lines.text.contains("commission is revoked"):
+		return _fail("The finale debrief lost the court's response.")
+	_key(KEY_ENTER)
+	_key(KEY_ENTER)
+	if not lines.text.contains("Sereth lights a lamp"):
+		return _fail("Sereth's ending did not carry out the letter's request.")
+	_key(KEY_ENTER)
+	return true
+
+
+func _on_completed_map() -> bool:
+	return _on_map(ASSEMBLY) and _map()._heading.text == "Campaign Complete"
 
 
 func _play_writ_and_retry(post: WritScene, at_post: String) -> bool:
-	if not _walk(UNSCREENED_ROAD, post) or not _wait_writ(post, func() -> bool:
+	if not _walk(UNSCREENED_ROAD, post) or not _wait_for(post, func() -> bool:
 		return post.objective.post_occupation_warned, 2300
 	):
 		return _fail("Taking the exposed road did not cause a real occupation warning.")
 	if not post._yard.has_point(post._patrol.global_position + Vector3.UP * 0.8) \
-			or not _wait_writ(post, func() -> bool: return post.objective.phase == Writ.Phase.FAILED, 450) \
+			or not _wait_for(post, func() -> bool: return post.objective.phase == Writ.Phase.FAILED, 450) \
 			or post.objective.failure != Writ.Failure.KEEPER_DRIVEN_AWAY \
 			or FileAccess.get_file_as_string(_path) != at_post or _title._page != Title.Page.CAMPAIGN_BATTLE:
 		return _fail("A real patrol occupation did not cause a defeat without saving.")
@@ -262,7 +420,7 @@ func _play_writ_and_retry(post: WritScene, at_post: String) -> bool:
 	_joy(JOY_BUTTON_A)
 	post._physics_process(DT)
 	if post.objective.phase != Writ.Phase.AWAITING_KEEPER or post.objective.audience_granted \
-			or not _wait_writ(post, func() -> bool: return post.objective.audience_granted, 100) \
+			or not _wait_for(post, func() -> bool: return post.objective.audience_granted, 100) \
 			or not post._keeper.global_position.is_equal_approx(post._keeper_reply_spot) \
 			or post.objective.phase != Writ.Phase.WITHDRAWING or FileAccess.get_file_as_string(_path) != at_post:
 		return _fail("The physical hearing was not separate from the offer, or wrote a clear before withdrawal.")
@@ -279,34 +437,37 @@ func _play_writ_and_retry(post: WritScene, at_post: String) -> bool:
 		or _fail("The physical west rally did not finish the hearing-only mission with a live reserve.")
 
 
-func _wait_writ(post: WritScene, condition: Callable, attempts: int) -> bool:
+func _wait_for(field: Harness, condition: Callable, attempts: int) -> bool:
 	for _attempt in attempts:
 		if condition.call():
 			return true
-		post._physics_process(DT)
+		field._physics_process(DT)
 	return condition.call()
 
 
 func _walk(ids: Array, field: Harness = null, tolerance := 0.16) -> bool:
 	var active := field if field else _mission
 	for id: String in ids:
-		var point := _point(id, active)
-		var local := active.to_local(point)
-		var target := Vector2(local.x, local.z)
-		var budget := ceili(target.distance_to(active.battle.hero_position) / Battle.HERO_SPEED / DT) + 100
-		for _step in range(budget):
-			var remaining := target - active.battle.hero_position
-			if remaining.length() < 0.1 or active.hero_world_position().distance_to(point) <= tolerance:
-				break
-			var move := remaining.normalized().rotated(active._hero_yaw)
-			_axis(JOY_AXIS_LEFT_X, move.x)
-			_axis(JOY_AXIS_LEFT_Y, move.y)
-			active._physics_process(DT)
-		_axis(JOY_AXIS_LEFT_X, 0.0)
-		_axis(JOY_AXIS_LEFT_Y, 0.0)
-		if active.hero_world_position().distance_to(point) > tolerance:
+		if not _walk_to(_point(id, active), active, tolerance):
 			return _fail("Actual terrain blocked Sereth before " + id)
 	return true
+
+
+func _walk_to(point: Vector3, active: Harness, tolerance: float) -> bool:
+	var local := active.to_local(point)
+	var target := Vector2(local.x, local.z)
+	var budget := ceili(target.distance_to(active.battle.hero_position) / Battle.HERO_SPEED / DT) + 100
+	for _step in range(budget):
+		var remaining := target - active.battle.hero_position
+		if remaining.length() < 0.1 or active.hero_world_position().distance_to(point) <= tolerance:
+			break
+		var move := remaining.normalized().rotated(active._hero_yaw)
+		_axis(JOY_AXIS_LEFT_X, move.x)
+		_axis(JOY_AXIS_LEFT_Y, move.y)
+		active._physics_process(DT)
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	return active.hero_world_position().distance_to(point) <= tolerance
 
 
 func _point(id: String, field: Harness = null) -> Vector3:
