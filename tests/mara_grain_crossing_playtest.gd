@@ -1,6 +1,7 @@
 extends SceneTree
 
-const Scene := preload("res://game/battlefield/mara_grain_crossing_playtest.tscn")
+const DefaultHarness := preload("res://game/battlefield/command_harness.tscn")
+const Registry := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/mara_grain_crossing_playtest.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
@@ -19,7 +20,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_mission = Scene.instantiate()
+	_mission = Registry.for_mission("mara_grain_crossing").scene.instantiate()
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame
@@ -30,6 +31,9 @@ func _run() -> void:
 	var reserve := _marker(^"Markers/Spawns/InfantryReserve")
 	_check(_mission.hero_world_position().is_equal_approx(_marker(^"Markers/Spawns/RoyalHero")), "The hero did not start at the Marches spawn.")
 	_check(_mission.battle.formations[0].position.is_equal_approx(Vector2(reserve.x, reserve.z)) and _mission.battle.formations[0].title == "Infantry Reserve", "The real reserve was not placed at its Marches marker.")
+	_check_reset_positions()
+	_check_hero_waypoints()
+	_key(KEY_BACKSPACE)
 	_check_reset_positions()
 
 	# North first: an unopposed rival physically blocks seed. Reposition and Hold
@@ -119,9 +123,126 @@ func _run() -> void:
 
 	_mission.queue_free()
 	await process_frame
+	await _check_default_shortcuts()
 	if _failures == 0:
+		print("Grain hero waypoints: keyboard and controller append/clear, route arrival, cart isolation, tactical and default shortcut parity passed.")
 		print("Marches playtest: both real rival marches, blockades, allied Hold relief, viable other lanes, all delivery outcomes and retry passed.")
 	quit(0 if _failures == 0 else 1)
+
+
+func _check_hero_waypoints() -> void:
+	_button(JOY_BUTTON_DPAD_LEFT)
+	_tick()
+	var leader := _mission.battle.lead
+	var origin := leader.position
+	var staged := [_mission._carts[SEED].global_position, _mission._carts[BREAD].global_position]
+	var controls := _mission._controls_label.text
+	_check(_mission.march_mode() and _mission.selected_index == Battle.LEAD_INDEX
+		and "D-pad Down / V: add waypoint" in controls and "D-pad Up / B: clear route" in controls
+		and "R1 / G: add waypoint" not in controls and "D-pad Up / T: clear route" not in controls
+		and "G / R1" in _mission._dispatch_button.text and "T / Triangle" in _mission._withdraw_button.text,
+		"The hero HUD needs only the Grain-specific waypoints and the cart HUD needs its original shortcuts.")
+	_nudge_marker(JOY_AXIS_LEFT_Y, -1.0, 8)
+	var first := _mission.march_marker
+	_key(KEY_V)
+	_check(first.distance_to(origin) > 5.0 and _waypoints() == PackedVector2Array([first])
+		and leader.position == origin and leader.order == Battle.Order.MOVE,
+		"V did not order a real lead waypoint from the steered hero marker.")
+	_nudge_marker(JOY_AXIS_LEFT_X, 1.0, 7)
+	var second := _mission.march_marker
+	_button(JOY_BUTTON_DPAD_DOWN)
+	_check(_waypoints() == PackedVector2Array([first, second]) and leader.destination == first,
+		"D-pad Down did not append behind the current waypoint.")
+	_key(KEY_SHIFT)
+	_key(KEY_V)
+	_key(KEY_B)
+	_button(JOY_BUTTON_DPAD_DOWN)
+	_button(JOY_BUTTON_DPAD_UP)
+	_check(_waypoints() == PackedVector2Array([first, second]) and leader.destination == first
+		and "D-pad Down / V" not in _mission._controls_label.text,
+		"Hero waypoint shortcuts incorrectly acted or were shown in command view.")
+	_key(KEY_SHIFT, false)
+	_advance_until(func() -> bool: return _waypoints() == PackedVector2Array([second]))
+	_check(leader.position.is_equal_approx(first) and leader.destination == second,
+		"The actual first leg did not finish on the selected ground before advancing.")
+	_advance_until(func() -> bool: return _waypoints().is_empty())
+	_check(leader.position.is_equal_approx(second) and leader.order == Battle.Order.HOLD,
+		"The platoon did not physically complete and hold at the second point.")
+	_nudge_marker(JOY_AXIS_LEFT_X, -1.0, 7)
+	for keyboard in [true, false]:
+		_button(JOY_BUTTON_DPAD_DOWN)
+		_check(_waypoints().size() == 1 and leader.order == Battle.Order.MOVE, "A second route was not ordered.")
+		if keyboard:
+			_key(KEY_B)
+		else:
+			_button(JOY_BUTTON_DPAD_UP)
+		_tick()
+		_check(_waypoints().is_empty() and leader.order == Battle.Order.HOLD and leader.position.is_equal_approx(second),
+			"A route cancel moved the leader or failed to hold and clear the route.")
+	_check(_mission._carts.size() == 2 and _state(SEED) == Grain.CartState.STAGED
+		and _state(BREAD) == Grain.CartState.STAGED and _mission.selected_cart == SEED
+		and _mission.committed_cart == -1 and _cues.is_empty() and _clears.is_empty()
+		and _mission._carts[SEED].global_position == staged[0] and _mission._carts[BREAD].global_position == staged[1],
+		"Adding, moving and clearing hero waypoints changed carts or their outcomes.")
+	for controller in [false, true]:
+		_key(KEY_V)
+		var pending := _waypoints()
+		_check(pending.size() == 1, "Cart input isolation needs a live lead route.")
+		if controller:
+			_button(JOY_BUTTON_RIGHT_SHOULDER)
+		else:
+			_key(KEY_G)
+		_tick()
+		_check(_state(SEED) == Grain.CartState.EN_ROUTE and _waypoints() == pending,
+			"G/R1 must dispatch the cart without adding or removing a waypoint.")
+		if controller:
+			_button(JOY_BUTTON_Y)
+		else:
+			_key(KEY_T)
+		_tick()
+		_check(_state(SEED) == Grain.CartState.TURNED_BACK and _waypoints() == pending,
+			"T/Triangle must turn the cart back without touching the lead route.")
+		_key(KEY_BACKSPACE)
+		_check_reset_positions()
+		_check(_waypoints().is_empty(), "Retry did not reset the hero route as well as the carts.")
+		_button(JOY_BUTTON_DPAD_LEFT)
+		_tick()
+		_nudge_marker(JOY_AXIS_LEFT_Y, -1.0, 8)
+
+
+func _check_default_shortcuts() -> void:
+	var plain := DefaultHarness.instantiate()
+	root.add_child(plain)
+	plain.set_physics_process(false)
+	await physics_frame
+	plain._physics_process(0.07)
+	_check("R1 / G: add waypoint" in plain._controls_label.text and "D-pad Up / T: clear route" in plain._controls_label.text,
+		"The generic hero controls changed outside Grain.")
+	var selected: int = plain.selected_index
+	_key(KEY_V)
+	_button(JOY_BUTTON_DPAD_DOWN)
+	_check(plain.march_waypoints(selected).is_empty(), "Grain's append shortcuts leaked into the default harness.")
+	_key(KEY_G)
+	var pending: PackedVector2Array = plain.march_waypoints(selected)
+	_key(KEY_B)
+	_check(pending.size() == 1 and plain.march_waypoints(selected) == pending, "Default G no longer adds or Grain's B leaked.")
+	_key(KEY_T)
+	_check(plain.march_waypoints(selected).is_empty(), "Default T no longer clears.")
+	plain.queue_free()
+	await process_frame
+
+
+func _nudge_marker(code: JoyAxis, value: float, ticks: int) -> void:
+	for amount in [value, 0.0]:
+		var event := InputEventJoypadMotion.new()
+		event.axis = code
+		event.axis_value = amount
+		root.push_input(event, true)
+		_tick(ticks if amount != 0.0 else 1)
+
+
+func _waypoints() -> PackedVector2Array:
+	return _mission.march_waypoints(Battle.LEAD_INDEX)
 
 
 func _check_blockade(cart: Grain.Cart, crossing: StringName, post: StringName) -> void:

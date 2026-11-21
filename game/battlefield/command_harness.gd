@@ -521,9 +521,13 @@ func _sync_view() -> void:
 		if battle.direct_hero_control():
 			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nHold L2 / Shift to command other platoons"
 		else:
-			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon   ·   Right stick / Q E R F: camera" % selected.title
+			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   %s   ·   Right stick / Q E R F: camera" % [selected.title, _march_route_controls()]
 			if not _march_note.is_empty():
 				_controls_label.text += "\n" + _march_note
+
+
+func _march_route_controls() -> String:
+	return "R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon"
 
 
 func _configure_field() -> void:
