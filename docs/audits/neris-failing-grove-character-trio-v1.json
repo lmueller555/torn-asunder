@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact existing Neris Lead, Loading Guard Watch and Track Screen visuals in the registered Failing Grove deployment only. No art changes to solo Cairnspine Survey or Greyhollow, no mechanics, normal combat clips, terrain or device performance approval.",
+  "author": "Torn Asunder Dryad character art and locomotion authors",
+  "reviewer": "Independent Grove visual and exact in-play gait review",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility, normal editor import and actual scene _ready. Original camera, commands, timers, objectives, patrol and formation ownership remain unchanged.",
+    "close_up": "Stock moving selected views plus separately labeled same-scene camera-only footage. Every 60 Hz physics frame sampled through actual 10.5 m orders; 30 fps videos include several repeat strides.",
+    "motion": "Neris Run at 5.5 m/s has 3.33 steps/s and approximately +1.5 to +1.9 mm net repeated low-contact motion. Watch has 2.72 steps/s at 3.0 m/s and 30 mm ground window max excursion approximately 13.6 mm versus 87.2 mm before correction. Screen retains the exact model and approximately +5 to +14 mm net in the tighter 20 mm window; no obvious repeated skid at the reviewed cameras.",
+    "reproduction": "Normally import the Godot project. Run tests/neris_failing_grove.gd, tests/neris_failing_grove_playtest.gd, tests/neris_campaign_flow.gd, tests/neris_cairnspine_survey.gd and tests/neris_greyhollow_campaign.gd via godot --headless --script. In the registered Grove give each original role a short legal Move and Hold, inspect the 108m live command view, then Retry. The original first patrol and switching leader/platoons are covered separately.",
+    "measurements": "Exact combined candidate: 80/80 native presenter observations, 14/14 original combat selection and rebuild, 12/12 official tactical A/B, and five original mission/campaign regressions. At 108 m all three inside stock view: +22,266 visible primitives, +30,588 shadow primitives, +22 visible draws from exact same-camera and clock stock comparison; repeat identical.",
+    "base_check": "The reachable Human, Orc, Druid and Elf art releases since 8ac6e57 do not alter Grove, the shared controller, deployment registration or policy."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Neris has the broad fan crown and seated bark face; Watch is a compact oak guard with short crown and tailored crossings; Screen a lighter silver-olive ash variant with forked bough lashed against the body. Close moving frames show boot, cuff and branches staying with the model in the sampled play poses."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Root grain, clean value differences and bindings read in Grove illumination relative to the polished Human infantry benchmark. The navigation beam is existing HUD, not an emissive material. Far views establish silhouette separation, not close-grain detail."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Three distinct existing roles remain visible at their correct actor slots in supported cameras. Regular formation placeholders and labels intermittently occlude limbs; no camera, terrain or label changes. Survey stays solo."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "The original move and hold speeds and animation clocks are preserved. Neris and Watch repeated low-sole sliding was substantially corrected by Run-only art. The brief Idle-to-Run low samples (~18 mm lead and ~9 mm Watch during blend) do not repeat in steady travel or show a visible sustained snag in the reviewed footage. Tight stance clamps exclude raised toe and heel roll; no blanket floor/attachment/combat certification."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Always one live rig per original mount; thresholds, selection, stock patrol, retry and actual re-instancing passed. Matched all-three final-pins command cost as listed above. Counts are software renderer submissions at this exact scope, not device FPS or whole-game performance."
+    }
+  },
+  "files": {
+    "assets/models/campaign/dryads/dryad_screen.glb": "387f52373cc5dd7d1a1830667fead4415ffce5204da65594671012863ab4e1d3",
+    "assets/models/campaign/dryads/dryad_screen.glb.import": "6fa4ddb9d26015c36addffedf76cbb91fcb638fdf046341215af7ffc5f207d9f",
+    "assets/models/campaign/dryads/dryad_watch.glb": "50370a3c87d18a5159bfcdf96373179f714b1518dc0a328664319a0e7019315f",
+    "assets/models/campaign/dryads/dryad_watch.glb.import": "78c0ce63ad468ba4b47786c128433ab560553fb2d1b787af0f6f08ee78956b18",
+    "assets/models/campaign/dryads/neris_alder.glb": "f12332c0b4999c597550dec865482a47644b7cf8244167101b59dbcea9c636b7",
+    "assets/models/campaign/dryads/neris_alder.glb.import": "440ba4139301e623ad09ae7e764515800397c02c924aa461c9797e27cd93704e",
+    "assets/source/campaign/dryads/dryad_screen.blend": "4d4ce7d3159f8017e8759c96832fec0e146bdf6528e726f58168f2476cb312a2",
+    "assets/source/campaign/dryads/dryad_watch.blend": "15c0eaf2567a7fe8eb262586e2f8c69cf0e8ddcb60d2dba3a2068c0906ce3c8e",
+    "assets/source/campaign/dryads/neris_alder.blend": "af9831c8000a1bf8e8b85b49e07adcaa7d3706d49c19a39f87e6df58de85f0cf",
+    "game/battlefield/neris_failing_grove_playtest.gd": "59131b68e4949653a866ed788741ab4e7b08f34b686b7491d334b5fb99459dc3",
+    "game/battlefield/neris_grove_character_art.gd": "b49a7452efbb015b69f22dd1790b9f990e257d74df676a8aca4310066834a64a"
+  }
+}
