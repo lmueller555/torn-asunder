@@ -122,3 +122,7 @@ Run `godot --headless --script tests/human_archer_volley.gd` for timing, target,
 ## Targeted casting prototype
 
 The isolated Ice cast tests one provisional ranged spell: Ice rating 6, 120 shared Battle Points, 16 m range and a 0.7 s windup. The cast locks one living target and spends on acceptance. Defeat, interruption, lost sight or out-of-range movement before release prevents the hit without refunding the already committed points. A release uses the existing Ice attack/defense ratings and grants no Battle Points. This model adds no campaign availability or effects. Verify with `godot --headless --script tests/targeted_ice_cast.gd`.
+
+## Siege crew prototype
+
+A siege crew must hold one ground position to prepare a shot. Moving or being caught in melee stows it. Prepared shots have a provisional 12–54 m window and require a playable arc from the scene. Siegecraft controls setup, accuracy and reload; misses still reload. The rules return the locked target point and whether the shot is on target. They do not yet create a projectile, damage a wall, or unlock a unit. Verify with `godot --headless --script tests/siege_preparation.gd`.
