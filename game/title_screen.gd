@@ -19,6 +19,7 @@ const BattlePointsDrill := preload("res://game/combat/battle_points_drill.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
+const FactionRoster := preload("res://game/combat/faction_roster.gd")
 const SkirmishView := preload("res://game/combat/infantry_skirmish_view.gd")
 const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
 const SkirmishSetup := preload("res://game/combat/skirmish_setup.gd")
@@ -39,7 +40,7 @@ const DARK := Color("#171a1a")
 enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
-	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE,
+	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS,
 }
 
 const RATING_NAMES := {
@@ -52,6 +53,24 @@ const RATING_NAMES := {
 	Unit.Damage.HOLY: "Holy",
 	Unit.Damage.CURSE: "Curse",
 }
+
+const PRACTICE_ROSTERS := {
+	"raska": [FactionRoster.ORCS, UnitCatalog.ORC_BASIN_REGULARS],
+	"ilyra": [FactionRoster.ELVES, UnitCatalog.ELF_SHORE_DETACHMENT],
+	"sova": [FactionRoster.DRUIDS, UnitCatalog.DRUID_TUNNEL_GUARD],
+	"neris": [FactionRoster.DRYADS, UnitCatalog.DRYAD_LOADING_GUARD],
+	"sereth": [FactionRoster.UNDEAD, UnitCatalog.UNDEAD_HOUSEHOLD_GUARD],
+}
+
+const TRAINING_NAMES := {
+	Platoon.Skill.CHARGE_BRACE: "Charge & Brace",
+	Platoon.Skill.MOUNTED_TRAINING: "Mounted Training",
+	Platoon.Skill.FORMATION_DRILL: "Formation Drill",
+	Platoon.Skill.SCOUTING: "Scouting",
+	Platoon.Skill.SIEGECRAFT: "Siegecraft",
+	Platoon.Skill.BEAST_HANDLING: "Beast Handling",
+}
+
 
 var _profile := ProfileStore.new()
 var _body_face := FontVariation.new()
@@ -161,6 +180,9 @@ func _go_back() -> void:
 		Page.UNIT_PROGRESSION:
 			_show_briefing()
 			_stage.get_node("Unit Progression").grab_focus()
+		Page.ROSTER_REQUIREMENTS:
+			_show_unit_progression(true)
+			_stage.get_node("Preview Advancement").grab_focus()
 		Page.BATTLE_POINTS_DRILL:
 			_show_drills()
 			_stage.get_node("Battle Points Drill").grab_focus()
@@ -487,8 +509,11 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
 		_training_promotion_status.name = "Promotion Status"
 		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
+	var planner: Button
 	if definition.has("model"):
 		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
+	elif PRACTICE_ROSTERS.has(_active_campaign.id):
+		planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
 
 	_rule(Rect2(523, 229, 841, 1), HAIRLINE)
 	_label(_stage, "Combat ratings", Rect2(523, 245, 820, 42), 29, GOLD, DISPLAY_FACE)
@@ -516,12 +541,80 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		_link_focus(_training_promotion, SIDE_RIGHT, left[2])
 	if _training_inspect:
 		_link_focus(_training_inspect, SIDE_RIGHT, left[3])
+	if planner:
+		_link_focus(_training_award, SIDE_BOTTOM, planner)
+		_link_focus(planner, SIDE_TOP, _training_award)
+		_link_focus(planner, SIDE_RIGHT, left[3])
 	for row in range(left.size()):
 		_link_focus(left[row], SIDE_LEFT, _training_award)
 		_link_focus(left[row], SIDE_RIGHT, right[row])
 		_link_focus(right[row], SIDE_LEFT, left[row])
 	_update_training()
 	_training_award.grab_focus()
+
+
+func _show_roster_requirements() -> void:
+	var source: Array = PRACTICE_ROSTERS.get(_active_campaign.id, [])
+	if _page != Page.UNIT_PROGRESSION or source.is_empty():
+		return
+	var faction: StringName = source[0]
+	var unit_id: StringName = source[1]
+	var roster := UnitCatalog.faction_roster()
+	var unit_name: String = roster.unit(unit_id).display_name
+	_open_page(Page.ROSTER_REQUIREMENTS)
+	var back := _heading("Advancement Requirements", "%s  /  %s  /  Provisional, not playable" % [_active_campaign.faction, unit_name])
+	_label(_stage, "Uses your practice ratings. Sample rank applies to every platoon skill for this preview only.",
+		Rect2(76, 221, 1235, 42), 23, IVORY)
+	var rank_value := _label(_stage, "", Rect2(76, 282, 344, 48), 25, GOLD)
+	rank_value.name = "Sample Training Rank"
+	var report_labels: Array[Label] = []
+	var sample := [0]
+	var read_training := func(_skill: int) -> int: return sample[0]
+	for index in range(roster.inspect_advances(unit_id, faction).size()):
+		var x := 76.0 + 655.0 * index
+		_rule(Rect2(x, 373, 615, 1), HAIRLINE)
+		var report := _label(_stage, "", Rect2(x, 397, 615, 285), 23, IVORY)
+		report.name = "Branch Requirements %d" % index
+		report.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		report_labels.append(report)
+	var redraw := func() -> void:
+		rank_value.text = "Sample training rank: %d / %d" % [sample[0], Platoon.MAX_RANK]
+		var rows := roster.inspect_advances(unit_id, faction, _training_unit.rating, read_training)
+		for index in range(rows.size()):
+			var branch: Dictionary = rows[index]
+			var text := "%s\n%s" % [roster.unit(branch.target).display_name,
+				"Eligible in this sample · Not playable" if branch.eligible else "Locked · Not playable"]
+			text += "\n\nCombat ratings" + _requirement_lines(branch.ratings, RATING_NAMES, "points")
+			text += "\n\nPlatoon training" + _requirement_lines(branch.training, TRAINING_NAMES, "ranks")
+			report_labels[index].text = text
+	var shift_rank := func(delta: int) -> void:
+		sample[0] = clampi(sample[0] + delta, 0, Platoon.MAX_RANK)
+		redraw.call()
+	var lower := _button("Lower Sample Rank", Rect2(429, 282, 263, 48), shift_rank.bind(-1))
+	var raise := _button("Raise Sample Rank", Rect2(706, 282, 263, 48), shift_rank.bind(1))
+	_link_focus(lower, SIDE_RIGHT, raise)
+	_link_focus(raise, SIDE_LEFT, lower)
+	_link_focus(lower, SIDE_TOP, back)
+	_link_focus(raise, SIDE_TOP, back)
+	_link_focus(back, SIDE_BOTTOM, raise)
+	_label(_stage, "Viewing these requirements cannot recruit a unit or change a save.", Rect2(76, 711, 1150, 38), 21, MUTED)
+	redraw.call()
+	raise.grab_focus()
+
+
+func _requirement_lines(gates: Dictionary, names: Dictionary, units: String) -> String:
+	if gates.is_empty():
+		return ": None"
+	var lines := ""
+	for stat: int in gates:
+		var gate: Dictionary = gates[stat]
+		if gate.missing == null:
+			lines += "\n%s: requires %d · current unknown" % [names[stat], gate.minimum]
+		elif gate.missing == 0:
+			lines += "\n%s: %d / %d · met" % [names[stat], gate.current, gate.minimum]
+		else:
+			lines += "\n%s: %d / %d · missing %d %s" % [names[stat], gate.current, gate.minimum, gate.missing, units]
+	return lines
 
 
 func _show_unit_model(definition: Dictionary) -> void:
