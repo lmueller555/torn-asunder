@@ -1,0 +1,80 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/marches_crossing.tscn" id="1_marches"]
+
+[sub_resource type="Environment" id="Environment_valley"]
+background_mode = 1
+background_color = Color(0.62, 0.69, 0.72, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.87, 0.91, 0.96, 1)
+ambient_light_energy = 0.76
+
+[node name="MarchesCrossingPreview" type="Node3D"]
+
+[node name="MarchesCrossing" parent="." instance=ExtResource("1_marches")]
+
+[node name="ValleyLight" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_valley")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-51, -32, 0)
+light_color = Color(1, 0.93, 0.82, 1)
+light_energy = 1.1
+shadow_enabled = true
+directional_shadow_max_distance = 565.0
+
+[node name="Overview" type="Camera3D" parent="."]
+position = Vector3(0, 270, 204)
+rotation_degrees = Vector3(-55, 0, 0)
+projection = 1
+size = 305.0
+far = 750.0
+current = true
+
+[node name="ReserveLabel" type="Label3D" parent="."]
+position = Vector3(-76, 9, -13)
+text = "RESERVE FORK"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.92, 0.64, 1)
+
+[node name="BridgeLabel" type="Label3D" parent="."]
+position = Vector3(0, 9, -65)
+text = "OPEN TIMBER BRIDGE"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.85, 0.66, 1)
+
+[node name="MillLabel" type="Label3D" parent="."]
+position = Vector3(67, 12, -47)
+text = "SEED-GRAIN MILL"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.85, 0.66, 1)
+
+[node name="ChargeLabel" type="Label3D" parent="."]
+position = Vector3(109, 10, -84)
+text = "CAVALRY FORM-UP"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.69, 0.63, 1)
+
+[node name="FordLabel" type="Label3D" parent="."]
+position = Vector3(0, 10, 75)
+text = "SCREENED SHALLOW FORD"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(0.78, 0.98, 0.94, 1)
+
+[node name="StoreLabel" type="Label3D" parent="."]
+position = Vector3(91, 12, 86)
+text = "BREAD-GRAIN STORE"
+pixel_size = 0.15
+billboard = 1
+no_depth_test = true
+modulate = Color(0.78, 0.98, 0.94, 1)
