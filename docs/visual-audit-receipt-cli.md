@@ -26,3 +26,9 @@ Repeat `--file` for every proposed source, export, and dependency the review cov
 | `files` | Object mapping each proposed file's canonical root-relative path (forward slashes, no symlinks) to its reviewed 64-digit lowercase SHA-256. |
 
 Keep the unaudited work and private evidence out of the repository. Do not create a placeholder PASS receipt: each field must describe the actual independent review. A hash mismatch needs a new review, not simply a rewritten digest.
+
+## Read-only deployment art report
+
+From the repository root, run `python3 -B -m tools.report_deployment_art` for a JSON inventory of the authored campaigns' registered deployments and shared Godot battlefields. It cross-checks the mission catalog and deployment registry and follows each scene's explicit `battlefield_scene` reference. It recognizes their current authored declaration forms rather than evaluating GDScript.
+
+Every current deployment is recorded as **still uses development art**. The two reviewed map kits are listed only for deployments that use their reviewed battlefield and only after verifying their actual scene instances and all their receipt-listed file bytes. Unit benchmarks and unaudited assets are outside this report. A successful export does not approve a map, verify visual quality, or replace the [visual inventory](visual-audit-inventory.md). If a required reference is missing, the known kit is absent, or its receipt no longer matches, the command emits no partial report and returns a nonzero status.
