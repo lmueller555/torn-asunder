@@ -7,6 +7,7 @@ const CampaignMap := preload("res://game/campaign_map.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
 const BP := preload("res://game/combat/battle_points.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
@@ -118,8 +119,8 @@ func _flow() -> bool:
 	await physics_frame
 	if mission._field.name != &"YearOneMineCampaign" or mission.encounter == null:
 		return _fail("Deployment fell back to the toy map or disabled live combat.")
-	if not _mine_budget(mission, 1, 700):
-		return _fail("A fresh Mine deployment did not show 400 / 700 BP at lead level one.")
+	if not _mine_budget(mission, 1, 700) or mission.encounter.hero.rating(Unit.Damage.MELEE) != 1:
+		return _fail("A fresh Mine deployment did not show 400 / 700 BP and untrained Mara.")
 	_key(KEY_V)
 	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
 		return _fail("The fresh attempt did not spend on the existing special.")
@@ -157,8 +158,8 @@ func _flow() -> bool:
 	mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
-	if not _mine_budget(mission, 2, 720):
-		return _fail("A replay after the first saved clear did not show lead level two and 400 / 720 BP.")
+	if not _mine_budget(mission, 2, 720) or mission.encounter.hero.rating(Unit.Damage.MELEE) != 1:
+		return _fail("The first saved clear raises the BP cap but must not spend the earned Melee point.")
 	_key(KEY_V)
 	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
 		return _fail("The existing special did not spend from the higher-cap launch pool.")
@@ -173,6 +174,8 @@ func _flow() -> bool:
 	_joy(JOY_BUTTON_B)
 	if not _on_map(MINE):
 		return _fail("Skipping debrief did not return to the map.")
+	if not await _check_earned_mine_melee():
+		return false
 	_map().select_waypoint(ROAD)
 	if not _press("ConfirmTravel") or not _on_map(ROAD) or _saved_world() != ROAD or _title._campaign_battle:
 		return _fail("The open road did not persist arrival or started an unimplemented mission.")
@@ -180,6 +183,94 @@ func _flow() -> bool:
 	if not _press("Continue") or not _on_map(ROAD) or _saved_clears() != PackedStringArray([CLEAR_ID]):
 		return _fail("Continue did not restore Mara's last arrived point and existing clear.")
 	return await _grain_flow()
+
+
+func _check_earned_mine_melee() -> bool:
+	if _saved_clears() != PackedStringArray([CLEAR_ID]) or _title._profile.invest_mara_lead_melee_point() != OK \
+			or _title._profile.purchase_mara_shield_infantry_drill() != OK:
+		return _fail("The actual first clear did not support two separate explicit training choices.")
+	var trained := FileAccess.get_file_as_string(_profile_path)
+	if not _press("ConfirmTravel") or not _button("Replay with Heavy Infantry") or not _press("Confirm Deployment"):
+		return false
+	var mission := _title._campaign_battle as Mission
+	mission.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _mine_lead_melee_build(mission, 2, false) or not _mine_melee_contact(mission, 2):
+		return false
+	if FileAccess.get_file_as_string(_profile_path) != trained:
+		return _fail("Deploying and fighting with the saved point rewrote the profile.")
+
+	# Replace the on-disk marker mid-attempt. Retry must keep the launch snapshot;
+	# the next launch must reject the invalid saved choice, even with a warm store.
+	var invalid := ConfigFile.new()
+	if invalid.load(_profile_path) != OK:
+		return _fail("Could not read the completed profile to prepare an invalid marker.")
+	invalid.set_value(Profile.LEAD_TRAINING, Profile.MARA_LEAD_MELEE, "true")
+	if invalid.save(_profile_path) != OK:
+		return _fail("Could not write the isolated invalid marker fixture.")
+	var bad_save := FileAccess.get_file_as_string(_profile_path)
+	mission.configure_campaign_lead_melee(false) # Running scenes cannot change the launch choice.
+	_key(KEY_BACKSPACE)
+	if not _mine_lead_melee_build(mission, 2, false) or FileAccess.get_file_as_string(_profile_path) != bad_save:
+		return _fail("Retry changed the launch build, troop choice, BP or saved file.")
+	_key(KEY_ESCAPE)
+	if not _on_map(MINE) or not _press("ConfirmTravel") or not _press("Replay with Heavy Infantry"):
+		return false
+	mission = _title._campaign_battle as Mission
+	mission.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _mine_lead_melee_build(mission, 1, true) or not _mine_melee_contact(mission, 1) \
+			or FileAccess.get_file_as_string(_profile_path) != bad_save:
+		return _fail("An invalid lead marker must not affect the independently trained Heavy deployment.")
+	_key(KEY_ESCAPE)
+	var restored := FileAccess.open(_profile_path, FileAccess.WRITE)
+	if not restored:
+		return _fail("Could not restore the genuine campaign profile.")
+	restored.store_string(trained)
+	restored.close()
+	_title._profile = Profile.new(_profile_path)
+	return _on_map(MINE) or _fail("Leaving the equipped attempt did not return to the Mine map.")
+
+
+func _mine_lead_melee_build(mission: Mission, melee: int, heavy: bool) -> bool:
+	var fight := mission.encounter
+	return (_mine_budget(mission, 2, 720) and fight.hero.hp == Encounter.HERO_HP
+		and fight.hero.rating(Unit.Damage.MELEE) == melee and fight.hero.stat_points == 0
+		and fight.hero.rating(Unit.Damage.RANGED) == 1 and fight.hero.rating(Unit.Damage.HOLY) == 1
+		and fight.infantry_attack.attacker.rating(Unit.Damage.MELEE) == 1
+		and fight.archer_attack.attacker.rating(Unit.Damage.RANGED) == 1
+		and fight.archer_attack.attacker.max_hp == 248.0
+		and fight.infantry_attack.attacker.max_hp == (380.0 if heavy else 310.0)
+		and mission.battle.formations[0].title == ("Heavy Infantry" if heavy else "Shield Infantry")) \
+		or _fail("The launch did not keep the chosen Hero point isolated from BP and both subordinate slots.")
+
+
+func _mine_melee_contact(mission: Mission, melee: int) -> bool:
+	# Use the same valid road lane in both trials, then drive the real attack and enemy step.
+	var start := mission._marker_position(mission.battlefield_marker(^"Markers/Routes/RoadCut"))
+	var end := mission._marker_position(mission.battlefield_marker(^"Markers/Routes/EastPass"))
+	var toward := (end - start).normalized()
+	var enemy := start + toward * 1.20
+	if not mission._terrain.clear_melee_contact(start, enemy):
+		return _fail("The paired contact fixture needs a clear lane.")
+	var fight := mission.encounter
+	mission.battle.hero_position = start
+	mission.battle.hero_heading = toward
+	fight.enemy_position = enemy
+	fight.enemy_phase = Encounter.EnemyPhase.WATCHING
+	_key(KEY_J)
+	_tick(16)
+	var outgoing := Encounter.ENEMY_HP - fight.enemy.hp
+	if not is_equal_approx(outgoing, 60.0 * Unit.damage_factor(melee, 1)) or fight.points.balance != 412:
+		return _fail("The actual light contact did not use Mara's launch rating or preserve the fixed BP award.")
+	_tick(32)
+	var incoming := Encounter.HERO_HP - fight.hero.hp
+	if not is_equal_approx(incoming, 90.0 * Unit.damage_factor(1, melee)):
+		return _fail("The road guard's confirmed melee contact did not use the same defensive rating.")
+	print("Mine lead melee %d: light dealt %.3f HP · guard dealt %.3f HP · +12 BP." % [melee, outgoing, incoming])
+	return true
 
 
 func _grain_flow() -> bool:
@@ -368,7 +459,7 @@ func _mine_briefing_budget(level: int, capacity: int) -> bool:
 
 func _mine_budget(mission: Mission, level: int, capacity: int) -> bool:
 	var bp := mission.team_battle_points_frame()
-	# The derived lead level only sets the budget. Unit stats are unchanged.
+	# The derived lead level only sets the budget, not the combat proxy's level.
 	return bp.balance == BP.STARTING_BALANCE and bp.capacity == capacity and bp.lead_level == level \
 		and mission.encounter.hero.level == 1 \
 		and mission._combat_hp.text.contains("Team 400 / %d BP (lead Lv %d)" % [capacity, level])
