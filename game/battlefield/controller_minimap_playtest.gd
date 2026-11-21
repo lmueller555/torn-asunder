@@ -4,21 +4,14 @@ extends "res://game/battlefield/engagement_camera_playtest.gd"
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 const MAP_SPEED := 13.0
 const NUDGE := 1.0
 
 class Reticle extends Control:
 	var point := Vector2.ZERO
-	var route := PackedVector2Array()
 
 	func _draw() -> void:
-		if route.size() > 1:
-			draw_polyline(route, Minimap.SECTOR, 1.5, true)
-		for index in route.size():
-			var marker := route[index]
-			draw_circle(marker, 7.0, Minimap.INK, true, -1.0, true)
-			draw_string(get_theme_default_font(), marker + Vector2(-3, 4), str(index + 1),
-				HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Minimap.PICKUP)
 		draw_circle(point, 7.0, Minimap.INK, false, 3.5, true)
 		draw_circle(point, 7.0, Minimap.HERO, false, 1.6, true)
 		draw_line(point - Vector2(10.0, 0.0), point + Vector2(10.0, 0.0), Minimap.HERO, 1.5, true)
@@ -35,6 +28,7 @@ var _map_needs_neutral: Dictionary[int, bool] = {}
 var _consumed_buttons: Dictionary[int, bool] = {}
 var _consumed_keys: Dictionary[int, bool] = {}
 var _reticle := Reticle.new()
+var _route_overlay := RouteOverlay.new()
 var _map_note := ""
 var _routes := Routes.new()
 var _route_feedback := ""
@@ -50,7 +44,9 @@ func _ready() -> void:
 	super._ready()
 	_routes.reset(battle)
 	_map.set_field_bounds(battle.bounds)
-	_map.resized.connect(_refresh_reticle)
+	_map.resized.connect(_refresh_plot_overlays)
+	_map.add_child(_route_overlay)
+	_route_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_map.add_child(_reticle)
 	_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -287,23 +283,30 @@ func _clear_world_input() -> void:
 
 func _step_map_cursor(displacement: Vector2) -> void:
 	_map_cursor = battle.clamp_to_field(_map_cursor + displacement)
-	_refresh_reticle()
+	_refresh_plot_overlays()
 
 
 func _refresh_layout() -> void:
 	_map_panel.offset_left = -475.0 if _map_open else -268.0
 	_map_panel.offset_top = -333.0 if _map_open else -205.0
-	_refresh_reticle()
+	_refresh_plot_overlays()
 
 
-func _refresh_reticle() -> void:
-	_reticle.visible = _map_open
-	if _map_open:
-		_reticle.point = _map.project(_map_cursor)
-		_reticle.route.clear()
-		for point in _routes.snapshot(selected_index):
-			_reticle.route.append(_map.project(point))
-		_reticle.queue_redraw()
+func _refresh_plot_overlays() -> void:
+	var plotting := _map_open and _can_order_draft()
+	_reticle.visible = plotting
+	_route_overlay.visible = plotting
+	if not plotting:
+		_route_overlay.clear_route()
+		return
+	_reticle.point = _map.project(_map_cursor)
+	_reticle.queue_redraw()
+	var pending := _routes.snapshot(selected_index)
+	var unit := battle.formations[selected_index]
+	var active_from: Variant = null
+	if not pending.is_empty() and unit.order == Battle.Order.MOVE and unit.destination.is_equal_approx(pending[0]):
+		active_from = unit.position
+	_route_overlay.show_route(_map, pending, active_from)
 
 
 func _refresh_minimap() -> void:
@@ -320,13 +323,13 @@ func _refresh_minimap() -> void:
 	_map.show_frame(snapshot)
 	if _map_open:
 		_map_title.text = "MINIMAP DRAFT · " + battle.formations[selected_index].title
-		_map_help.text = "Left stick / D-pad: aim   ·   R1 / G: append to route\nCross / Enter: replace with Move   ·   Circle / Esc: close draft"
+		_map_help.text = "Left stick / D-pad: aim   ·   R1 / G: append to route\nCross / Enter: replace with Move   ·   Circle / Esc: close draft\nGold line: moving now   ·   Numbered points: pending"
 	else:
 		_map_title.text = "MINIMAP · DEVELOPMENT PREVIEW"
 		_map_help.text = "D-pad Up / N: draft a Move" if policy.accepts_formation_orders() else "Read-only in hero action"
 	if not _map_note.is_empty():
 		_map_help.text += "\n" + _map_note
-	_refresh_reticle()
+	_refresh_plot_overlays()
 
 
 func _notification(what: int) -> void:

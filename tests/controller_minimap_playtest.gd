@@ -26,7 +26,7 @@ func _run() -> void:
 	_preview.queue_free()
 	await process_frame
 	if passed:
-		print("Controller minimap: bounded draft, no input leak, shared tactical/minimap two-leg walk, route cap/replacement, ally follow and hero handoff passed.")
+		print("Controller minimap: bounded draft, no input leak, shared two-leg walk and live overlay projection, route cap/replacement, ally follow and hero handoff passed.")
 	quit(0 if passed else 1)
 
 
@@ -120,25 +120,36 @@ func _shared_route_walk() -> bool:
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
 	var expected := PackedVector2Array([first, second])
 	if not _preview._map_open or _preview._routes.snapshot(Preview.SHIELDS) != expected \
-			or shields.destination != first or _preview._reticle.route.size() != 2 \
+			or shields.destination != first or _preview._route_overlay.waypoint_pixels().size() != 2 \
 			or not _preview._map_title.text.contains("Shield Infantry"):
 		return _fail("Map R1 replaced the first leg, hid the combined route, or changed its named receiver.")
 	_button(JOY_BUTTON_DPAD_RIGHT)
 	_button(JOY_BUTTON_B)
-	if _preview._map_open or _preview.cursor != first or _preview._routes.snapshot(Preview.SHIELDS) != expected:
+	if _preview._map_open or _preview.cursor != first or _preview._routes.snapshot(Preview.SHIELDS) != expected \
+			or _preview._route_overlay.visible or not _preview._route_overlay.waypoint_pixels().is_empty():
 		return _fail("Cancel did not discard only the unsent draft or restore the tactical cursor.")
 	_button(JOY_BUTTON_DPAD_RIGHT)
-	if not _preview._routes.snapshot(Preview.SCOUTS).is_empty():
-		return _fail("The mixed controls appended to a different named platoon.")
+	_button(JOY_BUTTON_DPAD_UP)
+	if not _preview._routes.snapshot(Preview.SCOUTS).is_empty() \
+			or not _preview._route_overlay.waypoint_pixels().is_empty():
+		return _fail("The focused map borrowed the other platoon's waypoints.")
+	_button(JOY_BUTTON_B)
 	_button(JOY_BUTTON_DPAD_LEFT)
+	_button(JOY_BUTTON_DPAD_UP)
+	if not _route_projects(expected, shields.position):
+		return _fail("Focused map did not project numbers and the initial active leg from the live unit.")
+	_tick(8)
+	if shields.position == original or not _route_projects(expected, shields.position):
+		return _fail("The active route line did not track the live formation while the map was open.")
 	if not _wait(func() -> bool: return shields.position.is_equal_approx(first), 240) \
-			or shields.position == original or shields.destination != second \
-			or _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([second]):
-		return _fail("The second Move did not wait for first physical waypoint arrival.")
-	return _wait(func() -> bool:
-		return shields.order == Battle.Order.HOLD and shields.position.is_equal_approx(second) \
-			and _preview._routes.snapshot(Preview.SHIELDS).is_empty(), 140
-	) or _fail("The platoon did not physically walk the second leg of the same route.")
+			or shields.destination != second or not _route_projects(PackedVector2Array([second]), first):
+		return _fail("Arrival did not renumber the remaining point and highlight the second physical leg.")
+	if not _wait(func() -> bool:
+		return shields.order == Battle.Order.HOLD and shields.position.is_equal_approx(second), 140
+	) or not _route_projects(PackedVector2Array(), null):
+		return _fail("Arrival did not clear both the active leg and pending route on the open map.")
+	_button(JOY_BUTTON_B)
+	return true
 
 
 func _cap_and_replace_route() -> bool:
@@ -156,7 +167,7 @@ func _cap_and_replace_route() -> bool:
 	var full := _preview._routes.snapshot(Preview.SHIELDS)
 	_button(JOY_BUTTON_DPAD_RIGHT)
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
-	if full.size() != Queue.MAX_WAYPOINTS or _preview._routes.snapshot(Preview.SHIELDS) != full \
+	if full.size() != Queue.MAX_WAYPOINTS or not _route_projects(full, _preview.battle.formations[Preview.SHIELDS].position) \
 			or not _preview._map_note.contains("Route full") or not _preview._map_open:
 		return _fail("Controller and keyboard append did not share the same eight-point cap.")
 	_button(JOY_BUTTON_B)
@@ -167,9 +178,10 @@ func _cap_and_replace_route() -> bool:
 	if _preview._map_open or _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([replacement]):
 		return _fail("Direct map Move did not replace the accepted queued route.")
 	_key(KEY_H)
-	return _preview._routes.snapshot(Preview.SHIELDS).is_empty() \
-		and _preview.battle.formations[Preview.SHIELDS].order == Battle.Order.HOLD \
-		or _fail("World Hold did not clear the map-built route.")
+	_button(JOY_BUTTON_DPAD_UP)
+	var cleared := _route_projects(PackedVector2Array(), null) and _preview.battle.formations[Preview.SHIELDS].order == Battle.Order.HOLD
+	_button(JOY_BUTTON_B)
+	return cleared or _fail("World Hold did not clear the overlay and the map-built route.")
 
 
 func _follow_then_hero() -> bool:
@@ -220,6 +232,20 @@ func _follow_then_hero() -> bool:
 	_button(JOY_BUTTON_X)
 	return _preview.defense.attack_phase == Attack.Phase.WINDUP \
 		or _fail("A fresh explicit hero action remained muted after releasing modal input.")
+
+
+func _route_projects(expected: PackedVector2Array, from: Variant) -> bool:
+	if not _preview._route_overlay.visible or _preview._routes.snapshot(_preview.selected_index) != expected:
+		return false
+	var projected := PackedVector2Array()
+	for point in expected:
+		projected.append(_preview._map.project(point))
+	if _preview._route_overlay.waypoint_pixels() != projected:
+		return false
+	var active := PackedVector2Array()
+	if from != null and not projected.is_empty():
+		active = PackedVector2Array([_preview._map.project(from), projected[0]])
+	return _preview._route_overlay.active_leg_pixels() == active
 
 
 func _aim(point: Vector2) -> void:
