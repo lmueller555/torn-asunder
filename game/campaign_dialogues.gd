@@ -8,6 +8,8 @@ const MARA_MINE_DISPATCH := &"mara_mine_dispatch"
 const MARA_MINE_DEBRIEF := &"mara_mine_debrief"
 const RASKA_MINE_DISPATCH := &"raska_mine_dispatch"
 const RASKA_MINE_DEBRIEF := &"raska_mine_debrief"
+const RASKA_WELL_ROAD_DISPATCH := &"raska_well_road_dispatch"
+const RASKA_WELL_ROAD_DEBRIEF := &"raska_well_road_debrief"
 const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
 const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
 const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
@@ -28,6 +30,7 @@ const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
 const RASKA := "War Marshal Raska Vennor"
 const LIEUTENANT := "Basin Lieutenant"
+const LOWER_CAPTAIN := "Lower-Town Captain"
 const MINER := "Mine Witness"
 const SOVA := "First Listener Sova Cairn"
 const GUARD := "Cairnspine Guard"
@@ -82,6 +85,28 @@ const BEATS := {
 			{"speaker": MINER, "text": "I haven't. I'll tell the assembly myself. I saw the spring come up. Sova's survey dates it to the night your river stopped."},
 			{"speaker": LIEUTENANT, "text": "Mara's carrier cleared the pass with the Godbridle. Do you want us to follow?"},
 			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "No. Get us two copies of the survey. And tell the assembly she'll speak first."},
+		],
+	},
+	RASKA_WELL_ROAD_DISPATCH: {
+		"title": "The Second Bucket",
+		"location": "Lower well storehouse · Before the escort",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "The new cut sent all our traffic to the wells. A March company is coming for both carts. Their own supply failed."},
+			{"speaker": LOWER_CAPTAIN, "text": "I'll lend you my company. There are families at the lower storehouse who aren't on the well roll. Some came from the Marches. Do I turn them away?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Open the storehouse. Give them water and seats. Send the upper cart when it's ready. The lower cart waits until the households are aboard."},
+			{"speaker": LIEUTENANT, "text": "The salt road is quicker, but their horses can get a run at us there. They won't have that room in the wash. Its ramp is narrow, though."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Take whichever road you can cover. I need both carts through the Basin exit."},
+		],
+	},
+	RASKA_WELL_ROAD_DEBRIEF: {
+		"title": "Past the Riverbanks",
+		"location": "Basin receiving yard · After the escort",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "Both carts reached the Basin. The households from the lower storehouse came in with the second one."},
+			{"speaker": LOWER_CAPTAIN, "text": "I counted the last barrels onto that cart myself. I'll take my company back below the river towns. What will a river do for us there?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "It'll put water back in the river towns. It won't reach every place that needs it."},
+			{"speaker": LOWER_CAPTAIN, "text": "Our pastures were on the old shore. So were the boats that brought our grain. A river won't bring those boats back."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The assembly sent me for its river. I can promise you that much. Not the sea."},
 		],
 	},
 	SOVA_MINE_DISPATCH: {

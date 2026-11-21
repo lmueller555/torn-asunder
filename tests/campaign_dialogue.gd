@@ -31,11 +31,12 @@ func _run() -> void:
 	passed = _check_grain_beats() and passed
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
+	passed = _check_raska_well_road_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, Grain and Moonwash branches, High Quay continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, High Quay and Well Road continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -304,6 +305,34 @@ func _simulate_moonwash_result(cargo: bool, hero_falls := false) -> StringName:
 	arrival.hero_fell = hero_falls
 	rescue.advance(arrival)
 	return rescue.clear_result
+
+
+func _check_raska_well_road_beats() -> bool:
+	var cases := [
+		[Beats.RASKA_WELL_ROAD_DISPATCH, ["Open the storehouse", "Give them water and seats", "The lower cart waits", "both carts through the Basin exit"]],
+		[Beats.RASKA_WELL_ROAD_DEBRIEF, ["Both carts reached the Basin", "counted the last barrels", "Our pastures were on the old shore", "Not the sea"]],
+	]
+	var initial_count := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A Well Road beat was missing or invalid: %s" % id)
+		var words := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			words += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.RASKA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.RASKA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Raska's existing portrait did not render in a Well Road beat.")
+			_panel.advance()
+		for phrase: String in fixture[1]:
+			if not phrase in words:
+				return _fail("Well Road dialogue lost an escort requirement or consequence: %s" % id)
+		if not portrait_seen or _panel.visible or _completions.back() != id:
+			return _fail("Well Road dialogue did not finish under its own ID: %s" % id)
+	return _completions.size() == initial_count + cases.size() or _fail("Well Road emitted duplicate completions.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:
