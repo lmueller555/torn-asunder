@@ -117,8 +117,8 @@ const _MAPS := {
 				"map_position": Vector2(0.52, 0.82), "mission_id": "ilyra_coast_survey",
 			},
 			"spanwater_lock": {
-				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.69, 0.87),
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.69, 0.87), "mission_id": "ilyra_spanwater_evacuation",
 			},
 		},
 		"routes": [
