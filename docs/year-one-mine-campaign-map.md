@@ -21,6 +21,12 @@ The support plane is **360 × 260 m** (convention: +X east, −Z north, one unit
 
 At the current prototype's **5.5 m/s hero** and **3 m/s formation** speeds, 260 m is about **47 s / 87 s of uninterrupted travel**. These are pacing estimates, not win targets. Later mission passes should test whether movement and competing orders fill those windows, and shorten or move a decision point if its approach feels idle.
 
+### Measured battlefield size: Small
+
+Normal infantry marched **326.925 m in 109.02 s** (6,541 physics steps at 60 Hz, **3 m/s**) in each direction. The route starts at the playable foot of the west crag (local XZ **−152, −17**), turns through WestAssembly, QuarryTurn, RoadWest, RoadJunction, RoadCut, EastPass and PassRelease, then reaches the playable foot of an east crag (**157, −30**). The geometry test issues each move through the live command simulation and checks walkable support and formation clearance at every step. At both ends, solid crag collision prevents another outward move even though that move is still inside the command bounds.
+
+That puts the valley in the **Small** planning class (110 s reference). This is the unopposed infantry march on the large shared battlefield, not a bounding-box estimate, a Godbridle delivery time, or a target for the three missions.
+
 ## Integration contract
 
 All [mine pocket marker paths](year-one-mine-map.md#scene-contract) exist here with the same names and roles, at newly authored positions. Extra routes are under `Markers/Routes/`: `WestAssembly`, `QuarryTurn`, `RoadCut`, `PassRelease`, `RidgeWestApproach`, `RidgeWestCrest`, `RidgeEastCrest`, `InterceptMouth`, `InterceptRoadMerge`, `EastReserve`, `SouthReserve`, `SouthTraverse`, `SouthFlankCut`, `PassFallback`, and `EvacuationTurn`. Position markers are at foot level; read their `global_position` after instantiation.
