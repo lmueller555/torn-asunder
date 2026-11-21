@@ -2,9 +2,11 @@ extends RefCounted
 
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
+const Roster := preload("res://game/combat/faction_roster.gd")
 
 const HUMAN_INFANTRY := &"human_infantry"
 const HUMAN_HEAVY_INFANTRY := &"human_heavy_infantry"
+const HUMAN_ARCHER := &"human_archer"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -76,6 +78,18 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 	},
 }
 
+
+
+## The first classified slice uses existing gameplay units only. Archer combat
+## is already represented by HumanArcherVolley but has no catalog model yet.
+## Consumers that require art still use TYPES as before.
+static func faction_roster() -> Roster:
+	var roster := Roster.new()
+	roster.add_unit(HUMAN_INFANTRY, Roster.HUMANS, Roster.MELEE)
+	roster.add_unit(HUMAN_HEAVY_INFANTRY, Roster.HUMANS, Roster.MELEE)
+	roster.add_unit(HUMAN_ARCHER, Roster.HUMANS, Roster.RANGED)
+	roster.add_advance(HUMAN_INFANTRY, HUMAN_HEAVY_INFANTRY, TYPES[HUMAN_HEAVY_INFANTRY].promotion_minimum_ratings)
+	return roster
 
 
 ## Checks a roster unit's purchased ratings without spending points or changing its type.
