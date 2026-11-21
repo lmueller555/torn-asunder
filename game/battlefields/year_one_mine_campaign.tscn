@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/mine_timber_portal/mine_timber_portal.tscn" id="1_mine_portal"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_earth"]
 albedo_color = Color(0.28, 0.34, 0.27, 1)
 
@@ -1300,19 +1302,11 @@ shape = SubResource("Shape_10_3p5_38")
 [node name="MinePortalWest" type="StaticBody3D" parent="Geometry/Tunnel"]
 position = Vector3(-68, 2.3, 57)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Tunnel/MinePortalWest"]
-mesh = SubResource("Mesh_0p85_4p6_1p5")
-material_override = SubResource("Mat_wood")
-
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Tunnel/MinePortalWest"]
 shape = SubResource("Shape_0p85_4p6_1p5")
 
 [node name="MinePortalEast" type="StaticBody3D" parent="Geometry/Tunnel"]
 position = Vector3(-58, 2.3, 57)
-
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Tunnel/MinePortalEast"]
-mesh = SubResource("Mesh_0p85_4p6_1p5")
-material_override = SubResource("Mat_wood")
 
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Tunnel/MinePortalEast"]
 shape = SubResource("Shape_0p85_4p6_1p5")
@@ -1320,12 +1314,11 @@ shape = SubResource("Shape_0p85_4p6_1p5")
 [node name="MinePortalLintel" type="StaticBody3D" parent="Geometry/Tunnel"]
 position = Vector3(-63, 5, 57)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Tunnel/MinePortalLintel"]
-mesh = SubResource("Mesh_11p5_0p8_1p5")
-material_override = SubResource("Mat_stock")
-
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Tunnel/MinePortalLintel"]
 shape = SubResource("Shape_11p5_0p8_1p5")
+
+[node name="MinePortalArt" parent="Geometry/Tunnel" instance=ExtResource("1_mine_portal")]
+position = Vector3(-63, 0, 57)
 
 [node name="EvacPortalWest" type="StaticBody3D" parent="Geometry/Tunnel"]
 position = Vector3(-68, 2.3, 97)
