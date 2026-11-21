@@ -9,6 +9,7 @@
 battlefield_scene = ExtResource("2_valley")
 field_bounds = Rect2(-160, -108, 320, 224)
 enable_sector_camera = true
+sundering_strike_enabled = true
 local_sector_size = 116.0
 road_guard_spawn = NodePath("Markers/Routes/EastReserve")
 interception_approach = NodePath("Markers/Routes/PassRelease")

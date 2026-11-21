@@ -94,7 +94,9 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 	var contact := defense.advance_attack(delta, true, battle.hero_position, battle.hero_heading,
 		enemy if sight else null, ENEMY_TEAM, enemy_position)
 	if contact:
-		if contact.hp_lost > 0.0:
+		if contact.attack == Attack.Attack.SUNDERING_STRIKE:
+			_feedback("Sundering Strike hit" if contact.hp_lost > 0.0 else "Sundering Strike missed")
+		elif contact.hp_lost > 0.0:
 			_feedback("%s hit · +%d BP" % ["Light" if contact.attack == Attack.Attack.LIGHT else "Heavy", contact.bp_credited])
 		else:
 			_feedback("Attack missed")

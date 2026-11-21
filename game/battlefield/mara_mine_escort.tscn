@@ -80,6 +80,11 @@ theme_override_font_sizes/font_size = 17
 [node name="Tell" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
 theme_override_font_sizes/font_size = 17
 
+[node name="Sundering" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
+visible = false
+theme_override_colors/font_color = Color(0.88, 0.76, 0.58, 1)
+theme_override_font_sizes/font_size = 15
+
 [node name="Controls" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
 theme_override_font_sizes/font_size = 15
 text = "Hero: Square / J · Light     Triangle / K · Heavy\n          L1 / U · Guard        Circle / L · Dodge\nCommand: Triangle / K · Attack with selected formation"

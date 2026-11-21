@@ -47,6 +47,8 @@ In command view, select **Shield Infantry**, point at the highlighted road guard
 
 This is a one-enemy combat prototype, not army-versus-army combat or campaign progression. Run `godot --headless --script tests/mara_mine_escort.gd` for the isolated objective route or `godot --headless --script tests/mara_mine_encounter.gd` for hero combat and enemy-caused failure. Run `godot --headless --script tests/mara_infantry_attack.gd` for the formation order and shared contact checks, or `godot --headless --script tests/mara_infantry_retaliation.gd` for targeting, defeat, and retry.
 
+In the campaign-scale version, **R2 / V** winds up **Sundering Strike** in hero view. The HUD shows readiness and the **150 BP** cost. An accepted strike spends from the shared pool immediately, even if the swing misses; it does not earn BP back. Guard, dodge, other attacks, and command view do not queue or spend a denied strike. Run `godot --headless --script tests/mara_campaign_sundering.gd` for the live campaign input and contact check.
+
 ## Command camera on larger battlefields
 
 On fields that enable the sector camera, hold **L2 / Shift** to start in a nearby tactical view. Move the cursor with the left stick or WASD; the camera follows once the cursor nears the edge of the view. With a mouse, move the pointer to a screen edge to pan. **R3 / M** switches to a map-wide overview; point at a place and press it again to inspect that sector. **L3 / Home** returns to the hero's sector. You can still select formations and issue orders from either command view. Releasing L2 / Shift returns to the hero without pausing orders.
