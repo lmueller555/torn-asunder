@@ -19,6 +19,9 @@ const DRUID_SHELF_GUARD := &"druid_shelf_guard"
 const DRYAD_LOADING_GUARD := &"dryad_loading_guard"
 const DRYAD_FEEDER_RESERVE := &"dryad_feeder_reserve"
 const DRYAD_SHELF_VOLUNTEERS := &"dryad_shelf_volunteers"
+const UNDEAD_HOUSEHOLD_GUARD := &"undead_household_guard"
+const UNDEAD_STAIR_GUARD := &"undead_stair_guard"
+const UNDEAD_COURT_FOOT := &"undead_court_foot"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -133,6 +136,13 @@ static func faction_roster() -> Roster:
 		{Platoon.Skill.CHARGE_BRACE: 1, Platoon.Skill.FORMATION_DRILL: 2})
 	roster.add_advance(DRYAD_LOADING_GUARD, DRYAD_SHELF_VOLUNTEERS,
 		{Unit.Damage.MELEE: 3}, {Platoon.Skill.SCOUTING: 2})
+
+	roster.add_unit(UNDEAD_HOUSEHOLD_GUARD, Roster.UNDEAD, Roster.MELEE, [], false, "Household Guard")
+	roster.add_unit(UNDEAD_STAIR_GUARD, Roster.UNDEAD, Roster.MELEE, [], false, "Stair Guard")
+	roster.add_unit(UNDEAD_COURT_FOOT, Roster.UNDEAD, Roster.MELEE, [], false, "Court Foot")
+	# Provisional narrow-lane guard training. Court assignment is not an advancement.
+	roster.add_advance(UNDEAD_HOUSEHOLD_GUARD, UNDEAD_STAIR_GUARD, {Unit.Damage.MELEE: 4},
+		{Platoon.Skill.CHARGE_BRACE: 1, Platoon.Skill.FORMATION_DRILL: 2})
 	return roster
 
 
