@@ -2,6 +2,8 @@
 
 `game/battlefields/isolated_grove_nursery.tscn` is the terrain for Neris's Year Three mission [What We Planted Here](campaigns/dryads.md#1-what-we-planted-here--year-three-neris_failing_grove). It does not run the envoy encounter, summon workers, move a sled, simulate water, or declare any objective result.
 
+For the standalone mission, run `godot game/battlefield/neris_failing_grove_playtest.tscn`. Interact with the envoy and volunteer call as Neris, then Hold a formation at the marked track screen to send back the physical forager patrol. Follow the loaded sled along the raised road and interact at the nursery. The patrol can pause loading or a nearby sled but does not deal combat damage.
+
 Run `tests/isolated_grove_nursery_preview.tscn` with F6. **1** gives the overview, **2** a closer command sector, and **3** a hero-height loading-yard view. Figures and the loaded sled in the preview are scale references only.
 
 ```sh

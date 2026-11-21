@@ -1,0 +1,61 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/isolated_grove_nursery.tscn" id="2_grove"]
+[ext_resource type="Script" path="res://game/battlefield/neris_failing_grove_playtest.gd" id="3_mission"]
+
+[node name="NerisFailingGrovePlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_mission")
+battlefield_scene = ExtResource("2_grove")
+field_bounds = Rect2(-151, -85, 301, 183)
+enable_sector_camera = true
+local_sector_size = 108.0
+hero_spawn = NodePath("Markers/Spawns/Neris")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/LoadingGuard"), NodePath("Markers/Spawns/TrackScreen")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 480.0
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -172.0
+offset_right = 815.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "NERIS  ·  WHAT WE PLANTED HERE"
+theme_override_colors/font_color = Color(0.66, 0.9, 0.76, 1)
+theme_override_font_sizes/font_size = 21
+
+[node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 21
+
+[node name="Status" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+
+[node name="Cue" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.8, 0.63, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 2
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
+focus_mode = 0
+text = "Restart [Backspace / Options]"
