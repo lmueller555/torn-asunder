@@ -175,12 +175,15 @@ func _append_waypoint(point: Vector2) -> void:
 
 
 func _waypoint_fits(point: Vector2) -> bool:
-	return _usable(point) and _walkable_hit(point) != null and _field._terrain.formation_fits_at(point)
+	# Both the command overlay and the hero marker use the same physical test.
+	# Neither the visibility of this panel nor the active camera defines ground.
+	return _in_bounds(point) and _field._terrain != null \
+		and _walkable_hit(point) != null and _field._terrain.formation_fits_at(point)
 
 
 ## The hero-view waypoint marker plots through these route queues.
 func march_issue(index: int, point: Vector2, append: bool) -> int:
-	if _route_battle == null:
+	if _field == null or _route_battle == null or _route_battle != _field.battle or not _field.march_mode():
 		return Queue.Result.INVALID_FOR_BATTLEFIELD
 	_sending_route_order = true
 	var result := _routes.issue(_route_battle, index, point, append, _waypoint_fits)
@@ -368,7 +371,7 @@ func _sync_draft() -> void:
 	var route_blocked := false
 	_route_overlay.visible = not pending.is_empty()
 	if _route_overlay.visible:
-		var platoon := _field.battle.formations[index]
+		var platoon := _field.battle.formation_at(index)
 		var marching := platoon.order == Battle.Order.MOVE and platoon.destination.is_equal_approx(pending[0])
 		_route_overlay.show_route(map, pending, platoon.position if marching else null)
 		route_blocked = platoon.order == Battle.Order.BLOCKED
@@ -414,8 +417,11 @@ func _controller_connection_changed(device: int, connected: bool) -> void:
 
 
 func _usable(point: Vector2) -> bool:
-	return visible and _field != null and _field.command_view and point.is_finite() \
-		and point.is_equal_approx(_field.battle.clamp_to_field(point))
+	return visible and _field != null and _field.command_view and _in_bounds(point)
+
+
+func _in_bounds(point: Vector2) -> bool:
+	return _field != null and point.is_finite() and point.is_equal_approx(_field.battle.clamp_to_field(point))
 
 
 func _stop_world_mouse_pan() -> void:
