@@ -39,16 +39,30 @@ func _recover_and_win() -> void:
 		"The actual dry ford admits traffic before release.")
 	var crew_start := _mission._crew.position
 	var rack_point := _marker("Objectives/FeederInletRack")
+	var original_patrol_size := _mission._patrol_sign.pixel_size
+	_check(_mission._rack_sign.is_visible_in_tree() and _mission._crew_sign.is_visible_in_tree()
+		and _mission._rack_sign.modulate.a == 1.0 and _mission._patrol_sign.pixel_size == original_patrol_size,
+		"Distant worksite captions have the exact original style, and the inactive patrol has its original type size.")
 	_key(KEY_SPACE)
 	_tick()
 	_check(objective.phase == Feeder.Phase.CLEAR_INLET and _mission._silt.visible,
 		"A remote interaction must not clear the rack or remove its visible blockage.")
 	_drive_to(_marker("Routes/FeederPathWest"))
+	_drive_to(rack_point + Vector3(-10.0, 0.0, 0.0))
+	_check(_mission._rack_sign.modulate.a > 0.0 and _mission._rack_sign.modulate.a < 1.0
+		and is_equal_approx(_mission._rack_sign.modulate.a, _mission._rack_sign.outline_modulate.a),
+		"Both face and outline transition smoothly in the approaching hero lens.")
 	_drive_to(rack_point)
+	_check(not _mission._rack_sign.is_visible_in_tree() and not _mission._crew_sign.is_visible_in_tree()
+		and _mission._rack_sign.get_parent().visible and _mission._crew.visible,
+		"The close hero lens clears captions while both worksite and crew remain rendered.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_A)
 	_tick()
 	_check(objective.phase == Feeder.Phase.CLEAR_INLET, "Command-view Hold is not a rack interaction.")
+	_check(_mission._rack_sign.is_visible_in_tree() and _mission._crew_sign.is_visible_in_tree()
+		and _mission._rack_sign.modulate.a == 1.0 and _mission._crew_sign.outline_modulate.a == 1.0,
+		"Switching to command restores both exact labels at the inlet, even with the hero still close.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_button(JOY_BUTTON_A)
 	_tick()
@@ -82,6 +96,8 @@ func _recover_and_win() -> void:
 	_wait(func() -> bool: return objective.phase == Feeder.Phase.CLEAR_DEBRIS, 500)
 	_check(objective.phase == Feeder.Phase.CLEAR_DEBRIS and _mission._silt.visible and objective.gauge_progress == 0.0,
 		"The incoming water front should visibly jam the unfinished rack.")
+	_check(_mission._patrol_sign.is_visible_in_tree() and _mission._patrol_sign.pixel_size == original_patrol_size,
+		"Command at the actual jam keeps the threat name fully visible and at the original size.")
 	_check(not _mission._can_move_in_lane(ford_edge, ford_inside, false)
 		and _mission._can_move_in_lane(ford_inside, ford_edge, false),
 		"Flooding must close the ford but permit retreat from its footprint.")
@@ -92,9 +108,14 @@ func _recover_and_win() -> void:
 	_key(KEY_SPACE)
 	_tick()
 	_check(objective.phase == Feeder.Phase.CLEAR_DEBRIS, "Rushing a clearance into a contested rack must not remove its jam.")
+	_check(_mission._patrol_sign.is_visible_in_tree() and _mission._patrol_sign.modulate.a == 1.0
+		and _mission._patrol_sign.pixel_size < original_patrol_size and "patrol is at the rack" in _mission._status.text,
+		"Only the nearby contested-jam hero view compacts but never hides the orange patrol cue.")
 	_wait(func() -> bool: return _mission._screened and not _mission._contested, 850)
 	_check(guarded.order == Battle.Order.HOLD and guarded.position.distance_to(_mission._screen_point) < 0.4
 		and _mission._screened and not _mission._contested, "Hold must make the visible March patrol withdraw out of range.")
+	_check(_mission._patrol_sign.pixel_size == original_patrol_size and _mission._patrol_sign.is_visible_in_tree(),
+		"The real patrol withdrawing restores the threat label without a mode switch.")
 	_key(KEY_SPACE)
 	_tick()
 	var board_start := _mission._boards[0].position
@@ -136,6 +157,15 @@ func _restart_and_miss_crest() -> void:
 		and _mission.battle.hero_position == _xz(_marker("Spawns/DryadCrew"))
 		and _mission._can_move_in_lane(Vector2(46.45, 0), Vector2(46.55, 0), false),
 		"Options retry must restore spawns, dry ford, blockage, and all stages of water.")
+	_check(_mission._rack_sign.is_visible_in_tree() and _mission._crew_sign.is_visible_in_tree()
+		and not _mission._patrol_sign.is_visible_in_tree(),
+		"Retry restores distant worksite cues and keeps the not-yet-active patrol hidden as before.")
+	_drive_to(_marker("Routes/FeederPathWest"))
+	_wait(func() -> bool: return objective.phase == Feeder.Phase.CLEAR_DEBRIS and _mission._contested, 3000)
+	_check(objective.phase == Feeder.Phase.CLEAR_DEBRIS and _mission._contested
+		and _mission._patrol_sign.is_visible_in_tree() and _mission._patrol_sign.modulate.a == 1.0
+		and _mission._patrol_sign.pixel_size == _mission._patrol_sign_size and _mission._rack_sign.modulate.a == 1.0,
+		"The same dangerous jam keeps its exact full-strength labels on the distant hero approach.")
 	_wait(func() -> bool: return _outcomes.size() == 2, 4300)
 	_tick(25)
 	_check(_outcomes == [true, false] and objective.failure == Feeder.Failure.FEEDER_BURIED and objective.released

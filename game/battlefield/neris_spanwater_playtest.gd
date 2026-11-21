@@ -18,6 +18,9 @@ const PATROL_SPEED := 5.7
 const CREW_SPEED := 4.5
 const BOARD_SECONDS := 13.0
 const RACK_REACH := 2.8
+const HIDE_RACK_CAPTIONS_WITHIN := 7.5
+const SHOW_RACK_CAPTIONS_BEYOND := 13.0
+const JAM_PATROL_NEAR_SIZE := 0.011
 const CONTEST_RADIUS := 5.0
 const SCREEN_RADIUS := 4.5
 const WATER := Color("#509fc9")
@@ -64,6 +67,11 @@ var _gauge_float: MeshInstance3D
 var _silt: Node3D
 var _boards: Array[MeshInstance3D] = []
 var _rack_sign: Label3D
+var _crew_sign: Label3D
+var _patrol_sign: Label3D
+var _patrol_sign_size: float
+var _rack_caption_opacity := -1.0
+var _rack_caption_outline: Color
 var _screen_sign: Label3D
 var _gauge_sign: Label3D
 
@@ -104,6 +112,11 @@ func _build_placeholders() -> void:
 func _physics_process(delta: float) -> void:
 	if not _finished():
 		super._physics_process(delta)
+
+
+func _update_mode() -> void:
+	super._update_mode()
+	_refresh_rack_captions()
 
 
 func _after_battle_step(delta: float) -> void:
@@ -254,8 +267,12 @@ func _reset_attempt() -> void:
 
 
 func _build_worksite() -> void:
-	_crew = _people("TownBoardCrew", "TOWN BOARD CREW", FRIENDLY)
-	_patrol = _people("MarchPatrol", "MARCH PATROL", ALERT)
+	_crew = _people("TownBoardCrew", FRIENDLY)
+	_crew_sign = _sign(_crew, "TOWN BOARD CREW", FRIENDLY, 2.1)
+	_rack_caption_outline = _crew_sign.outline_modulate
+	_patrol = _people("MarchPatrol", ALERT)
+	_patrol_sign = _sign(_patrol, "MARCH PATROL", ALERT, 2.1)
+	_patrol_sign_size = _patrol_sign.pixel_size
 	var rack_pose := to_local(_mark("Objectives/FeederInletRack").global_position)
 	_rack_sign = _beacon(rack_pose, FRIENDLY)
 	_screen_sign = _beacon(Vector3(_screen_point.x, rack_pose.y, _screen_point.y), ALERT)
@@ -302,7 +319,33 @@ func _refresh() -> void:
 	_rack_sign.text = "INLET RACK" if not _silt.visible else ("DEBRIS AT THE RACK" if objective.rack == Feeder.Rack.DEBRIS_JAM else "CLEAR THE INLET RACK")
 	(_screen_sign.get_parent() as Node3D).visible = not _finished() and objective.board_progress < 1.0
 	_gauge_sign.text = "TOWN GAUGE · %d%%" % floori(objective.gauge_progress * 100.0)
+	_refresh_rack_captions()
 	_refresh_readout()
+
+
+## Near the active rack, clear only the two friendly work cues. During a
+## contested jam, keep the orange threat name readable without covering the
+## nearby worksite or adjacent formation name. No tactical glyph is changed.
+func _refresh_rack_captions() -> void:
+	if not _rack_sign or not _crew_sign or not _patrol_sign:
+		return
+	var opacity := 1.0
+	if not command_view:
+		var rack := (_rack_sign.get_parent() as Node3D).global_position
+		var distance := hero_world_position().distance_to(rack)
+		opacity = smoothstep(HIDE_RACK_CAPTIONS_WITHIN, SHOW_RACK_CAPTIONS_BEYOND, distance)
+	var patrol_size := _patrol_sign_size
+	if objective.phase == Feeder.Phase.CLEAR_DEBRIS and _contested:
+		patrol_size = lerpf(JAM_PATROL_NEAR_SIZE, _patrol_sign_size, opacity)
+	if not is_equal_approx(_patrol_sign.pixel_size, patrol_size):
+		_patrol_sign.pixel_size = patrol_size
+	if opacity == _rack_caption_opacity:
+		return
+	_rack_caption_opacity = opacity
+	for label: Label3D in [_rack_sign, _crew_sign]:
+		label.visible = opacity > 0.0
+		label.modulate = Color(FRIENDLY, FRIENDLY.a * opacity)
+		label.outline_modulate = Color(_rack_caption_outline, _rack_caption_outline.a * opacity)
 
 
 func _refresh_readout() -> void:
@@ -346,7 +389,7 @@ func _refresh_readout() -> void:
 			_cue.text = "Spillway release warning  ·  %ds. Clear the low ford." % ceili(RELEASE_AT - _elapsed)
 
 
-func _people(node_name: String, title: String, color: Color) -> Node3D:
+func _people(node_name: String, color: Color) -> Node3D:
 	var actor := Node3D.new()
 	actor.name = node_name
 	add_child(actor)
@@ -355,7 +398,6 @@ func _people(node_name: String, title: String, color: Color) -> Node3D:
 		var offset := (index - 1.0) * 0.88
 		_mesh(actor, _box(Vector3(0.54, 1.14, 0.50)), clothes, Vector3(offset, 0.60, 0.0))
 		_mesh(actor, _box(Vector3(0.36, 0.35, 0.36)), clothes, Vector3(offset, 1.32, 0.0))
-	_sign(actor, title, color, 2.1)
 	return actor
 
 
