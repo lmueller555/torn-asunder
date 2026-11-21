@@ -1,16 +1,19 @@
 extends PanelContainer
 ## Cut-only adapter for the existing minimap and command harness. It has
-## no raider awareness or orders beyond the existing selected platoon Move.
+## no raider awareness and uses the same physical Move as the world cursor.
 
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
+const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
+const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 const SECTOR_PLANE := Plane(Vector3.UP, 0.0)
 const AIM_SPEED := 83.0
 const NUDGE := 3.0
 const AIM_AXES := [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]
 const AIM_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT,
-	JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_LEFT_STICK, JOY_BUTTON_RIGHT_STICK]
+	JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_LEFT_STICK, JOY_BUTTON_RIGHT_STICK, JOY_BUTTON_RIGHT_SHOULDER]
 
 
 class AimReticle extends Control:
@@ -24,6 +27,12 @@ class AimReticle extends Control:
 
 
 var _field: Harness
+var _routes := Routes.new()
+var _route_battle: Battle
+var _route_overlay := RouteOverlay.new()
+var _sending_route_order := false
+var _route_note := ""
+var _route_note_index := -1
 var _draft_battle: Battle
 var _draft_index := -1
 var _draft_point := Vector2.ZERO
@@ -46,6 +55,9 @@ func _ready() -> void:
 	mouse_entered.connect(_stop_world_mouse_pan)
 	map.mouse_entered.connect(_stop_world_mouse_pan)
 	_normal_hint = _hint.text
+	map.add_child(_route_overlay)
+	_route_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_route_overlay.hide()
 	_aim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	map.add_child(_aim)
 	_aim.hide()
@@ -55,6 +67,7 @@ func _ready() -> void:
 
 func refresh(field: Harness, available: bool) -> void:
 	_field = field
+	_bind_routes(field.battle if available else null)
 	var active := available and field.command_view and field._sector != null and field._terrain != null
 	if _draft_battle and (not active or not _can_aim()):
 		_close_draft()
@@ -64,6 +77,7 @@ func refresh(field: Harness, available: bool) -> void:
 		if not active:
 			map.show_frame(null)
 	if not active:
+		_sync_draft()
 		return
 	map.set_field_bounds(field.battle.bounds)
 	var frame := Minimap.Frame.new()
@@ -78,6 +92,7 @@ func refresh(field: Harness, available: bool) -> void:
 			frame.selected_ally = id
 	frame.camera_footprint = _sector_footprint()
 	map.show_frame(frame)
+	_sync_draft()
 
 
 func _focus_sector(point: Vector2) -> void:
@@ -89,11 +104,7 @@ func _focus_sector(point: Vector2) -> void:
 func _move_from_map(point: Vector2) -> bool:
 	if not _usable(point) or not _field.battle.formations[_field.selected_index].can_receive_orders():
 		return false
-	# Like the world mouse, a solid first hit must also be tagged walkable.
-	# Cast vertically so the map never orders the roof above the record room.
-	var start := Vector3(point.x, 64.0, point.y)
-	var finish := Vector3(point.x, -16.0, point.y)
-	var hit: Variant = _field._terrain.destination_from_ray(start, finish)
+	var hit: Variant = _walkable_hit(point)
 	if hit == null:
 		return false
 	_snap_sector(hit)
@@ -101,9 +112,80 @@ func _move_from_map(point: Vector2) -> bool:
 	return true
 
 
+func _walkable_hit(point: Vector2) -> Variant:
+	# Like the world mouse, a solid first hit must be tagged walkable.
+	# The vertical ray never picks through the record room's roof.
+	return _field._terrain.destination_from_ray(Vector3(point.x, 64.0, point.y), Vector3(point.x, -16.0, point.y))
+
+
+func _bind_routes(battle: Battle) -> void:
+	if battle == _route_battle:
+		return
+	if _route_battle:
+		_route_battle.formation_commanded.disconnect(_on_formation_commanded)
+	_route_battle = battle
+	_route_note = ""
+	_route_note_index = -1
+	if battle:
+		_routes.reset(battle)
+		battle.formation_commanded.connect(_on_formation_commanded)
+	else:
+		_routes = Routes.new()
+		_route_overlay.hide()
+		_route_overlay.clear_route()
+
+
+func pending_waypoints(index: int) -> PackedVector2Array:
+	return _routes.snapshot(index)
+
+
+func _on_formation_commanded(index: int) -> void:
+	# Explicit direct Move/Hold overrides an accepted plan, even at its head.
+	if not _sending_route_order:
+		_routes.clear(index)
+		if _route_note_index == index:
+			_route_note = ""
+
+
+func _append_waypoint(point: Vector2) -> void:
+	if not _can_plan():
+		return
+	var index := _field.selected_index
+	_sending_route_order = true
+	var result := _routes.issue(_route_battle, index, point, true, _waypoint_fits)
+	_sending_route_order = false
+	_route_note_index = index
+	_draft_blocked = false
+	match result:
+		Queue.Result.ACCEPTED: _route_note = ""
+		Queue.Result.DUPLICATE: _route_note = "Already on this route"
+		Queue.Result.FULL: _route_note = "Route full (%d/%d)" % [Queue.MAX_WAYPOINTS, Queue.MAX_WAYPOINTS]
+		_: _route_note = "Not a walkable formation point"
+	_sync_draft()
+
+
+func _waypoint_fits(point: Vector2) -> bool:
+	return _usable(point) and _walkable_hit(point) != null and _field._terrain.formation_fits_at(point)
+
+
+func advance_routes() -> void:
+	if _route_battle == null or _route_battle != _field.battle:
+		return
+	_sending_route_order = true
+	_routes.advance(_route_battle)
+	_sending_route_order = false
+
+
 func _input(event: InputEvent) -> void:
 	if not _field or (not visible and not _draft_battle and _until_neutral.is_empty() and _claimed_buttons.is_empty()):
 		return
+	if event is InputEventKey:
+		var key: Key = event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode
+		if key == KEY_G and (_can_aim() or (not _draft_battle and _can_plan())):
+			if event.pressed and not event.echo:
+				_append_waypoint(_draft_point if _draft_battle else _field.cursor)
+			get_viewport().set_input_as_handled()
+			return
 	if _draft_battle and ((event is InputEventMouseButton and event.pressed)
 			or (event is InputEventKey and event.pressed and not event.echo)
 			or (event is InputEventMouseMotion and not event.relative.is_zero_approx())):
@@ -114,9 +196,11 @@ func _input(event: InputEvent) -> void:
 	if not _draft_battle:
 		if event is InputEventJoypadMotion and not _until_neutral.has(int(event.axis)):
 			return
-		if (event is InputEventJoypadButton and not _claimed_buttons.has(int(event.button_index))
-				and (not event.pressed or event.button_index != JOY_BUTTON_DPAD_UP or not _can_open())):
-			return
+		if event is InputEventJoypadButton and not _claimed_buttons.has(int(event.button_index)):
+			var can_start: bool = ((event.button_index == JOY_BUTTON_DPAD_UP and _can_open())
+				or (event.button_index == JOY_BUTTON_RIGHT_SHOULDER and _can_plan()))
+			if not event.pressed or not can_start:
+				return
 	var claimed := false
 	if event is InputEventJoypadMotion or event is InputEventJoypadButton:
 		if not _field._uses_joypad(event.device):
@@ -160,6 +244,11 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 			_claimed_buttons[button] = true
 			_open_draft(event.device)
 			return true
+		if event.pressed and button == JOY_BUTTON_RIGHT_SHOULDER and _can_plan():
+			_claimed_buttons[button] = true
+			_capture_device = event.device
+			_append_waypoint(_field.cursor)
+			return true
 		return false
 	if button not in AIM_BUTTONS:
 		return false # Options, Create and other existing shell actions pass.
@@ -177,12 +266,19 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 					_draft_blocked = true
 					_sync_draft()
 			JOY_BUTTON_B: _close_draft()
+			JOY_BUTTON_RIGHT_SHOULDER:
+				if _can_aim():
+					_append_waypoint(_draft_point)
 	return true
 
 
-func _can_open() -> bool:
-	return (visible and _field.command_view and _field._l2_down
+func _can_plan() -> bool:
+	return (visible and _route_battle != null and _field.command_view
 		and _field.battle.formations[_field.selected_index].can_receive_orders())
+
+
+func _can_open() -> bool:
+	return _can_plan() and _field._l2_down
 
 
 func _can_aim() -> bool:
@@ -201,6 +297,8 @@ func _open_draft(device: int) -> void:
 func _close_draft() -> void:
 	if not _draft_battle:
 		return
+	if _route_note_index == _draft_index:
+		_route_note = ""
 	_draft_battle = null
 	_draft_index = -1
 	_draft_blocked = false
@@ -231,23 +329,42 @@ func _physics_process(delta: float) -> void:
 func _nudge(offset: Vector2) -> void:
 	_draft_point = _draft_battle.clamp_to_field(_draft_point + offset)
 	_draft_blocked = false
+	_route_note = ""
 	_sync_draft()
 
 
 func _sync_draft() -> void:
 	_aim.visible = _draft_battle != null
-	_hint.text = _normal_hint
+	var may_show_route := _can_plan()
+	var index := _field.selected_index if _field else -1
+	var pending := pending_waypoints(index) if may_show_route else PackedVector2Array()
+	_route_overlay.visible = not pending.is_empty()
+	if _route_overlay.visible:
+		var platoon := _field.battle.formations[index]
+		var marching := platoon.order == Battle.Order.MOVE and platoon.destination.is_equal_approx(pending[0])
+		_route_overlay.show_route(map, pending, platoon.position if marching else null)
+	else:
+		_route_overlay.clear_route()
+
+	var hint := _normal_hint
 	if _draft_battle:
 		_aim.pixel = map.project(_draft_point)
 		_aim.queue_redraw()
-		var line := "Blocked ground; aim again" if _draft_blocked else "Stick / D-pad: aim"
-		_hint.text = line + "\nCross: move  ·  Circle: cancel"
+		hint = "Stick / D-pad: aim" if not _draft_blocked else "Blocked ground; aim again"
+		hint += "\nCross: move  ·  Circle: cancel"
+	if may_show_route:
+		var status := "R1 / G: append  ·  %d/%d" % [pending.size(), Queue.MAX_WAYPOINTS]
+		hint += "\n" + (_route_note if _route_note_index == index and not _route_note.is_empty() else status)
+	_hint.text = hint
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
 		# A held axis must still return to neutral after regaining focus.
 		_close_draft()
+		# Button releases may happen outside the app; unlike axes they do not
+		# repeat, so a fresh press after focus should not be swallowed.
+		_claimed_buttons.clear()
 
 
 func _controller_connection_changed(device: int, connected: bool) -> void:
