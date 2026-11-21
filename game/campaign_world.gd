@@ -113,13 +113,18 @@ const _MAPS := {
 				"map_position": Vector2(0.27, 0.90), "mission_id": "ilyra_moonwash_rescue",
 			},
 			"moonwash_survey_shore": {
-				"id": "moonwash_survey_shore", "label": "Survey Shore", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.52, 0.82),
+				"id": "moonwash_survey_shore", "label": "Survey Shore", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.52, 0.82), "mission_id": "ilyra_coast_survey",
+			},
+			"spanwater_lock": {
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.69, 0.87),
 			},
 		},
 		"routes": [
 			{"from_id": "moonwash_camp", "to_id": "moonwash_harbor"},
 			{"from_id": "moonwash_harbor", "to_id": "moonwash_survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
+			{"from_id": "moonwash_survey_shore", "to_id": "spanwater_lock", "required_clear_id": "ilyra_coast_survey"},
 		],
 	},
 	"neris": {

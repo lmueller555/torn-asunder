@@ -80,6 +80,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "MOONWASH HARBOR · RESCUE DECKS",
 		"orders": "Reach the stranded deck and rig both lines in either order. Get both crews onto the receiving deck. Hold the Marines at the mooring if salvagers block the forward line. Shore cargo is optional: carry it aboard and load it before the last crew arrives.",
 	},
+	"ilyra_coast_survey": {
+		"scene": preload("res://game/battlefield/ilyra_coast_survey_campaign.tscn"),
+		"dispatch": Beats.ILYRA_COAST_SURVEY_DISPATCH,
+		"briefing_dispatch": true,
+		"result_debrief": true,
+		"battlefield_label": "MOONWASH SURVEY SHORE · BEACH AND HEADLAND",
+		"orders": "Record both readings as Ilyra. Hold the Shore Detachment at a marked guard ring. Transmit from either staffed, secure relay while the cutter is at its stop and in sight. Missed passes return.",
+	},
 	"neris_failing_grove": {
 		"scene": preload("res://game/battlefield/neris_failing_grove_playtest.tscn"),
 		"dispatch": Beats.NERIS_FAILING_GROVE_DISPATCH,

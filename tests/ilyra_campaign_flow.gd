@@ -10,13 +10,24 @@ const World := preload("res://game/campaign_world.gd")
 const Mission := preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.gd")
 const Rescue := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Harness := preload("res://game/battlefield/command_harness.gd")
+const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
+const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
 const CAMP := "moonwash_camp"
 const HARBOR := "moonwash_harbor"
 const SHORE := "moonwash_survey_shore"
 const CLEAR := "ilyra_moonwash_rescue"
+const SURVEY_CLEAR := "ilyra_coast_survey"
+const EVACUATION := "ilyra_spanwater_evacuation"
+const SPANWATER := "spanwater_lock"
 const DT := 1.0 / 60.0
 const PIER := ["Routes/ReceivingGangway", "Routes/PierOuterTurn", "Routes/PierInnerTurn", "Routes/OpenMooring"]
 const STRANDED := ["Routes/StrandedAccess", "Routes/StrandedDeckGangway"]
+const STONE := ["Routes/StoneTrailTurn", "Objectives/AncestralStone"]
+const INLET := ["Routes/StoneExit", "Routes/InletTrailTurn", "Objectives/FishingInlet"]
+const INLAND := ["Routes/InlandJunction", "Routes/MidCoastLane"]
+const RAMP := ["Routes/HeadlandLandwardTurn", "Routes/HeadlandRampFoot", "Routes/HeadlandRampTop",
+	"Routes/HeadlandApron", "Routes/HighGuard"]
 const OTHER_SAVES := {
 	"mara": [["mara_mine_escort", "mara_grain_crossing", "mara_moonwash_quay"],
 		["year_one_mine", "marches_road", "marches_crossing", "moonwash_road", HARBOR]],
@@ -26,6 +37,7 @@ const OTHER_SAVES := {
 
 var _title: Title
 var _mission: Mission
+var _field_mission: Harness
 var _profile_path: String
 
 
@@ -49,7 +61,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Ilyra campaign: Moonwash dispatch, map/briefing, physical rescue, optional replay, isolated first result and survey shore Continue passed.")
+		print("Ilyra campaign: rescue and survey dispatches, physical clears, abort/retry, both survey debriefs, travel-only Spanwater, replay, Continue and isolated first results passed.")
 	quit(0 if passed else 1)
 
 
@@ -134,17 +146,135 @@ func _flow() -> bool:
 		return _fail("Replay rewrote the first clear or the original provision outcome.")
 	_read_dialogue()
 	_map().select_waypoint(SHORE)
-	if not _press("ConfirmTravel") or not _on_map(SHORE) or _button("Confirm Deployment"):
-		return _fail("Actual clear did not open the survey shore, or an unbuilt battle became launchable.")
-	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or not _on_map(SHORE):
-		return _fail("Continue did not restore the reached survey shore.")
+	if not await _survey_flow():
+		return false
 	saved = Profile.new(_profile_path)
 	for id: String in OTHER_SAVES:
 		var itinerary: Array = OTHER_SAVES[id]
 		if saved.completed_missions(id) != PackedStringArray(itinerary[0]) 				or saved.load_campaign_world(id).current_waypoint_id() != itinerary[1].back():
 			return _fail("Ilyra's route overwrote " + id + "'s progress or position.")
-	return saved.grain_clear_result() == &"both" or _fail("Ilyra's result overwrote the Human Grain outcome.")
+	return (saved.grain_clear_result() == &"both" and saved.ilyra_moonwash_clear_result() == Rescue.CREWS_ONLY) \
+		or _fail("Survey progress overwrote a first Moonwash or Human Grain outcome.")
+
+
+
+func _survey_flow() -> bool:
+	if not _press("ConfirmTravel") or not _on_briefing(SURVEY_CLEAR):
+		return _fail("The real rescue clear did not open the Survey Shore briefing.")
+	if not _press("Read Dispatch") or not _is_dialogue(Beats.ILYRA_COAST_SURVEY_DISPATCH):
+		return _fail("The second mission did not present the authored survey dispatch.")
+	_read_dialogue(5)
+	if not _on_briefing(SURVEY_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("The survey dispatch bypassed deployment confirmation.")
+	var survey := _title._campaign_battle as SurveyBattle
+	if not survey or survey._field.name != &"MoonwashSurveyShore":
+		return _fail("Confirmed deployment did not instantiate the survey battlefield.")
+	_field_mission = survey
+	survey.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _walk(STONE):
+		return false
+	_key(KEY_SPACE)
+	_tick()
+	if not survey.objective.has_reading(Survey.Reading.ANCESTRAL_STONE):
+		return _fail("Abort fixture did not reach actual incomplete mission progress.")
+	var before_abort := FileAccess.get_file_as_string(_profile_path)
+	_joy(JOY_BUTTON_BACK)
+	if not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
+		return _fail("Aborting an incomplete survey wrote campaign progress.")
+	_map().select_waypoint(SPANWATER)
+	if not _map()._confirm_button.disabled or not _map()._detail.text.contains("Two Shorelines"):
+		return _fail("An aborted survey opened Spanwater.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(SHORE):
+		return _fail("Continue did not resume at the reached, uncleared Survey Shore.")
+	if not await _complete_survey(Survey.SignalSite.BEACH):
+		return false
+	if not _is_dialogue(Beats.ILYRA_COAST_SURVEY_BEACH_DEBRIEF):
+		return _fail("Actual beach completion did not branch to the beach debrief.")
+	var saved := Profile.new(_profile_path)
+	if saved.completed_missions("ilyra") != PackedStringArray([CLEAR, SURVEY_CLEAR]) \
+			or saved.load_campaign_world("ilyra").current_waypoint_id() != SHORE:
+		return _fail("A real cutter acknowledgment did not persist the second clear and reached waypoint.")
+	_read_dialogue(4)
+	if not _on_map(SHORE):
+		return _fail("Beach debrief lost the reached Survey Shore.")
+	var first_survey_save := FileAccess.get_file_as_string(_profile_path)
+	if not await _complete_survey(Survey.SignalSite.HEADLAND):
+		return false
+	if not _is_dialogue(Beats.ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF) \
+			or FileAccess.get_file_as_string(_profile_path) != first_survey_save:
+		return _fail("Headland replay selected the wrong debrief or mutated saved outcomes.")
+	_read_dialogue(5)
+	if not _on_map(SHORE) or not _map().select_waypoint(SPANWATER) or not _press("ConfirmTravel") \
+			or not _on_map(SPANWATER) or _button("Confirm Deployment"):
+		return _fail("The surveyed route could not reach Spanwater as travel only.")
+	_joy(JOY_BUTTON_B)
+	return (_press("Continue") and _on_map(SPANWATER) \
+		and not Profile.new(_profile_path).completed_missions("ilyra").has(EVACUATION)) \
+		or _fail("Continue lost the Spanwater visit or travel counted as a third clear.")
+
+
+func _complete_survey(site: Survey.SignalSite) -> bool:
+	if not _press("ConfirmTravel") or not _on_briefing(SURVEY_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("Could not reopen and confirm a fresh survey deployment.")
+	var survey := _title._campaign_battle as SurveyBattle
+	if not survey or survey.objective.phase != Survey.Phase.TAKING_READINGS \
+			or survey.objective.has_reading(Survey.Reading.ANCESTRAL_STONE):
+		return _fail("A fresh deployment inherited previous chart progress.")
+	_field_mission = survey
+	survey.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _walk(STONE):
+		return false
+	_joy(JOY_BUTTON_A)
+	_tick()
+	if not _walk(INLET):
+		return false
+	_key(KEY_SPACE)
+	_tick()
+	var beach := site == Survey.SignalSite.BEACH
+	var detachment_path := INLAND + (["Routes/InletFork", "Routes/InletBacktrack", "Routes/BeachGuard"] \
+		if beach else ["Routes/HeadlandRoadFork"] + RAMP)
+	if not _place_detachment(detachment_path):
+		return false
+	var hero_path := ["Routes/InletBeachTurn", "Objectives/BeachSignal"] if beach \
+		else ["Routes/InletBacktrack", "Routes/HeadlandInlandCut"] + RAMP + ["Objectives/HeadlandSignal"]
+	if not _walk(hero_path):
+		return false
+	if not _wait(func() -> bool: return survey._holding_site == site, 4800):
+		return false
+	# Use a full dwell rather than assuming the held cutter has just arrived.
+	if survey._dwell_left <= SurveyBattle.SIGNAL_SECONDS + 0.1:
+		if not _wait(func() -> bool: return survey._holding_site != site, 900) \
+				or not _wait(func() -> bool: return survey._holding_site == site, 4800):
+			return false
+	_joy(JOY_BUTTON_A)
+	if not _wait(func() -> bool: return survey.objective.phase == Survey.Phase.SUCCEEDED):
+		return false
+	if survey.objective.signal_site != site:
+		return _fail("Result did not come from the attempted physical relay.")
+	await process_frame
+	return true
+
+
+func _place_detachment(path: Array) -> bool:
+	var detachment: Battle.Formation = _field_mission.battle.formations[0]
+	for segment: String in path:
+		var waypoint := _local_xz(_point(segment))
+		_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+		_field_mission.cursor = waypoint
+		_joy(JOY_BUTTON_X)
+		_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+		if detachment.order != Battle.Order.MOVE or not _wait(func() -> bool: return detachment.position == waypoint):
+			return _fail("Detachment did not physically reach " + segment)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_joy(JOY_BUTTON_A)
+	_tick()
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	return detachment.order == Battle.Order.HOLD or _fail("The command Hold did not secure the relay.")
 
 
 func _rescue(with_cargo: bool) -> bool:
@@ -153,6 +283,7 @@ func _rescue(with_cargo: bool) -> bool:
 	_mission = _title._campaign_battle as Mission
 	if not _mission or _mission._field.name != &"MoonwashHarborCampaign" 			or _mission.battle.bounds.size != Vector2(288, 242):
 		return _fail("Deployment did not use Ilyra's campaign-scale shared harbor.")
+	_field_mission = _mission
 	_mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
@@ -202,41 +333,41 @@ func _walk(path: Array) -> bool:
 	for segment: String in path:
 		var point := _point(segment)
 		var target := _local_xz(point)
-		var budget := ceili(target.distance_to(_mission.battle.hero_position) / Battle.HERO_SPEED / DT) + 120
+		var budget := ceili(target.distance_to(_field_mission.battle.hero_position) / Battle.HERO_SPEED / DT) + 120
 		for _step in range(budget):
-			var remaining := target - _mission.battle.hero_position
+			var remaining := target - _field_mission.battle.hero_position
 			if remaining.length() < 0.12:
 				break
-			var move := remaining.normalized().rotated(_mission._hero_yaw)
+			var move := remaining.normalized().rotated(_field_mission._hero_yaw)
 			_axis(JOY_AXIS_LEFT_X, move.x)
 			_axis(JOY_AXIS_LEFT_Y, move.y)
 			_tick()
 		_axis(JOY_AXIS_LEFT_X, 0.0)
 		_axis(JOY_AXIS_LEFT_Y, 0.0)
-		if _mission.hero_world_position().distance_to(point) >= 0.14:
+		if _field_mission.hero_world_position().distance_to(point) >= 0.14:
 			return _fail("Could not physically walk to " + segment)
 	return true
 
 
-func _wait(condition: Callable) -> bool:
-	for _step in range(1900):
+func _wait(condition: Callable, budget := 1900) -> bool:
+	for _step in range(budget):
 		if condition.call():
 			return true
 		_tick()
-	return _fail("Expected rescue event did not occur.")
+	return _fail("Expected campaign battlefield event did not occur.")
 
 
 func _local_xz(point: Vector3) -> Vector2:
-	var local := _mission.to_local(point)
+	var local := _field_mission.to_local(point)
 	return Vector2(local.x, local.z)
 
 
 func _point(path: String) -> Vector3:
-	return _mission.battlefield_marker(NodePath("Markers/" + path)).global_position
+	return _field_mission.battlefield_marker(NodePath("Markers/" + path)).global_position
 
 
 func _tick() -> void:
-	_mission._physics_process(DT)
+	_field_mission._physics_process(DT)
 
 
 func _map() -> Map:
@@ -247,8 +378,8 @@ func _on_map(id: String) -> bool:
 	return _title._page == Title.Page.WORLD_MAP and _map() != null 		and _title._campaign_world.campaign_id() == "ilyra" and _title._campaign_world.current_waypoint_id() == id
 
 
-func _on_briefing() -> bool:
-	return _title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null 		and _title._campaign_world.mission_at_current_waypoint() == CLEAR
+func _on_briefing(mission_id := CLEAR) -> bool:
+	return _title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null 		and _title._campaign_world.mission_at_current_waypoint() == mission_id
 
 
 func _is_dialogue(id: StringName) -> bool:
@@ -256,8 +387,8 @@ func _is_dialogue(id: StringName) -> bool:
 	return dialogue != null and dialogue._active and dialogue._beat_id == id
 
 
-func _read_dialogue() -> void:
-	for _line in range(4):
+func _read_dialogue(lines := 4) -> void:
+	for _line in range(lines):
 		_key(KEY_ENTER)
 
 
