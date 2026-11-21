@@ -2,6 +2,7 @@ extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
 const PATH := "user://profile.cfg"
 const CAMPAIGNS := "campaigns"
@@ -10,6 +11,7 @@ const MISSION_RESULTS := "mission_results"
 const MARA := "mara"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
+const ILYRA := "ilyra"
 
 var _config := ConfigFile.new()
 var _path: String
@@ -54,8 +56,8 @@ func completed_missions(id: String) -> PackedStringArray:
 func record_mission_clear(id: String, mission_id: String) -> Error:
 	if id.strip_edges().is_empty() or mission_id.strip_edges().is_empty():
 		return ERR_INVALID_PARAMETER
-	# A new Grain clear needs its delivery result in the same transaction.
-	if mission_id == Grain.MISSION_ID:
+	# These clears need their result in the same transaction.
+	if mission_id in [Grain.MISSION_ID, Moonwash.MISSION_ID]:
 		return ERR_INVALID_PARAMETER
 	var completed := completed_missions(id)
 	if completed.has(mission_id):
@@ -66,28 +68,51 @@ func record_mission_clear(id: String, mission_id: String) -> Error:
 
 ## The saved council outcome, not the latest attempt. Legacy clears may have no result.
 func grain_clear_result() -> StringName:
-	if not completed_missions(MARA).has(Grain.MISSION_ID):
-		return &""
-	var stored: Variant = _config.get_value(MISSION_RESULTS, Grain.MISSION_ID, "")
-	if not (stored is String or stored is StringName):
-		return &""
-	var result := StringName(stored)
+	var result := _saved_mission_result(MARA, Grain.MISSION_ID)
 	return result if _is_grain_result(result) else &""
 
 
 ## Call only on the Grain objective's successful terminal event.
-## Keep the first clear's result; a replay must not fill an unknown legacy result.
 func record_grain_clear(result: StringName) -> Error:
 	if not _is_grain_result(result):
 		return ERR_INVALID_PARAMETER
-	var completed := completed_missions(MARA)
-	if completed.has(Grain.MISSION_ID):
+	return _record_first_result_clear(MARA, Grain.MISSION_ID, result)
+
+
+## The provisions carried into Ilyra's survey come from the original rescue.
+func ilyra_moonwash_clear_result() -> StringName:
+	var result := _saved_mission_result(ILYRA, Moonwash.MISSION_ID)
+	return result if _is_moonwash_result(result) else &""
+
+
+## Call only on Ilyra's rescue objective's successful terminal event.
+func record_ilyra_moonwash_clear(result: StringName) -> Error:
+	if not _is_moonwash_result(result):
+		return ERR_INVALID_PARAMETER
+	return _record_first_result_clear(ILYRA, Moonwash.MISSION_ID, result)
+
+
+func _saved_mission_result(id: String, mission_id: StringName) -> StringName:
+	if not completed_missions(id).has(mission_id):
+		return &""
+	var stored: Variant = _config.get_value(MISSION_RESULTS, mission_id, "")
+	return StringName(stored) if stored is String or stored is StringName else &""
+
+
+# Keep the first result, including an unknown result on a pre-existing legacy clear.
+func _record_first_result_clear(id: String, mission_id: StringName, result: StringName) -> Error:
+	var completed := completed_missions(id)
+	if completed.has(mission_id):
 		return OK
-	completed.append(Grain.MISSION_ID)
+	completed.append(mission_id)
 	return _set_values({
-		MISSION_PROGRESS: {MARA: completed},
-		MISSION_RESULTS: {Grain.MISSION_ID: String(result)},
+		MISSION_PROGRESS: {id: completed},
+		MISSION_RESULTS: {String(mission_id): String(result)},
 	})
+
+
+func _is_moonwash_result(result: StringName) -> bool:
+	return result in [Moonwash.CREWS_ONLY, Moonwash.CARGO_RECOVERED]
 
 
 func _is_grain_result(result: StringName) -> bool:
