@@ -1,13 +1,14 @@
 """Synthetic temporary inputs only; none of these receipts is an art approval."""
 
 from contextlib import redirect_stderr, redirect_stdout
-from datetime import date, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import io
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from tools.check_visual_audit_receipt import main, verify_receipt
 
@@ -29,7 +30,7 @@ class ReceiptTests(unittest.TestCase):
             "scope": "Synthetic test fixture only",
             "author": "Fixture Author",
             "reviewer": "Fixture Reviewer",
-            "reviewed_on": date.today().isoformat(),
+            "reviewed_on": datetime.now(timezone.utc).date().isoformat(),
             "result": "PASS",
             "evidence": {
                 "godot_context": "synthetic context reference",
@@ -92,10 +93,19 @@ class ReceiptTests(unittest.TestCase):
                 self.verify()
 
     def test_review_date_must_exist_be_iso_and_not_future(self):
-        for reviewed_on in ["", "20261101", "2026-02-30", (date.today() + timedelta(days=1)).isoformat()]:
+        for reviewed_on in ["", "20261101", "2026-02-30", (datetime.now(timezone.utc).date() + timedelta(days=1)).isoformat()]:
             self.receipt["reviewed_on"] = reviewed_on
             with self.subTest(reviewed_on=reviewed_on), self.assertRaises(ValueError):
                 self.verify()
+
+    def test_utc_review_date_does_not_depend_on_workstation_day(self):
+        self.receipt["reviewed_on"] = "2026-11-21"
+        utc_midnight = datetime(2026, 11, 21, 0, 15, tzinfo=timezone.utc)
+        with patch("tools.check_visual_audit_receipt.datetime") as clock:
+            clock.now.return_value = utc_midnight
+            self.assertEqual(self.verify(), len(self.files))
+            clock.now.assert_called_once_with(timezone.utc)
+
 
     def test_evidence_types_and_motion_result(self):
         context = self.receipt["evidence"].pop("godot_context")

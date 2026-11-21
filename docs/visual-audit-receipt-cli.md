@@ -19,7 +19,7 @@ Repeat `--file` for every proposed source, export, and dependency the review cov
 | `schema_version` | Integer `1`. |
 | `scope` | Name and intended in-game use or context. |
 | `author`, `reviewer` | Named author and independent reviewer. The checker rejects the same normalized name, but cannot establish independence. |
-| `reviewed_on` | Actual review date, `YYYY-MM-DD`, not in the future. Receipt staleness here means changed files, not elapsed time; a changed in-game use still needs a human context check. |
+| `reviewed_on` | Actual UTC review date, `YYYY-MM-DD`, not in the future in UTC. Receipt staleness here means changed files, not elapsed time; a changed in-game use still needs a human context check. |
 | `result` | Overall `PASS` as recorded by the reviewer. `REWORK`, `BLOCKED`, unreviewed and missing results cannot pass the checker. |
 | `evidence` | References (nonblank strings) under `godot_context`, `close_up`, `reproduction`, and `measurements`. Add `motion` for an applicable motion/effects check. Point to actual Godot play-distance captures, a close-up, reproducible steps/settings, and technical measurements with a target or baseline. Include both hero and command context where applicable. |
 | `checks` | Exactly five entries: `shape_and_craft`, `materials_and_lighting`, `readability_in_play`, `motion_and_effects` and `integration_and_cost`. Each is an object with `result`: `PASS` or, where justified, `NOT_APPLICABLE` with a nonblank `reason`. Readability and integration must be `PASS`. |
