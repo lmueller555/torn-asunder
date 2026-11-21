@@ -1,8 +1,11 @@
 extends RefCounted
 
+const World := preload("res://game/campaign_world.gd")
+
 const PATH := "user://profile.cfg"
 const CAMPAIGNS := "campaigns"
 const MISSION_PROGRESS := "mission_progress"
+const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 
 var _config := ConfigFile.new()
@@ -53,6 +56,26 @@ func record_mission_clear(id: String, mission_id: String) -> Error:
 		return OK
 	completed.append(mission_id)
 	return _set_value(MISSION_PROGRESS, id, completed)
+
+
+## Restore only position. An invalid/old save falls back to the authored start without a write.
+func load_campaign_world(id: String) -> World:
+	var stored: Variant = _config.get_value(CAMPAIGN_WAYPOINTS, id, "")
+	var waypoint_id: String = stored if stored is String else ""
+	return World.new(id, waypoint_id, completed_missions(id))
+
+
+## Call after arrival. Validate against the stored clears, not caller-supplied travel flags.
+func record_world_waypoint(world: World) -> Error:
+	if world == null:
+		return ERR_INVALID_PARAMETER
+	var id := world.campaign_id()
+	var waypoint_id := world.current_waypoint_id()
+	if not world.is_waypoint_reachable(waypoint_id, completed_missions(id)):
+		return ERR_INVALID_PARAMETER
+	if _config.get_value(CAMPAIGN_WAYPOINTS, id, "") == waypoint_id:
+		return OK
+	return _set_value(CAMPAIGN_WAYPOINTS, id, waypoint_id)
 
 
 func setting(key: String) -> bool:
