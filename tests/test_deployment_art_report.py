@@ -14,10 +14,12 @@ from tools.report_deployment_art import (
     BEACH_BATTLEFIELD, BEACH_DEPLOYMENT, BEACH_MISSION, BEACH_RECEIPT, BRIDGE_BATTLEFIELD,
     BRIDGE_DEPLOYMENT, BRIDGE_MISSION, BRIDGE_RECEIPT, CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
     CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
-    QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
+    QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, VAULT_BASE, VAULT_DEPLOYMENT, VAULT_MISSION, VAULT_RECEIPT,
+    VAULT_STOCK_DEPLOYMENTS, VAULT_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
     WHEEL_MISSION, WHEEL_RECEIPT,
     _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_kit,
-    _verify_mara_north_bridge, _verify_mara_quay_threshold, _verify_raska_spillway_wheel, build_report, main,
+    _verify_mara_north_bridge, _verify_mara_quay_threshold, _verify_raska_spillway_wheel,
+    _verify_sova_vault_jambs, build_report, main,
 )
 
 
@@ -33,7 +35,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION, BRIDGE_MISSION},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION, BRIDGE_MISSION, VAULT_MISSION},
         )
         for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
@@ -86,6 +88,23 @@ class DeploymentArtReportTest(unittest.TestCase):
         for mission in ("ilyra_spanwater_evacuation", "neris_spanwater_feeder"):
             self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
             self.assertEqual(rows[mission]["verified_kit_receipts"], [])
+
+    def test_vault_approval_requires_the_sova_only_inherited_field(self):
+        rows = {row["mission_id"]: row for row in build_report(ROOT)["deployments"]}
+        vault = rows[VAULT_MISSION]
+        self.assertEqual(vault["battlefield_scene"], VAULT_WRAPPER)
+        self.assertEqual(vault["art_status"], DEVELOPMENT)
+        self.assertEqual([item["receipt"] for item in vault["verified_kit_receipts"]], [VAULT_RECEIPT])
+        self.assertEqual(vault["verified_kit_receipts"][0]["verified_files"], 7)
+        for mission in VAULT_STOCK_DEPLOYMENTS:
+            self.assertEqual(rows[mission]["battlefield_scene"], VAULT_BASE)
+            self.assertEqual(rows[mission]["verified_kit_receipts"], [])
+        with self.assertRaisesRegex(ValueError, "not isolated"):
+            _verify_sova_vault_jambs(ROOT, {VAULT_MISSION: VAULT_DEPLOYMENT},
+                                    {VAULT_MISSION: VAULT_WRAPPER, "other": VAULT_WRAPPER})
+        with self.assertRaisesRegex(ValueError, "must still use"):
+            _verify_sova_vault_jambs(ROOT, {VAULT_MISSION: VAULT_DEPLOYMENT},
+                                    {VAULT_MISSION: VAULT_WRAPPER})
 
     def test_bridge_approval_is_limited_to_the_live_grain_camera_binding(self):
         rows = {row["mission_id"]: row for row in build_report(ROOT)["deployments"]}

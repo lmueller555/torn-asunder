@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/cairnspine_vault_road.tscn" id="1_pass"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/vault_jamb.glb" id="2_jamb"]
+
+[node name="CairnspineVaultRoad" instance=ExtResource("1_pass")]
+
+[node name="Mesh" parent="Geometry/Vault/VaultNorthGatePier" index="0"]
+cast_shadow = 3
+
+[node name="Mesh" parent="Geometry/Vault/VaultSouthGatePier" index="0"]
+cast_shadow = 3
+
+[node name="SovaCompactJambs" parent="Geometry/Vault" instance=ExtResource("2_jamb")]
+position = Vector3(141, 12, -14)
+
+[node name="VAULT_JAMBS" parent="Geometry/Vault/SovaCompactJambs" index="0"]
+cast_shadow = 0
+
+[editable path="Geometry/Vault/SovaCompactJambs"]
