@@ -2,6 +2,7 @@ extends Node3D
 
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
+const SectorCamera := preload("res://game/battlefield/sector_camera.gd")
 
 const L2_PRESS := 0.48
 const L2_RELEASE := 0.30
@@ -12,6 +13,8 @@ const FLOOR := Plane(Vector3.UP, 0.0)
 
 @export var battlefield_scene: PackedScene
 @export var field_bounds := Battle.FLAT_BOUNDS
+@export var enable_sector_camera := false
+@export_range(16.0, 150.0) var local_sector_size := 58.0
 @export var hero_spawn: NodePath
 @export var formation_spawns: Array[NodePath] = []
 
@@ -33,6 +36,9 @@ var _formation_models: Array[Node3D] = []
 var _formation_members: Array[Array] = []
 var _field: Node3D
 var _terrain: Terrain
+var _sector: SectorCamera
+var _mouse_cursor_active := false
+var _mouse_position := Vector2.ZERO
 var _selection: MeshInstance3D
 var _cursor_marker: MeshInstance3D
 var _destination_marker: MeshInstance3D
@@ -61,16 +67,57 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var movement := _movement_input()
+	var repoint := false
 	var look := _motion(_stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y), _digital(KEY_Q, KEY_E, KEY_R, KEY_F))
 	if command_view:
 		_command_yaw = wrapf(_command_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_command_pitch = clampf(_command_pitch + look.y * delta, deg_to_rad(50.0), deg_to_rad(75.0))
-		cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * CURSOR_SPEED * delta)
+		if _sector:
+			repoint = _step_sector_cursor(movement, delta)
+		else:
+			cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * CURSOR_SPEED * delta)
 	else:
 		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
 	# Only the hero input is suppressed in command view. Formations always advance.
 	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw) * _hero_move_factor(), _movement_check())
+	_update_cameras()
+	if not repoint or not _point_cursor(_mouse_position, true):
+		_sync_view()
+
+
+func _step_sector_cursor(movement: Vector2, delta: float) -> bool:
+	if not movement.is_zero_approx():
+		_mouse_cursor_active = false
+		var speed := _sector.view_size(_viewport_aspect()) * 0.54
+		cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * speed * delta)
+	if _mouse_cursor_active:
+		var edge := SectorCamera.pointer_edge(_mouse_position, get_viewport().get_visible_rect())
+		return _sector.pan(edge.rotated(-_command_yaw), delta)
+	_sector.follow_cursor(cursor, _ground(cursor).y, _command_yaw, _command_pitch, _viewport_aspect())
+	return false
+
+
+func _viewport_aspect() -> float:
+	var size := get_viewport().get_visible_rect().size
+	return maxf(size.x, 1.0) / maxf(size.y, 1.0)
+
+
+func _toggle_overview() -> void:
+	if not command_view or not _sector:
+		return
+	_mouse_cursor_active = false
+	_sector.toggle(cursor)
+	_update_cameras()
+	_sync_view()
+
+
+func _center_on_hero() -> void:
+	if not command_view or not _sector:
+		return
+	_mouse_cursor_active = false
+	cursor = battle.hero_position
+	_sector.center_on(cursor)
 	_update_cameras()
 	_sync_view()
 
@@ -102,6 +149,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_Z: _select_relative(-1)
 				KEY_X: _select_relative(1)
 				KEY_H: _hold_selected()
+				KEY_M: _toggle_overview()
+				KEY_HOME: _center_on_hero()
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
 		if event.axis == JOY_AXIS_TRIGGER_LEFT:
@@ -114,7 +163,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			JOY_BUTTON_DPAD_RIGHT: _select_relative(1)
 			JOY_BUTTON_X: _move_selected()
 			JOY_BUTTON_A: _hold_selected()
+			JOY_BUTTON_RIGHT_STICK: _toggle_overview()
+			JOY_BUTTON_LEFT_STICK: _center_on_hero()
 	elif command_view and event is InputEventMouseMotion:
+		_mouse_cursor_active = true
+		_mouse_position = event.position
 		_point_cursor(event.position, true)
 	elif command_view and event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT and _point_cursor(event.position, false):
@@ -125,6 +178,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+		_mouse_cursor_active = false
 		_keys.clear()
 		_axes.clear()
 		_l2_down = false
@@ -150,7 +204,9 @@ func _update_mode() -> void:
 	var next_view := _keys.has(KEY_SHIFT) or _l2_down
 	if command_view != next_view:
 		command_view = next_view
+		_mouse_cursor_active = false
 		if command_view:
+			_center_on_hero()
 			_command_camera.make_current()
 		else:
 			_hero_camera.make_current()
@@ -189,7 +245,7 @@ func _point_cursor(screen: Vector2, allow_clamp: bool) -> bool:
 	var direction := global_basis.inverse() * _command_camera.project_ray_normal(screen)
 	var target: Vector2
 	if _terrain:
-		var pick: Variant = _terrain.destination_from_ray(origin, origin + direction * 300.0)
+		var pick: Variant = _terrain.destination_from_ray(origin, origin + direction * _command_camera.far)
 		if pick == null:
 			return false
 		target = pick
@@ -213,7 +269,9 @@ func _update_cameras() -> void:
 	var desired := hero + hero_offset.rotated(Vector3.UP, _hero_yaw)
 	_hero_camera.position = _terrain.camera_position(hero, desired) if _terrain else desired
 	_hero_camera.look_at(to_global(hero + Vector3(0.0, 0.0, -2.0).rotated(Vector3.UP, _hero_yaw)))
-	var overview := _world(battle.bounds.get_center())
+	if _sector:
+		_command_camera.size = _sector.view_size(_viewport_aspect())
+	var overview := _world(_sector.view_center() if _sector else battle.bounds.get_center())
 	_command_camera.position = overview + Vector3(0.0, sin(_command_pitch), cos(_command_pitch)).rotated(Vector3.UP, _command_yaw) * _command_camera.size
 	_command_camera.look_at(to_global(overview))
 
@@ -245,13 +303,21 @@ func _sync_view() -> void:
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else "HERO VIEW  /  LIVE"
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
 	if command_view:
+		if _sector:
+			_mode_label.text = "%s  /  LIVE" % ("FIELD OVERVIEW" if _sector.overview else "TACTICAL SECTOR")
 		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold"
+		if _sector:
+			_controls_label.text += "\nR3 / M: overview / sector   ·   L3 / Home: center on hero"
+			if not _sector.overview:
+				_controls_label.text += "\nPan with the cursor or move the mouse to a screen edge"
 	else:
 		_controls_label.text = "Hold L2 / Shift to command\nLeft stick / WASD: move   ·   Right stick / Q E R F: camera   ·   D-pad / Z X: allied status"
 
 
 func _configure_field() -> void:
 	battle.bounds = field_bounds
+	if enable_sector_camera:
+		_sector = SectorCamera.new(field_bounds, local_sector_size)
 	if not battlefield_scene:
 		return
 	_field = battlefield_scene.instantiate()
@@ -267,6 +333,9 @@ func restart_battle() -> void:
 	battle.bounds = field_bounds
 	selected_index = 0
 	cursor = Vector2.ZERO
+	_mouse_cursor_active = false
+	if _sector:
+		_sector.center_on(cursor)
 	_keys.clear()
 	_axes.clear()
 	_l2_down = false
