@@ -14,8 +14,9 @@ func _initialize() -> void:
 	_check_orc_catalog()
 	_check_elf_catalog()
 	_check_druid_catalog()
+	_check_dryad_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc, Elf and Druid branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc, Elf, Druid and Dryad branches and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -129,8 +130,7 @@ func _check_orc_catalog() -> void:
 			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
 		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
 			"No Orc prototype should become an art entry or a live Human promotion.")
-	for faction in [Roster.DRYADS, Roster.UNDEAD]:
-		_check(roster.units_for_faction(faction).is_empty(), "An unrelated faction was inadvertently populated.")
+	_check(roster.units_for_faction(Roster.UNDEAD).is_empty(), "The unfilled Undead tree does not borrow entries.")
 	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
 		and not roster.has_label(archers, Roster.ANTI_RIDING),
 		"Each specialist has an independent role rather than replacing all the regulars' jobs.")
@@ -252,6 +252,49 @@ func _check_druid_catalog() -> void:
 	var trained := func(_stat: int) -> int: return 3
 	_check(roster.can_advance(tunnel, outlet, Callable(), trained) and not roster.can_advance(tunnel, shelf, Callable(), trained),
 		"The Outlet Screen can qualify without a rating reader; Shelf Guard cannot.")
+
+
+func _check_dryad_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var loading := Catalog.DRYAD_LOADING_GUARD
+	var reserve := Catalog.DRYAD_FEEDER_RESERVE
+	var volunteers := Catalog.DRYAD_SHELF_VOLUNTEERS
+	_check(roster.units_for_faction(Roster.DRYADS) == [loading, reserve, volunteers],
+		"The Dryad tree uses only the three existing grove-escort formations.")
+	for fixture: Array in [[loading, "Loading Guard"], [reserve, "Feeder Reserve"], [volunteers, "Shelf Volunteers"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty() and not Catalog.TYPES.has(id)
+			and not roster.has_label(id, Roster.ELITE_SUPPORT), "Dryad escorts aren't spellcasters, engineers, or a model entry.")
+	# Melee, Charge & Brace, Formation Drill, Scouting.
+	for fixture: Array in [
+		[[1, 0, 0, 0], []],
+		[[3, 0, 2, 1], []],
+		[[2, 1, 1, 2], []],
+		[[1, 1, 2, 0], [reserve]],
+		[[3, 0, 0, 2], [volunteers]],
+		[[3, 1, 2, 1], [reserve]],
+		[[2, 1, 2, 2], [reserve]],
+		[[3, 1, 2, 2], [reserve, volunteers]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.NATURE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[1], Platoon.Skill.FORMATION_DRILL: values[2],
+			Platoon.Skill.SCOUTING: values[3], Platoon.Skill.SIEGECRAFT: 5,
+		})
+		_check(roster.eligible_advances(loading, soldier.rating, platoon.rank) == fixture[1],
+			"The Dryad lanes need their own exact worker-screen and route-escort gates: %s." % str(values))
+		_check(not roster.can_advance(reserve, volunteers, soldier.rating, platoon.rank)
+			and not roster.can_advance(volunteers, reserve, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.DRUID_TUNNEL_GUARD, volunteers, soldier.rating, platoon.rank)
+			and not roster.can_advance(loading, Catalog.DRUID_SHELF_GUARD, soldier.rating, platoon.rank),
+			"Shared place and 'shelf' names cannot turn Dryad escorts into Druid guard promotions.")
+	var trained := func(_stat: int) -> int: return 2
+	_check(roster.can_advance(loading, reserve, Callable(), trained)
+		and not roster.can_advance(loading, volunteers, Callable(), trained),
+		"The work-site reserve can qualify by training, the route escort also needs Melee.")
 
 
 func _check(ok: bool, title: String) -> void:

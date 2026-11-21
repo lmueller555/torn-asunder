@@ -16,6 +16,9 @@ const ELF_SHIP_ARCHERS := &"elf_ship_archers"
 const DRUID_TUNNEL_GUARD := &"druid_tunnel_guard"
 const DRUID_OUTLET_SCREEN := &"druid_outlet_screen"
 const DRUID_SHELF_GUARD := &"druid_shelf_guard"
+const DRYAD_LOADING_GUARD := &"dryad_loading_guard"
+const DRYAD_FEEDER_RESERVE := &"dryad_feeder_reserve"
+const DRYAD_SHELF_VOLUNTEERS := &"dryad_shelf_volunteers"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -121,6 +124,15 @@ static func faction_roster() -> Roster:
 	roster.add_advance(DRUID_TUNNEL_GUARD, DRUID_OUTLET_SCREEN, {}, {Platoon.Skill.SCOUTING: 3})
 	roster.add_advance(DRUID_TUNNEL_GUARD, DRUID_SHELF_GUARD,
 		{Unit.Damage.MELEE: 6}, {Platoon.Skill.FORMATION_DRILL: 3})
+
+	roster.add_unit(DRYAD_LOADING_GUARD, Roster.DRYADS, Roster.MELEE, [], false, "Loading Guard")
+	roster.add_unit(DRYAD_FEEDER_RESERVE, Roster.DRYADS, Roster.MELEE, [], false, "Feeder Reserve")
+	roster.add_unit(DRYAD_SHELF_VOLUNTEERS, Roster.DRYADS, Roster.MELEE, [], false, "Shelf Volunteers")
+	# Provisional gates for protecting work sites or moving with escorted groups.
+	roster.add_advance(DRYAD_LOADING_GUARD, DRYAD_FEEDER_RESERVE, {},
+		{Platoon.Skill.CHARGE_BRACE: 1, Platoon.Skill.FORMATION_DRILL: 2})
+	roster.add_advance(DRYAD_LOADING_GUARD, DRYAD_SHELF_VOLUNTEERS,
+		{Unit.Damage.MELEE: 3}, {Platoon.Skill.SCOUTING: 2})
 	return roster
 
 
