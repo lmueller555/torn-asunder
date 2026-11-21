@@ -5,6 +5,8 @@ signal mission_finished(won: bool)
 
 const Grove := preload("res://game/battlefield/neris_failing_grove.gd")
 const REACH := 2.8
+const HIDE_WORK_LABELS_WITHIN := 7.5
+const SHOW_WORK_LABELS_BEYOND := 13.0
 const SLED_SPEED := 6.5
 const WORKER_SPEED := 3.1
 const PATROL_SPEED := 5.5
@@ -47,6 +49,9 @@ var _envoy_beacon: Node3D
 var _call_beacon: Node3D
 var _bed_beacon: Node3D
 var _sled_banner: Label3D
+var _crew_banner: Label3D
+var _work_label_opacity := -1.0
+var _work_label_outline: Color
 
 @onready var _goal: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
 @onready var _status: Label = $ObjectiveHUD/Panel/Margin/Readout/Status
@@ -88,6 +93,11 @@ func _name_formations() -> void:
 func _physics_process(delta: float) -> void:
 	if not _finished():
 		super._physics_process(delta)
+
+
+func _update_mode() -> void:
+	super._update_mode()
+	_refresh_work_labels()
 
 
 func _after_battle_step(delta: float) -> void:
@@ -243,7 +253,11 @@ func _refresh_objective() -> void:
 		var planted := _marker_position(_bed) + Vector2(3.0, -1.0)
 		_tree.position = _ground(planted) - Vector3.UP * 0.30
 	_tree.visible = not _sled_destroyed
-	_sled_banner.text = "ROOT SLED" if objective.loading_progress < 1.0 else "LOADED ROOT SLED"
+	if phase == Grove.Phase.SUCCEEDED:
+		_sled_banner.text = "EMPTY ROOT SLED"
+	else:
+		_sled_banner.text = "ROOT SLED" if objective.loading_progress < 1.0 else "LOADED ROOT SLED"
+	_refresh_work_labels()
 
 	_cue.text = ""
 	match phase:
@@ -284,6 +298,27 @@ func _refresh_objective() -> void:
 			_cue.text = "Foragers are approaching from the low track. Hold a formation at the marked screen."
 
 
+## The HUD and local markers remain in place. Only the two close work labels
+## fade away together in hero view; tactical and distant identification stay.
+func _refresh_work_labels() -> void:
+	if not _sled_banner or not _crew_banner:
+		return
+	var opacity := 1.0
+	if not command_view:
+		var hero := hero_world_position()
+		var distance := hero.distance_to(_sled.global_position)
+		if _crew.visible:
+			distance = minf(distance, hero.distance_to(_crew.global_position))
+		opacity = smoothstep(HIDE_WORK_LABELS_WITHIN, SHOW_WORK_LABELS_BEYOND, distance)
+	if opacity == _work_label_opacity:
+		return
+	_work_label_opacity = opacity
+	for label: Label3D in [_sled_banner, _crew_banner]:
+		label.visible = opacity > 0.0
+		label.modulate = Color(ALLY_COLOR, ALLY_COLOR.a * opacity)
+		label.outline_modulate = Color(_work_label_outline, _work_label_outline.a * opacity)
+
+
 func _prompt(marker: Marker3D, action: String) -> String:
 	if command_view:
 		return "Release L2 / Shift to return to Neris and interact."
@@ -320,7 +355,9 @@ func _marked_path(names: Array) -> PackedVector2Array:
 func _make_actors() -> void:
 	var envoy := _people("Grove envoy", ALLY_COLOR, 1)
 	envoy.global_position = _envoy.global_position
-	_crew = _people("Volunteer crew", ALLY_COLOR, 3)
+	_crew = _people("", ALLY_COLOR, 3)
+	_crew_banner = _sign(_crew, "Volunteer crew", ALLY_COLOR, 2.15)
+	_work_label_outline = _crew_banner.outline_modulate
 	_patrol = _people("Track foragers", ALERT_COLOR, 3)
 	_sled = Node3D.new()
 	_sled.name = "RootSledActor"
@@ -355,7 +392,8 @@ func _people(title: String, color: Color, count: int) -> Node3D:
 		var offset := (person - (count - 1) * 0.5) * 0.86
 		_mesh(actor, _box(Vector3(0.54, 1.15, 0.47)), clothes, Vector3(offset, 0.60, 0.0))
 		_mesh(actor, _box(Vector3(0.36, 0.35, 0.35)), cap, Vector3(offset, 1.32, 0.0))
-	_sign(actor, title, color, 2.15)
+	if not title.is_empty():
+		_sign(actor, title, color, 2.15)
 	return actor
 
 
