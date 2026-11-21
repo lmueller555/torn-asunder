@@ -56,13 +56,18 @@ const _MAPS := {
 				"map_position": Vector2(0.49, 0.34), "mission_id": "orc_mine_witness",
 			},
 			"basin_well_road": {
-				"id": "basin_well_road", "label": "Basin Well Road", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.83, 0.65),
+				"id": "basin_well_road", "label": "Basin Well Road", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.83, 0.65), "mission_id": "orc_well_road",
+			},
+			"spanwater_lock": {
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.69, 0.87),
 			},
 		},
 		"routes": [
 			{"from_id": "basin_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "basin_well_road", "required_clear_id": "orc_mine_witness"},
+			{"from_id": "basin_well_road", "to_id": "spanwater_lock", "required_clear_id": "orc_well_road"},
 		],
 	},
 	"sova": {

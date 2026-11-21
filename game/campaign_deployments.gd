@@ -33,6 +33,14 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.RASKA_MINE_DEBRIEF,
 		"orders": "Reach the tunnel outlet and stop the Human rear detachment from sealing it. Let the other workers reach safety, accept the willing witness's terms in person, and escort her to the Orc rally. Leave the Godbridle to Mara.",
 	},
+	"orc_well_road": {
+		"scene": preload("res://game/battlefield/raska_well_road_playtest.tscn"),
+		"dispatch": Beats.RASKA_WELL_ROAD_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.RASKA_WELL_ROAD_DEBRIEF,
+		"battlefield_label": "RED BASIN · SALT ROAD AND COVERED WASH",
+		"orders": "Get both well carts to the Basin exit. The upper cart can leave now. Send Raska to the lower storehouse to board the households before ordering their cart. Screen the mounted reserve or take the covered wash.",
+	},
 	"sova_mine_tunnels": {
 		"scene": preload("res://game/battlefield/sova_mine_evacuation_campaign.tscn"),
 		"dispatch": Beats.SOVA_MINE_DISPATCH,

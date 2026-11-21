@@ -1,6 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
 ## Standalone logistics prototype. The mounted reserve interdicts, without combat damage.
 
+signal mission_finished(won: bool)
+
 const WellRoad := preload("res://game/battlefield/raska_well_road.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const CART_SPEED := 7.5
@@ -100,6 +102,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _after_battle_step(delta: float) -> void:
+	var was_active := objective.outcome == WellRoad.Outcome.ACTIVE
 	_step_boarding(delta)
 	_step_reserve(delta)
 	var frame := WellRoad.Observation.new()
@@ -132,6 +135,8 @@ func _after_battle_step(delta: float) -> void:
 		if new_route != previous_routes[cart]:
 			_apply_route(cart, new_route)
 	_refresh()
+	if was_active and objective.outcome != WellRoad.Outcome.ACTIVE:
+		mission_finished.emit(objective.outcome == WellRoad.Outcome.SUCCEEDED)
 
 
 func _unhandled_input(event: InputEvent) -> void:

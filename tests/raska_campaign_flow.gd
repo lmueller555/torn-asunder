@@ -8,11 +8,17 @@ const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Mission := preload("res://game/battlefield/raska_mine_witness.gd")
 const Witness := preload("res://game/battlefield/orc_mine_witness.gd")
+const WellRoad := preload("res://game/battlefield/raska_well_road.gd")
+const WellScene := preload("res://game/battlefield/raska_well_road_playtest.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 const CAMP := "basin_camp"
 const MINE := "year_one_mine"
 const WELL_ROAD := "basin_well_road"
 const CLEAR := "orc_mine_witness"
+const WELL_CLEAR := "orc_well_road"
+const SPANWATER := "spanwater_lock"
 const DT := 1.0 / 60.0
 
 const ROUTE := [
@@ -38,6 +44,8 @@ func _run() -> void:
 	var seeded := profile.set_setting("fullscreen", false) == OK \
 		and profile.set_setting("reduced_motion", true) == OK \
 		and _seed_clear_and_position(profile, "mara", "mara_mine_escort", "marches_road") \
+		and profile.record_grain_clear(Grain.SEED_ONLY) == OK \
+		and profile.record_ilyra_moonwash_clear(Moonwash.CREWS_ONLY) == OK \
 		and _seed_clear_and_position(profile, "sova", "sova_mine_tunnels", "cairnspine_assembly")
 	_title = TitleScene.instantiate()
 	_title._profile = profile
@@ -49,7 +57,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Raska campaign: camp dispatch, gated map, actual outlet failure, retry, willing witness and real rally, debrief, independent saves and Continue passed.")
+		print("Raska campaign: actual Mine and Well Road clears, both dispatches/debriefs, no partial save, exact Spanwater gate, independent saves and Continue passed.")
 	quit(0 if passed else 1)
 
 
@@ -110,21 +118,117 @@ func _flow() -> bool:
 	if not _on_map(MINE):
 		return _fail("Raska's debrief did not leave the party at the same Mine waypoint.")
 	_map().select_waypoint(WELL_ROAD)
-	if not _press("ConfirmTravel") or not _on_map(WELL_ROAD) or _button("Confirm Deployment"):
-		return _fail("Raska's clear did not open the onward route, or connected an unbuilt battle.")
+	if not _press("ConfirmTravel") or not _on_briefing(WELL_CLEAR):
+		return _fail("The real Mine clear did not open the Well Road briefing.")
+	var well_route := PackedStringArray([CLEAR])
+	if _saved_clears() != well_route or Profile.new(_profile_path).load_campaign_world("raska").current_waypoint_id() != WELL_ROAD:
+		return _fail("Well Road arrival wrote a clear or failed to save the waypoint.")
 	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or not _on_map(WELL_ROAD):
-		return _fail("Continue did not reload Raska's arriving Well Road waypoint.")
+	if not _on_map(WELL_ROAD) or not _map().select_waypoint(SPANWATER) \
+			or not _button("ConfirmTravel").disabled or not _map()._detail.text.contains("The Second Bucket"):
+		return _fail("Spanwater travel did not require exactly the Well Road clear.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(WELL_ROAD) or not _press("ConfirmTravel") or not _on_briefing(WELL_CLEAR):
+		return _fail("Continue did not restore the Well Road waypoint without deploying.")
+	if not _press("Read Dispatch") or not _read_dialogue(Beats.RASKA_WELL_ROAD_DISPATCH) \
+			or not _on_briefing(WELL_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("The authored Well Road dispatch did not return to deployment.")
+	if not _press("ReturnToMap") or not _on_map(WELL_ROAD) or _saved_clears() != well_route \
+			or not _press("ConfirmTravel") or not _on_briefing(WELL_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("Leaving the battle early saved a clear or lost the return waypoint.")
+
+	var well := _title._campaign_battle as WellScene
+	if not well or well._field.name != &"RedBasinWellRoad":
+		return _fail("Well Road briefing did not deploy the actual Red Basin battle.")
+	well.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _deliver_well_carts(well):
+		return false
+	await process_frame
+	if _saved_clears() != PackedStringArray([CLEAR, WELL_CLEAR]) or not _read_dialogue(Beats.RASKA_WELL_ROAD_DEBRIEF):
+		return _fail("Two real cart arrivals did not save Raska's clear and present his debrief.")
+	if not _on_map(WELL_ROAD) or not _map().select_waypoint(SPANWATER) or not _press("ConfirmTravel") \
+			or not _on_map(SPANWATER) or _button("Confirm Deployment") \
+			or not _title._campaign_world.mission_at_current_waypoint().is_empty():
+		return _fail("Well Road did not unlock Spanwater as a travel-only waypoint.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(SPANWATER) or not _button("ConfirmTravel").disabled:
+		return _fail("Continue did not restore Spanwater without launching the third mission.")
+
 	var profile := Profile.new(_profile_path)
-	if profile.completed_missions("mara") != PackedStringArray(["mara_mine_escort"]) \
+	if profile.completed_missions("mara") != PackedStringArray(["mara_mine_escort", "mara_grain_crossing"]) \
+			or profile.grain_clear_result() != Grain.SEED_ONLY \
+			or profile.completed_missions("ilyra") != PackedStringArray(["ilyra_moonwash_rescue"]) \
+			or profile.ilyra_moonwash_clear_result() != Moonwash.CREWS_ONLY \
 			or profile.completed_missions("sova") != PackedStringArray(["sova_mine_tunnels"]) \
-			or profile.completed_missions("raska") != PackedStringArray([CLEAR]) \
+			or profile.completed_missions("raska") != PackedStringArray([CLEAR, WELL_CLEAR]) \
 			or profile.load_campaign_world("mara").current_waypoint_id() != "marches_road" \
 			or profile.load_campaign_world("sova").current_waypoint_id() != "cairnspine_assembly" \
-			or profile.load_campaign_world("raska").current_waypoint_id() != WELL_ROAD:
+			or profile.load_campaign_world("raska").current_waypoint_id() != SPANWATER:
 		return _fail("Campaign clears or waypoint saves crossed namespaces.")
 	return true
 
+
+func _deliver_well_carts(well: WellScene) -> bool:
+	var objective := well.objective
+	_joy(JOY_BUTTON_Y)
+	well._physics_process(DT)
+	if objective.cart_state(WellRoad.Cart.UPPER) != WellRoad.CartState.EN_ROUTE:
+		return _fail("The upper cart did not take the actual wash route.")
+	_joy(JOY_BUTTON_LEFT_SHOULDER)
+	_joy(JOY_BUTTON_Y)
+	well._physics_process(DT)
+	if objective.cart_state(WellRoad.Cart.LOWER) != WellRoad.CartState.LOADING:
+		return _fail("A premature route order bypassed boarding.")
+	for path in [
+		"Routes/UpperWellStaging", "Routes/WestApproachFork", "Routes/WashEntryTurn",
+		"Routes/LowerWellStaging", "Objectives/LowerBoarding", "Spawns/LowerHouseholds", "Objectives/LowerStorehouse",
+	]:
+		var point := well.battlefield_marker(NodePath("Markers/" + path)).global_position
+		if not _walk_well_hero(well, point):
+			return false
+	_joy(JOY_BUTTON_A)
+	for _step in range(850):
+		if objective.cart_state(WellRoad.Cart.LOWER) == WellRoad.CartState.READY:
+			break
+		well._physics_process(DT)
+	if objective.cart_state(WellRoad.Cart.LOWER) != WellRoad.CartState.READY or not well._riders[0].visible:
+		return _fail("The lower cart never physically took its households aboard.")
+	for _step in range(3500):
+		if objective.cart_state(WellRoad.Cart.UPPER) == WellRoad.CartState.SAFE:
+			break
+		well._physics_process(DT)
+	if objective.cart_state(WellRoad.Cart.UPPER) != WellRoad.CartState.SAFE \
+			or objective.cart_state(WellRoad.Cart.LOWER) != WellRoad.CartState.READY \
+			or _saved_clears() != PackedStringArray([CLEAR]) or _title._victory_pending:
+		return _fail("A single real delivery wrote a clear, or the early order was replayed.")
+	_key(KEY_T)
+	for _step in range(3500):
+		if objective.outcome != WellRoad.Outcome.ACTIVE:
+			break
+		well._physics_process(DT)
+	var exit := well.battlefield_marker(^"Markers/Objectives/BasinExit").global_position
+	return (objective.outcome == WellRoad.Outcome.SUCCEEDED \
+		and well._carts[0].wagon.global_position.distance_to(exit) <= WellScene.EXIT_RADIUS \
+		and well._carts[1].wagon.global_position.distance_to(exit) <= WellScene.EXIT_RADIUS) \
+		or _fail("Both physical carts did not arrive in the Basin exit after a fresh order.")
+
+
+func _walk_well_hero(well: WellScene, target: Vector3) -> bool:
+	var local := well.to_local(target)
+	var point := Vector2(local.x, local.z)
+	var budget := ceili(well.battle.hero_position.distance_to(point) / Battle.HERO_SPEED / DT) + 75
+	for _step in range(budget):
+		var offset := point - well.battle.hero_position
+		if offset.length() <= 0.17:
+			break
+		var aim := offset.normalized().rotated(well._hero_yaw)
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		well._physics_process(DT)
+	_stop()
+	return well.battle.hero_position.distance_to(point) <= 0.17 or _fail("Raska did not reach " + str(point))
 
 func _win_route(at_mine: String) -> bool:
 	var turn := _point("EvacuationTurn")
@@ -227,9 +331,9 @@ func _on_map(id: String) -> bool:
 		and _title._campaign_world.campaign_id() == "raska" and _title._campaign_world.current_waypoint_id() == id
 
 
-func _on_briefing() -> bool:
+func _on_briefing(mission_id := CLEAR) -> bool:
 	return _title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null \
-		and _title._campaign_world.mission_at_current_waypoint() == CLEAR
+		and _title._campaign_world.mission_at_current_waypoint() == mission_id
 
 
 func _read_dialogue(id: StringName) -> bool:
