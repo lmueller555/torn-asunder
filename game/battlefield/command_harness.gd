@@ -248,6 +248,27 @@ func _configure_field() -> void:
 	$Floor.hide()
 	_terrain = Terrain.new(_field)
 	_command_camera.size = maxf(_command_camera.size, field_bounds.size.length() * 1.08)
+	_place_at_spawns()
+
+
+func restart_battle() -> void:
+	battle = Battle.new()
+	battle.bounds = field_bounds
+	selected_index = 0
+	cursor = Vector2.ZERO
+	_keys.clear()
+	_axes.clear()
+	_l2_down = false
+	_hero_yaw = 0.0
+	_hero_pitch = deg_to_rad(23.0)
+	_command_yaw = 0.0
+	_command_pitch = deg_to_rad(59.0)
+	_place_at_spawns()
+	_update_cameras()
+	_update_mode()
+
+
+func _place_at_spawns() -> void:
 	var hero_marker := battlefield_marker(hero_spawn)
 	if hero_marker:
 		battle.hero_position = _marker_position(hero_marker)
