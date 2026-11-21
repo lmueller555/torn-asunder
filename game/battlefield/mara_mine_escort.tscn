@@ -44,3 +44,36 @@ theme_override_font_sizes/font_size = 16
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 text = "Restart  ·  Options / Backspace"
+
+[node name="CombatHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="CombatHUD"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -485.0
+offset_top = 20.0
+offset_right = -20.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="CombatHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="CombatHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Health" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.82, 0.54, 1)
+theme_override_font_sizes/font_size = 21
+
+[node name="Tell" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Controls" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 15
+text = "Hero: Square / J · Light     Triangle / K · Heavy\n          L1 / U · Guard        Circle / L · Dodge"
