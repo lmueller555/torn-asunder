@@ -55,12 +55,34 @@ func _run() -> void:
 		"The overview updates the footprint from the larger active command camera.")
 	_button(JOY_BUTTON_LEFT_STICK)
 	_tick()
-	_check(_click_through_minimap(), "A real right-click over the minimap passes through and gives the formation a world order.")
+	var inspect := _point("Routes/EastPass")
+	_map_click(MOUSE_BUTTON_LEFT, map.project(inspect))
+	_tick()
+	_check(map.mouse_filter == Control.MOUSE_FILTER_STOP and _mission.cursor.is_equal_approx(inspect)
+			and _mission._sector.focus.is_equal_approx(inspect)
+			and _mission.battle.formations[1].order == Battle.Order.HOLD,
+			"Left-clicking the minimap recenters on the world point without ordering a platoon.")
+	var orders := _point("Routes/RoadWest")
+	_map_click(MOUSE_BUTTON_RIGHT, map.project(orders))
+	_check(_mission.battle.formations[1].order == Battle.Order.MOVE
+			and _mission.battle.formations[1].destination.is_equal_approx(orders),
+			"Right-click maps to the walkable road world coordinate, not behind the HUD.")
+	_map_click(MOUSE_BUTTON_RIGHT, Vector2(2.0, 2.0))
+	_check(_mission.battle.formations[1].destination.is_equal_approx(orders),
+			"Clicks in the map's letterbox cannot alter the order.")
+	var blocked := _non_walkable_map_point()
+	_check(blocked != Vector2.INF, "The field has a drawn location without valid walkable ground.")
+	if blocked != Vector2.INF:
+		_map_click(MOUSE_BUTTON_RIGHT, map.project(blocked))
+		_check(_mission.battle.formations[1].destination.is_equal_approx(orders),
+				"A map order on solid obstacles or void leaves the previous order intact.")
 	_button(JOY_BUTTON_A)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_tick()
-	_check(map.sector_pixels().is_empty() and map.marker_pixel(&"Archers") != null,
-		"Returning to hero view hides the command footprint, not the unit positions.")
+	_map_click(MOUSE_BUTTON_RIGHT, map.project(orders))
+	_check(map.mouse_filter == Control.MOUSE_FILTER_IGNORE and map.sector_pixels().is_empty()
+			and map.marker_pixel(&"Archers") != null and _mission.battle.formations[1].order == Battle.Order.HOLD,
+		"Hero view keeps the map passive, no accidental order, while still showing positions.")
 
 	_mission.battle.hero_position = fight.enemy_position + Vector2(0, 1.5)
 	_tick()
@@ -141,24 +163,24 @@ func _polygon_screen_area(polygon: PackedVector2Array) -> float:
 	return absf(shoelace) * 0.5
 
 
-func _click_through_minimap() -> bool:
-	var canvas_rect := _hud.map.get_global_rect()
-	var camera := root.get_camera_3d()
-	for x in [0.2, 0.4, 0.6, 0.8]:
-		var pixel := canvas_rect.position + canvas_rect.size * Vector2(x, 0.41)
-		var from := _mission.to_local(camera.project_ray_origin(pixel))
-		var direction := _mission.global_basis.inverse() * camera.project_ray_normal(pixel)
-		var point: Variant = _mission._terrain.destination_from_ray(from, from + direction * camera.far)
-		if point == null or not _mission.battle.bounds.has_point(point):
-			continue
-		var click := InputEventMouseButton.new()
-		click.button_index = MOUSE_BUTTON_RIGHT
-		click.pressed = true
-		click.position = pixel
-		root.push_input(click, true)
-		var group := _mission.battle.formations[1]
-		return group.order == Battle.Order.MOVE and group.destination.distance_to(point) < 0.01
-	return false
+func _map_click(button: MouseButton, local_pixel: Vector2) -> void:
+	var event := InputEventMouseButton.new()
+	event.button_index = button
+	event.position = _hud.map.get_global_rect().position + local_pixel
+	event.pressed = true
+	root.push_input(event, true)
+
+
+func _non_walkable_map_point() -> Vector2:
+	var bounds := _mission.battle.bounds
+	for x in range(1, 14):
+		for z in range(1, 14):
+			var point := bounds.position + bounds.size * Vector2(x, z) / 14.0
+			var from := Vector3(point.x, 30.0, point.y)
+			var to := Vector3(point.x, -12.0, point.y)
+			if _mission._terrain.destination_from_ray(from, to) == null:
+				return point
+	return Vector2.INF
 
 
 func _point(id: String) -> Vector2:

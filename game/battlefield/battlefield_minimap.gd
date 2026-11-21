@@ -3,6 +3,7 @@ extends Control
 ## enemies can appear: this control never queries the battlefield or scene tree.
 
 signal point_requested(battlefield_point: Vector2)
+signal move_requested(battlefield_point: Vector2)
 
 enum ObjectiveKind { PICKUP, EXIT, ALERT }
 enum Icon { HERO, ALLY, ENEMY, PICKUP, EXIT, ALERT }
@@ -68,6 +69,8 @@ class Glyph:
 	set(value):
 		click_to_focus = value
 		mouse_filter = Control.MOUSE_FILTER_STOP if value else Control.MOUSE_FILTER_IGNORE
+
+@export var right_click_to_move := false
 
 var _field_bounds := Rect2()
 var _glyphs: Array[Glyph] = []
@@ -162,12 +165,19 @@ func sector_pixels() -> Array[PackedVector2Array]:
 func _gui_input(event: InputEvent) -> void:
 	if not click_to_focus or not event is InputEventMouseButton or not event.pressed:
 		return
-	if event.button_index != MOUSE_BUTTON_LEFT:
+	var is_move: bool = right_click_to_move and event.button_index == MOUSE_BUTTON_RIGHT
+	if event.button_index != MOUSE_BUTTON_LEFT and not is_move:
 		return
 	var point: Variant = unproject(event.position)
-	if point != null:
+	# The map consumes its own clicks even on the letterbox. Do not issue
+	# an unrelated projected world order through the map's padding.
+	accept_event()
+	if point == null:
+		return
+	if is_move:
+		move_requested.emit(point)
+	else:
 		point_requested.emit(point)
-		accept_event()
 
 
 func _draw() -> void:
