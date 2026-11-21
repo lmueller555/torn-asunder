@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "scope": "Exact static V1 salt-weathered masonry threshold piers and two caps in Mara’s live The High Quay only. No landing, flag, other harbor or release-wide approval.",
+  "author": "Torn Asunder quay environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independently reviewed matched native 1280×720 hero aligned/oblique with real exit cue and actual withdrawal, command sector and overview. Command changed 987 local pixels, overview 80. First stair-foot and landing-ascent matched images were pixel-identical.",
+    "close_up": "Supplementary native close west side and reverse pair show stone-foot/cap silhouette, natural battered edges and course continuity. Matched at the same stock and candidate camera positions and native harbor lighting.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, Mesa llvmpipe. Launch Mara’s The High Quay, enter lower apron, hold vanguard on the stair landing, bring rear guard around the inland bypass after actual lower closure, then move both upriver formations and Mara into the existing mint ring. Shift/L2 toggles tactical view. Confirm both side rays hit, 13.6 m center stays open, and crossing the 3.8 m exit radius rather than Space/Cross or stonework causes extraction.",
+    "measurements": "One 204-triangle surface, one 512² S3TC texture including mip chain (174,776 bytes); old shadow sources preserved. Adds 156 submitted primitives and removes three draws in each matched mode. Short interleaved stock/candidate ratios 0.958/1.030/1.000 aligned hero/oblique/sector; longer reciprocal blocks drifted. No console or GPU timing equivalence claimed."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Distinct foot, slightly battered stone arrises through ordered courses, crisp inset molded cap and consistent silhouettes from front/flank/back. An open two-pier threshold, not a gate or walk obstruction."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Salt-weathered stone has subtle value variation and intact course transitions around corners under native light. Original invisible shadow sources remain; no normal/specular asset added. No bright invented signals."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Two piers frame, not overshadow, the physical mint exit ring with the open lane clearly visible. Both actual hero angles and command/overview retain the original cue, side blockage and clear gap."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Fixed stones and caps only. Stair closure, route cues, flags, actors, and exit logic are separately unchanged, not reviewed as art."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "122 inherited shape transforms and resources match stock, open gap and valid exit picks preserved, Mara alone uses this wrapper. Exact scope budget ≤256 added submitted primitives and no increase in draw count, one ≤0.2 MiB compressed atlas. Software comparisons are supplementary and varied; actual console/hardware speed is unknown."
+    }
+  },
+  "files": {
+    "assets/models/environment/quay_threshold.glb": "77a78e5fc69b42b2c6df6f08bf8440432d108f0650a4da03e74d04f74afad6ea",
+    "assets/models/environment/quay_threshold.glb.import": "20a26e7eb358825a9bb0dd07143cfc46cf25ecfc703c7df26265eaf5458cc9bc",
+    "assets/models/environment/quay_threshold_import.gd": "8ba8e902f931a55185ae510c6b1ced80bdc616b86aa8db060f1c8a43055df84e",
+    "assets/models/environment/quay_threshold_import.gd.uid": "c73190d034b9469cfb99fab819319df274a8be7a89df2caf4ddcf56a3841e152",
+    "assets/source/moonwash_harbor/quay_threshold.blend": "02a36d1046b0351c5ada016d34937029e110f0be057d5a9ad3e74b35bdf53121",
+    "game/battlefields/moonwash_harbor_campaign.tscn": "f6de13094b0ebe83e9125cb3f56bc6a7003ca8a211782d4c9c1e032f2e07c034",
+    "game/battlefields/moonwash_harbor_campaign_mara_exit.tscn": "ec3cd213fd78185a0b71f178d257b40e320a2190510312dce9fd0646333f4bff"
+  },
+  "integration_scope": {
+    "deployment": "game/battlefield/mara_moonwash_playtest.tscn",
+    "field_variant": "game/battlefields/moonwash_harbor_campaign_mara_exit.tscn",
+    "shared_field": "game/battlefields/moonwash_harbor_campaign.tscn",
+    "reviewed_deployment_sha256_at_delivery": "f2a2f9d421a9c92b0dd882e6aa10bcc035d09703819b3970e26e674921a7f822",
+    "context": "Exact local inherited scene only in Mara’s original registry entry. No art, geometry, or behavior changes to Ilyra’s existing binding. Preserve base collision and authored shadow-only stock nodes."
+  },
+  "review_manifest_sha256": "c4f9ea85adcc77b0167d618f679b776bbc59ba756d6094960f1c0e9bdb3624b7",
+  "offline_evidence_sha256": {
+    "matched-live-threshold.jpg": "36e6126375c5c9316798b348e716346ddb18128a9294c230b5f5547a292e2b73",
+    "matched-threshold-inspection.jpg": "86d0a83ed8c221347f6bc551ffa9c53ccc86e83ac6292f071d030c12a8c07647",
+    "matched-threshold-material.jpg": "7c82711377fdd82d8d9b8b311876dad1f85d2808f83edd52e31c2645bb5f7127",
+    "native.txt": "c3e7b75f3f82f0079ecd5e49d7afcd49ce789dd9a13dda1c6f42d11e36bcb5a5",
+    "mesh-check.txt": "cf9764331bee90672da6b7bbb6f527d4c144f1834cbde6dab2707d3dfc53dc21",
+    "pixel-scope.txt": "bc1ac7316d8a9aad8a54ed8dab224e457c1c0b7ebce48535d18c417c3b6e9874",
+    "paired-hero.txt": "e6ea7f833a4e48d1988b1373066a7a2dbaf02716af1aa2c09fe334c20151e5ff",
+    "paired-oblique.txt": "2e2ece6e1748301efad568e192ae3e6e42fb275524763ea0437a67529b2de454",
+    "paired-sector.txt": "20fa36b49a04925ef5256ad21adf2428844fb12864dce7273adf5aee72f8d548",
+    "regression-summary.txt": "0f1dab196e49051fe4141f8b0d83925f1b163fc428272b646ca57873143b5a2f"
+  },
+  "measurements": {
+    "base_triangles": 204,
+    "decoded_texture_bytes_with_mips": 174776,
+    "new_material_surfaces": 1,
+    "added_primitives_aligned_oblique_sector_overview": [
+      156,
+      156,
+      156,
+      156
+    ],
+    "draw_call_deltas_aligned_oblique_sector_overview": [
+      -3,
+      -3,
+      -3,
+      -3
+    ],
+    "short_software_frame_ratios_aligned_oblique_sector": [
+      0.958,
+      1.03,
+      1.0
+    ],
+    "hardware_fps_claim": false
+  }
+}

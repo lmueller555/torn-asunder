@@ -12,10 +12,11 @@ from unittest.mock import patch
 
 from tools.report_deployment_art import (
     BEACH_BATTLEFIELD, BEACH_DEPLOYMENT, BEACH_MISSION, BEACH_RECEIPT, CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
-    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
+    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
+    QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
     WHEEL_MISSION, WHEEL_RECEIPT,
     _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_kit,
-    _verify_raska_spillway_wheel, build_report, main,
+    _verify_mara_quay_threshold, _verify_raska_spillway_wheel, build_report, main,
 )
 
 
@@ -31,7 +32,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION},
         )
         for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
@@ -84,6 +85,24 @@ class DeploymentArtReportTest(unittest.TestCase):
         for mission in ("ilyra_spanwater_evacuation", "neris_spanwater_feeder"):
             self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
             self.assertEqual(rows[mission]["verified_kit_receipts"], [])
+
+    def test_quay_approval_requires_the_mara_only_inherited_field(self):
+        rows = {row["mission_id"]: row for row in build_report(ROOT)["deployments"]}
+        quay = rows[QUAY_MISSION]
+        self.assertEqual(quay["battlefield_scene"], QUAY_WRAPPER)
+        self.assertEqual(quay["art_status"], DEVELOPMENT)
+        self.assertEqual(len(quay["verified_kit_receipts"]), 1)
+        self.assertEqual(quay["verified_kit_receipts"][0]["receipt"], QUAY_RECEIPT)
+        self.assertEqual(quay["verified_kit_receipts"][0]["placement_scope"], "mission_deployment")
+        rescue = rows["ilyra_moonwash_rescue"]
+        self.assertEqual(rescue["battlefield_scene"], QUAY_BASE)
+        self.assertEqual(rescue["verified_kit_receipts"], [])
+        with self.assertRaisesRegex(ValueError, "not isolated"):
+            _verify_mara_quay_threshold(ROOT, {QUAY_MISSION: QUAY_DEPLOYMENT},
+                                        {QUAY_MISSION: QUAY_WRAPPER, "ilyra_moonwash_rescue": QUAY_WRAPPER})
+        with self.assertRaisesRegex(ValueError, "still use"):
+            _verify_mara_quay_threshold(ROOT, {QUAY_MISSION: QUAY_DEPLOYMENT},
+                                        {QUAY_MISSION: QUAY_WRAPPER, "ilyra_moonwash_rescue": QUAY_BASE + ".other"})
 
     def test_beach_approval_is_only_for_active_ilyra_stand_binding(self):
         report = build_report(ROOT)

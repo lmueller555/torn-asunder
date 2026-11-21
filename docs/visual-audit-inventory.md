@@ -102,7 +102,7 @@ Reviewed the actual [High Quay deployment](../game/battlefield/mara_moonwash_pla
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
 | [Lower approach, stair landing and shoulder blocks](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Smooth, untextured slabs and square ends do not read as a built harbor stair and retaining structure. Preserve the real ramp support, blocked shoulder and clear landing center. Keep the warning, later lower-stair closure and physically usable inland bypass distinct. |
-| [Upper causeway threshold piers and caps](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Two undetailed pale boxes and flat caps do not frame the objective. Rework both as one fixed kit, without a gate leaf or lintel. The middle lane is already open (13.6 m between solid faces); both pier bodies block side rays and their tops are not command targets. |
+| [Mara’s Upper Quay causeway piers and caps](audits/mara-high-quay-threshold-v1.json) | Pass | Exact V1 salt-weathered masonry and its open threshold only in The High Quay. Native hero, sector and overview, both side bodies, the open 13.6 m gap and existing exit checked. Lower stair, flags, surrounding structures and Ilyra’s use of the shared field are outside this approval. |
 
 The mint exit ring is about six meters in front of the piers. Extraction occurs when Mara and both royal platoons physically reach the exit, not when the player presses Cross/Space or touches the stonework. Preserve the ring, existing floor and sightline, and do not tie completion to the visual threshold. Use the [live withdrawal test](../tests/mara_moonwash_playtest.gd) to exercise the warning, closure, bypass and extraction again after any replacement.
 
