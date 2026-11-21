@@ -69,6 +69,8 @@ Try the policy in the isolated development preview: `godot game/battlefield/enga
 
 While holding **L2 / Shift** in Mara’s campaign Mine, the local command camera gently follows selected Shield Infantry once they are in real melee contact. It leaves the cursor and orders in place; pointer or stick aiming, overview, and the minimap draft take priority. Release **L2 / Shift** to return to Mara’s unchanged direct controls. After importing, verify the policy with `godot --headless --script tests/engagement_camera_policy.gd` and the preview inputs with `godot --headless --script tests/engagement_camera_playtest.gd`.
 
+In Mara’s campaign Mine, **D-pad Down / C** toggles camera focus on Mara without assigning an order. A focused Mara keeps the ordinary hero view until the living road guard is in clear melee reach, then the camera gently moves closer. The usual movement, orbit, attacks, guard and dodge still work. **L2 / Shift** always takes you straight to tactical controls, including the minimap and orders, even at contact. Explicitly cycling to an ally in command view or turning focus off clears the choice; while a minimap draft is open, **D-pad Down** nudges its cursor instead. Check the live interaction with `godot --headless --script tests/mara_campaign_lead_action.gd`.
+
 ## Mixed formation drill
 
 Launch `godot game/battlefield/mixed_formation_drill.tscn`. Hold **L2 / Shift** for command, select Archers with **D-pad / Z X**, aim at the guard marker, and press **Triangle / K**. At the starting distance, the guard can close and pin the bow line before it releases. Use **Square / right-click** to fall back, then re-order the attack once the archers are clear and reloaded.
