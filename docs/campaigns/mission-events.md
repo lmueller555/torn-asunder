@@ -31,6 +31,27 @@ The labels below refer to the previous 90–180 s targets. These are measured, p
 | Large | [Spanwater Lock before release](../spanwater-lock-campaign-map.md#measured-dry-perimeter-march): 471.3 m / 157.17 s | Both ways between physical north and south rims via the western service bridge and open ford. Verified in Raska’s pre-release mission state; the matching initial layouts for Neris and Ilyra lose the ford after their timed release. |
 | Expansive perimeter route | [Year Five Cairnspine](../cairnspine-vault-road-map.md#measured-perimeter-march): 522.5 m / 174.20 s | Both ways between the physical north and south crags, using the valley floor west of the raised pass. Verified in all three registered finales; not the shelf or flank objective route. |
 
+### Physical resize rollout
+
+The campaign registry has **18 deployments on ten base battlefield layouts**. The five benchmarks are not the whole rollout. Add connected, useful approach terrain without stretching objectives, actor ranges, crossing widths or authored mission routes. Confirm the extended world is selectable from the command overview; keep the local tactical camera readable at its existing scale. A new rim must be a real terrain boundary, not just a command clamp.
+
+| Layout | Route to preserve and resize direction |
+| --- | --- |
+| Marches Crossing | Extend the approaches on the west and east of the grain escort. Preserve the bridge, ford, rival contact and independent cart yards. The North Bridge receipt covers the exact original host and registered deployment. |
+| Year One Mine | Extend the shared rim approaches for Mara, Sova and Raska. Keep the original pass, tunnel portal, custody and storehouse placements and the exact battlefield identity used by Mara’s replay. |
+| Still Kingdom Cut | Continue the road at both ends beyond the current command limits. Keep the stair, Record Room and retreat objectives in place. Reachable ground and waypoint admission need separate checks at the new edges. |
+| Spanwater Lock | Extend the dry perimeter outside the wheel, feeder and landing. Keep the dry crossing benchmark distinct from the timed profiles. Compare actual ford close, last-departure warning, both boardings, late exit and missed landing for Ilyra; verify Neris’s rack, crest, jam and gauge; preserve the audited wheel for Raska. |
+| Cairnspine Vault Road | Extend the Year Five perimeter without stretching either objective approach or displacing the audited jambs. The Year Two hearing stays in its authored local area on the same shared layout. |
+| Moonwash Harbor | Measure the existing dry infantry perimeter before sizing a replacement route. Never count a crew-only transfer span as playable ground. Preserve Mara’s warning, stair closure and inland bypass; preserve Ilyra’s independent rigging and boarding. Review continuity of Mara’s audited High Quay threshold on the shared harbor. |
+| Moonwash Survey Shore | Extend the inland side of the 356 m baseline without moving either shore relay or changing cutter occlusion, stop windows or reading locks. Both relay receipts stay scoped to their exact placements. |
+| Red Basin Well Road | Measure both salt and wash approaches. Current live benchmarks are 321.8 m and 443.1 m to the eastern command limit, not a physical rim. Preserve cart spacing, charge run-up, the narrow wash ramp, the original extraction and the audited storehouse. |
+| Isolated Grove and town nursery | Extend the level western and eastern approaches beyond the 306 m baseline. Keep the sled footprint, loading yard, unloading and narrow side track distinct. |
+| Cairnspine Boundary Post | Extend road before and after the 275 m baseline. Keep the covered pinch, courier route, reserve run-up and hearing handover inside the original encounter area. Review the exact Keeper shelter placement. |
+
+For each submission, verify the new terrain and its artwork independently, walk the route both ways and retest the full registered mission flow. Adding a wing beside an unchanged kit does not automatically preserve the kit’s prior approval: verify original bytes and current native placement, and record continuity if an audited host or deployment changes. See the [receipt checks](../visual-audit-receipt-cli.md) and [visual inventory](../visual-audit-inventory.md).
+
+## Patrol and interception
+
 Use two different pressure modes: a **patrol** follows its lane and pursues only on confirmed sight within its local range, so screened routes stay meaningful; an **intercept** receives a specific route/order from a mission event and can put a formation in the player's path even before it sees them. Telegraph the latter and give the player room to respond. Never enlarge all global sight ranges simply to make larger maps feel occupied. Check both modes with actual cover, the [detection rules](../patrol-detection.md), and distinct player choices to engage, screen, or detour.
 
 ## Current contracts
