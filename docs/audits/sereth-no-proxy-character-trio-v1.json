@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact registered Undead No Proxy finale only: Sereth Vale, Household Guard and opening Court Escort. No enemy appearance replacement, extra player controls, earlier Undead missions, combat animation, terrain release, or hardware performance approval.",
+  "author": "Torn Asunder Undead character art and locomotion authors",
+  "reviewer": "Independent No Proxy visual, exact gait and renderer submission review",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility, normal editor import and original finale _ready; native 1440x810 capture; unchanged stock lighting with one shadowed sun and ambient energy 0.65.",
+    "close_up": "Actual stock selected rear and flank of moving Sereth, moving Household and static Court in assembly. Additional same-scene front/rear and continuous side camera-only footage uses the same playhead and actors; stock labels can occlude the officers.",
+    "motion": "Fixed skinned heel/toe patch tracing during stock 5.5m/s Sereth and 3.0m/s Household Move, recorded at 60 Hz. Sereth 20mm median heel drift 0.4/1.0mm and toes 7.2/7.7mm; Household heel 1.7/1.4mm and toes 8.3/7.7mm after a Run-only correction, previous toe medians were roughly 29 to 30cm in tight repeat windows. Court keeps original non-commandable Idle and disappears with the original escort extraction.",
+    "reproduction": "Normally import the game. Run godot --headless --script res://tests/sereth_no_proxy_playtest.gd. In No Proxy, select Household for a legal Move, attempt Court Move (rejected), Move Sereth to the assembly, refuse the escort, observe the same generic Speaker depart, continue to original Rival spawn and Retry. Verify no officer visual duplicates into the Speaker/Rival.",
+    "measurements": "Actual 76m stock command panned 17.33m, all three visible: +23,629 visible triangles, +39,560 shadow triangles, -4 visible draws. 65-degree stock Sereth near: +81,200 visible, +154,436 shadow, -5 draws. Pairs repeated equally, camera/tier/actor state and phases fixed. Independent arithmetic reconciles near shadow submissions with two tier-qualified models appearing in two shadow submissions, not a dual-tier visibility fault. Not a frame-time or hardware claim.",
+    "base_check": "The original No Proxy, camera and shared controller paths pre-tested on 80c2fc3; independently released faction visuals are path-disjoint."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Separate skeletal leader, shield-bearing Household and unshielded Court silhouette. Sereth's integrated rounded rear hood fold removes a prior overlapping patch. Same stock camera and close live pose show distinct split coat, cuff and boot. Household keeper and stretched hide edge follow shield; Court remains a static escort."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Dark woven hood, worn silver yoke and bone rank markers read under actual mission light. Original Court texture revision separates rubbed silver ribs and plum hem without adding an emissive identity or borrowing the generic Speaker."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "All roles can be identified at their three intended opening slots. Stock labels sometimes mask an officer at a selected angle, so the audit uses clearer original approach angles alongside labeled supplemental same-scene close-up. Tactical silhouettes are small; no UI or role changes."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Existing commands/clocks/actor speeds and control are unchanged. Normal-mission 60 Hz world-sole motion through repeat cycles and R4 near footage show Household's gross repeat drift corrected. Integrated Sereth keeps the approved in-place locomotion and modeled cloth clearance in sampled poses; the source Knockdown and combat motions are outside this delivery. No complete contact claim."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Editor-imported role-exact _ready, one clip advance per real tick checked, generic template member zero untouched, Court visual remains hidden after original split and returns only on Retry. Stock finale regression preserved both lanes, Holds, challenge, terrace and losses. Exact matched command and close render costs above; near shadow submissions higher than previous comparable slices, acceptable only here."
+    }
+  },
+  "files": {
+    "assets/models/campaign/undead/court_escort.glb": "c46edef565564f6a1a48792395b9baf9acb4321341cba1fa7804295f75747c9b",
+    "assets/models/campaign/undead/court_escort.glb.import": "847a0f8afbbcf7a18bda28e07907f9078338080c02b470e91365b53d6ec268ca",
+    "assets/models/campaign/undead/household_guard.glb": "f9c99698e0f74092163f9912071de0050106b008c45ea4ef380b634a3550abe6",
+    "assets/models/campaign/undead/household_guard.glb.import": "485bceb23a973a318ec7c5c1219b05ea91a7ba4eaeeb0892367d4e50635ed540",
+    "assets/models/campaign/undead/sereth_vale.glb": "8ea1646f82eb2ad341d19975991c3a8aa99b3a5fa0ad13da21aa6f6293efc50c",
+    "assets/models/campaign/undead/sereth_vale.glb.import": "94102a33e49bf6937779e2b853d5cdb7c3aaa2799125b7292a7b2cba8e0391ba",
+    "assets/source/campaign/undead/court_escort.blend": "7406b7e19b83166916b91babb19e6af0b0e6bbcaaa4c5470b9828cdf40d1c526",
+    "assets/source/campaign/undead/household_guard.blend": "6cbbfde91f693bd462c20bf9519cfb9db6f7f5ed4fc3841e0d2dc32de10b0bf2",
+    "assets/source/campaign/undead/sereth_vale.blend": "8ac873934463aa244201ff96f010ec6f6f7ef654e4b60847dd954bb0320e73b4",
+    "game/battlefield/sereth_finale_character_art.gd": "acb628c82491d835cf1e2f67a7823e14cb6843bb9b3422c30d5e904d970381aa",
+    "game/battlefield/sereth_no_proxy_playtest.gd": "d3400a181d77eebfff4787e5c7c2329c1dc2ed2e4525ad569d73aba06bf64b68"
+  }
+}
