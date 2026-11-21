@@ -6,6 +6,7 @@ const Points := preload("res://game/combat/battle_points.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 
 enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED }
 
@@ -23,6 +24,7 @@ const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
 
 var points := Points.new()
+var infantry_attack := InfantryAttack.new()
 var hero := Unit.new(HERO_HP)
 var enemy := Unit.new(ENEMY_HP)
 var defense := Defense.new(hero, HERO_TEAM, points)
@@ -38,6 +40,15 @@ func _init(spawn: Vector2) -> void:
 	enemy_position = spawn
 
 
+func target_at(point: Vector2) -> bool:
+	return enemy.is_alive() and point.distance_to(enemy_position) <= InfantryAttack.TARGET_RADIUS
+
+
+func order_infantry_attack(battle: Battle, selected: int, point: Vector2) -> bool:
+	return selected == InfantryAttack.INFANTRY_INDEX and target_at(point) \
+		and infantry_attack.issue(battle.formations[selected], enemy, enemy_position)
+
+
 func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Callable) -> void:
 	_feedback_seconds -= delta
 	var sight := bool(clear_contact.call(battle.hero_position, enemy_position))
@@ -48,6 +59,12 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 			_feedback("%s hit · +%d BP" % ["Light" if contact.attack == Attack.Attack.LIGHT else "Heavy", contact.bp_credited])
 		else:
 			_feedback("Attack missed")
+	# The hero and formation share this enemy roster. A fatal hero contact above
+	# leaves no eligible infantry contact or BP award in the same physics tick.
+	var infantry_damage := infantry_attack.advance(delta, battle, enemy, enemy_position, clear_contact, can_move)
+	if infantry_damage > 0.0:
+		var credited := points.award_confirmed_hit(InfantryAttack.BP_PER_HIT)
+		_feedback("Shield Infantry hit · +%d BP" % credited)
 	if not enemy.is_alive():
 		enemy_phase = EnemyPhase.DEFEATED
 		return

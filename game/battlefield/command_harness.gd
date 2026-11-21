@@ -81,9 +81,14 @@ func _physics_process(delta: float) -> void:
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
 	# Only the hero input is suppressed in command view. Formations always advance.
 	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw) * _hero_move_factor(), _movement_check())
+	_after_battle_step(delta)
 	_update_cameras()
 	if not repoint or not _point_cursor(_mouse_position, true):
 		_sync_view()
+
+
+func _after_battle_step(_delta: float) -> void:
+	pass
 
 
 func _step_sector_cursor(movement: Vector2, delta: float) -> bool:
@@ -299,7 +304,7 @@ func _sync_view() -> void:
 	_cursor_marker.visible = command_view
 	_destination_marker.position = _ground(selected.destination, 0.08)
 	_destination_marker.visible = command_view and selected.order == Battle.Order.MOVE
-	var status: String = ["Holding", "Moving", "Blocked"][selected.order]
+	var status: String = ["Holding", "Moving", "Blocked", "Attacking"][selected.order]
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else "HERO VIEW  /  LIVE"
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
 	if command_view:
