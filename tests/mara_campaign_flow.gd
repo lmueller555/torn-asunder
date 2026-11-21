@@ -58,7 +58,11 @@ func _run() -> void:
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("neris"):
+	if _has_playtest_notice():
+		return _fail("The campaign playtest notice leaked onto the title menu.")
+	if not _press("New Game") or _title._page != Title.Page.VAULT or not _has_playtest_notice():
+		return _fail("The Campaign Vault did not visibly identify its development playtests.")
+	if not _press("neris"):
 		return false
 	if _title._page != Title.Page.WORLD_MAP or not _map() or _button("Confirm Deployment") \
 			or _title._campaign_world.campaign_id() != "neris":
@@ -86,6 +90,8 @@ func _flow() -> bool:
 		return _fail("An unconfirmed mine selection moved the party.")
 	if not _on_briefing() or _saved_world() != MINE or not _saved_clears().is_empty():
 		return _fail("Mine arrival did not persist the waypoint and stop at briefing without awarding a clear.")
+	if not _has_playtest_notice():
+		return _fail("The deployment briefing did not identify the placeholder art before confirmation.")
 	_joy(JOY_BUTTON_B)
 	if not _on_map(MINE) or not _press("ConfirmTravel") or not _on_briefing():
 		return _fail("Cancel did not return to the actual arrived position with a way to reopen briefing.")
@@ -527,6 +533,13 @@ func _drive_to(marker_id: String, until_windup := false) -> bool:
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
 	return reached or _fail("The actual route did not reach " + marker_id)
+
+
+func _has_playtest_notice() -> bool:
+	for child in _title._stage.get_children():
+		if child is Label and child.is_visible_in_tree() and child.text.begins_with("Development playtest: includes placeholder art."):
+			return true
+	return false
 
 
 func _on_map(id: String) -> bool:
