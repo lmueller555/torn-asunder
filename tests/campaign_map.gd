@@ -31,7 +31,7 @@ func _run() -> void:
 	_view.return_requested.connect(func() -> void: _returns += 1)
 	root.add_child(_view)
 	await process_frame
-	var passed := await _exercise_flow(clears)
+	var passed := _exercise_flow(clears)
 	if FileAccess.file_exists(profile_path) != original_exists \
 			or (original_exists and FileAccess.get_file_as_string(profile_path) != original_save):
 		passed = _fail("Map navigation wrote a profile file.")
@@ -56,10 +56,11 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	_key(KEY_ENTER)
 	if not _view.is_travelling() or _world.current_waypoint_id() != CAMP or not _briefings.is_empty():
 		return _fail("Confirm did not begin distinct travel before exposing the briefing.")
-	await create_timer(0.12).timeout
+	_view._tween.pause()
+	_view._tween.custom_step(0.12)
 	if _view.token_map_position().is_equal_approx(camp) or _view.token_map_position().is_equal_approx(mine):
 		return _fail("The token did not visibly interpolate between waypoints.")
-	await create_timer(0.56).timeout
+	_view._tween.custom_step(0.56)
 	if _view.is_travelling() or not _view.token_map_position().is_equal_approx(mine) \
 			or _world.current_waypoint_id() != MINE or _arrivals != PackedStringArray([MINE]) \
 			or _briefings != PackedStringArray([MISSION]) or _view.find_child("MaraMineEscort", true, false):
