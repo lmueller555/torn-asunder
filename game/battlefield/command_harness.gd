@@ -1,6 +1,7 @@
 extends Node3D
 
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Terrain := preload("res://game/battlefield/command_terrain.gd")
 
 const L2_PRESS := 0.48
 const L2_RELEASE := 0.30
@@ -8,6 +9,11 @@ const STICK_DEADZONE := 0.18
 const CURSOR_SPEED := 12.0
 const ORBIT_SPEED := 1.6
 const FLOOR := Plane(Vector3.UP, 0.0)
+
+@export var battlefield_scene: PackedScene
+@export var field_bounds := Battle.FLAT_BOUNDS
+@export var hero_spawn: NodePath
+@export var formation_spawns: Array[NodePath] = []
 
 var battle := Battle.new()
 var command_view := false
@@ -24,6 +30,9 @@ var _command_yaw := 0.0
 var _command_pitch := deg_to_rad(59.0)
 var _hero: Node3D
 var _formation_models: Array[Node3D] = []
+var _formation_members: Array[Array] = []
+var _field: Node3D
+var _terrain: Terrain
 var _selection: MeshInstance3D
 var _cursor_marker: MeshInstance3D
 var _destination_marker: MeshInstance3D
@@ -43,6 +52,7 @@ func _ready() -> void:
 		for axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_TRIGGER_LEFT]:
 			_axes[axis] = Input.get_joy_axis(_input_device, axis)
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
+	_configure_field()
 	_build_placeholders()
 	_update_cameras()
 	_update_mode()
@@ -55,12 +65,13 @@ func _physics_process(delta: float) -> void:
 	if command_view:
 		_command_yaw = wrapf(_command_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_command_pitch = clampf(_command_pitch + look.y * delta, deg_to_rad(50.0), deg_to_rad(75.0))
-		cursor = Battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * CURSOR_SPEED * delta)
+		cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * CURSOR_SPEED * delta)
 	else:
 		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
 	# Only the hero input is suppressed in command view. Formations always advance.
-	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw))
+	var obstacle_check := _terrain.can_move if _terrain else Callable()
+	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw), obstacle_check)
 	_update_cameras()
 	_sync_view()
 
@@ -165,12 +176,19 @@ func _hold_selected() -> void:
 func _point_cursor(screen: Vector2, allow_clamp: bool) -> bool:
 	var origin := to_local(_command_camera.project_ray_origin(screen))
 	var direction := global_basis.inverse() * _command_camera.project_ray_normal(screen)
-	var intersection: Variant = FLOOR.intersects_ray(origin, direction)
-	if intersection == null:
-		return false
-	var point: Vector3 = intersection
-	var target := Vector2(point.x, point.z)
-	var bounded := Battle.clamp_to_field(target)
+	var target: Vector2
+	if _terrain:
+		var pick: Variant = _terrain.destination_from_ray(origin, origin + direction * 300.0)
+		if pick == null:
+			return false
+		target = pick
+	else:
+		var intersection: Variant = FLOOR.intersects_ray(origin, direction)
+		if intersection == null:
+			return false
+		var point: Vector3 = intersection
+		target = Vector2(point.x, point.z)
+	var bounded := battle.clamp_to_field(target)
 	if not allow_clamp and not bounded.is_equal_approx(target):
 		return false
 	cursor = bounded
@@ -179,29 +197,40 @@ func _point_cursor(screen: Vector2, allow_clamp: bool) -> bool:
 
 
 func _update_cameras() -> void:
-	var hero := _world(battle.hero_position, 1.15)
+	var hero := _ground(battle.hero_position, 1.15)
 	var hero_offset := Vector3(0.0, sin(_hero_pitch), cos(_hero_pitch)) * 6.1
-	_hero_camera.position = hero + hero_offset.rotated(Vector3.UP, _hero_yaw)
+	var desired := hero + hero_offset.rotated(Vector3.UP, _hero_yaw)
+	_hero_camera.position = _terrain.camera_position(hero, desired) if _terrain else desired
 	_hero_camera.look_at(to_global(hero + Vector3(0.0, 0.0, -2.0).rotated(Vector3.UP, _hero_yaw)))
-	_command_camera.position = Vector3(0.0, sin(_command_pitch), cos(_command_pitch)).rotated(Vector3.UP, _command_yaw) * 39.0
-	_command_camera.look_at(global_position)
+	var overview := _world(battle.bounds.get_center())
+	_command_camera.position = overview + Vector3(0.0, sin(_command_pitch), cos(_command_pitch)).rotated(Vector3.UP, _command_yaw) * _command_camera.size
+	_command_camera.look_at(to_global(overview))
 
 
 func _sync_view() -> void:
 	var selected := battle.formations[selected_index]
-	_hero.position = _world(battle.hero_position)
+	_hero.position = _ground(battle.hero_position)
 	_hero.rotation.y = atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	for index in range(battle.formations.size()):
 		var formation := battle.formations[index]
-		_formation_models[index].position = _world(formation.position)
-		_formation_models[index].rotation.y = atan2(-formation.heading.x, -formation.heading.y)
-	_selection.position = _world(selected.position, 0.04)
+		var model := _formation_models[index]
+		var yaw := atan2(-formation.heading.x, -formation.heading.y)
+		var origin := _ground(formation.position)
+		var moved := model.position != origin or not is_equal_approx(model.rotation.y, yaw)
+		model.position = origin
+		model.rotation.y = yaw
+		if _terrain and moved:
+			for member: Node3D in _formation_members[index]:
+				var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, model.rotation.y)
+				var feet := formation.position + Vector2(offset.x, offset.z)
+				member.position.y = _terrain.ground_height(feet) - model.position.y
+	_selection.position = _ground(selected.position, 0.05)
 	_selection.visible = command_view
-	_cursor_marker.position = _world(cursor, 0.08)
+	_cursor_marker.position = _ground(cursor, 0.10)
 	_cursor_marker.visible = command_view
-	_destination_marker.position = _world(selected.destination, 0.06)
+	_destination_marker.position = _ground(selected.destination, 0.08)
 	_destination_marker.visible = command_view and selected.order == Battle.Order.MOVE
-	var status := "Moving" if selected.order == Battle.Order.MOVE else "Holding"
+	var status: String = ["Holding", "Moving", "Blocked"][selected.order]
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else "HERO VIEW  /  LIVE"
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
 	if command_view:
@@ -210,12 +239,59 @@ func _sync_view() -> void:
 		_controls_label.text = "Hold L2 / Shift to command\nLeft stick / WASD: move   ·   Right stick / Q E R F: camera   ·   D-pad / Z X: allied status"
 
 
+func _configure_field() -> void:
+	battle.bounds = field_bounds
+	if not battlefield_scene:
+		return
+	_field = battlefield_scene.instantiate()
+	add_child(_field)
+	$Floor.hide()
+	_terrain = Terrain.new(_field)
+	_command_camera.size = maxf(_command_camera.size, field_bounds.size.length() * 1.08)
+	var hero_marker := battlefield_marker(hero_spawn)
+	if hero_marker:
+		battle.hero_position = _marker_position(hero_marker)
+		battle.hero_heading = _marker_heading(hero_marker)
+		_hero_yaw = atan2(-battle.hero_heading.x, -battle.hero_heading.y)
+		cursor = battle.hero_position
+	for index in range(mini(formation_spawns.size(), battle.formations.size())):
+		var marker := battlefield_marker(formation_spawns[index])
+		if marker:
+			var formation := battle.formations[index]
+			formation.position = _marker_position(marker)
+			formation.heading = _marker_heading(marker)
+			formation.hold()
+
+
+func battlefield_marker(path: NodePath) -> Marker3D:
+	return _field.get_node_or_null(path) as Marker3D if _field and not path.is_empty() else null
+
+
+func hero_world_position() -> Vector3:
+	return to_global(_ground(battle.hero_position))
+
+
+func _marker_position(marker: Marker3D) -> Vector2:
+	var local := to_local(marker.global_position)
+	return Vector2(local.x, local.z)
+
+
+func _marker_heading(marker: Marker3D) -> Vector2:
+	var heading := global_basis.inverse() * -marker.global_basis.z
+	return Vector2(heading.x, heading.z).normalized()
+
+
+func _ground(point: Vector2, offset := 0.0) -> Vector3:
+	return _world(point, offset + (_terrain.ground_height(point) if _terrain else 0.0))
+
+
 func _build_placeholders() -> void:
-	var field_material := _material(Color("#536253"))
-	for x in range(-16, 17, 4):
-		_mesh($Floor, _box(Vector3(0.03, 0.01, 24.0)), field_material, Vector3(x, 0.16, 0.0))
-	for z in range(-12, 13, 4):
-		_mesh($Floor, _box(Vector3(34.0, 0.01, 0.03)), field_material, Vector3(0.0, 0.16, z))
+	if not battlefield_scene:
+		var field_material := _material(Color("#536253"))
+		for x in range(-16, 17, 4):
+			_mesh($Floor, _box(Vector3(0.03, 0.01, 24.0)), field_material, Vector3(x, 0.16, 0.0))
+		for z in range(-12, 13, 4):
+			_mesh($Floor, _box(Vector3(34.0, 0.01, 0.03)), field_material, Vector3(0.0, 0.16, z))
 
 	_hero = Node3D.new()
 	add_child(_hero)
@@ -234,11 +310,16 @@ func _build_placeholders() -> void:
 		var color := Color("#65b9d6") if index == 0 else Color("#8bbdaa")
 		var uniform := _material(color)
 		var trim := _material(color.lightened(0.47))
+		var members: Array[Node3D] = []
 		for x in range(4):
 			for z in range(3):
-				var point := Vector3((x - 1.5) * 0.85, 0.60, (z - 1.0) * 0.78)
-				_mesh(group, troop, uniform, point)
-				_mesh(group, equipment, trim, point + Vector3(0.0, 0.1, -0.27))
+				var member := Node3D.new()
+				member.position = Vector3((x - 1.5) * 0.85, 0.0, (z - 1.0) * 0.78)
+				group.add_child(member)
+				members.append(member)
+				_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
+				_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+		_formation_members.append(members)
 		var banner := Label3D.new()
 		banner.text = battle.formations[index].title
 		banner.position.y = 2.1

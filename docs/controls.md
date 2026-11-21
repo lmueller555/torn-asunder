@@ -32,3 +32,7 @@ Launch the standalone flat-field harness from the repository root with `godot ga
 | H | — | Hold the selected formation at its current position |
 
 After importing the project, run `godot --headless --script tests/command_harness.gd` to check input, view changes, and order persistence.
+
+To try the same controls on the shared Year One mine, run `godot game/battlefield/command_mine.tscn`. Formations take a straight path: if the path is blocked by solid terrain or cover, they stop and show **Blocked**. Issue a new Move around the obstruction. The main road is open, and the ridge is accessible via its ramps. To reach the overlook from the west, move the archers up the center of the ramp before turning toward the overlook. This is a movement playtest, not the escort objective or a combat encounter.
+
+Run `godot --headless --script tests/command_mine.gd` to check the shared mine spawns, road and ridge movement, cursor picking, and blocking.
