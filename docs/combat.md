@@ -111,6 +111,8 @@ The AI Skirmish setup offers Infantry and Heavy Infantry for each platoon. Heavy
 
 A separate **campaign lead allocation preview** derives its budget from confirmed chapter clears: one point per earned level. Investing or refunding a point changes the preview only, not the save, XP, or deployed fighters. All eight combat disciplines use their normal rating bounds. With the current three chapters, even a full Human clear gives two points, so concentrating both in Melee Power reaches 3, not the Heavy Infantry requirement of 10. The preview shows the real rating gap without offering a promotion. Run `godot --headless --script tests/campaign_stat_allocation.gd`.
 
+The **Mara Shield Infantry training model** is separate from her lead ratings and BP pool. The first confirmed Mine clear entitles that subordinate slot to one drill credit. Spending it in the model raises the slot’s Formation Drill from 1 to 2 and qualifies it for an optional Heavy Infantry choice; it neither equips Heavy Infantry nor changes the ordinary default. The credit cannot be earned twice. This is not yet a saved campaign purchase or a deployable loadout, and the practice/skirmish Melee 10 rule is unchanged. Verify with `godot --headless --script tests/mara_subordinate_training.gd`.
+
 References for the design pattern only: [*Kingdom Under Fire: Heroes* manual, pp. 20–25](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) for skill-gated jobs and [official Human unit guide](https://www.kufheroes.com/eng/characters/unit_human.asp) for the slower heavy armor role. Torn Asunder uses its own combat profile and has no additional Lightning modifier for this promotion.
 
 ## Human Archer prototype
