@@ -9,6 +9,9 @@ const GROUP_TITLES := ["Mouth group", "Bend group"]
 const GROUP_COLORS := [Color("#f3c681"), Color("#a0e8d1")]
 const GUARD_TITLES := ["Tunnel Guard", "Outlet Screen"]
 
+## Larger terrain can require a straight approach clear of the portal before the trail turns.
+@export var outlet_turn: NodePath
+
 var objective := Evacuation.new()
 var _route := PackedVector3Array()
 var _next_waypoints: Array[int] = [1, 2]
@@ -30,6 +33,12 @@ func _ready() -> void:
 		var prefix := "Markers/Objectives/" if index == ROUTE_NAMES.size() - 1 else "Markers/Routes/"
 		var marker := battlefield_marker(NodePath(prefix + ROUTE_NAMES[index]))
 		_route.append(marker.global_position)
+	if not outlet_turn.is_empty():
+		var turn := battlefield_marker(outlet_turn)
+		if turn:
+			_route.insert(EXIT_WAYPOINT + 1, turn.global_position)
+		else:
+			push_error("Sova evacuation outlet turn is not a Marker3D: %s" % outlet_turn)
 	for group in range(GROUP_TITLES.size()):
 		_stages.append(_stage_marker(group))
 		_groups.append(_worker_group(group))
