@@ -10,6 +10,12 @@ const SALVAGER_SPEED := 5.8
 const INTERACT_RADIUS := 2.1
 const SCREEN_RADIUS := 5.2
 const MARINES := 1
+const HARBOR := "res://game/battlefields/moonwash_harbor_campaign.tscn"
+const SIGNAL_SIDE_OFFSET := 1.1
+const RESCUE_SIGNALS := [
+	[^"ForwardSignal", ^"ForwardReceiverSignal"],
+	[^"AftSignal", ^"AftReceiverSignal"],
+]
 const POINT_NAMES := ["Fore", "Aft"]
 const COLORS := [Color("#eac781"), Color("#8de3ce")]
 const SPAWN_PATHS := [^"Markers/Spawns/ForwardCrew", ^"Markers/Spawns/AftCrew"]
@@ -41,6 +47,7 @@ var _interact_requested := false
 
 func _ready() -> void:
 	super._ready()
+	_clear_rescue_endpoints()
 	for transfer in range(POINT_NAMES.size()):
 		var start := _point(SPAWN_PATHS[transfer])
 		var rig := _point(TRANSFER_PATHS[transfer])
@@ -69,6 +76,23 @@ func _ready() -> void:
 	_restart.pressed.connect(restart_mission)
 	_reset_scene()
 	_refresh_objective()
+
+
+func _clear_rescue_endpoints() -> void:
+	if not _field or _field.scene_file_path != HARBOR:
+		return
+	var ships := _field.get_node_or_null(^"Geometry/Ships")
+	if not ships:
+		return
+	# Only this deployed Ilyra instance moves the original post assemblies.
+	# Move each pair away from its crew's diagonal approach. The water gap,
+	# transfer anchors, shared mesh resources, and actual rig stay untouched.
+	for transfer in RESCUE_SIGNALS.size():
+		var side := -1.0 if transfer == Rescue.Transfer.FORWARD else 1.0
+		for path: NodePath in RESCUE_SIGNALS[transfer]:
+			var post := ships.get_node_or_null(path) as StaticBody3D
+			if post:
+				post.position.x += side * SIGNAL_SIDE_OFFSET
 
 
 func _physics_process(delta: float) -> void:
