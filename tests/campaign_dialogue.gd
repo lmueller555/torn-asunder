@@ -28,11 +28,12 @@ func _run() -> void:
 	passed = _check_cancellation_and_replay() and passed
 	passed = _check_other_mine_beats() and passed
 	passed = _check_grain_beats() and passed
+	passed = _check_high_quay_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, Grain branches, mixed-device input, completion, cancel, and replay.")
+		print("Verified campaign dialogue, Grain branches, High Quay continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -167,7 +168,7 @@ func _check_grain_beats() -> bool:
 	var dispatch := Beats.get_beat(Beats.MARA_GRAIN_DISPATCH)
 	if not _panel.present(Beats.MARA_GRAIN_DISPATCH, dispatch):
 		return _fail("Grain dispatch was missing or invalid.")
-	var dispatch_text := _read_grain_beat(dispatch)
+	var dispatch_text := _finish_visible_beat(dispatch)
 	if not "mill yard" in dispatch_text or not "lower ford" in dispatch_text or not "town store" in dispatch_text:
 		return _fail("The dispatch lost a delivery destination.")
 	var cases := [
@@ -183,7 +184,7 @@ func _check_grain_beats() -> bool:
 		if id != fixture[2] or seen.has(id) or not _panel.present(id, beat):
 			return _fail("A real delivery result did not select its own council beat: %s" % result)
 		seen[id] = true
-		var account := _read_grain_beat(beat)
+		var account := _finish_visible_beat(beat)
 		for detail: String in fixture[3]:
 			if not detail in account:
 				return _fail("Council testimony lost a delivered or missing load: %s" % result)
@@ -213,7 +214,7 @@ func _simulate_grain_result(seed_delivers: bool, bread_delivers: bool) -> String
 	return grain.clear_result
 
 
-func _read_grain_beat(beat: Dictionary) -> String:
+func _finish_visible_beat(beat: Dictionary) -> String:
 	var text := ""
 	for index in range(beat.lines.size()):
 		text += _label("DialogueLine").text + "\n"
@@ -224,6 +225,34 @@ func _read_grain_beat(beat: Dictionary) -> String:
 func _has_grain_source(id: StringName) -> bool:
 	var source := Beats.get_beat(id)
 	return not source.lines[0].text.is_empty()
+
+
+func _check_high_quay_beats() -> bool:
+	var ids: Array[StringName] = [
+		Beats.MARA_WATER_REQUEST,
+		Beats.MARA_HIGH_QUAY_DISPATCH,
+		Beats.MARA_HIGH_QUAY_DEBRIEF,
+	]
+	var seen: Array[String] = []
+	var start := _completions.size()
+	for id in ids:
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A High Quay campaign beat was missing or invalid: %s" % id)
+		seen.append(_finish_visible_beat(beat))
+		if _panel.visible or _completions.back() != id:
+			return _fail("The High Quay beat did not complete under its own stable ID: %s" % id)
+	if _completions.size() != start + ids.size() or _completions.slice(start) != ids:
+		return _fail("High Quay dialogue emitted duplicate or out-of-order completions.")
+	if not "Whose water will fill them?" in seen[0] or not "return water to the dry headwater channels" in seen[0]:
+		return _fail("The intermission lost the cautious command or its unanswered cost.")
+	if not "current running inland" in seen[1] or not "upper stairs" in seen[1] or not "Leave the boats to Ilyra" in seen[1]:
+		return _fail("The briefing lost the inquiry, retreat route, or independent Elven duty.")
+	if not "stranded on stone" in seen[2] or not "farms on your list" in seen[2] or not "There won't be a second order" in seen[2]:
+		return _fail("The final report changed the campaign's incomplete water result or Mara's refusal.")
+	if "Orrun," in seen[1] or "Orrun," in seen[2]:
+		return _fail("Another order was given after the shared intermission.")
+	return true
 
 
 func _send_key(key_code: Key, echo := false) -> void:
