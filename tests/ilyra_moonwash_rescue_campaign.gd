@@ -31,7 +31,7 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	_mission.mission_cleared.connect(func(result: StringName) -> void: _results.append(result))
-	var passed := _check_endpoint_clearance() and _aft_first() and _fore_first_with_cargo() \
+	var passed := _check_endpoint_clearance() and _check_work_captions_at_spawn() and _aft_first() and _fore_first_with_cargo() \
 		and _check_endpoint_clearance()
 	if _signal_overlap_ticks != 0:
 		passed = _fail("Rendered rescuers overlapped a solid endpoint in %d drive ticks." % _signal_overlap_ticks)
@@ -79,6 +79,26 @@ func _check_endpoint_clearance() -> bool:
 	return legal
 
 
+func _check_work_captions_at_spawn() -> bool:
+	var captions := _mission._work_captions
+	if captions.size() != 6:
+		return _fail("Fade must bind only the two crews and four rescue-point captions.")
+	for transfer in [FORE, AFT]:
+		var base: int = transfer * 3
+		if captions[base].anchor != _mission._crews[transfer] 				or captions[base + 1].anchor.global_position != _mission._routes[transfer][1] 				or captions[base + 2].anchor.global_position != _mission._routes[transfer][2]:
+			return _fail("Fade should use the real crew and both authored anchors for each lane.")
+	# Ilyra opens between the near hero cutoff and far wayfinding cutoff of
+	# the fore receiver, with the other five anchors still off at a distance.
+	var transition := captions[2]
+	if not transition.label.visible or transition.label.modulate.a <= 0.05 			or transition.label.modulate.a >= 0.95:
+		return _fail("The starting receiving-deck view should hit the gradual fade range.")
+	for index in [0, 1, 3, 4, 5]:
+		var distant := captions[index]
+		if distant.label.visible != distant.visible or distant.label.modulate != distant.face 				or distant.label.outline_modulate != distant.outline:
+			return _fail("The distant work captions must preserve the original wayfinding.")
+	return true
+
+
 func _aft_first() -> bool:
 	var spawn := _point("Spawns/ElfHero")
 	var start_aft := _point("Spawns/AftCrew")
@@ -94,17 +114,29 @@ func _aft_first() -> bool:
 		return _fail("Interacting from the receiving ship prepared a distant rescue line.")
 	if not _go_stranded() or not _walk(AFT_RIG):
 		return false
+	var aft_caption: Label3D = _mission._work_captions[AFT * 3 + 1].label
+	if aft_caption.visible or not _mission._hint.text.contains("rig the aft line"):
+		return _fail("Nearby hero captions must clear the actual aft rig and keep the original hint.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	for work in _mission._work_captions:
+		if work.label.visible != work.visible or work.label.modulate != work.face 				or work.label.outline_modulate != work.outline:
+			return _fail("Command must immediately restore every original caption property.")
 	_key(KEY_SPACE)
 	_joy(JOY_BUTTON_A)
 	_tick()
 	if _mission.objective.line_is_rigged(AFT):
 		return _fail("Command view interacted with the aft hero rig.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	if aft_caption.visible:
+		return _fail("Re-entering nearby hero view must hide the aft caption again.")
 	_joy(JOY_BUTTON_A)
 	_tick()
 	if not _mission._lines[AFT].visible or _mission._lines[FORE].visible or _mission._salvage_started:
 		return _fail("Ilyra's Cross did not rig only the aft line.")
+	if not _wait(func() -> bool: return _mission._crews[AFT].global_position.z >= 67.5):
+		return false
+	if _mission._work_captions[AFT * 3].label.visible:
+		return _fail("The crossing party's caption should yield when that party comes near the hero.")
 	if not _wait(func() -> bool: return _state(AFT) == Rescue.CrewStatus.SAFE):
 		return false
 	if not _crew_on_deck(AFT) or _state(FORE) != Rescue.CrewStatus.STRANDED or not _results.is_empty():
@@ -134,7 +166,7 @@ func _aft_first() -> bool:
 			or not _mission.hero_world_position().is_equal_approx(spawn) \
 			or _mission._crews[FORE].global_position != start_fore or _mission._crews[AFT].global_position != start_aft:
 		return _fail("Retry retained rescue geometry, crew position or pressure.")
-	return true
+	return _check_work_captions_at_spawn()
 
 
 func _fore_first_with_cargo() -> bool:

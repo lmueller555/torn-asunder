@@ -8,6 +8,8 @@ const Rescue := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 const CREW_SPEED := 2.8
 const SALVAGER_SPEED := 5.8
 const INTERACT_RADIUS := 2.1
+const HIDE_WORK_CAPTIONS_WITHIN := 7.5
+const SHOW_WORK_CAPTIONS_BEYOND := 13.0
 const SCREEN_RADIUS := 5.2
 const MARINES := 1
 const HARBOR := "res://game/battlefields/moonwash_harbor_campaign.tscn"
@@ -21,6 +23,30 @@ const COLORS := [Color("#eac781"), Color("#8de3ce")]
 const SPAWN_PATHS := [^"Markers/Spawns/ForwardCrew", ^"Markers/Spawns/AftCrew"]
 const TRANSFER_PATHS := [^"Markers/Objectives/ForwardTransfer", ^"Markers/Objectives/AftTransfer"]
 const RECEIVER_PATHS := [^"Markers/Objectives/ForwardReceiver", ^"Markers/Objectives/AftReceiver"]
+
+class WorkCaption:
+	var label: Label3D
+	var anchor: Node3D
+	var face: Color
+	var outline: Color
+	var visible: bool
+	var _opacity := 1.0
+
+	func _init(node: Label3D) -> void:
+		label = node
+		anchor = node.get_parent() as Node3D
+		face = node.modulate
+		outline = node.outline_modulate
+		visible = node.visible
+
+	func set_opacity(value: float) -> void:
+		if value == _opacity:
+			return
+		_opacity = value
+		label.visible = visible and value > 0.0
+		label.modulate = Color(face, face.a * value)
+		label.outline_modulate = Color(outline, outline.a * value)
+
 
 var objective := Rescue.new()
 var _routes: Array[PackedVector3Array] = []
@@ -38,6 +64,7 @@ var _salvage_started := false
 var _salvager_sign: Label3D
 var _mooring_beacon: Node3D
 var _interact_requested := false
+var _work_captions: Array[WorkCaption] = []
 
 @onready var _progress: Label = $ObjectiveHUD/Panel/Margin/Readout/Progress
 @onready var _pressure: Label = $ObjectiveHUD/Panel/Margin/Readout/Pressure
@@ -54,10 +81,10 @@ func _ready() -> void:
 		var deck := _point(RECEIVER_PATHS[transfer])
 		_routes.append(PackedVector3Array([start, rig, deck]))
 		var tint: Color = COLORS[transfer]
-		_crews.append(_party(POINT_NAMES[transfer] + " crew", tint))
+		_crews.append(_party(POINT_NAMES[transfer] + " crew", tint, true))
 		_lines.append(_line(rig, deck, tint))
-		_beacon(rig, POINT_NAMES[transfer].to_upper() + " RIG", tint)
-		_beacon(deck, POINT_NAMES[transfer].to_upper() + " RECEIVER", tint.darkened(0.14))
+		_beacon(rig, POINT_NAMES[transfer].to_upper() + " RIG", tint, true)
+		_beacon(deck, POINT_NAMES[transfer].to_upper() + " RECEIVER", tint.darkened(0.14), true)
 	_cargo_origin = _point(^"Markers/Objectives/OptionalCargo")
 	_receiving_deck = _point(^"Markers/Objectives/ReceivingDeck")
 	_cargo = Node3D.new()
@@ -98,6 +125,11 @@ func _clear_rescue_endpoints() -> void:
 func _physics_process(delta: float) -> void:
 	if objective.outcome == Rescue.Outcome.ACTIVE:
 		super._physics_process(delta)
+
+
+func _update_mode() -> void:
+	super._update_mode()
+	_refresh_work_captions()
 
 
 func _after_battle_step(delta: float) -> void:
@@ -225,6 +257,7 @@ func _reset_scene() -> void:
 
 
 func _refresh_objective() -> void:
+	_refresh_work_captions()
 	const STATES := ["Stranded", "Crossing", "Paused", "Safe", "Lost"]
 	var status := PackedStringArray()
 	for transfer in range(POINT_NAMES.size()):
@@ -261,6 +294,20 @@ func _refresh_objective() -> void:
 			_: _hint.text = "Use the pier gangways to reach the marked rigs on the stranded deck."
 
 
+# At arm's reach the existing HUD names both crews/lines and the existing
+# rings locate the work. Leave distant navigation and all tactical names as-is.
+func _refresh_work_captions() -> void:
+	if _work_captions.is_empty():
+		return
+	var feet := Vector3.ZERO if command_view else hero_world_position()
+	for caption in _work_captions:
+		var opacity := 1.0
+		if not command_view:
+			var distance := feet.distance_to(caption.anchor.global_position)
+			opacity = smoothstep(HIDE_WORK_CAPTIONS_WITHIN, SHOW_WORK_CAPTIONS_BEYOND, distance)
+		caption.set_opacity(opacity)
+
+
 func _line(rig: Vector3, receiver: Vector3, tint: Color) -> Node3D:
 	var line := Node3D.new()
 	add_child(line)
@@ -273,7 +320,7 @@ func _line(rig: Vector3, receiver: Vector3, tint: Color) -> Node3D:
 	return line
 
 
-func _party(label: String, tint: Color) -> Node3D:
+func _party(label: String, tint: Color, near_work_fade := false) -> Node3D:
 	var party := Node3D.new()
 	add_child(party)
 	var uniform := _material(tint)
@@ -284,15 +331,19 @@ func _party(label: String, tint: Color) -> Node3D:
 		_mesh(party, _box(Vector3(0.38, 0.39, 0.36)), skin, offset + Vector3.UP * 1.36)
 	var sign := _sign(party, label, tint, 2.3)
 	sign.name = "PartySign"
+	if near_work_fade:
+		_work_captions.append(WorkCaption.new(sign))
 	return party
 
 
-func _beacon(point: Vector3, label: String, tint: Color) -> Node3D:
+func _beacon(point: Vector3, label: String, tint: Color, near_work_fade := false) -> Node3D:
 	var beacon := Node3D.new()
 	add_child(beacon)
 	beacon.global_position = point
 	_mesh(beacon, _ring(1.38, 1.52), _material(tint, true), Vector3.UP * 0.045)
-	_sign(beacon, label, tint, 2.6)
+	var sign := _sign(beacon, label, tint, 2.6)
+	if near_work_fade:
+		_work_captions.append(WorkCaption.new(sign))
 	return beacon
 
 
