@@ -1,4 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
+
+const CharacterArt := preload("res://game/battlefield/sereth_finale_character_art.gd")
 ## Development playtest only. This stand never moves the witnesses or the bridle.
 
 signal mission_finished(won: bool)
@@ -78,6 +80,7 @@ func _ready() -> void:
 	_pin(_terrace_entry, "TERRACE APPROACH", SAFE)
 	_restart.pressed.connect(restart_mission)
 	_reset_attempt()
+	CharacterArt.attach(self)
 
 
 func _physics_process(delta: float) -> void:
