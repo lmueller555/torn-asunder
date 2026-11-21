@@ -41,8 +41,8 @@ func _run_flow() -> bool:
 			or not status.text.contains("Melee Power 1 / 10") or not status.text.contains("+120 starting HP") \
 			or not status.text.contains("5 less base sword damage") or not status.text.contains("Practice only"):
 		return _fail("The fresh practice screen did not explain and lock the promotion.")
-	if _title._training_stats.get_rect().end.y > status.position.y \
-			or status.get_rect().end.y > _button("Award 100 XP").position.y \
+	if _title._training_stats.get_rect().end.y + 8.0 > status.position.y \
+			or status.get_rect().end.y + 12.0 > _button("Award 100 XP").position.y \
 			or status.get_rect().end.x > 523.0 \
 			or _button("Inspect 3D Model").get_rect().end.y > _title._notice.position.y:
 		return _fail("The practice text or controls overlap in the menu's fixed layout.")

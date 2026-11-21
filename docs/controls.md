@@ -89,6 +89,8 @@ While holding **L2 / Shift** in Mara’s campaign Mine, the local command camera
 
 In Mara’s campaign Mine, **D-pad Down / C** toggles camera focus on Mara without assigning an order. A focused Mara keeps the ordinary hero view until the living road guard is in clear melee reach, then the camera gently moves closer. The usual movement, orbit, attacks, guard and dodge still work. **L2 / Shift** always takes you straight to tactical controls, including the minimap and orders, even at contact. Explicitly cycling to an ally in command view or turning focus off clears the choice; while a minimap draft is open, **D-pad Down** nudges its cursor instead. Check the live interaction with `godot --headless --script tests/mara_campaign_lead_action.gd`.
 
+At Mara’s **High Quay**, the local sector can gently center on the selected platoon during actual body contact with the quay levy. It keeps the normal 110 m span, cursor, and orders. You stay in direct control: pointer or stick aiming, orbit, overview, choosing another platoon, or coming out of command restores the regular framing. A distant sighting or an offscreen contact does not move the camera. This is a withdrawal screen, not a melee attack.
+
 ## Mixed formation drill
 
 Launch `godot game/battlefield/mixed_formation_drill.tscn`. Hold **L2 / Shift** for command, select Archers with **D-pad / Z X**, aim at the guard marker, and press **Triangle / K**. At the starting distance, the guard can close and pin the bow line before it releases. Use **Square / right-click** to fall back, then re-order the attack once the archers are clear and reloaded.

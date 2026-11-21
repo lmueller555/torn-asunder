@@ -24,6 +24,8 @@ Open **Combat Drills** from Camp Operations or a leader's practice briefing to c
 
 Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
 
+After the first Mine clear in Mara’s campaign, return to **Marches Camp → Camp Operations → Lead Melee Training** to optionally raise the lead’s Melee Power from 1 to 2 on Mine replays. This one-time investment is separate from Shield Infantry Drill and does not spend practice points or change the BP pool.
+
 In King Mara Halden’s **Unit Progression** practice session, raise Melee Power to 10 to try Heavy Infantry without changing your campaign save. **Inspect 3D Model** opens the current practice unit in the studio. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLBs in `assets/models`.
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.

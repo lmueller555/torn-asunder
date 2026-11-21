@@ -96,7 +96,11 @@ func start() -> void:
 	outcome_shown = false
 	_outcome_timer = 0.0
 	command_mode = false
-	mission = Missions.find(mission_id)
+	battle = null
+	mission = {} if mission_id.is_empty() else Missions.find(mission_id)
+	if mission.is_empty():
+		push_warning("The development-only generic mission view requires an explicit, known mission_id. No mission started.")
+		return
 	if campaign_id.is_empty():
 		for id in CAMPAIGNS:
 			for entry: Dictionary in Missions.for_campaign(id):

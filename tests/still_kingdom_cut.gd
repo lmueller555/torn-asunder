@@ -126,7 +126,7 @@ func _check_live_edge_march() -> bool:
 			return false
 		distance += before.distance_to(formation.position)
 	var seconds := frames * DT
-	if not Scale.within_target_band(seconds) or Scale.classify(seconds) != Scale.Tier.STANDARD:
+	if not Scale.within_baseline_band(seconds) or Scale.classify_baseline(seconds) != Scale.Tier.STANDARD:
 		_fail("Expected a Standard march across the playable Cut road; measured %.2f s." % seconds)
 		return false
 	print("Still Kingdom Cut: %.1f m / %.2f s of real infantry movement between the deployed road limits (Standard)." % [

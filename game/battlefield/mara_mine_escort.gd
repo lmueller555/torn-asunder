@@ -48,6 +48,7 @@ const CAMPAIGN_MINE := "res://game/battlefields/year_one_mine_campaign.tscn"
 var objective := Escort.new()
 var encounter: Encounter
 var _launch_lead_level := 1
+var _launch_lead_melee_invested := false
 var _heavy_replay_loadout := false
 var _pickup: Marker3D
 var _exit: Marker3D
@@ -88,6 +89,13 @@ var _infantry_animators: Array[AnimationPlayer] = []
 func configure_campaign_lead_level(level: int) -> void:
 	if not is_inside_tree():
 		_launch_lead_level = level
+
+
+## The campaign caller supplies an already authorized snapshot, not a rating or a save reader.
+func configure_campaign_lead_melee(invested: bool) -> void:
+	if not is_inside_tree() and not is_node_ready() and battlefield_scene \
+			and battlefield_scene.resource_path == CAMPAIGN_MINE:
+		_launch_lead_melee_invested = invested
 
 
 ## Local proof hook only. A later deployment caller must authorize both a
@@ -480,7 +488,8 @@ func _reset_encounter() -> void:
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
 	var infantry: InfantryAttack = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE) if _heavy_replay_loadout else null
-	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane, _launch_lead_level, infantry) \
+	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane,
+		_launch_lead_level, infantry, _launch_lead_melee_invested) \
 		if opposition_enabled and guard_marker else null
 	if encounter and _pass_release:
 		var route := PackedVector2Array()

@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Scene := preload("res://game/battlefield/mara_moonwash_playtest.tscn")
+const Deployment := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/mara_moonwash_playtest.gd")
 const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
 const Levy := preload("res://game/battlefield/moonwash_levy_patrol.gd")
@@ -11,6 +12,7 @@ const DT := 1.0 / 60.0
 var _mission: Mission
 var _failures := 0
 var _observed_contact := false
+var _capture := ""
 
 
 func _initialize() -> void:
@@ -18,7 +20,12 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_mission = Scene.instantiate()
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture="):
+			_capture = arg.trim_prefix("--capture=")
+	var deployment := Deployment.for_mission("mara_moonwash_quay")
+	_check(deployment.scene == Scene, "The tested scene is the registered High Quay.")
+	_mission = deployment.scene.instantiate()
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame
@@ -39,6 +46,11 @@ func _run() -> void:
 	_check(patrol.decision.intent == Patrol.Intent.ENGAGE and patrol.decision.contact_id == Levy.HERO_ID
 		and _mission._levy_status.visible and _mission._levy_status.text.contains("in contact")
 		and _mission._levy_label.visible, "Actual hero approach produces a sighting and readable close-contact warning.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tick(5)
+	_check(patrol.decision.contact_id == Levy.HERO_ID and _mission._follow_shift == Vector3.ZERO
+		and root.get_camera_3d() == _mission._command_camera, "Real hero contact never follows the selected platoon or changes camera mode.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	var closest := INF
 	for step in range(40):
 		_set_hero_aim(patrol.position)
@@ -69,6 +81,11 @@ func _run() -> void:
 	_command()
 	_joy(JOY_BUTTON_DPAD_RIGHT)
 	_order(group, "Spawns/LocalLevy")
+	_joy(JOY_BUTTON_RIGHT_STICK)
+	_tick(8)
+	_check(not _mission._sector.overview and group.order == Battle.Order.MOVE
+		and _mission._follow_shift == Vector3.ZERO, "An approaching guard does not follow before physical contact.")
+	_joy(JOY_BUTTON_RIGHT_STICK)
 	for step in range(1500):
 		if group.order == Battle.Order.BLOCKED:
 			break
@@ -80,6 +97,7 @@ func _run() -> void:
 	_tick()
 	_check(group.order == Battle.Order.HOLD and _mission._levy_status.text.contains("screening"),
 		"Hold makes the contact a visible screen while other troops remain movable.")
+	await _check_follow(group)
 
 	_mission.restart_mission()
 	patrol = _mission.levy
@@ -98,14 +116,138 @@ func _run() -> void:
 		and _mission.objective.phase == Quay.Phase.WITHDRAWING, "Retry resets position, alert and memory.")
 	_observed_contact = false
 	_run_bypass()
-	_check(_mission.objective.phase == Quay.Phase.SUCCEEDED and not _observed_contact,
-		"An actual full withdrawal along the inland approach can finish without ever being spotted or touching the levy.")
+	_check(_mission.objective.phase == Quay.Phase.SUCCEEDED and not _observed_contact and _mission._follow_shift == Vector3.ZERO,
+		"An actual full withdrawal along the inland approach finishes without contact or a follow camera.")
 
 	_mission.queue_free()
 	await process_frame
 	if _failures == 0:
-		print("High Quay local levy: authored march, real cover, visible pursuit, physical contact, retreat, no-contact bypass and retry passed.")
+		print("High Quay local levy: authored march, real cover, visible pursuit, physical contact, order-safe follow, retreat, no-contact bypass and retry passed.")
 	quit(0 if _failures == 0 else 1)
+
+
+func _check_follow(group: Battle.Formation) -> void:
+	var camera := _mission._command_camera
+	var span := _mission.local_sector_size
+	_check(_mission._sector.overview and camera.size > span and _mission._follow_shift == Vector3.ZERO,
+		"Physical contact never takes over whole-field overview.")
+	var baseline := _local_layout("Routes/QuaySafeTurn")
+	var cursor := _mission.cursor
+	var focus := _mission._sector.focus
+	var aim_at := _marker("Routes/InlandBypass")
+	var aim_pixel := camera.unproject_position(aim_at.global_position)
+	await _capture_frame("ordinary-local-screen")
+	_tick(36)
+	_check(_mission._follow_shift.length() > 0.0 and _mission._follow_shift.length() <= Mission.FOLLOW_MAX_SHIFT + 0.001
+		and camera.position != baseline.origin and camera.basis == baseline.basis and camera.size == span
+		and _mission.cursor == cursor and _mission._sector.focus == focus and group.order == Battle.Order.HOLD
+		and root.get_camera_3d() == camera, "Real selected contact gives only a bounded 110m orthographic framing shift.")
+	await _capture_frame("selected-levy-follow")
+	_joy(JOY_BUTTON_DPAD_LEFT)
+	_check(_mission.selected_index == 0 and camera.transform == baseline,
+		"Selecting away restores the exact ordinary projection before rendering.")
+	_tick(12)
+	_check(_mission._follow_shift == Vector3.ZERO and camera.transform == baseline
+		and _mission.levy.decision.contact_id == &"Royal Rear Guard", "Another platoon's contact never steals the selected camera.")
+	_joy(JOY_BUTTON_DPAD_RIGHT)
+	_tick(12)
+	_check(_mission._follow_shift != Vector3.ZERO, "Reselect the physical contact to frame it again while idle.")
+	_axis(JOY_AXIS_RIGHT_X, 0.13)
+	_check(_mission._follow_shift != Vector3.ZERO, "One under-deadzone component does not interrupt follow.")
+	_axis(JOY_AXIS_RIGHT_Y, 0.13)
+	_check(_mission._follow_shift == Vector3.ZERO and camera.transform == baseline,
+		"A diagonally live right stick restores the original camera before the orbit begins.")
+	_tick(8)
+	_check(camera.basis != baseline.basis and _mission._follow_shift == Vector3.ZERO, "Held orbit works and keeps follow suspended.")
+	_axis(JOY_AXIS_RIGHT_X, 0.0)
+	_axis(JOY_AXIS_RIGHT_Y, 0.0)
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	_tick()
+	_axis(JOY_AXIS_LEFT_X, 0.6)
+	_check(camera.transform == baseline and _mission._follow_shift == Vector3.ZERO,
+		"Moving the real aim stick restores the lens before its next cursor update.")
+	_tick(5)
+	_check(_mission.cursor != cursor and _mission._follow_shift == Vector3.ZERO, "Manual cursor movement stays in charge.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	var remote := _local_layout("Routes/InlandApproach")
+	_tick(10)
+	_check(camera.transform == remote and _mission._follow_shift == Vector3.ZERO,
+		"A distant sector where the contact cannot fit does not follow it.")
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	_tick(12)
+	_joy(JOY_BUTTON_RIGHT_STICK)
+	_check(camera.size > span and _mission._follow_shift == Vector3.ZERO, "Overview restores from an active contact lens.")
+	await _capture_frame("overview-after-follow")
+	_joy(JOY_BUTTON_RIGHT_STICK)
+
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	aim_pixel = camera.unproject_position(aim_at.global_position)
+	_tick(20)
+	var motion := InputEventMouseMotion.new()
+	motion.position = aim_pixel
+	root.push_input(motion, true)
+	_check(camera.transform == baseline and _mission._mouse_cursor_active
+		and _mission.cursor.distance_to(_point("Routes/InlandBypass")) < 0.05,
+		"The first pointer aim uses the exact normal projection, not the shifted lens.")
+	_tick(4)
+	_check(_mission._follow_shift == Vector3.ZERO, "Pointer aiming keeps follow suspended.")
+
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	aim_pixel = camera.unproject_position(aim_at.global_position)
+	_tick(20)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_RIGHT
+	click.pressed = true
+	click.position = aim_pixel
+	root.push_input(click, true)
+	_check(camera.transform == baseline and group.order == Battle.Order.MOVE
+		and group.destination.distance_to(_point("Routes/InlandBypass")) < 0.05,
+		"An immediate right-click from follow issues the exact underlying Move without changing its ray.")
+	_joy(JOY_BUTTON_A)
+	_tick(10)
+	_check(group.order == Battle.Order.HOLD and _mission._follow_shift != Vector3.ZERO,
+		"Existing Hold is still delivered and a live contact can reacquire while the camera is idle.")
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	_tick(10)
+	root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	_check(camera.transform == baseline and _mission._follow_shift == Vector3.ZERO
+		and root.get_camera_3d() == _mission._hero_camera and not _mission.command_view,
+		"Focus loss restores the exact tactical projection and does not strand the hero in command.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	baseline = _local_layout("Routes/QuaySafeTurn")
+	_tick(10)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_check(camera.transform == baseline and _mission._follow_shift == Vector3.ZERO
+		and root.get_camera_3d() == _mission._hero_camera, "L2 release restores the normal lens and direct hero camera.")
+	await _capture_frame("hero-after-follow")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_local_layout("Routes/QuaySafeTurn")
+	_tick(10)
+	_check(_mission._follow_shift != Vector3.ZERO, "Retry fixture has an active shift to remove.")
+	_joy(JOY_BUTTON_START)
+	_check(_mission._follow_shift == Vector3.ZERO and not _mission.command_view and root.get_camera_3d() == _mission._hero_camera,
+		"Options resets an active follow without affecting the ordinary retry.")
+
+
+func _local_layout(id: String) -> Transform3D:
+	# Keep the already-established contact and vary only the pre-existing
+	# sector/cursor placement so the camera geometries are deterministic.
+	_mission._restore_levy_follow()
+	_mission.cursor = _point(id)
+	_mission._sector.center_on(_mission.cursor)
+	_mission._mouse_cursor_active = false
+	_mission._update_cameras()
+	_mission._sync_view()
+	return _mission._command_camera.transform
+
+
+func _capture_frame(name: String) -> void:
+	if _capture.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	for _frame in range(6):
+		await RenderingServer.frame_post_draw
+	_check(root.get_texture().get_image().save_png(_capture.path_join(name + ".png")) == OK,
+		"Save follow QA frame " + name)
 
 
 func _run_bypass() -> void:

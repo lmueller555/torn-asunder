@@ -5,6 +5,7 @@ const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
 
 var _mission: Mission
 var _failures := 0
@@ -16,13 +17,15 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_mission = Scene.instantiate()
+	_mission.configure_campaign_lead_melee(true)
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
 
 	var fight := _mission.encounter
-	_check(fight.points.balance == 400 and _mission._combat_hp.text.contains("400"), "The mission HUD starts with 400 shared BP.")
+	_check(fight.points.balance == 400 and _mission._combat_hp.text.contains("400")
+		and fight.hero.rating(Unit.Damage.MELEE) == 1, "The standalone pocket starts with 400 BP and cannot opt into campaign lead training.")
 	_key(KEY_J)
 	_tick(38)
 	_check(fight.enemy.hp == fight.enemy.max_hp and fight.points.balance == 400, "A distant light attack misses without awarding BP.")

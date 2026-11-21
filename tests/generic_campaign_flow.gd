@@ -17,10 +17,24 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var passed := true
+	for invalid_id: String in ["", "unknown_generic_mission"]:
+		var invalid = View.instantiate()
+		invalid.mission_id = invalid_id
+		var outcomes: Array[bool] = []
+		invalid.mission_finished.connect(func(won: bool) -> void: outcomes.append(won))
+		root.add_child(invalid)
+		await physics_frame
+		await physics_frame
+		if invalid.battle != null or invalid.get_child_count() != 0 or not outcomes.is_empty():
+			passed = _fail("An unconfigured generic view started a mission for ID %s." % [invalid_id])
+		invalid.queue_free()
+		await process_frame
+
 	for campaign in Campaigns.ALL:
 		for mission in Catalog.missions_for_campaign(campaign.id):
-			if Deployments.for_mission(mission.id).get("scene") == null:
-				passed = _fail("%s has no deployment scene." % mission.id)
+			var scene: PackedScene = Deployments.for_mission(mission.id).get("scene")
+			if scene == null or scene == View:
+				passed = _fail("%s did not keep its dedicated deployment scene." % mission.id)
 			var view = View.instantiate()
 			view.mission_id = mission.id
 			view.campaign_id = campaign.id
@@ -40,7 +54,7 @@ func _run() -> void:
 	if not _won:
 		passed = _fail("The generic view did not report its victory.")
 	if passed:
-		print("Every catalog mission deploys, and the generic view starts all 18 and reports victory.")
+		print("All 18 dedicated scenes stay registered; the generic view requires a known ID, starts all 18 explicitly, and reports victory.")
 	quit(0 if passed else 1)
 
 

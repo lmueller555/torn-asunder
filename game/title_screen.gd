@@ -44,8 +44,10 @@ enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
 	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
+	MARA_LEAD_MELEE,
 }
 
+const MARA_LEAD_MELEE_ENTRY := "Lead Melee Training"
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
 	Unit.Damage.RANGED: "Ranged Power",
@@ -190,6 +192,11 @@ func _go_back() -> void:
 			var drill := _stage.get_node_or_null("Shield Infantry Drill") as Button
 			if drill:
 				drill.grab_focus()
+		Page.MARA_LEAD_MELEE:
+			_show_briefing()
+			var lead := _stage.get_node_or_null(MARA_LEAD_MELEE_ENTRY) as Button
+			if lead:
+				lead.grab_focus()
 		Page.ROSTER_REQUIREMENTS:
 			_show_unit_progression(true)
 			_training_planner.grab_focus()
@@ -420,6 +427,7 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	_victory_pending = false
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
 		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
+		mission.configure_campaign_lead_melee(confirmed_clears.has(mission_id) and _profile.mara_lead_melee_invested())
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
 		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
@@ -541,6 +549,11 @@ func _show_briefing() -> void:
 			_link_focus(shield, SIDE_TOP, progression)
 			_link_focus(dispatch, SIDE_RIGHT, shield)
 			_link_focus(shield, SIDE_LEFT, dispatch)
+			if _has_mara_lead_melee():
+				var lead := _button(MARA_LEAD_MELEE_ENTRY, Rect2(1046, 636, 318, 57), _show_mara_lead_melee)
+				_link_focus(shield, SIDE_RIGHT, lead)
+				_link_focus(lead, SIDE_LEFT, shield)
+				_link_focus(lead, SIDE_TOP, progression)
 	back.grab_focus()
 
 
@@ -596,6 +609,54 @@ func _purchase_mara_shield_drill() -> void:
 		_show_notice("Training could not be saved. The purchase was not applied.")
 
 
+func _has_mara_lead_melee() -> bool:
+	return (_campaign_world != null and _active_campaign.get("id") == ProfileStore.MARA
+		and _campaign_world.campaign_id() == ProfileStore.MARA
+		and _campaign_world.current_waypoint_id() == "marches_camp")
+
+
+func _show_mara_lead_melee() -> void:
+	if not _has_mara_lead_melee():
+		return
+	var state := _profile.mara_lead_melee_status()
+	var invested := state == ProfileStore.MaraLeadMeleeStatus.INVESTED
+	_open_page(Page.MARA_LEAD_MELEE)
+	var back := _heading(MARA_LEAD_MELEE_ENTRY, "Mara’s campaign training · Mine replays only")
+	var rating := _label(_stage, "Melee Power: %d" % (2 if invested else 1),
+		Rect2(76, 236, 1040, 65), 39, IVORY, DISPLAY_FACE)
+	rating.name = "LeadMeleeRating"
+	var status := "Locked: Clear The Pass Below the Mine."
+	match state:
+		ProfileStore.MaraLeadMeleeStatus.AVAILABLE:
+			status = "Available: Spend 1 earned lead point to raise Melee Power from 1 to 2."
+		ProfileStore.MaraLeadMeleeStatus.INVESTED:
+			status = "Invested: This one-time training is complete."
+		ProfileStore.MaraLeadMeleeStatus.UNAVAILABLE:
+			status = "Unavailable: The saved training record could not be read."
+	var summary := _label(_stage, status, Rect2(76, 320, 1070, 52), 26, GOLD)
+	summary.name = "LeadMeleeStatus"
+	var scope := _label(_stage,
+		"Only the lead’s Melee Power changes on Mine replays. The lead’s level, HP, Battle Points, and mission rewards stay the same.\n"
+		+ "This one-time investment is separate from Shield Infantry Drill and Unit Progression practice.",
+		Rect2(76, 398, 1090, 100), 24, IVORY)
+	scope.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	scope.name = "LeadMeleeScope"
+	if state == ProfileStore.MaraLeadMeleeStatus.AVAILABLE:
+		var confirm := _button("Confirm Investment (1 lead point)", Rect2(76, 572, 455, 57), _invest_mara_lead_melee)
+		_link_focus(back, SIDE_BOTTOM, confirm)
+		_link_focus(confirm, SIDE_TOP, back)
+	back.grab_focus()
+
+
+func _invest_mara_lead_melee() -> void:
+	if _page != Page.MARA_LEAD_MELEE or not _has_mara_lead_melee():
+		return
+	var result := _profile.invest_mara_lead_melee_point()
+	_show_mara_lead_melee()
+	if result != OK:
+		_show_notice("Lead Melee could not be saved. No point was spent.")
+
+
 func _show_unit_progression(keep_training: bool = false) -> void:
 	var starting_id: StringName = _active_campaign.get("starting_unit", &"")
 	if not keep_training:
@@ -617,17 +678,18 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 	_training_level = _label(_stage, "", Rect2(76, 228, 445, 58), 40, IVORY, DISPLAY_FACE)
 	_training_stats = _label(_stage, "", Rect2(76, 294, 445, 164), 24, IVORY)
 	_training_stats.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_training_award = _button("Award 100 XP", Rect2(76, 550 if has_promotion else 573, 345, 45), _award_training_experience)
+	_training_award = _button("Award 100 XP", Rect2(76, 566 if has_promotion else 573, 345, 45), _award_training_experience)
 	_training_inspect = null
 	_training_planner = null
 	_training_promotion = null
 	_training_promotion_status = null
 	if has_promotion:
-		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
+		_training_promotion_status = _label(_stage, "", Rect2(76, 477, 435, 72), 18, GOLD)
+		_training_promotion_status.add_theme_constant_override("line_spacing", -4)
 		_training_promotion_status.name = "Promotion Status"
-		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
+		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 612, 345, 45), _promote_training_unit)
 	if definition.has("model"):
-		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
+		_training_inspect = _button("Inspect 3D Model", Rect2(76, 658 if has_promotion else 650, 345, 45), _show_unit_model.bind(definition))
 	elif PRACTICE_ROSTERS.has(_active_campaign.id):
 		_training_planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
 

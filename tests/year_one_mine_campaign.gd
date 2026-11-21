@@ -206,7 +206,7 @@ func _march_route(route: Array[Vector2], direction: String) -> bool:
 			_fail("Mine march %s could not reach %s; stopped at %s." % [direction, destination, infantry.position])
 			return false
 	var seconds := ticks * MARCH_DT
-	if not MarchScale.within_target_band(seconds) or MarchScale.classify(seconds) != MarchScale.Tier.SMALL:
+	if not MarchScale.within_baseline_band(seconds) or MarchScale.classify_baseline(seconds) != MarchScale.Tier.SMALL:
 		_fail("Expected a Small Mine march %s; marched %.3f m in %.2f s." % [direction, distance, seconds])
 		return false
 	print("Year One Mine (%s): infantry marched %.3f m from %s to %s in %.2f s (%d ticks, Small)." % [
