@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "scope": "Red Basin lower storehouse V1.2 closed loading frontage and exterior in the current The Second Bucket placement only. No other well, bench, cart, actors, village, or map approval.",
+  "author": "Torn Asunder terrain asset author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Matched native Godot hero from actual action ring and cart lane, legal side angle, tactical sector at 110 m and overview. Hero reaches ring, starts real cart movement, and observes three households board at their separate yard until Ready.",
+    "close_up": "Native normal and label-free real hero lens checks closed shutter, frame and ground seating. Unobscured native rear corners at same 65° lens are inspection only outside the movement window; no new ability to enter the solid shell.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, 1280×720. Open the live Well Road from Raska's second campaign briefing. Use upper staging, west fork, wash entrance and lower staging to reach the exterior ring near XZ (-143,39); press Space as hero and watch the cart move to (-134,41) before all households board. Compare actual hero and Shift/Home sector, then M overview.",
+    "measurements": "458 near / 174 far triangles, two resident S3TC image RIDs with mips totaling 3,495,280 bytes. Whole-view primitives +422/+138/+138, minus two draw calls in each lens. Controlled same-process software only: warm hero serial ABBA baseline 62.136/61.257 ms, candidate 68.545/71.274 ms; do not infer console or GPU FPS."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Closed wood shutter supported by a visible frame, iron straps/latch, plinth and covered eave. Actual gameplay and both supplemental rear corners show joined plaster and wall seating; no measured positive-area duplicate surfaces."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Closed split timber, sandstone and worn ash plaster hold a distinct angle under the real lighting. The existing shape casts the same shadow with no additional source or shared map lighting changes."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The shutter reads at the actual hero approach without claiming an enterable doorway; roof and interaction site stay distinct in command. Twenty-two native distance probes choose one visual variant through the 48 m transition."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Visual-only subtree. Original bodies, roof pick rejection, supported cart yard, two route choices and three arrivals unchanged. Same-process scene-relative cost is within this single kit's texture and primitive budget (less than 4 MiB; +500/+200/+200 maximum and no added draws). No target hardware benchmark."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Static closed shell, no opening or animation. Actual hero movement, battle cameras, cart arrival and separate household motion were used for context."
+    }
+  },
+  "files": {
+    "assets/models/environment/basin_storehouse.glb": "acbe3071d55ea7b16d3060fcaf3edfffe92084dbef6ceffec2657de6d39b9359",
+    "assets/models/environment/basin_storehouse.glb.import": "7b44747e39de07746f2d5ae6f75e49a811c34679eb3c41f76b20cdd6ca8c0a02",
+    "assets/models/environment/basin_storehouse_import.gd": "3228151f26c5c5796939573c96f8cb1c150be29733b20bc3c32eaa43ef8f0fdd",
+    "assets/models/environment/basin_storehouse_import.gd.uid": "fc2364068204f92a6a314d9c0212520d0f7669dafddbb8c92b32a893036a07e0",
+    "game/battlefields/red_basin_well_road.tscn": "77d26ac0e6d5fe12d5b1702351799b4a7d3bc0e82a2310d12171c03c9cf4b3b8",
+    "assets/source/red_basin/basin_storehouse.blend": "0070d8c60039635a41fe21a13fea331b5f71320cfc04a50ca96e01d2bb4fb16c"
+  },
+  "review_manifest_sha256": "d5023915ca587b896401cdc20afec54da2c454ed639ba1d8bfcef876c63eebe4",
+  "offline_evidence_sha256": {
+    "candidate-hero-interact-no-labels.png": "d7d1ed3be8328e1f0e230b99d31e649e3c16d42979db7260a79b5fa357ad8124",
+    "candidate-hero-cart-already-at-boarding.png": "ea5338fe3ca562101eafa55efa1cf055bae58d48f9e2b9b4cbd867c6d1c7753c",
+    "candidate-command-sector-ready.png": "ee099004b57de0d468bafae173fd2b03c17062c23c6b766a9a3195ebbd2576f3",
+    "candidate-command-overview.png": "0448d56dec1db2c079cf71a810ecd746620e7f08825ef8ccc23a9f0a88db8f92",
+    "native-review.txt": "f6479688d8732a00c733fc568ea3c85c2f1e0c2d3b9ba03c721134efc1abffde",
+    "exact-scope.txt": "75237ec5b101ad15376060768c0fd8a74a0c894c51294a88d11a7bdf77b45b68",
+    "final-checks/matched-corners-and-rear.jpg": "85d77637c0e5bbf4efbdf18cea16daf15f990306d1c11529fdec10dd865066c9",
+    "final-checks/hero-repeat.txt": "dbe5ddbd7d0af1749817fd23b72e50aa3af564266cf263ab0bda69b386d8c3e0"
+  },
+  "measurements": {
+    "triangles_near_far": [
+      458,
+      174
+    ],
+    "compressed_mipped_texture_bytes": 3495280,
+    "unique_textures": 2,
+    "additional_primitives_hero_sector_overview": [
+      422,
+      138,
+      138
+    ],
+    "draw_call_deltas": [
+      -2,
+      -2,
+      -2
+    ],
+    "hero_baseline_block_medians_ms": [
+      62.136,
+      61.257
+    ],
+    "hero_candidate_block_medians_ms": [
+      68.545,
+      71.274
+    ],
+    "hardware_fps_claim": false
+  },
+  "tests": [
+    "Clean audit import",
+    "red_basin_well_road.gd",
+    "raska_well_road_playtest.gd",
+    "raska_campaign_flow.gd",
+    "Actual lower yard hero boarding, cart at (-134,-4,41), three arrivals, wells remain inert, and roof cannot be ordered",
+    "22 matched native hero and command LOD samples"
+  ]
+}

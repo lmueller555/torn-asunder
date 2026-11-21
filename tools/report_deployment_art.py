@@ -31,6 +31,8 @@ KITS = (
         "game/battlefields/still_kingdom_cut.tscn", "assets/models/environment/cut_cemetery_stair.glb", 6),
     Kit("Cut Record Room exterior (V3.1)", "docs/audits/cut-record-room-v31.json",
         "game/battlefields/still_kingdom_cut.tscn", "assets/models/environment/record_room.glb", 6),
+    Kit("Red Basin lower storehouse (V1.2)", "docs/audits/red-basin-storehouse-v12.json",
+        "game/battlefields/red_basin_well_road.tscn", "assets/models/environment/basin_storehouse.glb", 6),
 )
 CUT_KIT = KITS[1]
 CUT_ORIGINAL_RECEIPT_SHA256 = "cebadd861eab16ddcbb773f75bf7b5014b967d9db7479ceaf4e4d53ce66868c6"
