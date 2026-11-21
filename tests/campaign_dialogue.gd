@@ -34,12 +34,13 @@ func _run() -> void:
 	passed = _check_raska_well_road_beats() and passed
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
+	passed = _check_sova_vault_return_beats() and passed
 	passed = _check_neris_failing_grove_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad grove), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad grove and Sova’s vault), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -400,6 +401,53 @@ func _check_sova_public_record_beats() -> bool:
 	if not speakers.has(Beats.ORC_WITNESS) or not speakers.has(Beats.ELVEN_WITNESS):
 		return _fail("The Year Four custody transfer lacked both witnesses.")
 	return _completions.size() == initial_count + cases.size() or _fail("Sova's beats emitted duplicate completions.")
+
+
+func _check_sova_vault_return_beats() -> bool:
+	var cases := [
+		[Beats.SOVA_VAULT_RETURN_DISPATCH, "No New Command",
+			["shelf is the shorter climb", "side path bends back to the same forecourt",
+				"custody terms", "I'll carry the Godbridle", "witness road open", "Clear the ring",
+				"No one gives a new command"]],
+		[Beats.SOVA_VAULT_RETURN_DEBRIEF, "Leave the Record Open",
+			["hand you that case at Spanwater", "From the terrace", "door shut",
+				"Orrun is still carrying out Mara's order", "Godbridle is back in the vault",
+				"We gave no new command", "open to every valley", "reason to blame us"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title", "") != fixture[1] or not "Year Five" in beat.get("location", "") or not _panel.present(id, beat):
+			return _fail("The Year Five vault beat was missing, invalid, or set in the wrong year: %s" % id)
+		var words := ""
+		var speakers := {}
+		for index in range(beat.lines.size()):
+			var speaker := _label("SpeakerName").text
+			words += _label("DialogueLine").text + "\n"
+			speakers[speaker] = true
+			if speaker == Beats.SOVA and (not _portrait().visible or _portrait().texture != Beats.SOVA_PORTRAIT):
+				return _fail("Sova's portrait did not render at the vault.")
+			if index < beat.lines.size() - 1:
+				if index % 2 == 0:
+					_send_pad(JOY_BUTTON_A)
+				else:
+					_send_key(KEY_ENTER)
+		for phrase: String in fixture[2]:
+			if not phrase in words:
+				return _fail("A vault beat lost a route, custody, or consequence detail: %s" % phrase)
+		if id == Beats.SOVA_VAULT_RETURN_DEBRIEF:
+			for witness in [Beats.ORC_WITNESS, Beats.ELVEN_WITNESS, Beats.MARCH_WITNESS]:
+				if not speakers.has(witness):
+					return _fail("The return lost a witness from the separate terrace: %s" % witness)
+		if not speakers.has(Beats.SOVA) or "Orrun," in words or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
+			return _fail("The vault dialogue issued a command, lost Sova, or advanced without Finish.")
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("The vault beat did not finish under its own ID.")
+		ids.append(id)
+	return _completions.slice(start) == ids or _fail("Vault dialogue emitted duplicate or out-of-order completions.")
 
 
 func _check_neris_failing_grove_beats() -> bool:

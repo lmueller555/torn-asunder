@@ -18,6 +18,8 @@ const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
 const SOVA_PUBLIC_RECORD_DISPATCH := &"sova_public_record_dispatch"
 const SOVA_PUBLIC_RECORD_DEBRIEF := &"sova_public_record_debrief"
 const SOVA_GODBRIDLE_HANDOVER := &"sova_godbridle_handover"
+const SOVA_VAULT_RETURN_DISPATCH := &"sova_vault_return_dispatch"
+const SOVA_VAULT_RETURN_DEBRIEF := &"sova_vault_return_debrief"
 const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
 const MARA_GRAIN_SEED_DEBRIEF := &"mara_grain_debrief_seed_only"
 const MARA_GRAIN_BREAD_DEBRIEF := &"mara_grain_debrief_bread_only"
@@ -46,6 +48,7 @@ const GUARD := "Cairnspine Guard"
 const SCRIBE := "Public Scribe"
 const ORC_WITNESS := "Orc Witness"
 const ELVEN_WITNESS := "Elven Witness"
+const MARCH_WITNESS := "Marches Witness"
 const CLERK := "Council Clerk"
 const MILLER := "Mill Steward"
 const BAKER := "Town Baker"
@@ -208,6 +211,29 @@ const BEATS := {
 			{"speaker": ELVEN_WITNESS, "text": "I see the bridle. I'll attest that it passed from your hands to his."},
 			{"speaker": ORC_WITNESS, "text": "So will I. I'm here to witness a handover, not to sign away anyone's claim."},
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Close the case. I'll take it into custody. When the valleys meet, this goes into the public record too."},
+		],
+	},
+	SOVA_VAULT_RETURN_DISPATCH: {
+		"title": "No New Command",
+		"location": "Cairnspine assembly · Year Five, before the vault return",
+		"lines": [
+			{"speaker": GUARD, "text": "The shelf is the shorter climb. The side path bends back to the same forecourt. A rival reserve is gathering north of it."},
+			{"speaker": SCRIBE, "text": "The valleys pledged their guards when we put the full record into the custody terms. The witnesses have their own way to the terrace."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "I'll carry the Godbridle. Hold the approach to the vault, and leave the witness road open."},
+			{"speaker": GUARD, "text": "If their reserve gets inside the closure ring, do we follow them in?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Give me room to step back. Clear the ring, and I'll try the door again. We're here to return the bridle. No one gives a new command."},
+		],
+	},
+	SOVA_VAULT_RETURN_DEBRIEF: {
+		"title": "Leave the Record Open",
+		"location": "Cairnspine witness terrace · Year Five, after closure",
+		"lines": [
+			{"speaker": ORC_WITNESS, "text": "I watched Mara hand you that case at Spanwater. From the terrace I saw you carry it into the vault."},
+			{"speaker": ELVEN_WITNESS, "text": "I saw the same, and I saw the door shut. I'll put my name to the return."},
+			{"speaker": MARCH_WITNESS, "text": "And mine. What do I tell the towns still waiting for their water?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Orrun is still carrying out Mara's order. The Godbridle is back in the vault. We gave no new command."},
+			{"speaker": SCRIBE, "text": "I'll leave a copy at the assembly. Who may read the vault record?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Leave it open to every valley. Keep our names in it, even when the people asking to read it have reason to blame us."},
 		],
 	},
 	MARA_GRAIN_DISPATCH: {
