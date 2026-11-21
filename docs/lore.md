@@ -27,7 +27,7 @@ The mining crew tests the bridle by asking for water. By morning, a spring is ru
 
 In **Year One**, a Human crown takes custody of the bridle. An Orc delegation follows its dry river upstream to demand the water’s return. The Druids arrive with a map that explains what happened and try to get the miners out before the armies close in.
 
-The first shared battle takes place at the mine. A Human commander must evacuate the bridle, an Orc commander fights to capture the crew who used it, and a Druid commander tries to hold the tunnels long enough to get the workers out.
+The first shared battle takes place at the mine. The Human detachment carries the Godbridle out through the pass while Sova leads the miners through the tunnels. Raska arrives under orders to seize someone who can explain what happened to the Basin’s river. At the outlet, one miner offers to go with him and testify if the others can leave safely. He accepts her terms. Each campaign follows a different objective in the same encounter.
 
 The [combat system](combat.md#year-one-battle-at-the-mine) describes how each side plays through that battle.
 
