@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="Script" path="res://game/battlefield/mixed_formation_drill.gd" id="2_drill"]
+
+[node name="MixedFormationDrill" instance=ExtResource("1_harness")]
+script = ExtResource("2_drill")
