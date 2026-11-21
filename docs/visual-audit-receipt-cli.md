@@ -43,6 +43,19 @@ Every current deployment is recorded as **still uses development art**. The five
 
 For a campaign release preflight, run `python3 -B -m tools.report_deployment_art --require-release-ready`. The command exits 2 and lists every deployment that lacks full visual approval (currently all 18); invalid inventory or receipt data exits 1. A verified prop or terrain kit is not a map-wide approval. The check is limited to registered campaign deployments: overworld, menus, and other modes still require their own audits. Use this check before packaging; it does not modify editor or development playtests or the Godot export command.
 
+## Inventory existing visuals in the live opening scene
+
+After importing the project, generate an opening inventory with Godot:
+
+```sh
+godot --headless --no-header --script tools/inventory_deployment_visuals.gd > /tmp/torn-opening-art.json
+godot --headless --no-header --script tools/inventory_deployment_visuals.gd -- ilyra_coast_survey
+```
+
+The command instantiates each registered mission without advancing its gameplay. It lists existing renderable nodes at deployment, including meshes and labels made by startup scripts and hidden originals that remain beside a replacement. Each row gives the node path within the mission, nearest containing scene/import, scene ownership, inherited visibility, shadow-only status, and known direct resource paths. A blank resource list can mean procedural art, not “no art.” Engine-generated names can vary between runs.
+
+This is a starting list, not a list of unique assets, a screenshot audit, or an approval decision. Tree visibility does not mean the camera draws the node. Later spawns, effects and state changes, optional rosters, the overworld, menus, and rendering details outside the reported node types require separate review. For approval, follow the [visual inventory](visual-audit-inventory.md) and inspect the required gameplay states in Godot. The release preflight remains separate.
+
 ### Cut cemetery stair continuity
 
 The original V7 receipt and its SHA-256 pin remain unchanged. If a different exterior changes the shared Cut scene, the export rejects the new host until an independent reviewer records a separately pinned `docs/audits/cut-cemetery-stair-v7-continuity.json`. This is a full version 1 receipt for the same six paths: only the exact host scene digest may change. Its `continuity` object records `previous_receipt`, `previous_receipt_sha256`, `battlefield`, and `previous_battlefield_sha256`. Record the scoped scene diff (or exact inverse), native stair traversal and matched camera rechecks under `evidence.continuity`. Pin that exact new receipt only after the review. This check does not authenticate its reviewer or reproduce the evidence; the standard byte verifier is unchanged. It records continuity of the stair placement only, not PASS for the separate exterior or the map.
