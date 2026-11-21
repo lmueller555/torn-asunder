@@ -54,3 +54,9 @@ In the campaign-scale version, **R2 / V** winds up **Sundering Strike** in hero 
 On fields that enable the sector camera, hold **L2 / Shift** to start in a nearby tactical view. Move the cursor with the left stick or WASD; the camera follows once the cursor nears the edge of the view. With a mouse, move the pointer to a screen edge to pan. **R3 / M** switches to a map-wide overview; point at a place and press it again to inspect that sector. **L3 / Home** returns to the hero's sector. You can still select formations and issue orders from either command view. Releasing L2 / Shift returns to the hero without pausing orders.
 
 This mode is opt-in through the command scene's `enable_sector_camera`, `field_bounds`, and `local_sector_size` settings. The current small prototypes keep their existing camera. Run `godot --headless --script tests/sector_camera.gd` to exercise both views and ordering on a synthetic 440 × 300 m field.
+
+## Prototype platoon waypoints
+
+The [original *Kingdom Under Fire: Heroes* Xbox manual, pp. 12–17](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) describes issuing movement the same way with the minimap on and placing up to eight waypoints. Torn Asunder’s standalone queue keeps that limit. Both a tactical cursor and a minimap can supply the same battlefield XZ point and terrain check. A direct destination replaces the route, an appended waypoint extends it, and only reaching the next point consumes it. Duplicate or invalid requests leave the route intact. Hold or cancel must clear it explicitly.
+
+These are provisional movement-order rules, not new input bindings. The command harness and minimap are not wired to the queue yet. Run `godot --headless --script tests/platoon_waypoint_queue.gd` to check the rules.
