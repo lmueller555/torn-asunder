@@ -4,8 +4,8 @@ extends Control
 
 signal point_requested(battlefield_point: Vector2)
 
-enum ObjectiveKind { PICKUP, EXIT }
-enum Icon { HERO, ALLY, ENEMY, PICKUP, EXIT }
+enum ObjectiveKind { PICKUP, EXIT, ALERT }
+enum Icon { HERO, ALLY, ENEMY, PICKUP, EXIT, ALERT }
 
 const PADDING := 11.0
 const BACK := Color("#101b20")
@@ -18,6 +18,7 @@ const ALLY := Color("#7edbb8")
 const ENEMY := Color("#ff8d80")
 const PICKUP := Color("#ffcc77")
 const EXIT := Color("#aee3f5")
+const ALERT := Color("#f3a76f")
 const SECTOR := Color("#c7e8f5")
 
 
@@ -98,7 +99,10 @@ func show_frame(snapshot: Frame) -> void:
 	if snapshot:
 		for marker in snapshot.objectives:
 			if marker:
-				_add_marker(marker, Icon.EXIT if marker.objective_kind == ObjectiveKind.EXIT else Icon.PICKUP)
+				match marker.objective_kind:
+					ObjectiveKind.EXIT: _add_marker(marker, Icon.EXIT)
+					ObjectiveKind.ALERT: _add_marker(marker, Icon.ALERT)
+					_: _add_marker(marker, Icon.PICKUP)
 		for marker in snapshot.visible_enemies:
 			_add_marker(marker, Icon.ENEMY)
 		for marker in snapshot.allies:
@@ -221,6 +225,14 @@ func _draw_marker(marker: Glyph, at: Vector2) -> void:
 			draw_polyline(gate, INK, 4.0, true)
 			draw_polyline(gate, EXIT, 2.0, true)
 			draw_line(at - Vector2(3, 0), at + Vector2(3, 0), EXIT, 1.5, true)
+
+		Icon.ALERT:
+			var caution := PackedVector2Array([at + Vector2(0, -8), at + Vector2(8, 6), at + Vector2(-8, 6)])
+			draw_colored_polygon(caution, ALERT)
+			caution.append(caution[0])
+			draw_polyline(caution, INK, 1.4, true)
+			draw_line(at + Vector2(0, -3), at + Vector2(0, 1), INK, 1.5, true)
+			draw_circle(at + Vector2(0, 3), 0.9, INK)
 
 
 func _add_marker(marker: Marker, shape: Icon, selected := false) -> void:
