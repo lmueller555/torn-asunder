@@ -9,17 +9,17 @@ const _BY_CAMPAIGN := {
 		{"id": "mara_moonwash_quay", "title": "The High Quay", "year": 3, "battlefield_id": "moonwash_harbor"},
 	],
 	"raska": [
-		{"id": "orc_mine_witness", "title": "One Person to Ask", "year": 1, "battlefield_id": "year_one_mine"},
+		{"id": "orc_mine_witness", "title": "One Person to Ask", "year": 3, "battlefield_id": "year_one_mine"},
 		{"id": "orc_well_road", "title": "The Second Bucket", "year": 3, "battlefield_id": "red_basin_well_road"},
 		{"id": "orc_spanwater_release", "title": "River, Not Sea", "year": 4, "battlefield_id": "spanwater_lock"},
 	],
 	"sova": [
-		{"id": "sova_mine_tunnels", "title": "The Workers' Way Out", "year": 1, "battlefield_id": "year_one_mine"},
-		{"id": "sova_public_record", "title": "Let Them Walk Out", "year": 2, "battlefield_id": "cairnspine_vault_road"},
+		{"id": "sova_mine_tunnels", "title": "The Workers' Way Out", "year": 3, "battlefield_id": "year_one_mine"},
+		{"id": "sova_public_record", "title": "Let Them Walk Out", "year": 3, "battlefield_id": "cairnspine_vault_road"},
 		{"id": "sova_vault_return", "title": "No New Command", "year": 5, "battlefield_id": "cairnspine_vault_road"},
 	],
 	"ilyra": [
-		{"id": "ilyra_moonwash_rescue", "title": "Hulls on Stone", "year": 2, "battlefield_id": "moonwash_harbor"},
+		{"id": "ilyra_moonwash_rescue", "title": "Hulls on Stone", "year": 3, "battlefield_id": "moonwash_harbor"},
 		{"id": "ilyra_coast_survey", "title": "Two Shorelines", "year": 3, "battlefield_id": "moonwash_survey_shore"},
 		{"id": "ilyra_spanwater_evacuation", "title": "Last Boat at Spanwater", "year": 4, "battlefield_id": "spanwater_lock"},
 	],

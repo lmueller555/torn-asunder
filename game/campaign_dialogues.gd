@@ -124,9 +124,9 @@ const BEATS := {
 	},
 	RASKA_MINE_DISPATCH: {
 		"title": "Someone Who Saw It",
-		"location": "Basin camp · Before the mine escort",
+		"location": "Basin camp · After Orrun’s awakening",
 		"lines": [
-			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The assembly sent us after a river. The miners were here when it stopped. Get me to the outlet so I can ask them what they saw."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The Dryads have gone, but the spring at Greyhollow is still running. Our river stopped the night it started. Get me to the outlet so I can ask the miners what they saw."},
 			{"speaker": LIEUTENANT, "text": "If we hold the narrow part of the road, the second platoon can cross the ridge and come down under cover."},
 			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Hold the road only as long as you need to. Keep clear of the Druids and let the workers through."},
 			{"speaker": LIEUTENANT, "text": "And if Mara gets the Godbridle past us?"},
@@ -201,11 +201,11 @@ const BEATS := {
 	},
 	SOVA_MINE_DISPATCH: {
 		"title": "The Workers First",
-		"location": "Old mine tunnels · Before the evacuation",
+		"location": "Greyhollow tunnels · After Orrun’s awakening",
 		"lines": [
 			{"speaker": GUARD, "text": "One group is waiting by the tunnel mouth. The second is at the bend. Do I send them both?"},
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Let me check the outlet first. When I signal, send the first group. Keep the second at the bend until the path is clear again."},
-			{"speaker": GUARD, "text": "Mara's escort is moving on the pass. Are we leaving the Godbridle to them?"},
+			{"speaker": GUARD, "text": "The Dryads pulled back days ago. Now Mara's escort is moving on the pass. Are we leaving the Godbridle to them?"},
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Yes. My survey dates the spring to the night the river vanished. It can't tell us what the miners asked Orrun. First, let's get them somewhere safe."},
 		],
 	},
@@ -279,6 +279,7 @@ const BEATS := {
 		"location": "Marches council chamber · Before the crossing",
 		"lines": [
 			{"speaker": CAPTAIN, "text": "Two carts on credit after the second bad harvest. Rival levies are waiting to impound them. The crown that sent them wants an answer about the water."},
+			{"speaker": CLERK, "text": "They heard what happened after the rescue. The miners asked Orrun for water. Orrun woke. A spring opened at Greyhollow, and the Basin lost its river. Now every crown wants us to ask for a spring of its own."},
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Send the seed across the bridge to the mill yard. The bread grain goes by the lower ford to the town store."},
 			{"speaker": CAPTAIN, "text": "The bridge is exposed. If we send both escorts out at once, there'll be no one left at the fork."},
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Hold a reserve there. If a cart can't get through, turn it back and get the other one home. We need the grain, not the bridge."},

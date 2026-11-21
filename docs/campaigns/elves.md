@@ -1,12 +1,12 @@
 # Elven campaign: The Coast We Remember
 
-Tide Speaker Ilyra Venn remembers the streets under Moonwash. The pilots who keep her fleet afloat know the living coast above them. Over [Years Two–Four](../war-timeline.md#six-campaign-windows), Ilyra learns what rebuilding her home would ask of theirs. The player commands her pledged ships and their shore detachments; unpledged ships are not hers to order.
+Tide Speaker Ilyra Venn remembers the streets under Moonwash. The pilots who keep her fleet afloat know the living coast above them. Over [Years Three–Four](../war-timeline.md#six-campaign-windows), Ilyra learns what rebuilding her home would ask of theirs. The player commands her pledged ships and their shore detachments; unpledged ships are not hers to order.
 
 ## Mission order
 
 | ID | Mission | Year | Unlock |
 |---|---|---|---|
-| `ilyra_moonwash_rescue` | Hulls on Stone | Two | Start Ilyra's campaign |
+| `ilyra_moonwash_rescue` | Hulls on Stone | Three | Start Ilyra's campaign |
 | `ilyra_coast_survey` | Two Shorelines | Three | Clear `ilyra_moonwash_rescue` and see Sova's disclosure in debrief |
 | `ilyra_spanwater_evacuation` | Last Boat at Spanwater | Four | Clear `ilyra_coast_survey` |
 
@@ -14,7 +14,7 @@ These IDs belong to campaign `ilyra`, not particular scene files. Defeat retries
 
 ## 1. Hulls on Stone
 
-**Briefing.** Masts pitch as old walls rise beneath moored ships. Ilyra recognizes the corner of her childhood street beneath a stranded hull. One port signals that the pledged ships should pursue the artifact while the Marches are distracted. Ilyra keeps them in harbor and orders their crews to rig a rescue.
+**Briefing.** After the discovery and Orrun’s awakening, Mara gives the command that diverts the water inland. At Moonwash, masts pitch as old walls rise beneath moored ships. Ilyra recognizes the corner of her childhood street beneath a stranded hull. One port signals that the pledged ships should pursue the artifact while the Marches are distracted. Ilyra keeps them in harbor and orders their crews to rig a rescue.
 
 **Victory.** Secure the forward and aft transfer points in either order. At each, have the field hero rig a marked line and bring that stranded crew group across to the receiving deck. Win when both groups have landed. **Defeat:** the hero falls, or either required crew group is wiped out before delivery. Show crew and transfer status separately. Loading a marked cargo bundle is optional; no cargo objective blocks a crew transfer or the mission clear.
 

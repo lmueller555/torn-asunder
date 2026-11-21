@@ -18,9 +18,9 @@ This inventory tracks visual assets already in Torn Asunder. It is a working rev
 
 The [V10 audit receipt](audits/mine-timber-portal-v10.json) passes the front Mine timber portal and connected stone shoulders in the large Mine scene. It covers the exact reviewed files, both gameplay cameras, close and reverse views, and the detail-to-distance transition. The evacuation arch, mountain, nearby buildings, and other props remain unapproved. The technical result is a scene-relative asset budget, not a console frame-rate benchmark.
 
-The [V3 audit receipt](audits/godbridle-custody-case-v3.json) passes the sealed Godbridle case only in Mara’s campaign Mine. The case replaces the old exposed symbolic bridle in those ground and carry states, keeps the pickup and navigation cues, and does not replace any other mission’s artifact art.
+The [V3 audit receipt](audits/godbridle-custody-case-v3.json) passes the sealed Godbridle case only in Mara’s original escort, now a standalone historical playtest. It is not mounted in Get Them Out. The case replaces the old exposed symbolic bridle in those ground and carry states, keeps the pickup and navigation cues, and does not replace any other mission’s artifact art.
 
-The [V1 Mine Storehouse receipt](audits/mara-mine-storehouse-v1.json) passes the closed braced shell, barred shutter and low slate roof only in Mara’s registered escort. Original wall and roof solids, cover and route remain. Both distances were checked; the stand-alone, Sova, and Raska stock shells, crates, and nearby portal surroundings are outside this pass.
+The [V1 Mine Storehouse receipt](audits/mara-mine-storehouse-v1.json) passes the closed braced shell, barred shutter and low slate roof only in Mara’s original escort. The new rescue inherits the placement, but its new context is not covered by that receipt. Original wall and roof solids, cover and route remain. Both distances were checked; the stand-alone, Sova, and Raska stock shells, crates, and nearby portal surroundings are outside this pass.
 
 ## Inspected: first Mine pass
 
