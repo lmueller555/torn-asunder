@@ -25,6 +25,7 @@ func _run() -> void:
 	var passed := _check_authoring_and_invalid_data()
 	passed = (await _check_advancement()) and passed
 	passed = _check_cancellation_and_replay() and passed
+	passed = _check_other_mine_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
@@ -121,6 +122,42 @@ func _check_cancellation_and_replay() -> bool:
 	_send_key(KEY_ENTER)
 	if _panel.visible or _cancellations != [id, id, id]:
 		return _fail("Keyboard activation of the selected Back button advanced instead.")
+	return true
+
+
+func _check_other_mine_beats() -> bool:
+	var cases := [
+		[Beats.RASKA_MINE_DISPATCH, Beats.RASKA, Beats.RASKA_PORTRAIT, ["let the workers through", "someone willing"]],
+		[Beats.RASKA_MINE_DEBRIEF, Beats.RASKA, Beats.RASKA_PORTRAIT, ["changed your mind", "the night your river stopped", "Mara's carrier cleared the pass"]],
+		[Beats.SOVA_MINE_DISPATCH, Beats.SOVA, Beats.SOVA_PORTRAIT, ["send the first group", "get them somewhere safe"]],
+		[Beats.SOVA_MINE_DEBRIEF, Beats.SOVA, Beats.SOVA_PORTRAIT, ["Both groups are through the tunnels", "she went with Raska", "Mara's carrier cleared the pass", "old sealed record"]],
+	]
+	var start_completions := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var content := Beats.get_beat(id)
+		if content.is_empty() or content.lines.size() < 3 or content.lines.size() > 5 or not _panel.present(id, content):
+			return _fail("A new mine conversation had invalid content: %s" % id)
+		var visible_text := ""
+		var portraits := 0
+		for index in range(content.lines.size()):
+			visible_text += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == fixture[1]:
+				if not _portrait().visible or _portrait().texture != fixture[2]:
+					return _fail("A faction leader is missing their existing portrait: %s" % id)
+				portraits += 1
+			if index < content.lines.size() - 1:
+				_panel.advance()
+		for phrase: String in fixture[3]:
+			if not phrase in visible_text:
+				return _fail("A mine conversation lost its required story fact: %s" % id)
+		if portraits == 0 or _button("AdvanceButton").text != "Finish":
+			return _fail("A beat did not show its lead speaker or reach explicit Finish: %s" % id)
+		_panel.advance()
+		if _completions.back() != id or _panel.visible:
+			return _fail("A new beat did not complete under its own stable ID: %s" % id)
+	if _completions.size() != start_completions + cases.size():
+		return _fail("New beats did not send exactly one completion each.")
 	return true
 
 
