@@ -1,5 +1,7 @@
 extends "res://game/battlefield/command_harness.gd"
 
+const CharacterArt := preload("res://game/battlefield/sova_mine_character_art.gd")
+
 ## Emitted once when an attempt reaches a terminal result.
 signal mission_finished(won: bool)
 
@@ -55,6 +57,7 @@ func _ready() -> void:
 	_restart_button.pressed.connect(restart_mission)
 	_reset_workers()
 	_refresh_view()
+	CharacterArt.attach(self)
 
 
 func _physics_process(delta: float) -> void:
