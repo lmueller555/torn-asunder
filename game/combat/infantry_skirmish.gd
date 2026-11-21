@@ -4,6 +4,7 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Setup := preload("res://game/combat/skirmish_setup.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
+const Points := preload("res://game/combat/battle_points.gd")
 
 # From RECOIL through KNOCKDOWN, states are ordered by contact priority.
 enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER }
@@ -116,6 +117,8 @@ var winner := LIVE
 var hits := 0
 var blocks := 0
 
+var _team_battle_points: Array[Points] = []
+var _troop_hit_award: int
 var _first_amber_platoon: int
 var _body_cells: Dictionary[Vector2i, Array] = {}
 var _random := RandomNumberGenerator.new()
@@ -127,7 +130,8 @@ var _clear_time := 0.0
 var _celebrating := false
 
 
-func _init(seed_value: int = 8, setup: Setup = null) -> void:
+func _init(seed_value: int = 8, setup: Setup = null, troop_hit_award: int = 0) -> void:
+	_troop_hit_award = maxi(0, troop_hit_award)
 	_random.seed = seed_value
 	_cheer_random.seed = seed_value ^ 0x494E46
 	_retarget_random.seed = seed_value ^ 0x524554
@@ -140,6 +144,9 @@ func _init(seed_value: int = 8, setup: Setup = null) -> void:
 	arena_limit.x += (widest - 1) * PLATOON_SPACING * 0.5
 	for team in range(2):
 		var count: int = setup.sides[team].size()
+		# AI skirmish has no hero yet; use the lead platoon for capacity.
+		var lead_level: int = setup.sides[team][0].level if count > 0 else 1
+		_team_battle_points.append(Points.new(lead_level))
 		for slot in range(count):
 			var build: Setup.PlatoonBuild = setup.sides[team][slot]
 			var center := (slot - (count - 1) * 0.5) * PLATOON_SPACING
@@ -163,6 +170,29 @@ func _spawn_platoon(team: int, center: float, build: Setup.PlatoonBuild, trainin
 		soldiers.append(soldier)
 		engagements.append({})
 	platoons.append(Platoon.new(roster, training))
+
+
+func battle_points_for_team(team: int) -> Points:
+	if team < 0 or team >= _team_battle_points.size():
+		return null
+	return _team_battle_points[team]
+
+
+# The caller confirms charge contact before invoking this resolver. An ineffective
+# charge does not earn points, and only opposing platoons can be charged.
+func resolve_platoon_charge(attacker_index: int, defender_index: int, braced: bool, bp_award: int) -> float:
+	if winner != LIVE or attacker_index < 0 or attacker_index >= platoons.size():
+		return 0.0
+	if defender_index < 0 or defender_index >= platoons.size():
+		return 0.0
+	var attacker_team := 0 if attacker_index < _first_amber_platoon else 1
+	var defender_team := 0 if defender_index < _first_amber_platoon else 1
+	if attacker_team == defender_team:
+		return 0.0
+	var loss := platoons[attacker_index].charge(platoons[defender_index], braced)
+	if loss > 0.0:
+		_team_battle_points[attacker_team].award_confirmed_hit(bp_award)
+	return loss
 
 
 func team_size(team: int) -> int:
@@ -666,7 +696,7 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			continue
 		var defender_index := attacker.target
 		var defender := soldiers[defender_index]
-		if not defender.unit.is_alive() or defender.is_recovering() or elapsed < defender.recovery_protected_until:
+		if attacker.team == defender.team or not defender.unit.is_alive() or defender.is_recovering() or elapsed < defender.recovery_protected_until:
 			continue
 		var offset := defender.position - attacker.position
 		if offset.length_squared() > ATTACK_RANGE * ATTACK_RANGE:
@@ -681,7 +711,10 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			reactions[defender_index] = maxi(reactions[defender_index], State.BLOCKED)
 			continue
 		hits += 1
-		damage[defender_index] += defender.unit.damage_from(attacker.unit, _attack)
+		var hit_damage := defender.unit.damage_from(attacker.unit, _attack)
+		damage[defender_index] += hit_damage
+		if hit_damage > 0.0:
+			_team_battle_points[attacker.team].award_confirmed_hit(_troop_hit_award)
 		if attacker.heavy:
 			var reaction := State.KNOCKDOWN if _random.randf() < 0.22 else State.STAGGER
 			# Push away from the strike that wins reaction priority. Keep the first strike on ties.
