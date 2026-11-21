@@ -19,6 +19,18 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The other faction rosters and new paths are not authored here.
+`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc starter tree below adds metadata only. The other faction rosters are not authored here.
+
+### Orc starter tree: Red Basin companies
+
+These are the formations already named in [Raska’s Well Road and Spanwater playtests](campaigns/orcs.md). The names describe troop jobs; the lower-town companies are an allegiance in the story, not a fourth class. **Provisional roster gates only:** the table adds no soldier profiles, damage, movement modifiers, promotions in a menu, or playable combat. It does not alter the campaign’s fixed formations.
+
+| Unit key | Form and role | Advance from Basin Regulars | Tradeoff to test later |
+|---|---|---|---|
+| `orc_basin_regulars` | **Basin Regulars**, Melee | Starting unit | General-purpose infantry can shift screens and hold narrow approaches, but has no dedicated anti-charge or ranged role. |
+| `orc_brace_infantry` | **Brace Infantry**, Anti-riding + Melee | Melee **5** and Charge & Brace **2** | Commit to a frontal hold against a run-up; turning or redeploying drops that protection. A charge can go around them on open ground. |
+| `orc_basin_archers` | **Basin Archers**, Ranged | Ranged **6** and Scouting **2** | Cover a road or wash shoulder from sighted ground; lose the shot behind terrain and need infantry if pressed in melee. |
+
+From Basin Regulars, meeting both sets of gates makes both choices eligible; neither branch can skip into the other. Ratings and training are checked separately. No Battle Points, hero XP, or art availability substitute for these minima. The [official *Kingdom Under Fire: Heroes* Orc guide](https://www.kufheroes.com/eng/characters/unit_orc.asp) informs the distinction between durable general infantry and a specialist that stops mounted advances. These names, roles and numbers are Torn Asunder’s; Basin Archers come from its own Well Road scenario.
 
 Run `godot --headless --script tests/faction_roster.gd`.

@@ -42,7 +42,7 @@ var _advances: Array[Dictionary] = []
 ## Elite Support is independent standing, never a replacement for the unit's
 ## battlefield function. Engineering is an optional secondary capability.
 func add_unit(id: StringName, faction: StringName, primary_family: StringName,
-		secondary_tags: Array[StringName] = [], elite_support := false) -> bool:
+		secondary_tags: Array[StringName] = [], elite_support := false, display_name := "") -> bool:
 	if id == &"" or _units.has(id) or faction not in FACTIONS or not _is_family(primary_family):
 		return false
 	var seen: Array[StringName] = [primary_family]
@@ -57,6 +57,8 @@ func add_unit(id: StringName, faction: StringName, primary_family: StringName,
 		"secondary_tags": secondary_tags.duplicate(),
 		"elite_support": elite_support,
 	}
+	if not display_name.strip_edges().is_empty():
+		_units[id]["display_name"] = display_name.strip_edges()
 	return true
 
 

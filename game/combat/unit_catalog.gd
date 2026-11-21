@@ -7,6 +7,9 @@ const Roster := preload("res://game/combat/faction_roster.gd")
 const HUMAN_INFANTRY := &"human_infantry"
 const HUMAN_HEAVY_INFANTRY := &"human_heavy_infantry"
 const HUMAN_ARCHER := &"human_archer"
+const ORC_BASIN_REGULARS := &"orc_basin_regulars"
+const ORC_BRACE_INFANTRY := &"orc_brace_infantry"
+const ORC_BASIN_ARCHERS := &"orc_basin_archers"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -79,16 +82,22 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 }
 
 
-
-## The first classified slice uses existing gameplay units only. Archer combat
-## is already represented by HumanArcherVolley but has no catalog model yet.
-## Consumers that require art still use TYPES as before.
+## Battlefield taxonomy and planning gates. Human Archer and the Orc rows
+## intentionally have no entry in the model inventory (TYPES).
 static func faction_roster() -> Roster:
 	var roster := Roster.new()
 	roster.add_unit(HUMAN_INFANTRY, Roster.HUMANS, Roster.MELEE)
 	roster.add_unit(HUMAN_HEAVY_INFANTRY, Roster.HUMANS, Roster.MELEE)
 	roster.add_unit(HUMAN_ARCHER, Roster.HUMANS, Roster.RANGED)
 	roster.add_advance(HUMAN_INFANTRY, HUMAN_HEAVY_INFANTRY, TYPES[HUMAN_HEAVY_INFANTRY].promotion_minimum_ratings)
+	roster.add_unit(ORC_BASIN_REGULARS, Roster.ORCS, Roster.MELEE, [], false, "Basin Regulars")
+	roster.add_unit(ORC_BRACE_INFANTRY, Roster.ORCS, Roster.ANTI_RIDING, [Roster.MELEE], false, "Brace Infantry")
+	roster.add_unit(ORC_BASIN_ARCHERS, Roster.ORCS, Roster.RANGED, [], false, "Basin Archers")
+	# Provisional metadata only. These are not runtime promotions or balance changes.
+	roster.add_advance(ORC_BASIN_REGULARS, ORC_BRACE_INFANTRY,
+		{Unit.Damage.MELEE: 5}, {Platoon.Skill.CHARGE_BRACE: 2})
+	roster.add_advance(ORC_BASIN_REGULARS, ORC_BASIN_ARCHERS,
+		{Unit.Damage.RANGED: 6}, {Platoon.Skill.SCOUTING: 2})
 	return roster
 
 
