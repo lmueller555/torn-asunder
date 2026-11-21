@@ -1,12 +1,18 @@
 extends RefCounted
 ## Authored conversations. A route may replay a beat without mutating its source.
 
+const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+
 const MARA_MINE_DISPATCH := &"mara_mine_dispatch"
 const MARA_MINE_DEBRIEF := &"mara_mine_debrief"
 const RASKA_MINE_DISPATCH := &"raska_mine_dispatch"
 const RASKA_MINE_DEBRIEF := &"raska_mine_debrief"
 const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
 const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
+const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
+const MARA_GRAIN_SEED_DEBRIEF := &"mara_grain_debrief_seed_only"
+const MARA_GRAIN_BREAD_DEBRIEF := &"mara_grain_debrief_bread_only"
+const MARA_GRAIN_BOTH_DEBRIEF := &"mara_grain_debrief_both"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
@@ -17,6 +23,9 @@ const LIEUTENANT := "Basin Lieutenant"
 const MINER := "Mine Witness"
 const SOVA := "First Listener Sova Cairn"
 const GUARD := "Cairnspine Guard"
+const CLERK := "Council Clerk"
+const MILLER := "Mill Steward"
+const BAKER := "Town Baker"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -81,7 +90,62 @@ const BEATS := {
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Fold it into the survey. When we get home, ask the Keepers to bring out the old sealed record. I'm going to read it to the valleys."},
 		],
 	},
+	MARA_GRAIN_DISPATCH: {
+		"title": "Grain on Credit",
+		"location": "Marches council chamber · Before the crossing",
+		"lines": [
+			{"speaker": CAPTAIN, "text": "Two carts on credit after the second bad harvest. Rival levies are waiting to impound them. The crown that sent them wants an answer about the water."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Send the seed across the bridge to the mill yard. The bread grain goes by the lower ford to the town store."},
+			{"speaker": CAPTAIN, "text": "The bridge is exposed. If we send both escorts out at once, there'll be no one left at the fork."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Hold a reserve there. If a cart can't get through, turn it back and get the other one home. We need the grain, not the bridge."},
+		],
+	},
+	MARA_GRAIN_SEED_DEBRIEF: {
+		"title": "Leave the Seed Sealed",
+		"location": "Marches council chamber · After the crossing",
+		"lines": [
+			{"speaker": MILLER, "text": "The seed is in the mill yard. The growers can plant the south fields if I keep those sacks out of the mill."},
+			{"speaker": CLERK, "text": "The bread cart never reached the town store. The bakers want to know what goes in tomorrow's dough."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Give the town ovens the flour we can spare. Leave the seed sealed."},
+			{"speaker": CLERK, "text": "The allied crown will recall its troops and stop the grain unless we make good on water."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Bring the Godbridle in. Have the surveyors mark the dry headwater channels before we speak to Orrun."},
+		],
+	},
+	MARA_GRAIN_BREAD_DEBRIEF: {
+		"title": "One Week of Bread",
+		"location": "Marches council chamber · After the crossing",
+		"lines": [
+			{"speaker": BAKER, "text": "The bread grain is in the town store. We can keep the ovens lit this week."},
+			{"speaker": CLERK, "text": "The mill yard got no seed. The growers ask whether to sow what they have left or save it for food."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Have them count what they can still plant. Don't open the last sacks tonight."},
+			{"speaker": CLERK, "text": "Our ally says there'll be no more grain and no troops if the channels stay dry."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Send for the Godbridle. I want a map of the headwaters on this table when we speak to Orrun."},
+		],
+	},
+	MARA_GRAIN_BOTH_DEBRIEF: {
+		"title": "Both Receipts",
+		"location": "Marches council chamber · After the crossing",
+		"lines": [
+			{"speaker": MILLER, "text": "The seed cart is checked in at the mill yard. The growers are coming for their shares at first light."},
+			{"speaker": BAKER, "text": "And the bread grain made the town store. I'll have the ovens lit before they get there."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Two receipts at last. How long can we feed the towns before another shipment is due?"},
+			{"speaker": CLERK, "text": "Not long enough. Our ally won't send another cart and will call its troops home unless the water comes back."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Keep the receipts. Bring the Godbridle and the headwater map. We still need to speak to Orrun."},
+		],
+	},
 }
+
+
+## Resolve only validated successful Grain results. No default or progress side effects.
+static func grain_debrief_id(result: StringName) -> StringName:
+	match result:
+		Grain.SEED_ONLY:
+			return MARA_GRAIN_SEED_DEBRIEF
+		Grain.BREAD_ONLY:
+			return MARA_GRAIN_BREAD_DEBRIEF
+		Grain.BOTH:
+			return MARA_GRAIN_BOTH_DEBRIEF
+	return &""
 
 
 static func get_beat(id: StringName) -> Dictionary:
