@@ -136,8 +136,11 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 		if world.current_waypoint_id() != CAMP or world.visited_waypoint_ids() != PackedStringArray([CAMP]):
 			return _fail("A locked, unknown, malformed or blank save fabricated an arrival.")
 		var foreign_world := profile.load_campaign_world("neris")
-		if not foreign_world.current_waypoint_id().is_empty() or profile.record_world_waypoint(foreign_world) != ERR_INVALID_PARAMETER:
-			return _fail("A campaign without a map inherited another campaign's waypoint.")
+		if foreign_world.current_waypoint_id() != "grove_camp" \
+				or foreign_world.visited_waypoint_ids() != PackedStringArray(["grove_camp"]):
+			return _fail("A Dryad save pointing to Mara's Mine did not fall back to Grove Camp.")
+		if profile.record_world_waypoint(profile.load_campaign_world("unknown_campaign")) != ERR_INVALID_PARAMETER:
+			return _fail("Saving a campaign without an overworld should be rejected.")
 		if profile.record_world_waypoint(null) != ERR_INVALID_PARAMETER or FileAccess.get_file_as_string(path) != before:
 			return _fail("Rejecting invalid or foreign state modified the profile.")
 	var profile := Profile.new(path)

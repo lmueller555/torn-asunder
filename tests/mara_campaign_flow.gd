@@ -60,8 +60,9 @@ func _run() -> void:
 func _flow() -> bool:
 	if not _press("New Game") or not _press("neris"):
 		return false
-	if _title._page != Title.Page.BRIEFING or _map() or _button("Confirm Deployment"):
-		return _fail("An unbuilt campaign opened a deployable mission.")
+	if _title._page != Title.Page.WORLD_MAP or not _map() or _button("Confirm Deployment") \
+			or _title._campaign_world.campaign_id() != "neris":
+		return _fail("Selecting the Dryads borrowed Mara's map or deployed a battle prematurely.")
 	_joy(JOY_BUTTON_B)
 	if not _press("New Game") or not _press("mara"):
 		return false

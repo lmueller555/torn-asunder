@@ -72,6 +72,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "MOONWASH HARBOR · RESCUE DECKS",
 		"orders": "Reach the stranded deck and rig both lines in either order. Get both crews onto the receiving deck. Hold the Marines at the mooring if salvagers block the forward line. Shore cargo is optional: carry it aboard and load it before the last crew arrives.",
 	},
+	"neris_failing_grove": {
+		"scene": preload("res://game/battlefield/neris_failing_grove_playtest.tscn"),
+		"dispatch": Beats.NERIS_FAILING_GROVE_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.NERIS_FAILING_GROVE_DEBRIEF,
+		"battlefield_label": "ISOLATED GROVE · RAISED NURSERY ROAD",
+		"orders": "Speak to the grove envoy, then call the volunteers. Hold the low-track approach to keep the loading yard clear. Follow the sled along the raised road and help plant the tree at the nursery. Leave the town well alone.",
+	},
 }
 
 
