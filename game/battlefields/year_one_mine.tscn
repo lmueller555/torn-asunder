@@ -361,6 +361,7 @@ size = Vector3(8, 6, 4)
 [node name="Boundary" type="Node3D" parent="Geometry"]
 
 [node name="Basin" type="StaticBody3D" parent="Geometry/Ground"]
+collision_layer = 3
 position = Vector3(0, -1, 8)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Ground/Basin"]
@@ -489,6 +490,7 @@ material_override = SubResource("Mat_cliff")
 shape = SubResource("Shape_5_4_6")
 
 [node name="WestRamp" type="StaticBody3D" parent="Geometry/Ridge"]
+collision_layer = 3
 position = Vector3(-20.7253, 1.03848, -18)
 rotation = Vector3(0, 0, 0.2783)
 
@@ -500,6 +502,7 @@ material_override = SubResource("Mat_ridge")
 shape = SubResource("Shape_14p56022_2_9")
 
 [node name="EastRamp" type="StaticBody3D" parent="Geometry/Ridge"]
+collision_layer = 3
 position = Vector3(20.7253, 1.03848, -18)
 rotation = Vector3(0, 0, -0.2783)
 
@@ -511,6 +514,7 @@ material_override = SubResource("Mat_ridge")
 shape = SubResource("Shape_14p56022_2_9")
 
 [node name="Crest" type="StaticBody3D" parent="Geometry/Ridge"]
+collision_layer = 3
 position = Vector3(0, 1, -18)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Ridge/Crest"]
