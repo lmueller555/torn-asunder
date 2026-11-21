@@ -223,6 +223,7 @@ var _cells: Dictionary = {}
 var _attackers := PackedInt32Array()
 var _team_alive: Array = [[], [], []]
 var _overrun: Dictionary = {}
+var _effect_serial := 0
 
 
 func _init(definition: Dictionary, hero_id: StringName, hero_level: int, levels: Dictionary = {}, seed_value: int = 11) -> void:
@@ -1007,7 +1008,8 @@ func _update_projectiles(delta: float) -> void:
 
 
 func _effect(kind: String, position: Vector2, radius: float, color: Color, facing: Vector2 = Vector2.ZERO) -> void:
-	effects.append({"kind": kind, "pos": position, "radius": radius, "color": color, "age": 0.0, "life": 0.9, "facing": facing})
+	_effect_serial += 1
+	effects.append({"id": _effect_serial, "kind": kind, "pos": position, "radius": radius, "color": color, "age": 0.0, "life": 0.9, "facing": facing})
 
 
 func _update_effects(delta: float) -> void:
@@ -2112,7 +2114,8 @@ func _perform(actions: Array) -> void:
 			"hazard":
 				var zone: Dictionary = zones.get(action[1], {})
 				if not zone.is_empty():
-					hazards.append({
+					_effect_serial += 1
+					hazards.append({"id": _effect_serial,
 						"zone": action[1], "pos": zone.pos, "radius": zone.get("radius", 6.0),
 						"warn_until": elapsed + float(action[2]), "end": elapsed + float(action[2]) + float(action[3]),
 						"dps": float(action[4]) if action.size() > 4 else 0.08,

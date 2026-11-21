@@ -3,12 +3,14 @@ extends Node3D
 ## objective markers and lighting. Every mesh is generated, so maps need no art files.
 
 const THEMES := {
-	"mountain": {"ground": Color("#5b5f4e"), "accent": Color("#6b6650"), "rock": Color("#77746a"), "sky": Color("#9fb2bd"), "fog": Color("#a9b6b8"), "sun": Color("#ffe6c4")},
+	"mountain": {"ground": Color("#4a4e3f"), "accent": Color("#6b6650"), "rock": Color("#77746a"), "sky": Color("#9fb2bd"), "fog": Color("#a9b6b8"), "sun": Color("#ffe6c4")},
 	"plains": {"ground": Color("#5d6d3d"), "accent": Color("#71784a"), "rock": Color("#827c6a"), "sky": Color("#a9c3d6"), "fog": Color("#bccbd0"), "sun": Color("#fff0d0")},
 	"highland": {"ground": Color("#57624a"), "accent": Color("#6f6a52"), "rock": Color("#7c7b74"), "sky": Color("#8e9ea8"), "fog": Color("#98a4a6"), "sun": Color("#f2e3c8")},
-	"coast": {"ground": Color("#a39a7b"), "accent": Color("#8a8a6a"), "rock": Color("#8d8a80"), "sky": Color("#b6cfdc"), "fog": Color("#c4d3d8"), "sun": Color("#fff2da")},
+	"coast": {"ground": Color("#8a8266"), "accent": Color("#8a8a6a"), "rock": Color("#8d8a80"), "sky": Color("#b6cfdc"), "fog": Color("#c4d3d8"), "sun": Color("#fff2da")},
 	"fen": {"ground": Color("#454c3a"), "accent": Color("#3c4536"), "rock": Color("#5e5f58"), "sky": Color("#6f7a7c"), "fog": Color("#6f7d7a"), "sun": Color("#c9d2d6")},
 	"forest": {"ground": Color("#4c5e35"), "accent": Color("#5d6a3c"), "rock": Color("#6e6c62"), "sky": Color("#9fb7bf"), "fog": Color("#a4b3ad"), "sun": Color("#fbe9c9")},
+	"salt": {"ground": Color("#b3a68a"), "accent": Color("#9e8f72"), "rock": Color("#8d7a62"), "sky": Color("#c9b9a0"), "fog": Color("#cdbda4"), "sun": Color("#fff0d6")},
+	"river": {"ground": Color("#56633f"), "accent": Color("#6a6b48"), "rock": Color("#7a776c"), "sky": Color("#a3b8c2"), "fog": Color("#aebcbf"), "sun": Color("#fbeccd")},
 	"vault": {"ground": Color("#5a5a50"), "accent": Color("#6a645a"), "rock": Color("#6d6c68"), "sky": Color("#8a95a3"), "fog": Color("#8f98a2"), "sun": Color("#ffe1bb")},
 }
 
@@ -76,6 +78,33 @@ void fragment() {
 	col = mix(col, col * 0.55, outside);
 	ALBEDO = col;
 	ROUGHNESS = 0.96;
+}
+"""
+
+const ROCK_SHADER := """
+shader_type spatial;
+uniform vec3 rock : source_color;
+varying vec3 world;
+varying vec3 normal_world;
+float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+float noise(vec3 p) {
+	vec3 i = floor(p); vec3 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x), mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+		mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x), mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}
+void vertex() {
+	world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	normal_world = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+void fragment() {
+	float n = noise(world * 0.35) * 0.55 + noise(world * 1.4) * 0.3 + noise(world * 5.0) * 0.15;
+	float strata = 0.5 + 0.5 * sin(world.y * 2.3 + n * 4.0);
+	vec3 col = rock * (0.72 + n * 0.45) * (0.9 + strata * 0.12);
+	float top = smoothstep(0.55, 0.9, normal_world.y);
+	col = mix(col, rock * vec3(0.78, 0.86, 0.66), top * 0.55);
+	col *= mix(0.75, 1.0, smoothstep(0.0, 3.0, world.y));
+	ALBEDO = col;
+	ROUGHNESS = 0.95;
 }
 """
 
@@ -164,9 +193,11 @@ func show_zone(id: String, visible_now: bool) -> void:
 		_zone_markers[id].visible = visible_now
 
 
-func show_interactable(index: int, visible_now: bool) -> void:
+func show_interactable(index: int, visible_now: bool, at: Vector2 = Vector2.INF) -> void:
 	if index < _interact_markers.size():
 		_interact_markers[index].visible = visible_now
+		if at != Vector2.INF:
+			_interact_markers[index].position = Vector3(at.x, 0, at.y)
 
 
 func raise_obstacle(id: String) -> void:
@@ -208,12 +239,14 @@ func _environment(size: Vector2) -> void:
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = theme.sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = theme.sky.lerp(Color.WHITE, 0.3)
-	environment.ambient_light_energy = 0.7
+	environment.background_color = theme.sky.darkened(0.15)
+	environment.ambient_light_color = theme.sky
+	environment.ambient_light_energy = 0.38
 	environment.fog_enabled = true
-	environment.fog_light_color = theme.fog
-	environment.fog_density = 0.0045
+	environment.fog_light_color = theme.fog.darkened(0.2)
+	environment.fog_density = 0.0022
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_exposure = 0.95
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
 	add_child(world_environment)
@@ -221,7 +254,7 @@ func _environment(size: Vector2) -> void:
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-52, -38, 0)
 	sun.light_color = theme.sun
-	sun.light_energy = 1.05
+	sun.light_energy = 0.95
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 70.0
 	add_child(sun)
@@ -273,7 +306,7 @@ func _rock_lump(at: Vector2, radius: float, height: float) -> void:
 	sphere.radial_segments = 10
 	sphere.rings = 6
 	mesh.mesh = sphere
-	mesh.material_override = _material(theme.rock.darkened(_random.randf_range(0.0, 0.18)))
+	mesh.material_override = _rock_material()
 	mesh.scale = Vector3(radius, height, radius * _random.randf_range(0.8, 1.2))
 	mesh.position = Vector3(at.x, height * 0.15, at.y)
 	mesh.rotation.y = _random.randf() * TAU
@@ -283,7 +316,7 @@ func _rock_lump(at: Vector2, radius: float, height: float) -> void:
 func _road(road: Dictionary) -> void:
 	var points: Array = road.points
 	var width: float = road.get("width", 5.0)
-	var color: Color = theme.ground.lerp(Color("#a08d6c"), 0.55)
+	var color: Color = theme.ground.lerp(Color("#8a7a5c"), 0.45)
 	match road.get("kind", ""):
 		"riverbed":
 			color = theme.ground.lerp(Color("#c2ad8a"), 0.6)
@@ -325,6 +358,7 @@ func _obstacle(obstacle: Dictionary, parent: Node3D) -> void:
 			"cliff":
 				var height := 7.0 + _random.randf_range(0.0, 3.0)
 				var block := _box(Vector3(rect.size.x, height, rect.size.y), theme.rock, parent)
+				block.material_override = _rock_material()
 				block.position = Vector3(center.x, height * 0.5, center.y)
 				# Broken boulders soften the silhouette along the cliff edges.
 				var perimeter := 2.0 * (rect.size.x + rect.size.y)
@@ -345,7 +379,7 @@ func _obstacle(obstacle: Dictionary, parent: Node3D) -> void:
 					sphere.radial_segments = 8
 					sphere.rings = 5
 					lump.mesh = sphere
-					lump.material_override = _material(theme.rock.darkened(_random.randf_range(0.05, 0.2)))
+					lump.material_override = _rock_material()
 					var r := _random.randf_range(1.2, 2.4)
 					lump.scale = Vector3(r, r * _random.randf_range(1.0, 2.6), r)
 					lump.position = Vector3(p.x, r * 0.6, p.y)
@@ -399,7 +433,7 @@ func _obstacle(obstacle: Dictionary, parent: Node3D) -> void:
 				sphere.radial_segments = 10
 				sphere.rings = 6
 				rock.mesh = sphere
-				rock.material_override = _material(theme.rock.darkened(_random.randf_range(0.0, 0.12)))
+				rock.material_override = _rock_material()
 				rock.scale = Vector3(circle.z, circle.z * 1.1, circle.z)
 				rock.position = Vector3(at.x, circle.z * 0.35, at.y)
 				rock.rotation.y = _random.randf() * TAU
@@ -415,6 +449,17 @@ func _water(size: Vector2, at: Vector3, parent: Node3D) -> void:
 	water.position = at + Vector3(0, 0.04, 0)
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(water)
+
+
+func _rock_material() -> ShaderMaterial:
+	if not _materials.has("rock"):
+		var material := ShaderMaterial.new()
+		var shader := Shader.new()
+		shader.code = ROCK_SHADER
+		material.shader = shader
+		material.set_shader_parameter("rock", theme.rock)
+		_materials["rock"] = material
+	return _materials.rock
 
 
 func _water_material() -> ShaderMaterial:
