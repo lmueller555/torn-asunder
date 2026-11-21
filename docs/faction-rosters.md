@@ -87,4 +87,6 @@ These **provisional data** add no spells or special abilities, do not change the
 
 The missing values are rating points or training ranks to meet existing thresholds, not an XP, Battle Point, or funding quote. Reading a plan does not spend points, change a composition, make a promotion playable, or add a class to skirmish.
 
-Run `godot --headless --script tests/faction_roster.gd` and `godot --headless --script tests/roster_advancement_inspection.gd`.
+From the five non-Human campaigns' **Camp Operations → Unit Progression**, choose **Preview Advancement**. It uses the current practice unit’s ratings and a sample rank you can raise or lower for all platoon skills. Locked gaps and sample eligibility are read-only; sample ranks are not training purchases and qualifying does not make an unimplemented unit playable. Human Infantry keeps its existing Heavy Infantry practice promotion instead.
+
+Run `godot --headless --script tests/faction_roster.gd`, `godot --headless --script tests/roster_advancement_inspection.gd`, and `godot --headless --script tests/roster_preview_menu.gd`.
