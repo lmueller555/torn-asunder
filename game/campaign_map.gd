@@ -201,7 +201,7 @@ func _refresh_selection() -> void:
 			_confirm_button.text = "Open Battlefield Briefing"
 			_confirm_button.disabled = false
 		elif selected.kind == World.WaypointKind.CAMP:
-			_detail.text = "Visit camp for dispatch and preparations, or select the Mine to travel."
+			_detail.text = "Visit camp for dispatch and preparations, or select a connected waypoint to travel."
 			_confirm_button.text = "Open Camp Operations"
 			_confirm_button.disabled = false
 		else:

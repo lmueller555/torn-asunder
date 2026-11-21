@@ -335,7 +335,7 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 	var mission: Node3D = scene.instantiate()
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
-		mission.connect(&"mission_cleared", _on_grain_cleared.bind(mission, campaign_id, mission_id))
+		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
 	else:
 		mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
@@ -351,21 +351,29 @@ func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: Strin
 		_record_campaign_victory(mission, campaign_id, mission_id, deployment.debrief)
 
 
-func _on_grain_cleared(result: StringName, mission: Node3D, campaign_id: String, mission_id: String) -> void:
-	var debrief := DialogueBeats.grain_debrief_id(result)
+func _on_campaign_result(result: StringName, mission: Node3D, campaign_id: String, mission_id: String) -> void:
+	var debrief := &""
+	match mission_id:
+		"mara_grain_crossing":
+			debrief = DialogueBeats.grain_debrief_id(result)
+		"ilyra_moonwash_rescue":
+			debrief = DialogueBeats.moonwash_debrief_id(result)
 	if debrief != &"":
 		_record_campaign_victory(mission, campaign_id, mission_id, debrief, result)
 
 
-func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: String, debrief: StringName, grain_result := &"") -> void:
+func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: String, debrief: StringName, result := &"") -> void:
 	if mission != _campaign_battle or _victory_pending:
 		return
 	_victory_pending = true
 	var saved: Error
-	if grain_result == &"":
-		saved = _profile.record_mission_clear(campaign_id, mission_id)
-	else:
-		saved = _profile.record_grain_clear(grain_result)
+	match mission_id:
+		"mara_grain_crossing":
+			saved = _profile.record_grain_clear(result)
+		"ilyra_moonwash_rescue":
+			saved = _profile.record_ilyra_moonwash_clear(result)
+		_:
+			saved = _profile.record_mission_clear(campaign_id, mission_id)
 	if saved != OK:
 		_campaign_warning = "The mission was completed, but its clear could not be saved."
 	elif _profile.record_world_waypoint(_campaign_world) != OK:

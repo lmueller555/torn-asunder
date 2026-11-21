@@ -39,6 +39,14 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.SOVA_MINE_DEBRIEF,
 		"orders": "Release both groups at the tunnel mouth and bend. The evacuation is complete when both reach Druid safety and the willing witness is waiting at the outlet. The Godbridle is not your objective.",
 	},
+	"ilyra_moonwash_rescue": {
+		"scene": preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.tscn"),
+		"dispatch": Beats.ILYRA_MOONWASH_DISPATCH,
+		"briefing_dispatch": true,
+		"result_debrief": true,
+		"battlefield_label": "MOONWASH HARBOR · RESCUE DECKS",
+		"orders": "Reach the stranded deck and rig both lines in either order. Get both crews onto the receiving deck. Hold the Marines at the mooring if salvagers block the forward line. Shore cargo is optional: carry it aboard and load it before the last crew arrives.",
+	},
 }
 
 

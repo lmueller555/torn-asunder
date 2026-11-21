@@ -58,10 +58,10 @@ func _run() -> void:
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("ilyra"):
+	if not _press("New Game") or not _press("neris"):
 		return false
 	if _title._page != Title.Page.BRIEFING or _map() or _button("Confirm Deployment"):
-		return _fail("A non-Mara campaign opened a deployable mission.")
+		return _fail("An unbuilt campaign opened a deployable mission.")
 	_joy(JOY_BUTTON_B)
 	if not _press("New Game") or not _press("mara"):
 		return false
