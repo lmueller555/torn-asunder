@@ -117,6 +117,27 @@ const _MAPS := {
 			{"from_id": "moonwash_harbor", "to_id": "moonwash_survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
 		],
 	},
+	"neris": {
+		"start": "grove_camp",
+		"waypoints": {
+			"grove_camp": {
+				"id": "grove_camp", "label": "Grove Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.34, 0.46),
+			},
+			"isolated_grove_nursery": {
+				"id": "isolated_grove_nursery", "label": "Isolated Grove", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.54, 0.63), "mission_id": "neris_failing_grove",
+			},
+			"spanwater_lock": {
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.69, 0.87),
+			},
+		},
+		"routes": [
+			{"from_id": "grove_camp", "to_id": "isolated_grove_nursery"},
+			{"from_id": "isolated_grove_nursery", "to_id": "spanwater_lock", "required_clear_id": "neris_failing_grove"},
+		],
+	},
 }
 
 var _campaign_id: String
