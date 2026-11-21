@@ -3,6 +3,9 @@ extends SceneTree
 const Crossing := preload("res://game/battlefields/marches_crossing.tscn")
 const Preview := preload("res://tests/marches_crossing_preview.tscn")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
+const Battle := preload("res://game/battlefield/command_battle.gd")
+const MarchScale := preload("res://game/battlefield/battlefield_march_scale.gd")
+const MARCH_DT := 1.0 / 60.0
 
 const SPAWNS := [
 	"RoyalHero", "InfantryReserve", "EscortArchers", "SeedGrainCart", "BreadGrainCart",
@@ -38,7 +41,8 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	_world = _map.get_world_3d().direct_space_state
-	var passed := _check_markers() and _check_lanes() and _check_sightlines() and _check_boundaries()
+	var passed := _check_markers() and _check_lanes() and _check_sightlines() \
+		and _check_boundaries() and _measure_edge_march()
 	if passed:
 		print("Marches Crossing: support, two cart-width deliveries, slower screened ford, reserve, open charge lane, LOS and valley limits verified.")
 	quit(0 if passed else 1)
@@ -150,6 +154,46 @@ func _check_boundaries() -> bool:
 		if not _ray(boundary[0], boundary[1]):
 			return _fail("A perimeter ridge did not bound the valley.")
 	return true
+
+
+func _measure_edge_march() -> bool:
+	# Use the playable feet of the west/east ridges, not the bounding box or cart exits.
+	var bridge: Vector3 = _spots["BridgeDeck"]
+	var start := Vector2(-145.0, bridge.z)
+	var destination := Vector2(145.0, bridge.z)
+	for point: Vector2 in [start, destination]:
+		if not _supports_formation(point):
+			return _fail("Bridge traverse does not reach supported valley edges.")
+		var outside := point + Vector2(signf(point.x) * 4.0, 0.0)
+		if _supports_formation(outside):
+			return _fail("Measured edge no longer borders the perimeter ridge.")
+	var battle := Battle.new()
+	battle.bounds = Rect2(-171.0, -146.0, 342.0, 292.0)
+	battle.formations[0].position = start
+	battle.formations[0].hold()
+	battle.order_move(0, destination)
+	var platoon := battle.formations[0]
+	var ticks := 0
+	while platoon.order == Battle.Order.MOVE and ticks < 180 * 60:
+		battle.step(MARCH_DT, Vector2.ZERO, _terrain.can_move)
+		ticks += 1
+		if not _supports_formation(platoon.position):
+			return _fail("The measured formation left supported terrain at %s." % platoon.position)
+	var seconds := ticks * MARCH_DT
+	if not platoon.position.is_equal_approx(destination) or platoon.order != Battle.Order.HOLD \
+			or not MarchScale.within_target_band(seconds) or MarchScale.classify(seconds) != MarchScale.Tier.COMPACT:
+		return _fail("Expected an unopposed Compact edge march; reached %s in %.2f s." % [platoon.position, seconds])
+	print("Marches Crossing: infantry marched %.1f m edge to edge in %.2f s (Compact)." % [
+		start.distance_to(destination), seconds,
+	])
+	return true
+
+
+func _supports_formation(point: Vector2) -> bool:
+	var surface: Variant = _terrain.destination_from_ray(
+		Vector3(point.x, 30.0, point.y), Vector3(point.x, -4.0, point.y)
+	)
+	return surface != null and _terrain.formation_fits_at(point)
 
 
 func _ray(from: Vector3, to: Vector3) -> bool:
