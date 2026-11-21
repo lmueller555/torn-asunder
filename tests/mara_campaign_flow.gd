@@ -150,7 +150,7 @@ func _win_escort() -> bool:
 	for id: String in ["Routes/MineYard", "Routes/RoadWest", "Routes/RoadJunction", "Routes/RoadCut"]:
 		if not _drive_to(id):
 			return false
-	if not _drive_to("Routes/EastPass", true):
+	if not _drive_to("Routes/EastPass") or not _drive_to("Routes/InterceptRoadMerge", true):
 		return false
 	_key(KEY_U)
 	_tick(43)
@@ -162,7 +162,7 @@ func _win_escort() -> bool:
 		_tick(58)
 	if mission.encounter.enemy.is_alive() or mission.objective.phase != Escort.Phase.ESCORTING:
 		return _fail("Fighting the road guard did not preserve the still-incomplete escort.")
-	for id: String in ["Routes/EastPass", "Routes/PassRelease", "Objectives/GodbridleExit"]:
+	for id: String in ["Routes/PassRelease", "Objectives/GodbridleExit"]:
 		if not _drive_to(id):
 			return false
 	return mission.objective.phase == Escort.Phase.SUCCEEDED or _fail("Actual east exit delivery did not win.")

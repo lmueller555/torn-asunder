@@ -12,16 +12,25 @@ const Defense := preload("res://game/combat/hero_defense.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const PICKUP_RADIUS := 2.2
 const EXIT_RADIUS := 2.7
+# PassRelease faces the exit. This corridor catches the uphill approach early
+# enough for the guard to physically move from the reserve pocket into view.
+const APPROACH_BEHIND := 61.0
+const APPROACH_AHEAD := 4.0
+const APPROACH_HALF_WIDTH := 9.0
 const WARM_LIGHT := Color("#ffd382")
 const EXIT_LIGHT := Color("#8de5d1")
 
 @export var opposition_enabled := true
 @export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
+@export var interception_approach: NodePath
+@export var interception_route: Array[NodePath] = []
 
 var objective := Escort.new()
 var encounter: Encounter
 var _pickup: Marker3D
 var _exit: Marker3D
+var _pass_release: Marker3D
+var _interception_started := false
 var _pickup_beacon: Node3D
 var _exit_beacon: Node3D
 var _bridle: Node3D
@@ -52,6 +61,8 @@ func _ready() -> void:
 	super._ready()
 	_pickup = battlefield_marker(^"Markers/Objectives/GodbridlePickup")
 	_exit = battlefield_marker(^"Markers/Objectives/GodbridleExit")
+	_pass_release = battlefield_marker(interception_approach)
+	objective.interception_requested.connect(_on_interception_requested)
 	_pickup_beacon = _beacon(_pickup, PICKUP_RADIUS, WARM_LIGHT, "GODBRIDLE")
 	_exit_beacon = _beacon(_exit, EXIT_RADIUS, EXIT_LIGHT, "EAST ROAD EXIT")
 	_bridle = _make_bridle()
@@ -79,6 +90,9 @@ func _physics_process(delta: float) -> void:
 	# In this prototype the hero is the sole carrier; units entering the exit never count.
 	observation.carrier_in_road_exit = objective.phase == Escort.Phase.ESCORTING \
 		and not _hero_incapacitated and feet.distance_to(_exit.global_position) <= EXIT_RADIUS
+	observation.carrier_in_interception_approach = objective.phase == Escort.Phase.ESCORTING \
+		and not _hero_incapacitated and encounter != null and encounter.enemy.is_alive() \
+		and encounter.enemy_phase == Encounter.EnemyPhase.AT_RESERVE and _inside_pass_approach(feet)
 	observation.hero_incapacitated = _hero_incapacitated
 	observation.bridle_lost = _bridle_lost
 	_interact_requested = false
@@ -86,6 +100,18 @@ func _physics_process(delta: float) -> void:
 	_refresh_objective_view(feet)
 	if _finished():
 		mission_finished.emit(objective.phase == Escort.Phase.SUCCEEDED)
+
+
+func _inside_pass_approach(feet: Vector3) -> bool:
+	if not _pass_release:
+		return false
+	var local := _pass_release.to_local(feet)
+	return absf(local.x) <= APPROACH_HALF_WIDTH and absf(local.y) <= 2.0 \
+		and local.z >= -APPROACH_AHEAD and local.z <= APPROACH_BEHIND
+
+
+func _on_interception_requested() -> void:
+	_interception_started = encounter != null and encounter.begin_interception()
 
 
 func _after_battle_step(delta: float) -> void:
@@ -243,7 +269,10 @@ func _refresh_objective_view(feet: Vector3) -> void:
 				_instructions_label.text = "Press Cross or Space to pick up the Godbridle."
 		Escort.Phase.ESCORTING:
 			_goal_label.text = "Escort the Godbridle to the east road exit  ·  %d m" % ceili(feet.distance_to(_exit.global_position))
-			_instructions_label.text = "You are carrying the Godbridle. Follow the road to the east."
+			if _interception_started and encounter.enemy.is_alive():
+				_instructions_label.text = "Orc movement ahead. Get the Godbridle through to the exit."
+			else:
+				_instructions_label.text = "You are carrying the Godbridle. Follow the road to the east."
 		Escort.Phase.SUCCEEDED:
 			_goal_label.text = "Escort complete"
 			_instructions_label.text = "The hero delivered the Godbridle. Restart to replay the route."
@@ -289,6 +318,7 @@ func _make_bridle() -> Node3D:
 
 
 func _reset_encounter() -> void:
+	_interception_started = false
 	_guard_key = false
 	_guard_pad = false
 	var guard_marker := battlefield_marker(road_guard_spawn)
@@ -296,6 +326,15 @@ func _reset_encounter() -> void:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
 	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane) \
 		if opposition_enabled and guard_marker else null
+	if encounter and _pass_release:
+		var route := PackedVector2Array()
+		for path in interception_route:
+			var waypoint := battlefield_marker(path)
+			if not waypoint:
+				route.clear()
+				break
+			route.append(_marker_position(waypoint))
+		encounter.stage_interception(route)
 	_refresh_combat_view()
 
 
@@ -367,6 +406,10 @@ func _refresh_combat_view() -> void:
 			_combat_tell.text = "Road guard winding up!  Face it and guard, or dodge."
 	elif not encounter.active_feedback().is_empty():
 		_combat_tell.text = encounter.active_feedback()
+	elif encounter.enemy_phase == Encounter.EnemyPhase.INTERCEPTING:
+		_combat_tell.text = "Orc guard advancing onto the east road"
+	elif encounter.enemy_phase == Encounter.EnemyPhase.AT_RESERVE:
+		_combat_tell.text = "No enemy on the escort road"
 	elif attack_phase == Attack.Phase.WINDUP:
 		_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
 	elif target_selected:

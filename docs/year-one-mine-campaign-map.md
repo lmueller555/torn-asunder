@@ -1,6 +1,6 @@
 # Year One Mine: campaign-scale battlefield graybox
 
-`game/battlefields/year_one_mine_campaign.tscn` is a separate, large 3D layout for the [shared Year One encounter](combat.md#year-one-battle-at-the-mine). The [96 × 88 m mine pocket](year-one-mine-map.md) remains the existing playable prototype and is unchanged. The campaign scene is not yet wired to missions or the command runtime.
+`game/battlefields/year_one_mine_campaign.tscn` is a separate, large 3D layout for the [shared Year One encounter](combat.md#year-one-battle-at-the-mine). The [96 × 88 m mine pocket](year-one-mine-map.md) remains a separate prototype. The larger valley is now used by Mara's escort and Sova's evacuation prototypes. Mara's encounter stages an Orc at EastReserve until the living carrier approaches PassRelease with the Godbridle. The same Orc then runs through InterceptMouth to the road merge; a warning precedes contact. Delivery at the east exit is still the goal, whether or not the Orc is defeated.
 
 Open `tests/year_one_mine_campaign_preview.tscn` and press F6. Press **1** for the full valley, **2** for the local command sector, or **3** for the road at hero height. The 1.8 m capsules give scale, not combat or formations. The command view frames a 116 m vertical span around the pass so troop-scale detail isn't lost in the valley-wide view. The hero view uses a 65° lens and a follow-distance proxy of about 6 m.
 
