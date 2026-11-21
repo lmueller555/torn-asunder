@@ -33,6 +33,8 @@ var _route_overlay := RouteOverlay.new()
 var _sending_route_order := false
 var _route_note := ""
 var _route_note_index := -1
+var _route_note_point := Vector2.ZERO
+var _route_note_size := 0
 var _draft_battle: Battle
 var _draft_index := -1
 var _draft_point := Vector2.ZERO
@@ -155,6 +157,8 @@ func _append_waypoint(point: Vector2) -> void:
 	var result := _routes.issue(_route_battle, index, point, true, _waypoint_fits)
 	_sending_route_order = false
 	_route_note_index = index
+	_route_note_point = point
+	_route_note_size = pending_waypoints(index).size()
 	_draft_blocked = false
 	match result:
 		Queue.Result.ACCEPTED: _route_note = ""
@@ -338,11 +342,13 @@ func _sync_draft() -> void:
 	var may_show_route := _can_plan()
 	var index := _field.selected_index if _field else -1
 	var pending := pending_waypoints(index) if may_show_route else PackedVector2Array()
+	var route_blocked := false
 	_route_overlay.visible = not pending.is_empty()
 	if _route_overlay.visible:
 		var platoon := _field.battle.formations[index]
 		var marching := platoon.order == Battle.Order.MOVE and platoon.destination.is_equal_approx(pending[0])
 		_route_overlay.show_route(map, pending, platoon.position if marching else null)
+		route_blocked = platoon.order == Battle.Order.BLOCKED
 	else:
 		_route_overlay.clear_route()
 
@@ -354,7 +360,16 @@ func _sync_draft() -> void:
 		hint += "\nCross: move  ·  Circle: cancel"
 	if may_show_route:
 		var status := "R1 / G: append  ·  %d/%d" % [pending.size(), Queue.MAX_WAYPOINTS]
-		hint += "\n" + (_route_note if _route_note_index == index and not _route_note.is_empty() else status)
+		var aim := _draft_point if _draft_battle else _field.cursor
+		# Feedback describes the rejected point and route at that instant. A
+		# different aim or head arrival makes it stale, including a full queue.
+		if _route_note_index != index or _route_note_size != pending.size() or not aim.is_equal_approx(_route_note_point):
+			_route_note = ""
+		hint += "\n" + (_route_note if not _route_note.is_empty() else status)
+		if route_blocked:
+			hint += "\nRoute blocked  ·  Move to replace"
+	else:
+		_route_note = ""
 	_hint.text = hint
 
 

@@ -133,6 +133,7 @@ func _run() -> void:
 		and _mission.objective.outcome == Cut.Outcome.ACTIVE, "Options restarts cleanly in hero stance.")
 	await _controller_draft()
 	await _waypoint_queue()
+	await _blocked_queue()
 	print("Cut minimap: viewport %s / panel %s / current camera %s / %d failures." %[
 		root.get_visible_rect().size, _mission._command_minimap.get_global_rect(), root.get_camera_3d().name, _failures])
 	_mission.queue_free()
@@ -326,6 +327,71 @@ func _waypoint_queue() -> void:
 	_key(KEY_G)
 	old_battle.order_hold(0)
 	_check(_mission.battle != old_battle and _route_is(0, [first]), "A restarted Cut has a fresh queue and ignores stale battle signals.")
+	_mission.restart_mission()
+
+
+func _blocked_queue() -> void:
+	var hud := _mission._command_minimap
+	var guard := _mission.battle.formations[0]
+	var start := _point("Routes/LaneSouthTurn")
+	var first := _point("Routes/LaneEastTurn")
+	var second := _point("Routes/LaneClerkTurn")
+	var roof := _point("Routes/RecordRoomInside")
+	# Isolate the straight leg across the authored EastInnerBaffle, not the
+	# approach from spawn past the west baffle. Only movement itself is stepped.
+	guard.position = start
+	guard.hold()
+	_orders.clear()
+	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	for point in [first, second, roof]:
+		_mouse_map(MOUSE_BUTTON_LEFT, _map.project(point))
+		_key(KEY_G)
+	_check(_route_is(0, [first, second]) and _orders == [0] and hud._hint.text.contains("Not a walkable"),
+		"Accept the standable endpoints even though the first leg crosses a baffle; reject the roof.")
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(start))
+	_check(not hud._hint.text.contains("Not a walkable"), "Invalid append feedback belongs to the cursor point that was tried.")
+	for _frame in 500:
+		_tick()
+		if guard.order == Battle.Order.BLOCKED:
+			break
+	var stopped := guard.position
+	_check(is_equal_approx(stopped.y, start.y) and stopped.x > -32.0 and stopped.x < -31.0
+		and guard.destination.is_equal_approx(first) and guard.order == Battle.Order.BLOCKED,
+		"The guard physically stops on the west face of EastInnerBaffle, not at the accepted head.")
+	_check(hud._hint.text.contains("Route blocked") and _hud_fits(),
+		"The command map explains the paused route without colliding with other HUD panels.")
+	await _capture_image("blocked-queue-at-east-inner-baffle")
+	_key(KEY_G) # This different, valid point joins the tail; it cannot bypass the baffle.
+	_tick(90)
+	_check(_orders == [0] and guard.position == stopped and guard.order == Battle.Order.BLOCKED
+		and _route_is(0, [first, second, start]) and hud._route_overlay.active_leg_pixels().is_empty(),
+		"No blocked leg is consumed or skipped, even after another valid point is appended.")
+	_mouse_map(MOUSE_BUTTON_RIGHT, _map.project(start))
+	_check(_orders == [0, 0] and _route_is(0, []) and guard.order == Battle.Order.MOVE
+		and not hud._hint.text.contains("Route blocked"), "A safe direct Move replaces the paused route.")
+	_tick(480)
+	_check(guard.position.is_equal_approx(start) and guard.order == Battle.Order.HOLD,
+		"The guard marches back along the safe side of the baffle instead of promoting the discarded tail.")
+
+	# Hold the cursor still on a failed append across an accepted head's arrival.
+	# The old error must not mask the new leg/count.
+	var short_leg := start + Vector2.LEFT * 3.0
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(short_leg))
+	_key(KEY_G)
+	var actual_head := guard.destination
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(start))
+	_key(KEY_G)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(roof))
+	_key(KEY_G)
+	_check(_route_is(0, [short_leg, start]) and hud._hint.text.contains("Not a walkable"),
+		"Keep invalid append feedback while the failed aim and route state are current.")
+	for _frame in 70:
+		_tick()
+		if guard.position == actual_head:
+			break
+	_check(_route_is(0, [start]) and hud._hint.text.contains("1/8") and not hud._hint.text.contains("Not a walkable"),
+		"Head arrival restores the count for the next leg even if the cursor did not move.")
 	_mission.restart_mission()
 
 
