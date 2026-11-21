@@ -1,0 +1,56 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/spanwater_lock_campaign.tscn" id="2_field"]
+[ext_resource type="Script" path="res://game/battlefield/elite_support_drill.gd" id="3_drill"]
+
+[node name="EliteSupportDrill" instance=ExtResource("1_harness")]
+script = ExtResource("3_drill")
+battlefield_scene = ExtResource("2_field")
+field_bounds = Rect2(-165, -70, 52, 55)
+hero_spawn = NodePath("Markers/Spawns/OrcVanguard")
+formation_spawns = Array[NodePath]([NodePath("Markers/Routes/UpstreamApproach"), NodePath("Markers/Spawns/OrcSupport")])
+
+[node name="DrillHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="DrillHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -194.0
+offset_right = 840.0
+offset_bottom = -20.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="DrillHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Rows" type="VBoxContainer" parent="DrillHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="DrillHUD/Panel/Margin/Rows"]
+text = "DEVELOPMENT PLAYTEST · ELITE SUPPORT · UNAPPROVED GRAYBOX"
+theme_override_font_sizes/font_size = 20
+
+[node name="Team" type="Label" parent="DrillHUD/Panel/Margin/Rows"]
+theme_override_font_sizes/font_size = 18
+
+[node name="Role" type="Label" parent="DrillHUD/Panel/Margin/Rows"]
+theme_override_font_sizes/font_size = 18
+
+[node name="Controls" type="Label" parent="DrillHUD/Panel/Margin/Rows"]
+text = "Triangle / C: announce pulse at cursor. Switch roles with D-pad / Z X to counter."
+theme_override_font_sizes/font_size = 16
+
+[node name="Response" type="Label" parent="DrillHUD/Panel/Margin/Rows"]
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 17
+
+[node name="Restart" type="Button" parent="DrillHUD/Panel/Margin/Rows"]
+focus_mode = 0
+text = "Restart [Backspace / Options]"
