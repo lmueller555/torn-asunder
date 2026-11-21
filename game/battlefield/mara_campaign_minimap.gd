@@ -7,6 +7,9 @@ const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
+const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
+const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 
 const SIGHT_RANGE := 48.0
 const GROUND := Plane(Vector3.UP, 0.0)
@@ -26,6 +29,12 @@ class AimReticle extends Control:
 
 
 var _reticle := AimReticle.new()
+var _route_overlay := RouteOverlay.new()
+var _routes := Routes.new()
+var _route_battle: Battle
+var _sending_route_order := false
+var _route_note := ""
+var _route_note_index := -1
 var _draft_battle: Battle
 var _draft_index := -1
 var _draft_point := Vector2.ZERO
@@ -48,6 +57,9 @@ func _ready() -> void:
 	map.point_requested.connect(_focus_map_point)
 	map.move_requested.connect(_move_from_map)
 	_legend = _key.text
+	map.add_child(_route_overlay)
+	_route_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_route_overlay.hide()
 	map.add_child(_reticle)
 	_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -83,6 +95,7 @@ func _move_from_map(point: Vector2) -> bool:
 func _input(event: InputEvent) -> void:
 	if not _mission.is_node_ready():
 		return
+	_bind_route_battle()
 	var swallow := false
 	if event is InputEventJoypadButton and _mission._uses_joypad(event.device):
 		swallow = _capture_button(event)
@@ -104,15 +117,22 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 			_captured_buttons.erase(button)
 		return true
 	if not _draft_battle:
-		if button != JOY_BUTTON_DPAD_UP or not event.pressed or not _can_open_controller():
+		if not event.pressed or not _can_open_controller():
 			return false
-		_captured_buttons[button] = true
-		_open_controller()
-		return true
+		if button == JOY_BUTTON_DPAD_UP:
+			_captured_buttons[button] = true
+			_open_controller()
+			return true
+		if button == JOY_BUTTON_RIGHT_SHOULDER:
+			_captured_buttons[button] = true
+			_append_waypoint(_mission.cursor)
+			return true
+		return false
 	if event.pressed:
 		_captured_buttons[button] = true
 		match button:
 			JOY_BUTTON_A: _confirm_controller()
+			JOY_BUTTON_RIGHT_SHOULDER: _append_minimap_waypoint()
 			JOY_BUTTON_B: _close_controller()
 			JOY_BUTTON_DPAD_UP: _step_draft(Vector2.UP * CURSOR_NUDGE)
 			JOY_BUTTON_DPAD_DOWN: _step_draft(Vector2.DOWN * CURSOR_NUDGE)
@@ -148,6 +168,10 @@ func _capture_key(event: InputEventKey) -> bool:
 			_captured_keys.erase(key)
 		return true
 	if not _draft_battle:
+		if key == KEY_G and event.pressed and not event.echo and _can_open_controller():
+			_captured_keys[key] = true
+			_append_waypoint(_mission.cursor)
+			return true
 		return false
 	if key == KEY_SHIFT:
 		if not event.pressed and not _mission._l2_down:
@@ -155,8 +179,9 @@ func _capture_key(event: InputEventKey) -> bool:
 		return false
 	if event.pressed and not event.echo:
 		_captured_keys[key] = true
-		if key == KEY_ESCAPE:
-			_close_controller()
+		match key:
+			KEY_ESCAPE: _close_controller()
+			KEY_G: _append_minimap_waypoint()
 	return true
 
 
@@ -188,6 +213,75 @@ func _confirm_controller() -> void:
 		_refresh_controller_overlay()
 
 
+## Bound only by the live campaign Mine HUD. Neither the shared escort scene
+## nor the small Mine opt in, and the audited pickup/visual code is untouched.
+func _bind_route_battle() -> void:
+	if _route_battle == _mission.battle:
+		return
+	if _route_battle:
+		_route_battle.formation_commanded.disconnect(_on_formation_commanded)
+		for index in _route_battle.formations.size():
+			_route_battle.formations[index].order_changed.disconnect(_on_formation_order_changed.bind(index))
+	_route_battle = _mission.battle
+	_routes.reset(_route_battle)
+	_route_note = ""
+	_route_note_index = -1
+	_route_battle.formation_commanded.connect(_on_formation_commanded)
+	for index in _route_battle.formations.size():
+		_route_battle.formations[index].order_changed.connect(_on_formation_order_changed.bind(index))
+
+
+func pending_waypoints(index: int) -> PackedVector2Array:
+	return _routes.snapshot(index) if _route_battle == _mission.battle else PackedVector2Array()
+
+
+func _append_minimap_waypoint() -> void:
+	if not _can_confirm_controller():
+		_close_controller()
+		return
+	_append_waypoint(_draft_point)
+
+
+func _append_waypoint(point: Vector2) -> void:
+	var index := _mission.selected_index
+	_sending_route_order = true
+	var result := _routes.issue(_route_battle, index, point, true, _waypoint_fits)
+	_sending_route_order = false
+	_route_note_index = index
+	_draft_denied = false
+	match result:
+		Queue.Result.ACCEPTED: _route_note = ""
+		Queue.Result.DUPLICATE: _route_note = "Already on this route"
+		Queue.Result.FULL: _route_note = "Route full (%d pending)" % Queue.MAX_WAYPOINTS
+		_: _route_note = "Not a walkable formation point"
+	_refresh_controller_overlay()
+
+
+func _waypoint_fits(point: Vector2) -> bool:
+	if not _mission.battle.clamp_to_field(point).is_equal_approx(point) or not _mission._terrain:
+		return false
+	if _mission._terrain.destination_from_ray(Vector3(point.x, 30.0, point.y), Vector3(point.x, -12.0, point.y)) == null:
+		return false
+	return _mission._terrain.formation_fits_at(point)
+
+
+func _on_formation_commanded(index: int) -> void:
+	# Explicit direct Move/Hold, including a Move to our current head, wins.
+	if not _sending_route_order:
+		_clear_waypoints(index)
+
+
+func _on_formation_order_changed(order: Battle.Order, index: int) -> void:
+	if order in [Battle.Order.ATTACK, Battle.Order.DEFEATED, Battle.Order.EXTRACTED]:
+		_clear_waypoints(index)
+
+
+func _clear_waypoints(index: int) -> void:
+	_routes.clear(index)
+	if _route_note_index == index:
+		_route_note = ""
+
+
 func _close_controller() -> void:
 	_draft_battle = null
 	_draft_index = -1
@@ -215,19 +309,33 @@ func _zero_bound_input() -> void:
 func _step_draft(offset: Vector2) -> void:
 	_draft_point = _draft_battle.clamp_to_field(_draft_point + offset)
 	_draft_denied = false
+	_route_note = ""
 	_refresh_controller_overlay()
 
 
 func _refresh_controller_overlay() -> void:
 	_reticle.visible = _draft_battle != null
+	_route_overlay.visible = _reticle.visible
+	var index := _mission.selected_index
+	var pending := pending_waypoints(index)
 	if _draft_battle:
+		var formation := _mission.battle.formations[index]
+		var active_from: Variant = null
+		if not pending.is_empty() and formation.order == Battle.Order.MOVE and formation.destination.is_equal_approx(pending[0]):
+			active_from = formation.position
+		_route_overlay.show_route(map, pending, active_from)
 		_reticle.pixel = map.project(_draft_point)
 		_reticle.queue_redraw()
 		_key.text = "Stick: Aim  ·  Cross: Move  ·  Circle: Back"
 		if _draft_denied:
 			_key.text += "\nNot a walkable point"
 	else:
+		_route_overlay.clear_route()
 		_key.text = _legend + ("\nD-pad Up: minimap cursor" if _mission.command_view else "")
+	if _mission.command_view:
+		_key.text += "\nR1 / G: Append waypoint  ·  %d/%d" % [pending.size(), Queue.MAX_WAYPOINTS]
+		if _route_note_index == index and not _route_note.is_empty():
+			_key.text += "\n" + _route_note
 
 
 func _notification(what: int) -> void:
@@ -250,6 +358,16 @@ func _reset_capture() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not _mission.is_node_ready():
+		return
+	_bind_route_battle()
+	if _mission._finished():
+		for index in _route_battle.formations.size():
+			_clear_waypoints(index)
+	else:
+		_sending_route_order = true
+		_routes.advance(_route_battle)
+		_sending_route_order = false
 	if _draft_battle and _can_confirm_controller():
 		var aim := Vector2(_map_axes.get(JOY_AXIS_LEFT_X, 0.0), _map_axes.get(JOY_AXIS_LEFT_Y, 0.0))
 		if aim.length() > _mission.STICK_DEADZONE:
@@ -261,6 +379,7 @@ func refresh() -> void:
 	# Child controls are readied before their parent mission has loaded terrain.
 	if not _mission.is_node_ready():
 		return
+	_bind_route_battle()
 	if _draft_battle and not _can_confirm_controller():
 		_close_controller()
 	if map.click_to_focus != _mission.command_view:

@@ -1,5 +1,5 @@
 extends RefCounted
-## Queue/physical Move bridge shared by the development command previews.
+## Queue/physical Move bridge for opted-in command views.
 ## Input scope, selected platoon, terrain validation and feedback are caller-owned.
 
 const Battle := preload("res://game/battlefield/command_battle.gd")
