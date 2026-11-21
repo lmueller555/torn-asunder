@@ -2,7 +2,13 @@
 
 *Torn Asunder* targets the visual finish of a polished PlayStation 3 / Xbox 360 game. Match that level of craft while keeping our own art direction. A triangle count, texture resolution, or offline beauty render cannot establish the standard on its own.
 
-Creation or a visible revision triggers this audit for each unit, prop, environment kit, map layer, material, animation, effect, and UI art asset. Treat a kit as one submission only when its pieces are shown together in the same use case and each proposed piece is inspectable. A new use of an existing asset needs a context check for scale, readability, and performance; that check does not replace auditing any new or changed art.
+This gate applies to art already in the project as well as to each new or visibly revised unit, prop, environment kit, map layer, material, animation, effect, and UI art asset. Treat a kit as one submission only when its pieces are shown together in the same use case and each proposed piece is inspectable. A new use of an existing asset needs a context check for scale, readability, and performance; that check does not replace auditing any new or changed art.
+
+## Existing art
+
+Human Infantry and Heavy Infantry are the two already-approved benchmarks. Use their finished in-game silhouettes, materials, detail and motion as the visual reference at the corresponding camera distance; do not require unrelated assets to use their mesh or texture budgets.
+
+All other existing map and gameplay art starts **Unapproved**, not grandfathered in. Inventory what actually renders and where; review each existing candidate against the same criteria below. A placeholder that visibly fails is **Rework**; missing evidence is **Blocked**. Neither is eligible for approved gameplay or release. Old grayboxes may remain only in clearly labeled development playtests so the team can keep testing routes and mechanics while replacements are built. Moving an old placeholder to a new mission, renaming it, or generating it at runtime does not make it approved.
 
 ## 1. Keep the candidate outside the repository
 
