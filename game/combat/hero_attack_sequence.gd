@@ -1,17 +1,20 @@
 class_name HeroAttackSequence
 extends RefCounted
-## Timing and contact for one directly controlled basic attack at a time.
+## Timing and contact for one directly controlled hero attack at a time.
 
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Points := preload("res://game/combat/battle_points.gd")
 
-enum Attack { LIGHT, HEAVY }
+enum Attack { LIGHT, HEAVY, SUNDERING_STRIKE }
 enum Phase { IDLE, WINDUP, RECOVERY }
 
 # Prototype timings (seconds), reach (metres), damage, and BP, not global tuning.
 const PROFILES := {
 	Attack.LIGHT: {"windup": 0.22, "recovery": 0.30, "reach": 1.65, "damage": 60.0, "bp": 12},
 	Attack.HEAVY: {"windup": 0.46, "recovery": 0.48, "reach": 2.10, "damage": 110.0, "bp": 20},
+	Attack.SUNDERING_STRIKE: {
+		"windup": 0.62, "recovery": 0.68, "reach": 2.25, "damage": 210.0, "bp": 0, "bp_cost": 150,
+	},
 }
 const MIN_FORWARD_DOT := 0.5
 
@@ -50,6 +53,11 @@ func start(kind: Attack, battle_live: bool) -> bool:
 	if not battle_live or _hero == null or not _hero.is_alive() or _team < 0:
 		return false
 	if _phase != Phase.IDLE or not PROFILES.has(kind):
+		return false
+	# Commit the shared cost once, after admission and before starting the windup.
+	# An accepted special still costs BP if it misses or the battle ends.
+	var cost: int = PROFILES[kind].get("bp_cost", 0)
+	if cost > 0 and (_points == null or not _points.try_spend(cost, true)):
 		return false
 	_attack = kind
 	_phase = Phase.WINDUP
@@ -112,6 +120,6 @@ func _resolve_contact(
 	if distance_squared > 0.0 and hero_facing.normalized().dot(offset.normalized()) < MIN_FORWARD_DOT:
 		return contact
 	contact.hp_lost = target.receive_hit(_hero, {Unit.Damage.MELEE: profile.damage})
-	if contact.hp_lost > 0.0 and _points != null:
+	if contact.hp_lost > 0.0 and profile.bp > 0 and _points != null:
 		contact.bp_credited = _points.award_confirmed_hit(profile.bp)
 	return contact
