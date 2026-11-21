@@ -12,8 +12,9 @@ from unittest.mock import patch
 
 from tools.report_deployment_art import (
     CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
-    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS,
-    _battlefield, _deployments, _verify_custody_case, _verify_kit, build_report, main,
+    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
+    WHEEL_MISSION, WHEEL_RECEIPT,
+    _battlefield, _deployments, _verify_custody_case, _verify_kit, _verify_raska_spillway_wheel, build_report, main,
 )
 
 
@@ -29,7 +30,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ"},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION},
         )
         for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
@@ -73,6 +74,28 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertEqual(basin[0]["receipt"], "docs/audits/red-basin-storehouse-v12.json")
         self.assertEqual(basin[0]["placement_scope"], "shared_battlefield")
         self.assertEqual(basin[0]["verified_files"], 6)
+
+        wheel = rows[WHEEL_MISSION]["verified_kit_receipts"]
+        self.assertEqual(rows[WHEEL_MISSION]["battlefield_scene"], WHEEL_BATTLEFIELD)
+        self.assertEqual([item["receipt"] for item in wheel], [WHEEL_RECEIPT])
+        self.assertEqual(wheel[0]["placement_scope"], "mission_deployment")
+        self.assertEqual(wheel[0]["verified_files"], 8)
+        for mission in ("ilyra_spanwater_evacuation", "neris_spanwater_feeder"):
+            self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
+            self.assertEqual(rows[mission]["verified_kit_receipts"], [])
+
+    def test_wheel_requires_its_reviewed_deployment_binding(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / WHEEL_DEPLOYMENT
+            path.parent.mkdir(parents=True)
+            old = (ROOT / WHEEL_DEPLOYMENT).read_text(encoding="utf-8")
+            path.write_text(old.replace('script = ExtResource("4_wheel_binding")', ''), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact adapter is not attached"):
+                _verify_raska_spillway_wheel(root, {WHEEL_MISSION: WHEEL_DEPLOYMENT}, {WHEEL_MISSION: WHEEL_BATTLEFIELD})
+            with self.assertRaisesRegex(ValueError, "reviewed placement is not registered"):
+                _verify_raska_spillway_wheel(root, {}, {WHEEL_MISSION: WHEEL_BATTLEFIELD})
+
 
     def test_release_check_rejects_every_development_deployment_even_with_a_passed_kit(self):
         out, err = StringIO(), StringIO()

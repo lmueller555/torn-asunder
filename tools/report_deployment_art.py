@@ -49,6 +49,12 @@ CASE_CONSUMER = "game/battlefield/mara_mine_escort.gd"
 CASE_VISUAL = "assets/models/environment/godbridle_case_visual.gd"
 CASE_ASSET = "assets/models/environment/godbridle_custody_case.glb"
 CASE_RECEIPT = "docs/audits/godbridle-custody-case-v3.json"
+WHEEL_MISSION = "orc_spanwater_release"
+WHEEL_DEPLOYMENT = "game/battlefield/raska_spanwater.tscn"
+WHEEL_BATTLEFIELD = "game/battlefields/spanwater_lock_campaign.tscn"
+WHEEL_BINDING = "game/battlefield/props/raska_spillway_wheel_binding.gd"
+WHEEL_ASSET = "assets/models/environment/raska_spillway_wheel/spillway_wheel.tscn"
+WHEEL_RECEIPT = "docs/audits/raska-spanwater-wheel-v11.json"
 DEVELOPMENT = "still uses development art"
 ID = r"[a-z][a-z0-9_]*"
 PACKED_RESOURCE = re.compile(
@@ -190,6 +196,24 @@ def _verify_custody_case(root: Path, deployments: dict[str, str]) -> dict:
                            "mission_deployment", CASE_DEPLOYMENT)
 
 
+def _verify_raska_spillway_wheel(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    # Unlike a shared kit, the wheel's reviewed replacement is an opt-in child
+    # of one deployment. The other Spanwater missions inherit the stock wheel.
+    if deployments.get(WHEEL_MISSION) != WHEEL_DEPLOYMENT or battlefields.get(WHEEL_MISSION) != WHEEL_BATTLEFIELD:
+        raise ValueError("Raska spillway wheel: reviewed placement is not registered")
+    scene = (root / WHEEL_DEPLOYMENT).read_text(encoding="utf-8")
+    ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(WHEEL_BINDING)}" id="([^"]+)"\]$',
+                     scene, re.M)
+    mounted = re.findall(
+        r'^\[node name="SpillwayWheelVisualBinding" type="Node" parent="\."\]\nscript = ExtResource\("([^"]+)"\)$',
+        scene, re.M,
+    )
+    if len(ext) != 1 or ext != mounted:
+        raise ValueError("Raska spillway wheel: exact adapter is not attached to its deployment")
+    return _receipt_record(root, "Raska’s Spanwater spillway wheel and stand (V1.1)", WHEEL_RECEIPT, 8,
+                           {WHEEL_ASSET, WHEEL_BINDING}, "mission_deployment", WHEEL_DEPLOYMENT)
+
+
 def _receipt_record(root: Path, name: str, receipt: str, file_count: int, required: set[str],
                     placement_scope: str, placement_scene: str) -> dict:
     receipt_path = root / receipt
@@ -215,6 +239,7 @@ def build_report(root: Path) -> dict:
             raise ValueError(f"{kit.name}: reviewed placement is not used by a campaign deployment")
         verified.setdefault(kit.battlefield, []).append(_verify_kit(root, kit))
     custody_case = _verify_custody_case(root, deployments)
+    spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -225,7 +250,8 @@ def build_report(root: Path) -> dict:
                 "battlefield_scene": battlefields[mission],
                 "art_status": DEVELOPMENT,
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
-                + ([custody_case] if mission == CASE_MISSION else []),
+                + ([custody_case] if mission == CASE_MISSION else [])
+                + ([spillway_wheel] if mission == WHEEL_MISSION else []),
             }
             for mission, scene in deployments.items()
         ],
