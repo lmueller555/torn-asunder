@@ -75,6 +75,18 @@ These rework decisions cover the families visible in the linked Godot previews a
 | [Spanwater main channel and spillway terrain](../tests/spanwater_lock_campaign_preview.tscn) | Rework | Channel and spilling water are solid color planes and the old gates and banks lack believable joins. Moving water cues and the two layouts still need separate in-game checks. The stock wheel remains unapproved in the other uses. |
 | [Raska's spillway wheel, axle and stand](audits/raska-spanwater-wheel-v11.json) | Pass | Exact V1.1 only in River, Not Sea. Native hero before and after the real release plus tactical and overview, exact collision and scene-relative cost verified. Ilyra's and Neris's existing visuals, water, actors and the rest of the field are outside this approval. |
 
+## Inspected: live Spanwater release, feeder, and landing states
+
+The three deployments share a river map, not a single water animation. Native hero and command views include real phase changes, not just the opening scene. The stationary Raska wheel remains the only Spanwater art approval.
+
+| Existing visual | Status | What blocks a pass |
+|---|---|---|
+| [Raska’s main-channel front and low ford](../game/battlefield/raska_spanwater.gd) | Rework | A flat turquoise strip grows, holds when contested, and resumes correctly, but it has no visible leading edge. At closure it stops at the center of the ford. Part of the blocked approach still looks dry from hero view. Keep the real retreat and raised route open; a replacement should make the unsafe low path legible without advancing while contested. |
+| [Neris’s feeder fronts, crest, and town gauge](../game/battlefield/neris_spanwater_playtest.gd) | Rework | Nearly uniform strips and a pale square do not distinguish ordinary feeder flow from the approaching crest. Below the raised path, the stock flow is hard to see from hero view. Preserve the real separation between the main river, repaired inlet, and downstream front. The gauge must not rise until the downstream water reaches town. |
+| [Ilyra’s stairs, boarding plank, and launches](../game/battlefield/ilyra_spanwater_playtest.gd) | Rework | The elevated flat flood tile blankets the stairs and can hide most of the hero. The plank disappears at the correct closure, but the loaded departure is visible as moving labels rather than a hull. Preserve the last-departure warning, the separate landing closure and the ability of already-loaded launches to leave after closure. |
+
+Reproduce the exact gameplay states with the [Raska release](../tests/raska_spanwater.gd), [Neris feeder](../tests/neris_spanwater_playtest.gd), and [Ilyra landing](../tests/ilyra_spanwater_playtest.gd) fixtures. This is a finding about stock presentation, not a change to water logic, collisions, or audit status elsewhere.
+
 ## Inspected: Red Basin lower storehouse
 
 | Existing asset or family | Status | What blocks a pass |
