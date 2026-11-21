@@ -143,8 +143,8 @@ const _MAPS := {
 				"map_position": Vector2(0.69, 0.87), "mission_id": "neris_spanwater_feeder",
 			},
 			"cairnspine_vault_road": {
-				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.86, 0.76),
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.86, 0.76), "mission_id": "neris_cairnspine_passage",
 			},
 		},
 		"routes": [
