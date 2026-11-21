@@ -9,6 +9,7 @@ const FIRST_AMBER := 2 * Battle.PLATOON_SIZE
 
 func _initialize() -> void:
 	var passed := _check_pool()
+	passed = _check_status_frame() and passed
 	passed = _check_team_pools() and passed
 	passed = _check_melee_awards() and passed
 	passed = _check_charge_awards() and passed
@@ -36,6 +37,27 @@ func _check_pool() -> bool:
 	return true
 
 
+func _check_status_frame() -> bool:
+	var pool := Points.new(3)
+	var frozen := pool.frame()
+	if frozen.balance != 400 or frozen.capacity != 740 or frozen.lead_level != 3 \
+			or Points.new(0).frame().lead_level != 1 or Points.new(1000).frame().lead_level != 99:
+		return _fail("The detached frame did not expose the actual clamped level, capacity and balance.")
+	if frozen.spend_status(-1, false) != Points.SpendStatus.INVALID_COST \
+			or frozen.spend_status(401, false) != Points.SpendStatus.REQUIREMENTS_NOT_MET \
+			or frozen.spend_status(401) != Points.SpendStatus.INSUFFICIENT \
+			or frozen.spend_status(400) != Points.SpendStatus.READY:
+		return _fail("The readout did not distinguish invalid cost, unmet requirements, insufficient BP and readiness.")
+	if pool.balance != 400 or not pool.try_spend(300, true) or pool.try_spend(120, true) \
+			or pool.frame().spend_status(120) != Points.SpendStatus.INSUFFICIENT \
+			or frozen.spend_status(120) != Points.SpendStatus.READY or frozen.balance != 400:
+		return _fail("Read-only inspection changed the balance, or a stale affordable frame authorized a new spend.")
+	if pool.award_confirmed_hit(20) != 20 or pool.frame().balance != 120 \
+			or pool.frame().spend_status(120) != Points.SpendStatus.READY or frozen.balance != 400:
+		return _fail("A confirmed award failed to refresh a new frame or mutated a detached one.")
+	return true
+
+
 func _check_team_pools() -> bool:
 	var setup := _setup()
 	setup.sides[0][0].level = 3
@@ -44,7 +66,8 @@ func _check_team_pools() -> bool:
 	var battle := Battle.new(8, setup)
 	var blue := battle.battle_points_for_team(0)
 	var amber := battle.battle_points_for_team(1)
-	if blue == amber or blue.capacity != 740 or amber.capacity != 720:
+	if blue == amber or blue.capacity != 740 or amber.capacity != 720 \
+			or blue.frame().lead_level != 3 or amber.frame().lead_level != 2:
 		return _fail("Teams did not get independent pools capped by their lead platoon.")
 	if blue.balance != 400 or amber.balance != 400 or battle.battle_points_for_team(-1) != null or battle.battle_points_for_team(2) != null:
 		return _fail("Battle initialization did not create exactly two fresh team pools.")

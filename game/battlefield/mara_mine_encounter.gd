@@ -27,11 +27,11 @@ const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
 const INTERCEPTION_SPEED := 5.4
 
-var points := Points.new()
+var hero := Unit.new(HERO_HP)
+var points := Points.new(hero.level)
 var infantry_attack := InfantryAttack.new()
 var archer_attack: ArcherAttack
 var _feet: Callable
-var hero := Unit.new(HERO_HP)
 var enemy := Unit.new(ENEMY_HP)
 var defense := Defense.new(hero, HERO_TEAM, points)
 var enemy_position: Vector2

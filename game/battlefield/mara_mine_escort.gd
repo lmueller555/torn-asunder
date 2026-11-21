@@ -10,6 +10,7 @@ const Catalog := preload("res://game/combat/unit_catalog.gd")
 const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
 const Archer := preload("res://game/combat/human_archer_volley.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
+const Points := preload("res://game/combat/battle_points.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const PICKUP_RADIUS := 2.2
@@ -114,7 +115,7 @@ func _physics_process(delta: float) -> void:
 	_refresh_objective_view(feet)
 	if _finished():
 		if encounter:
-			_refresh_sundering_readout()
+			_refresh_sundering_readout(team_battle_points_frame())
 		mission_finished.emit(objective.phase == Escort.Phase.SUCCEEDED)
 
 
@@ -478,9 +479,10 @@ func _refresh_combat_view() -> void:
 		Attack.Phase.WINDUP: _hero_weapon.rotation.x = -1.40 if special else -0.90
 		Attack.Phase.RECOVERY: _hero_weapon.rotation.x = 1.26 if special else 0.90
 		_: _hero_weapon.rotation.x = 0.15
-	_refresh_sundering_readout()
-	_combat_hp.text = "Mara %d / %d HP    ·    Team %d / %d BP" % [
-		ceili(encounter.hero.hp), roundi(encounter.hero.max_hp), encounter.points.balance, encounter.points.capacity,
+	var bp := team_battle_points_frame()
+	_refresh_sundering_readout(bp)
+	_combat_hp.text = "Mara %d / %d HP    ·    Team %d / %d BP (lead Lv %d)" % [
+		ceili(encounter.hero.hp), roundi(encounter.hero.max_hp), bp.balance, bp.capacity, bp.lead_level,
 	]
 	var troops := encounter.infantry_attack.attacker
 	_infantry_hp.text = "Shield Infantry · %d / %d prototype HP%s" % [
@@ -520,7 +522,12 @@ func _refresh_combat_view() -> void:
 
 
 
-func _refresh_sundering_readout() -> void:
+## Read-only encounter status. The scene and combat resolvers still use the live pool.
+func team_battle_points_frame() -> Points.Frame:
+	return encounter.points.frame() if encounter else null
+
+
+func _refresh_sundering_readout(bp: Points.Frame) -> void:
 	_special_status.visible = sundering_strike_enabled
 	if not sundering_strike_enabled:
 		return
@@ -536,7 +543,7 @@ func _refresh_sundering_readout() -> void:
 		status = "Hero view only"
 	elif defense.phase != Defense.Phase.FREE or defense.attack_phase != Attack.Phase.IDLE:
 		status = "Busy"
-	elif not encounter.points.can_afford(SUNDERING_COST):
+	elif bp.spend_status(SUNDERING_COST) == Points.SpendStatus.INSUFFICIENT:
 		status = "Not enough BP"
 	else:
 		status = "Ready"
