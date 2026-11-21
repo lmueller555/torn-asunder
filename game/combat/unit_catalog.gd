@@ -27,6 +27,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 			"off_hand": &"shield",
 		},
 		"starting_hp": Unit.STARTING_HP,
+		"movement_scale": 1.0,
 		"ratings": {
 			Unit.Damage.MELEE: Unit.MIN_RATING,
 			Unit.Damage.RANGED: Unit.MIN_RATING,
@@ -52,7 +53,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 	HUMAN_HEAVY_INFANTRY: {
 		"name": "Heavy Infantry",
 		"faction": "Humans",
-		"role": "Heavy mail infantry",
+		"role": "Line holder in heavy mail",
 		"model": preload("res://assets/models/human_heavy_infantry.glb"),
 		"animation_preview": {
 			&"Advancing Diagonal Cut": {"headroom": 0.34, "travel": 0.36},
@@ -62,5 +63,34 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 			&"Shield Walk Stop": {"travel": 0.264},
 		},
 		"preview_clip": &"Shield-Ready Idle",
+		"equipment": {
+			"main_hand": &"sword",
+			"off_hand": &"shield",
+		},
+		"promotes_from": HUMAN_INFANTRY,
+		"promotion_minimum_ratings": {Unit.Damage.MELEE: 10},
+		# Provisional profile. Ratings are inherited; movement is used in the skirmish simulation.
+		"starting_hp": 1320.0,
+		"movement_scale": 0.85,
+		"basic_attack": {Unit.Damage.MELEE: 32.0},
 	},
 }
+
+
+
+## Checks a roster unit's purchased ratings without spending points or changing its type.
+## The caller supplies the unit's current roster type; CombatUnit does not store it.
+static func can_promote(source_type: StringName, target_type: StringName, unit: Unit) -> bool:
+	return unit != null and can_promote_with_ratings(source_type, target_type, unit.rating)
+
+
+## Also checks a build's budgeted ratings before any soldiers are instantiated.
+static func can_promote_with_ratings(source_type: StringName, target_type: StringName, read_rating: Callable) -> bool:
+	var target: Dictionary = TYPES.get(target_type, {})
+	if not read_rating.is_valid() or not target.has("promotes_from") or target.promotes_from != source_type:
+		return false
+	var minimum_ratings: Dictionary = target.promotion_minimum_ratings
+	for type: Unit.Damage in minimum_ratings:
+		if int(read_rating.call(type)) < minimum_ratings[type]:
+			return false
+	return true

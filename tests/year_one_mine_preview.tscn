@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine.tscn" id="1_mine"]
+
+[sub_resource type="Environment" id="Environment_preview"]
+background_mode = 1
+background_color = Color(0.08, 0.103, 0.116, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.78, 0.86, 1, 1)
+ambient_light_energy = 0.53
+
+[node name="YearOneMinePreview" type="Node3D"]
+
+[node name="Mine" parent="." instance=ExtResource("1_mine")]
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_preview")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.88, -0.62, 0)
+light_color = Color(1, 0.92, 0.83, 1)
+light_energy = 0.85
+shadow_enabled = true
+directional_shadow_max_distance = 180.0
+
+[node name="Overview" type="Camera3D" parent="."]
+position = Vector3(22, 106, 70)
+rotation = Vector3(-1.009, 0.337, 0)
+projection = 1
+current = true
+size = 96.0

@@ -71,6 +71,20 @@ func award_experience(amount: int) -> int:
 	if gained == 0:
 		return 0
 
+	_update_level_health()
+	_stat_points += gained
+	return gained
+
+
+## Change base HP for a unit profile without resetting training or erasing wounds.
+func set_starting_hp(hit_points: float) -> void:
+	if not is_finite(hit_points) or hit_points < 1.0:
+		return
+	_starting_hp = hit_points
+	_update_level_health()
+
+
+func _update_level_health() -> void:
 	var previous_max_hp := _max_hp
 	# Use levels gained as the HP curve's reference, independent of rating purchases.
 	var reference_rating := float(_level - 1)
@@ -79,9 +93,7 @@ func award_experience(amount: int) -> int:
 	_max_hp = _starting_hp * hp_scale
 	_level_scale = hp_scale / reference_scale
 	if is_alive():
-		_hp = _max_hp - (previous_max_hp - _hp)
-	_stat_points += gained
-	return gained
+		_hp = maxf(0.0, _max_hp - (previous_max_hp - _hp))
 
 
 func rating(type: Damage) -> int:

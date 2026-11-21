@@ -21,6 +21,21 @@ const CLIPS := {
 	Battle.State.CHEER: &"Sword Cheer",
 }
 
+# Use only motions authored for this rig. Other states use its own ready pose.
+const HEAVY_CLIPS := {
+	Battle.State.IDLE: &"Shield-Ready Idle",
+	Battle.State.RUN: &"Combat Run",
+	Battle.State.ATTACK: &"Advancing Diagonal Cut",
+	Battle.State.RAISE: &"Shield Raise",
+	Battle.State.GUARD: &"Shield Guard",
+	Battle.State.LOWER: &"Shield Lower",
+}
+const CLIPS_BY_TYPE := {
+	Catalog.HUMAN_INFANTRY: CLIPS,
+	Catalog.HUMAN_HEAVY_INFANTRY: HEAVY_CLIPS,
+}
+const HEAVY_RUN_CLIP_SPEED := 2.2
+
 signal updated
 
 var battle: Battle
@@ -30,6 +45,7 @@ var _setup := Setup.new()
 var _camera_depth := 25.0
 var _models: Array[Node3D] = []
 var _players: Array[AnimationPlayer] = []
+var _clip_sets: Array[Dictionary] = []
 var _markers: Array[MeshInstance3D] = []
 var _displayed: Array[int] = []
 var _last_display_second := -1
@@ -47,7 +63,6 @@ func configure(setup: Setup) -> void:
 func _ready() -> void:
 	battle = Battle.new(8, _setup)
 	_size_field()
-	var definition: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
 	var marker_mesh := CylinderMesh.new()
 	marker_mesh.top_radius = 0.36
 	marker_mesh.bottom_radius = 0.36
@@ -60,19 +75,17 @@ func _ready() -> void:
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		materials.append(material)
 	for soldier in battle.soldiers:
+		var definition: Dictionary = Catalog.TYPES[soldier.unit_type]
 		var model := definition.model.instantiate() as Node3D
 		add_child(model)
 		_models.append(model)
-		var player := model.get_node("AnimationPlayer") as AnimationPlayer
-		player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
-		var slash := player.get_animation(CLIPS[Battle.State.ATTACK])
-		for track in range(slash.get_track_count()):
-			var path := slash.track_get_path(track)
-			if slash.track_get_type(track) == Animation.TYPE_POSITION_3D and path.get_concatenated_subnames() == "Root":
-				# Let the simulation own movement and keep the embedded animation poses in place.
-				player.root_motion_track = path
-				break
+		var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+		var clips: Dictionary = CLIPS_BY_TYPE.get(soldier.unit_type, {})
+		if player:
+			player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+			_set_root_motion(player, _valid_clip(player, clips, Battle.State.ATTACK))
 		_players.append(player)
+		_clip_sets.append(clips)
 
 		var marker := MeshInstance3D.new()
 		marker.mesh = marker_mesh
@@ -91,7 +104,8 @@ func restart() -> void:
 	paused = false
 	_displayed.fill(-1)
 	for player in _players:
-		player.stop()
+		if player:
+			player.stop()
 	_sync_models(0.0)
 	_frame_battle(0.0)
 	updated.emit()
@@ -130,23 +144,52 @@ func _physics_process(delta: float) -> void:
 		updated.emit()
 
 
+func _set_root_motion(player: AnimationPlayer, clip: StringName) -> void:
+	if clip.is_empty():
+		return
+	var animation := player.get_animation(clip)
+	for track in range(animation.get_track_count()):
+		var path := animation.track_get_path(track)
+		if animation.track_get_type(track) == Animation.TYPE_POSITION_3D and path.get_concatenated_subnames() == "Root":
+			# Let the simulation own translation even when the model has an advancing cut.
+			player.root_motion_track = path
+			return
+
+
+func _valid_clip(player: AnimationPlayer, clips: Dictionary, state: Battle.State) -> StringName:
+	var clip: StringName = clips.get(state, &"")
+	return clip if player and not clip.is_empty() and player.has_animation(clip) else &""
+
+
 func _sync_models(delta: float) -> void:
 	for index in range(_models.size()):
 		var soldier := battle.soldiers[index]
 		var model := _models[index]
 		var player := _players[index]
+		var clips := _clip_sets[index]
 		model.position = Vector3(soldier.position.x, 0, soldier.position.y)
 		model.rotation.y = atan2(soldier.facing.x, soldier.facing.y)
 		_markers[index].visible = soldier.unit.is_alive()
+		# Only hold a downed pose when the rig actually has a knockdown animation.
+		var hold_down := soldier.state == Battle.State.DOWN and not _valid_clip(player, clips, Battle.State.KNOCKDOWN).is_empty()
 		if _displayed[index] != soldier.state:
 			_displayed[index] = soldier.state
-			if soldier.state != Battle.State.DOWN:
-				var clip: StringName = CLIPS[soldier.state]
+			var clip := _valid_clip(player, clips, soldier.state)
+			# Heavy Infantry has no death clip; do not leave a standing corpse on the field.
+			model.visible = soldier.state != Battle.State.DEAD or not clip.is_empty()
+			if player and not hold_down and model.visible:
 				var speed := 1.0
-				if Battle.DURATIONS.has(soldier.state):
+				if clip.is_empty():
+					clip = _valid_clip(player, clips, Battle.State.IDLE)
+				elif soldier.state == Battle.State.RUN and soldier.unit_type == Catalog.HUMAN_HEAVY_INFANTRY:
+					speed = soldier.run_speed / HEAVY_RUN_CLIP_SPEED
+				elif Battle.DURATIONS.has(soldier.state):
 					speed = player.get_animation(clip).length / Battle.DURATIONS[soldier.state]
-				player.play(clip, 0.075 if delta > 0.0 else 0.0, speed)
-		if soldier.state != Battle.State.DOWN:
+				if clip.is_empty():
+					player.stop()
+				else:
+					player.play(clip, 0.075 if delta > 0.0 else 0.0, speed)
+		if player and model.visible and not hold_down:
 			# The attack is chosen at the end of the simulation step, with its clock still at zero.
 			var attack_just_started := soldier.state == Battle.State.ATTACK and soldier.time == 0.0
 			player.advance(0.0 if attack_just_started else delta)

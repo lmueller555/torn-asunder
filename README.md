@@ -15,15 +15,15 @@ Use a mouse, the arrow keys and Enter, or the DualSense D-pad and Cross to navig
 
 New Game opens the Campaign Vault and its six leader portraits. Starting a campaign opens its briefing and writes one local save per leader. Continue opens the most recently played briefing, and Load lists every saved briefing. Settings saves fullscreen and reduced-motion preferences. Playable missions are planned for a later milestone.
 
-Open **Combat Drills** from any briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings.
+Open **Combat Drills** from any briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 
 Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
 
-In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model** to view the Human Infantry. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLB in `assets/models`.
+In King Mara Halden’s **Unit Progression** practice session, raise Melee Power to 10 to try Heavy Infantry without changing your campaign save. **Inspect 3D Model** opens the current practice unit in the studio. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLBs in `assets/models`.
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
 
-Select **Unit Test → AI Skirmish** to set up Blue and Amber. Give each side one to four platoons of 32 Human Infantry. Select a platoon, choose its level (1–99), and distribute its points among the eight combat ratings. Every rating starts at 1. Each level after the first earns one point, and each point raises one rating by 1. All 32 soldiers inherit their platoon’s build. Use **Adjust by** to spend or reclaim one point, five points, or as many as the selected rating allows. You can leave points unspent. Lowering a level removes the most recent investments first if the allocation exceeds the new budget.
+Select **Unit Test → AI Skirmish** to set up Blue and Amber. Give each side one to four platoons of 32 soldiers. Select a platoon, choose its level (1–99), and distribute its points among the eight combat ratings. Infantry is the default; select Heavy Infantry once that platoon reaches Melee Power 10. Every rating starts at 1. Each level after the first earns one point, and each point raises one rating by 1. All 32 soldiers inherit their platoon’s build. Use **Adjust by** to spend or reclaim one point, five points, or as many as the selected rating allows. You can leave points unspent. Lowering a level removes the most recent investments first if the allocation exceeds the new budget.
 
 Choose **Start Skirmish** to watch the armies fight. **Restart** replays the same matchup from full health. **Back** returns to setup with both rosters ready to edit. Each platoon has its own HP bar, and each side shows its total survivors.
 

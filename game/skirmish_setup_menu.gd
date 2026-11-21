@@ -22,6 +22,8 @@ var _count_less: Array[Button] = []
 var _count_more: Array[Button] = []
 var _slots: Array[Array] = []
 var _level_buttons: Dictionary[int, Button] = {}
+var _type_buttons: Dictionary[StringName, Button] = {}
+var _type_status: Label
 var _step_buttons: Dictionary[int, Button] = {}
 var _step := 1
 var _rating_labels: Dictionary[Unit.Damage, Label] = {}
@@ -69,15 +71,21 @@ func initialize(setup: Setup, back_button: BaseButton, rating_names: Dictionary)
 	_level_control("LevelPlusTen", "+10", 973, 10)
 	_level_control("LevelMax", "Max", 1047, Unit.MAX_LEVEL)
 
-	_label("Combat ratings", Rect2(474, 121, 201, 35), 23, IVORY, DISPLAY_FACE)
-	_label("Adjust by", Rect2(680, 121, 82, 35), 19, MUTED)
+	_label("Class", Rect2(474, 108, 80, 36), 23, MUTED)
+	_type_control(Catalog.HUMAN_INFANTRY, "TypeInfantry", Rect2(574, 109, 116, 34))
+	_type_control(Catalog.HUMAN_HEAVY_INFANTRY, "TypeHeavyInfantry", Rect2(700, 109, 179, 34))
+	_type_status = _label("", Rect2(896, 108, 365, 36), 19, GOLD)
+	_type_status.name = "UnitTypeStatus"
+
+	_label("Combat ratings", Rect2(474, 155, 201, 35), 23, IVORY, DISPLAY_FACE)
+	_label("Adjust by", Rect2(680, 155, 82, 35), 19, MUTED)
 	for amount: int in [1, 5, 0]:
 		var caption := str(amount) if amount else "All"
-		var rect := Rect2(766 + 53 * _step_buttons.size(), 123, 49, 33)
+		var rect := Rect2(766 + 53 * _step_buttons.size(), 157, 49, 33)
 		var button := _button("RatingStep" + caption, caption, rect, _set_step.bind(amount), 20)
 		button.toggle_mode = true
 		_step_buttons[amount] = button
-	_budget = _label("", Rect2(928, 121, 333, 35), 22, GOLD)
+	_budget = _label("", Rect2(928, 155, 333, 35), 22, GOLD)
 	_budget.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	for type: Unit.Damage in Unit.Damage.values():
 		_add_rating(type, rating_names[type])
@@ -106,7 +114,7 @@ func _add_roster(side: int) -> void:
 	var buttons: Array[Button] = []
 	for slot in range(Setup.MAX_PLATOONS):
 		var rect := Rect2(18 + (slot % 2) * 201, y + 70 + floori(slot / 2.0) * 64, 193, 55)
-		var button := _button(side_name + "Platoon" + str(slot + 1), "", rect, _select.bind(side, slot), 22)
+		var button := _button(side_name + "Platoon" + str(slot + 1), "", rect, _select.bind(side, slot), 19)
 		button.toggle_mode = true
 		buttons.append(button)
 	_slots.append(buttons)
@@ -116,9 +124,15 @@ func _level_control(id: String, caption: String, x: float, delta: int) -> void:
 	_level_buttons[delta] = _button(id, caption, Rect2(x, 63, 67, 40), _change_level.bind(delta), 21)
 
 
+func _type_control(type: StringName, id: String, rect: Rect2) -> void:
+	var button := _button(id, Catalog.TYPES[type].name, rect, _change_type.bind(type), 20)
+	button.toggle_mode = true
+	_type_buttons[type] = button
+
+
 func _add_rating(type: Unit.Damage, caption: String) -> void:
 	var x := 474 + type % 2 * 405
-	var y := 168 + floori(type / 2.0) * 67
+	var y := 198 + floori(type / 2.0) * 62
 	var key: String = Unit.Damage.keys()[type].capitalize()
 	_rule(Rect2(x, y, 383, 1))
 	_label(caption, Rect2(x, y + 3, 180, 32), 22, IVORY)
@@ -146,6 +160,11 @@ func _change_level(delta: int) -> void:
 	var build := _build()
 	build.set_level(build.level + delta)
 	_refresh(_level_buttons[-1] if delta > 0 else _level_buttons[1])
+
+
+func _change_type(type: StringName) -> void:
+	_build().set_unit_type(type)
+	_refresh(_type_buttons[Catalog.HUMAN_INFANTRY])
 
 
 func _change_rating(type: Unit.Damage, delta: int) -> void:
@@ -187,7 +206,7 @@ func _refresh(fallback: Button = null) -> void:
 			button.visible = slot < count
 			if button.visible:
 				var platoon: Setup.PlatoonBuild = _setup.sides[side][slot]
-				button.text = "Platoon %d · Lv. %d" % [slot + 1, platoon.level]
+				button.text = "Platoon %d · Lv. %d\n%s" % [slot + 1, platoon.level, Catalog.TYPES[platoon.unit_type].name]
 				button.set_pressed_no_signal(side == _side and slot == _slot)
 
 	_heading.text = "%s · Platoon %d" % [SIDES[_side], _slot + 1]
@@ -195,6 +214,19 @@ func _refresh(fallback: Button = null) -> void:
 	_level_label.text = str(build.level)
 	for delta in _level_buttons:
 		_level_buttons[delta].disabled = (delta < 0 and build.level <= 1) or (delta > 0 and build.level >= Unit.MAX_LEVEL)
+
+	for type in _type_buttons:
+		_type_buttons[type].disabled = not build.can_select_unit_type(type)
+		_type_buttons[type].set_pressed_no_signal(build.unit_type == type)
+	var regular_button := _type_buttons[Catalog.HUMAN_INFANTRY]
+	var heavy_button := _type_buttons[Catalog.HUMAN_HEAVY_INFANTRY]
+	regular_button.focus_neighbor_right = regular_button.get_path_to(heavy_button) if not heavy_button.disabled else NodePath()
+	heavy_button.focus_neighbor_left = heavy_button.get_path_to(regular_button)
+	var heavy: Dictionary = Catalog.TYPES[Catalog.HUMAN_HEAVY_INFANTRY]
+	var required_melee: int = heavy.promotion_minimum_ratings[Unit.Damage.MELEE]
+	_type_status.text = "Heavy Infantry: Melee Power %d / %d" % [build.rating(Unit.Damage.MELEE), required_melee]
+	if build.unit_type == Catalog.HUMAN_HEAVY_INFANTRY:
+		_type_status.text = "Heavy Infantry: more HP, slower, lighter hits"
 
 	var remaining := build.remaining_points()
 	_set_step(_step)
@@ -206,7 +238,7 @@ func _refresh(fallback: Button = null) -> void:
 		_rating_labels[type].text = str(build.rating(type))
 		_rating_less[type].disabled = invested == 0
 		_rating_more[type].disabled = remaining == 0 or build.rating(type) >= Unit.MAX_RATING
-	_summary.text = "%d platoons  ·  %d Infantry per platoon  ·  %d soldiers" % [total, Skirmish.PLATOON_SIZE, total * Skirmish.PLATOON_SIZE]
+	_summary.text = "%d platoons  ·  %d soldiers per platoon  ·  %d soldiers" % [total, Skirmish.PLATOON_SIZE, total * Skirmish.PLATOON_SIZE]
 	_update_focus(previous, fallback)
 
 
