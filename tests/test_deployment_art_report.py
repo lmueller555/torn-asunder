@@ -29,7 +29,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road"},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ"},
         )
         for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
@@ -63,7 +63,11 @@ class DeploymentArtReportTest(unittest.TestCase):
                          ["docs/audits/cut-record-room-v31.json"])
         self.assertEqual(cut["verified_kit_receipts"][1]["verified_files"], 6)
         self.assertEqual(cut["verified_kit_receipts"][1]["placement_scope"], "shared_battlefield")
-        self.assertEqual(rows["sereth_pass_writ"]["verified_kit_receipts"], [])
+        boundary = rows["sereth_pass_writ"]["verified_kit_receipts"]
+        self.assertEqual(len(boundary), 1)
+        self.assertEqual(boundary[0]["receipt"], "docs/audits/keeper-boundary-shelter-v11.json")
+        self.assertEqual(boundary[0]["placement_scope"], "shared_battlefield")
+        self.assertEqual(boundary[0]["verified_files"], 6)
         basin = rows["orc_well_road"]["verified_kit_receipts"]
         self.assertEqual(len(basin), 1)
         self.assertEqual(basin[0]["receipt"], "docs/audits/red-basin-storehouse-v12.json")

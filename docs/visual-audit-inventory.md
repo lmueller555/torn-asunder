@@ -33,7 +33,7 @@ The starting hero and tactical views from the [Mine integration](https://github.
 
 ## Inspected: Still Kingdom Cut and Cairnspine Boundary Post
 
-Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview](../tests/still_kingdom_cut_preview.tscn) and [Boundary Post playtest](../game/battlefield/sereth_pass_writ_playtest.tscn). The representative scenes use internal flat-color meshes; terrain-route tests do not establish art performance on target hardware. Only the two independently audited placements below are passes.
+Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview](../tests/still_kingdom_cut_preview.tscn) and [Boundary Post playtest](../game/battlefield/sereth_pass_writ_playtest.tscn). The representative scenes use internal flat-color meshes; terrain-route tests do not establish art performance on target hardware. Only the independently audited placements listed as Pass below are approved.
 
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
@@ -43,7 +43,7 @@ Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview]
 | [Other Cut village shells](../game/battlefields/still_kingdom_cut.tscn) | Rework | Repeated box silhouettes and blank roof decks remain unapproved around the audited Record Room. |
 | [Cut interior record-room and small cemetery props](../game/battlefields/still_kingdom_cut.tscn) | Blocked | No representative hero close-ups for benches, shelving, graves, or document props in this audit. |
 | [Boundary Post road, trench and banks](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Unbroken flat road strips, vertical plane cuts and repeated faceted banks look like route diagrams, not worn terrain and retaining structures. |
-| [Boundary Post open-front Keeper shelter](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Checked in the [live writ deployment](../game/battlefield/sereth_pass_writ_playtest.tscn). The roof slab, walls and post read as a block shelter; without labels the separate bench can be mistaken for a doorway. Preserve the open front, real handover outside, Keeper’s approach and withdrawal lanes, stock roof targeting and the sheep-track cover. This does not audit the bench, Keeper or carried writ. |
+| [Boundary Post open-front Keeper shelter](audits/keeper-boundary-shelter-v11.json) | Pass | Exact V1.1 ashlar support, timber and slate in the [live writ deployment](../game/battlefield/sereth_pass_writ_playtest.tscn). The stock open front, actual exterior handover and roof collision remain. Hero and command distances and scene-relative cost verified. The bench, Keeper, writ and surrounding field are outside this approval. |
 | [Boundary Post low walls and other posts](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Plain blocks in the reviewed tactical and hero frames lack finished construction and distinct silhouettes. Keep the existing sight breaks. |
 | [Boundary Post small lookout/rally props](../game/battlefields/cairnspine_boundary_post.tscn) | Blocked | Separate hero-scale checks are needed for the lookout sign and rally marker. |
 
