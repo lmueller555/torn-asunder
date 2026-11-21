@@ -2,7 +2,7 @@
 
 **High Executor Sereth Vale · Years Three–Five · Three missions**
 
-Campaign design, not playable content. See [Sereth and the Last Testament](../leaders.md#undead--high-executor-sereth-vale), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
+The first two chapters are available from the campaign map as development playtests. The finale is not yet deployable from the campaign map. See [Sereth and the Last Testament](../leaders.md#undead--high-executor-sereth-vale), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
 
 Sereth helped write the rule that the dead must consent to return. The court sends him for the Godbridle before another command can silence the voices at the cut. He has a public reason to obey and a private one: after two centuries, there may finally be something his sister left behind.
 
@@ -16,6 +16,8 @@ Sereth helped write the rule that the dead must consent to return. The court sen
 - **Cost:** Sereth seals the records for cataloging instead of giving the court a list of names to recall. He leaves under commission to secure the Godbridle, before anyone has found his sister’s letter. Nothing in the sound, subtitle labels, or objective screen answers what the voices are.
 
 ## 2. An Audience, Not a Seizure — Year Four (`sereth_pass_writ`)
+
+**Playtest:** After securing the records at the Cut, travel to **Keeper Boundary Post**, read the dispatch and confirm deployment. The Keeper’s reply grants an audience only. Withdraw to the west rally to record the clear and show **A Hearing Only**. The clear opens **Valley Assembly** as a travel-only waypoint; arriving there does not deploy the finale.
 
 **Briefing:** Mara has already handed the bridle to Sova. The court sends a writ requesting an audience before the vault is closed. A rival March patrol wants to stop the writ from reaching the valley Keeper and keep the next move for its own crown.
 

@@ -165,13 +165,18 @@ const _MAPS := {
 				"map_position": Vector2(0.76, 0.33), "mission_id": "sereth_voices_at_the_cut",
 			},
 			"cairnspine_boundary_post": {
-				"id": "cairnspine_boundary_post", "label": "Keeper Boundary Post", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.62, 0.46),
+				"id": "cairnspine_boundary_post", "label": "Keeper Boundary Post", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.62, 0.46), "mission_id": "sereth_pass_writ",
+			},
+			"cairnspine_assembly": {
+				"id": "cairnspine_assembly", "label": "Valley Assembly", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.76, 0.62),
 			},
 		},
 		"routes": [
 			{"from_id": "still_kingdom_camp", "to_id": "still_kingdom_cut"},
 			{"from_id": "still_kingdom_cut", "to_id": "cairnspine_boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
+			{"from_id": "cairnspine_boundary_post", "to_id": "cairnspine_assembly", "required_clear_id": "sereth_pass_writ"},
 		],
 	},
 }
