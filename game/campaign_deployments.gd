@@ -88,6 +88,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "MOONWASH SURVEY SHORE · BEACH AND HEADLAND",
 		"orders": "Record both readings as Ilyra. Hold the Shore Detachment at a marked guard ring. Transmit from either staffed, secure relay while the cutter is at its stop and in sight. Missed passes return.",
 	},
+	"ilyra_spanwater_evacuation": {
+		"scene": preload("res://game/battlefield/ilyra_spanwater_playtest.tscn"),
+		"dispatch": Beats.ILYRA_SPANWATER_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.ILYRA_SPANWATER_DEBRIEF,
+		"battlefield_label": "SPANWATER LOCK · SOUTH BANK LANDING",
+		"orders": "Call both household groups and hold the marines at the landing approach. Board through the single berth before the stairs flood, then get both loaded groups past the boat exit. Loaded boats can still leave after the landing closes. Leave the Godbridle convoy alone.",
+	},
 	"neris_failing_grove": {
 		"scene": preload("res://game/battlefield/neris_failing_grove_playtest.tscn"),
 		"dispatch": Beats.NERIS_FAILING_GROVE_DISPATCH,
