@@ -40,3 +40,7 @@ The Red Basin elected Raska to get its river back. The lower towns want the sea 
 - **Continuity checks:** At the mine all three canonical results must coexist. At Spanwater verify that the river-stage clear leaves the sea gate shut, the lower companies gone, and the feeder and boat lanes available for their own campaigns. Neither mission requires simulating a different campaign’s win before awarding its own.
 
 Design reference only: [*Kingdom Under Fire: Heroes* manual, pp. 12–25](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) for troop orders, hero combat and control points. The campaign’s characters, events, and objectives are original.
+
+## Spanwater objective rules
+
+The standalone `raska_spanwater_release.gd` model accepts observations from a future mission scene. Orc control unlocks a **new** Raska interaction at `SpillwayWheel`, which orders the lower-town withdrawal once and starts the release. Only fresh progress reported while the wheel is secured counts toward river stage. Contest or lost control pauses it; a battlefield-confirmed shutdown before river stage fails it. Once river stage is reached, Raska must reach `HighBankExit`. The model has no countdown or sea-gate action. Withdrawal visuals, water, and battle placement are not implemented by the model. Verify the phase rules with `godot --headless --script tests/raska_spanwater_release.gd`.
