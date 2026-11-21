@@ -19,6 +19,16 @@ Use one of five battlefield sizes. Size means a normal infantry platoon's unoppo
 
 Pick a plausible through-route using edge markers. March with the real formation and terrain adapters, with no combat or waiting, and record both measured time and route length. A rectangle, an objective-only route, or the length along a blocked straight line is not a scale measurement. The [tier helper](../../game/battlefield/battlefield_march_scale.gd) reports the nearest target while flagging marches outside the 90–180 s band separately. This sets all five targets; it does not claim an authored map exists for each class.
 
+### Measured examples in current development maps
+
+| Nearest class | Normal infantry benchmark | What the measurement covers |
+| --- | --- | --- |
+| Compact | [Marches Crossing](../marches-crossing-map.md#measured-march-scale): 290 m / 96.67 s | West to east ridge foot over the timber bridge. |
+| Small | [Year One Mine](../year-one-mine-campaign-map.md#measured-battlefield-size-small): 326.9 m / 109.02 s | Supported passage between two physical rims, in both directions. |
+| Standard | [Still Kingdom Cut](../still-kingdom-cut-map.md#geography-and-approach-choices): 390 m / 130.03 s | Open road between the live command limits. Terrain continues beyond both limits. |
+| Large route | [Red Basin Well Road](../red-basin-well-road-map.md#operational-march-in-the-deployed-mission): 443.1 m / 147.8 s | Covered wash to the command limit, not the physical shelf edge. The same endpoints via the exposed salt road take 107.3 s, so the larger class describes this route, not the field as a whole. |
+| Expansive | Not verified in a live deployment | Target remains 180 s, with a supported and tactically useful through-route. |
+
 Use two different pressure modes: a **patrol** follows its lane and pursues only on confirmed sight within its local range, so screened routes stay meaningful; an **intercept** receives a specific route/order from a mission event and can put a formation in the player's path even before it sees them. Telegraph the latter and give the player room to respond. Never enlarge all global sight ranges simply to make larger maps feel occupied. Check both modes with actual cover, the [detection rules](../patrol-detection.md), and distinct player choices to engage, screen, or detour.
 
 ## Current contracts
