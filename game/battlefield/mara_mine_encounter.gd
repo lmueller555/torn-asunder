@@ -28,12 +28,12 @@ const ENEMY_SPEED := 2.9
 const INTERCEPTION_SPEED := 5.4
 
 var hero := Unit.new(HERO_HP)
-var points := Points.new(hero.level)
+var points: Points
 var infantry_attack := InfantryAttack.new()
 var archer_attack: ArcherAttack
 var _feet: Callable
 var enemy := Unit.new(ENEMY_HP)
-var defense := Defense.new(hero, HERO_TEAM, points)
+var defense: Defense
 var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
@@ -48,9 +48,11 @@ var _interception_route := PackedVector2Array()
 var _interception_leg := 0
 
 
-func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable()) -> void:
+func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable(), lead_level := 1) -> void:
 	enemy_position = spawn
 	_feet = feet
+	points = Points.new(lead_level)
+	defense = Defense.new(hero, HERO_TEAM, points)
 	archer_attack = ArcherAttack.new(points, HERO_TEAM, ENEMY_TEAM, clear_ranged)
 
 

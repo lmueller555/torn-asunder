@@ -7,6 +7,8 @@ const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
+const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
+const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
@@ -352,7 +354,8 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
 	var campaign_id: String = _active_campaign.id
-	if not CampaignMissions.is_unlocked(campaign_id, mission_id, _profile.completed_missions(campaign_id)):
+	var confirmed_clears := _profile.completed_missions(campaign_id)
+	if not CampaignMissions.is_unlocked(campaign_id, mission_id, confirmed_clears):
 		return
 	var deployment := CampaignDeployments.for_mission(mission_id)
 	if deployment.is_empty():
@@ -361,6 +364,8 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
 	var mission: Node3D = scene.instantiate()
+	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
+		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
 		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
