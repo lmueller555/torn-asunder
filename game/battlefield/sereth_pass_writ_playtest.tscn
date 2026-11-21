@@ -1,0 +1,64 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/cairnspine_boundary_post.tscn" id="2_post"]
+[ext_resource type="Script" path="res://game/battlefield/sereth_pass_writ_playtest.gd" id="3_playtest"]
+
+[node name="SerethPassWritPlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_playtest")
+battlefield_scene = ExtResource("2_post")
+field_bounds = Rect2(-145, -89, 290, 178)
+enable_sector_camera = true
+local_sector_size = 94.0
+hero_spawn = NodePath("Markers/Spawns/Sereth")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HouseholdPlatoon"), NodePath("Markers/Spawns/CourtPlatoon")])
+
+[node name="DebugPlaytestVisuals" type="Node3D" parent="."]
+metadata/playtest_only = true
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -180.0
+offset_right = 760.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 8
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "AN AUDIENCE, NOT A SEIZURE  /  YEAR FOUR GRAYBOX"
+theme_override_colors/font_color = Color(0.78, 0.88, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Keeper" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Pressure" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.96, 0.71, 0.54, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Hint" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
+size_flags_horizontal = 0
+focus_mode = 0
+text = "Restart  [Backspace / Options]"
