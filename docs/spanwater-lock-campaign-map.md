@@ -19,6 +19,12 @@ The terrain support plane measures **360 × 240 m**. Coordinates are local meter
 - **Elves.** Near and far household groups have distinct arrival paths, converging above the low timber landing. The far approach turns behind a screen before reaching the bank ramp. A different water corridor passes the hold points and berth, then returns east through the boat exit. Raised stairs beside the ramp make the lower landing's elevation legible.
 - **Phase geometry.** The north and south ramps meet at an exposed dry crossing before release. Future flood/boarding code can use two independent authored volumes; closing the ford must not close the raised way out or the landing automatically. This scene does not activate either.
 
+## Measured dry perimeter march
+
+A standard infantry formation takes **157.17 seconds** to march **471.28 m** at 3 m/s in either direction between the north town-bank crags and the south rim. A direct crossing and the straight shortcuts between the measured bends are blocked. The route passes over the western service bridge, then heads east on the upper bank to cross the dry ford. This qualifies as **Large** without a detour for combat or a mission objective.
+
+The route is available in Raska’s live mission while the spillway stays closed. Neris’s and Ilyra’s timed releases can close the ford before a normal march reaches it, so their measurements describe the initial dry terrain, not a route guaranteed during their missions. Run `godot --headless --script tests/spanwater_perimeter_march.gd` after importing to verify legal command points, rim collisions, the blocked shortcuts, and both directions in the three registered layouts.
+
 ## Marker and camera handoff
 
 All [pocket marker paths](spanwater-lock-map.md#scene-contract) are preserved with the same meaning at newly authored positions, including the two inert phase boxes. Added paths under `Markers/Routes/`:
