@@ -38,12 +38,13 @@ func _run() -> void:
 	passed = _check_sova_public_record_beats() and passed
 	passed = _check_sova_vault_return_beats() and passed
 	passed = _check_neris_beats() and passed
+	passed = _check_neris_passage_beats() and passed
 	passed = _check_sereth_cut_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad feeder), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad finale), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -581,6 +582,55 @@ func _check_neris_beats() -> bool:
 			return _fail("A Dryad beat did not finish under its own ID: %s" % id)
 		ids.append(id)
 	return _completions.slice(start) == ids or _fail("Dryad dialogue emitted duplicate or out-of-order completions.")
+
+
+func _check_neris_passage_beats() -> bool:
+	var cases := [
+		[Beats.NERIS_CAIRNSPINE_PASSAGE_DISPATCH, "A Road We Can Share", "Cairnspine valley assembly",
+			[Beats.REFUGEE_GUIDE, Beats.NERIS, Beats.REFUGEE_GUIDE, Beats.WITNESS_GUIDE, Beats.NERIS],
+			["The groves refused the crossing", "Sova has his own escort", "shelf or the side path",
+				"last safe marker", "Give me a signal", "confirm each route", "volunteers hold it",
+				"the terrace, not the vault gate"]],
+		[Beats.NERIS_CAIRNSPINE_PASSAGE_DEBRIEF, "Room by the Stove", "Cairnspine witness terrace",
+			[Beats.REFUGEE_GUIDE, Beats.WITNESS_GUIDE, Beats.NERIS, Beats.REFUGEE_GUIDE, Beats.WITNESS_GUIDE],
+			["Both groups are here", "what they see at the vault, not before",
+				"The last volunteers stay with the witnesses", "nursery tree still needs watering",
+				"I'll ask the family", "I'll ask them while we wait"]],
+	]
+	var emitted := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title") != fixture[1] or not beat.get("location", "").begins_with(fixture[2]) \
+				or "Year Five" not in beat.location or beat.lines.size() != fixture[3].size() or not _panel.present(id, beat):
+			return _fail("The independent Year Five passage beat did not open under its own ID.")
+		var spoken := ""
+		for index in beat.lines.size():
+			var speaker: String = fixture[3][index]
+			if _label("SpeakerName").text != speaker:
+				return _fail("Neris and the local guides did not speak for themselves.")
+			if speaker == Beats.NERIS:
+				if not _portrait().visible or _portrait().texture != Beats.NERIS_PORTRAIT:
+					return _fail("Neris did not reuse her existing portrait.")
+			elif _portrait().visible or not _label("PortraitFallback").visible:
+				return _fail("A local guide did not use the existing dialogue fallback.")
+			spoken += _label("DialogueLine").text + "\n"
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[4]:
+			if phrase not in spoken:
+				return _fail("The passage dialogue lost a local choice or escort instruction: " + phrase)
+		if id == Beats.NERIS_CAIRNSPINE_PASSAGE_DEBRIEF:
+			for assumption in ["closed the vault", "returned the bridle", "Orrun", "Sereth", "the shelf", "the side path"]:
+				if assumption in spoken:
+					return _fail("The passage debrief purported to know another outcome or a specific winning route.")
+		if _button("AdvanceButton").text != "Finish" or _completions.size() != emitted:
+			return _fail("A passage beat skipped explicit Finish.")
+		_send_key(KEY_SPACE)
+		emitted += 1
+		if _panel.visible or _completions.size() != emitted or _completions.back() != id:
+			return _fail("A passage beat did not complete once and under its own ID.")
+	return true
 
 
 func _check_sereth_cut_beats() -> bool:
