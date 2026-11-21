@@ -19,7 +19,7 @@ Open **Combat Drills** from any briefing to compare the six platoon skills acros
 
 Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
 
-In King Mara Halden's campaign, select **Unit Progression → Inspect 3D Model** to view the Human Infantry. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLB in `assets/models`.
+In King Mara Halden’s **Unit Progression** practice session, raise Melee Power to 10 to try Heavy Infantry without changing your campaign save. **Inspect 3D Model** opens the current practice unit in the studio. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLBs in `assets/models`.
 
 Open **Unit Test** from the title screen to inspect any unit with a model in the unit catalog. Pick an animation to play it, use **Pause** or **Restart** to check the motion, and switch views using the buttons below the preview.
 

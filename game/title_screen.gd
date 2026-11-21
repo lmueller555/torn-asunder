@@ -64,9 +64,14 @@ var _drill_metrics: Array[Label] = []
 var _drill_baseline: Array[Label] = []
 var _drill_results: Array[Label] = []
 var _training_unit: CombatUnit
+var _training_unit_id: StringName
 var _training_base_hit: float
 var _training_level: Label
 var _training_stats: Label
+var _training_award: Button
+var _training_inspect: Button
+var _training_promotion: Button
+var _training_promotion_status: Label
 var _training_buttons: Dictionary[Unit.Damage, Button] = {}
 var _skirmish_setup := SkirmishSetup.new()
 
@@ -114,13 +119,17 @@ func _go_back() -> void:
 	match _page:
 		Page.TITLE:
 			_show_quit()
-		Page.DRILLS, Page.UNIT_PROGRESSION:
+		Page.DRILLS:
 			_show_briefing()
+		Page.UNIT_PROGRESSION:
+			_show_briefing()
+			_stage.get_node("Unit Progression").grab_focus()
 		Page.BATTLE_POINTS_DRILL:
 			_show_drills()
 			_stage.get_node("Battle Points Drill").grab_focus()
 		Page.UNIT_MODEL:
 			_show_unit_progression(true)
+			_training_inspect.grab_focus()
 		Page.SKIRMISH:
 			_show_skirmish_setup()
 		Page.SKIRMISH_SETUP:
@@ -237,12 +246,15 @@ func _show_briefing() -> void:
 
 
 func _show_unit_progression(keep_training: bool = false) -> void:
-	var unit_id: StringName = _active_campaign.get("starting_unit", &"")
-	var definition: Dictionary = UnitCatalog.TYPES.get(unit_id, {})
-	var basic_attack: Dictionary = definition.get("basic_attack", {})
+	var starting_id: StringName = _active_campaign.get("starting_unit", &"")
 	if not keep_training:
-		_training_unit = Unit.new(definition.get("starting_hp", Unit.STARTING_HP), definition.get("ratings", {}))
+		_training_unit_id = starting_id
+		var starting: Dictionary = UnitCatalog.TYPES.get(starting_id, {})
+		_training_unit = Unit.new(starting.get("starting_hp", Unit.STARTING_HP), starting.get("ratings", {}))
+	var definition: Dictionary = UnitCatalog.TYPES.get(_training_unit_id, {})
+	var basic_attack: Dictionary = definition.get("basic_attack", {})
 	_training_base_hit = basic_attack.get(Unit.Damage.MELEE, Unit.REFERENCE_HIT)
+	var has_promotion := starting_id == UnitCatalog.HUMAN_INFANTRY
 	var subtitle := "Practice awarding XP and spending stat points on a training unit."
 	if not definition.is_empty():
 		var equipment: Dictionary = definition.equipment
@@ -252,13 +264,18 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 	_open_page(Page.UNIT_PROGRESSION)
 	var back := _heading("Unit Progression", subtitle)
 	_training_level = _label(_stage, "", Rect2(76, 228, 445, 58), 40, IVORY, DISPLAY_FACE)
-	_training_stats = _label(_stage, "", Rect2(76, 311, 445, 245), 25, IVORY)
+	_training_stats = _label(_stage, "", Rect2(76, 294, 445, 164), 24, IVORY)
 	_training_stats.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	var award := _button("Award 100 XP", Rect2(76, 573, 345, 55), _award_training_experience)
+	_training_award = _button("Award 100 XP", Rect2(76, 550 if has_promotion else 573, 345, 45), _award_training_experience)
+	_training_inspect = null
+	_training_promotion = null
+	_training_promotion_status = null
+	if has_promotion:
+		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
+		_training_promotion_status.name = "Promotion Status"
+		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
 	if definition.has("model"):
-		var inspect := _button("Inspect 3D Model", Rect2(76, 640, 345, 55), _show_unit_model.bind(definition))
-		_link_focus(award, SIDE_BOTTOM, inspect)
-		_link_focus(inspect, SIDE_TOP, award)
+		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
 
 	_rule(Rect2(523, 229, 841, 1), HAIRLINE)
 	_label(_stage, "Combat ratings", Rect2(523, 245, 820, 42), 29, GOLD, DISPLAY_FACE)
@@ -279,15 +296,19 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 
 	_link_cycle(left, SIDE_TOP, SIDE_BOTTOM)
 	_link_cycle(right, SIDE_TOP, SIDE_BOTTOM)
-	_link_focus(award, SIDE_TOP, back)
-	_link_focus(back, SIDE_BOTTOM, award)
-	_link_focus(award, SIDE_RIGHT, left[0])
+	_link_focus(_training_award, SIDE_TOP, back)
+	_link_focus(back, SIDE_BOTTOM, _training_award)
+	_link_focus(_training_award, SIDE_RIGHT, left[0])
+	if _training_promotion:
+		_link_focus(_training_promotion, SIDE_RIGHT, left[2])
+	if _training_inspect:
+		_link_focus(_training_inspect, SIDE_RIGHT, left[3])
 	for row in range(left.size()):
-		_link_focus(left[row], SIDE_LEFT, award)
+		_link_focus(left[row], SIDE_LEFT, _training_award)
 		_link_focus(left[row], SIDE_RIGHT, right[row])
 		_link_focus(right[row], SIDE_LEFT, left[row])
 	_update_training()
-	award.grab_focus()
+	_training_award.grab_focus()
 
 
 func _show_unit_model(definition: Dictionary) -> void:
@@ -295,6 +316,9 @@ func _show_unit_model(definition: Dictionary) -> void:
 	var back := _heading(definition.name, "%s · %s" % [definition.faction, definition.role])
 	var studio := _create_unit_studio(Rect2(76, 212, 896, 512))
 	studio.set_unit_model(definition.model)
+	var pose: StringName = definition.get("preview_clip", &"")
+	if studio.animation_player and studio.animation_player.has_animation(pose):
+		studio.animation_player.play(pose)
 	_label(_stage, "View", Rect2(1012, 248, 352, 48), 30, IVORY, DISPLAY_FACE)
 	var views := _unit_view_buttons(studio, Rect2(1012, 319, 352, 55), Vector2(0, 71))
 	var navigation: Array[Button] = [back]
@@ -533,6 +557,45 @@ func _train_combat_rating(type: Unit.Damage) -> void:
 		_show_notice("Gain a level to earn a stat point.")
 
 
+func _promote_training_unit() -> void:
+	var promoted := UnitCatalog.HUMAN_HEAVY_INFANTRY
+	if _page != Page.UNIT_PROGRESSION or not UnitCatalog.can_promote(_training_unit_id, promoted, _training_unit):
+		return
+	_training_unit.set_starting_hp(UnitCatalog.TYPES[promoted].starting_hp)
+	_training_unit_id = promoted
+	_show_unit_progression(true)
+	_training_inspect.grab_focus()
+
+
+func _update_training_promotion() -> void:
+	var next_button := _training_inspect
+	if _training_promotion:
+		var regular: Dictionary = UnitCatalog.TYPES[UnitCatalog.HUMAN_INFANTRY]
+		var heavy_id := UnitCatalog.HUMAN_HEAVY_INFANTRY
+		var heavy: Dictionary = UnitCatalog.TYPES[heavy_id]
+		var required_rating: int = heavy.promotion_minimum_ratings[Unit.Damage.MELEE]
+		var equipped := _training_unit_id == heavy_id
+		var status := "Heavy Infantry equipped" if equipped else "Heavy Infantry · Melee Power %d / %d" % [
+			_training_unit.rating(Unit.Damage.MELEE), required_rating,
+		]
+		_training_promotion_status.text = "%s\n+%d starting HP · %d less base sword damage\nPractice only · Planned speed: %d%% of Infantry" % [
+			status, heavy.starting_hp - regular.starting_hp,
+			regular.basic_attack[Unit.Damage.MELEE] - heavy.basic_attack[Unit.Damage.MELEE],
+			roundi(heavy.movement_scale * 100.0),
+		]
+		_training_promotion.disabled = not UnitCatalog.can_promote(_training_unit_id, heavy_id, _training_unit)
+		if not _training_promotion.disabled:
+			next_button = _training_promotion
+			_link_focus(_training_promotion, SIDE_TOP, _training_award)
+			_link_focus(_training_promotion, SIDE_BOTTOM, _training_inspect)
+		if equipped:
+			_training_promotion.text = "Heavy Infantry equipped"
+	if next_button:
+		_link_focus(_training_award, SIDE_BOTTOM, next_button)
+	if _training_inspect:
+		_link_focus(_training_inspect, SIDE_TOP, _training_award if next_button == _training_inspect else next_button)
+
+
 func _update_training() -> void:
 	_training_level.text = "Level %d" % _training_unit.level
 	var damage := _training_unit.damage_from(_training_unit, {Unit.Damage.MELEE: _training_base_hit})
@@ -540,11 +603,12 @@ func _update_training() -> void:
 	var xp := "XP to next level  %d / %d" % [_training_unit.experience, _training_unit.experience_for_next_level()]
 	if _training_unit.level == Unit.MAX_LEVEL:
 		xp = "Maximum level reached"
-	_training_stats.text = "Maximum HP  %.1f\nMatched melee hit  %.1f damage\n%d hits to defeat\n\n%s\nUnspent stat points  %d" % [
+	_training_stats.text = "Maximum HP  %.1f\nMatched melee hit  %.1f damage\n%d hits to defeat\n%s\nUnspent stat points  %d" % [
 		_training_unit.max_hp, damage, hits, xp, _training_unit.stat_points,
 	]
 	for type in _training_buttons:
 		_training_buttons[type].text = "%s   %d" % [RATING_NAMES[type], _training_unit.rating(type)]
+	_update_training_promotion()
 
 
 func _show_drills() -> void:
