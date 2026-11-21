@@ -108,4 +108,4 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
 theme_override_font_sizes/font_size = 13
-text = "Left-click: focus  ·  Right-click: move"
+text = "Left-click: focus  ·  Right-click: move\nL2 + D-pad Up: aim a Move"

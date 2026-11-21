@@ -59,7 +59,7 @@ This mode is opt-in through the command scene's `enable_sector_camera`, `field_b
 
 In **The Names at the Cut**, hold **L2 / Shift** to show the north-up minimap. It shows Sereth, the two friendly guards, the selected platoon, and the area shown by the tactical camera. **Left-click** the minimap to center the camera without moving a platoon. **Right-click** a walkable point for one Move order. The Record Room roof rejects orders. The existing formation movement still checks obstacles on the way to a valid point.
 
-Controller aiming, Move and Hold stay on the usual stick and buttons. This minimap does not show raiders, support waypoint queues, or appear in hero view. **Return to Campaign Map** remains usable while holding command. Verify the live campaign with `godot --headless --script tests/sereth_cut_command_minimap.gd`.
+On controller, hold **L2** and press **D-pad Up** to aim on the minimap. Use the **left stick or D-pad**, then press **Cross** for one valid Move. **Circle**, releasing **L2**, or losing focus cancels without an order. Outside minimap aiming, the usual stick, Move, and Hold still work. The map does not show raiders, queue waypoints, or appear in hero view. **Return to Campaign Map** remains usable while holding command. Verify the live campaign with `godot --headless --script tests/sereth_cut_command_minimap.gd`.
 
 ## Prototype platoon waypoints
 
