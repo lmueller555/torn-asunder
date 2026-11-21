@@ -30,8 +30,8 @@ class AimReticle extends Control:
 		draw_line(pixel - Vector2(0.0, 10.0), pixel + Vector2(0.0, 10.0), Minimap.HERO, 1.6, true)
 
 
-var _reticle := AimReticle.new()
-var _route_overlay := RouteOverlay.new()
+var _reticle: AimReticle
+var _route_overlay: RouteOverlay
 var _lead_action := LeadAction.new()
 var _shield_follow := ShieldFollow.new()
 var _routes := Routes.new()
@@ -61,9 +61,13 @@ func _ready() -> void:
 	map.point_requested.connect(_focus_map_point)
 	map.move_requested.connect(_move_from_map)
 	_legend = _key.text
+	# A deployment can be instantiated and freed without entering the tree.
+	# Only allocate Controls once their parent can own them.
+	_route_overlay = RouteOverlay.new()
 	map.add_child(_route_overlay)
 	_route_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_route_overlay.hide()
+	_reticle = AimReticle.new()
 	map.add_child(_reticle)
 	_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE

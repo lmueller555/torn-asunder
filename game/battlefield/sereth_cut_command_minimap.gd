@@ -29,7 +29,7 @@ class AimReticle extends Control:
 var _field: Harness
 var _routes := Routes.new()
 var _route_battle: Battle
-var _route_overlay := RouteOverlay.new()
+var _route_overlay: RouteOverlay
 var _sending_route_order := false
 var _route_note := ""
 var _route_note_index := -1
@@ -43,7 +43,7 @@ var _axes: Dictionary[int, float] = {}
 var _until_neutral: Dictionary[int, bool] = {}
 var _claimed_buttons: Dictionary[int, bool] = {}
 var _capture_device := -1
-var _aim := AimReticle.new()
+var _aim: AimReticle
 var _normal_hint := ""
 
 @onready var map: Minimap = $Margin/Readout/Map
@@ -57,9 +57,12 @@ func _ready() -> void:
 	mouse_entered.connect(_stop_world_mouse_pan)
 	map.mouse_entered.connect(_stop_world_mouse_pan)
 	_normal_hint = _hint.text
+	# Match the Mine HUD: do not leave unparented Controls on a bare instance.
+	_route_overlay = RouteOverlay.new()
 	map.add_child(_route_overlay)
 	_route_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_route_overlay.hide()
+	_aim = AimReticle.new()
 	_aim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	map.add_child(_aim)
 	_aim.hide()
