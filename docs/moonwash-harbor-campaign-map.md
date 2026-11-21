@@ -11,9 +11,9 @@ The preview opens above the battlefield. In the Godot editor, select the saved `
 
 ## Human withdrawal playtest
 
-Run `godot game/battlefield/mara_moonwash_playtest.tscn` to try Mara's standalone withdrawal on the same geometry. Guide the hero and both royal platoons to the upper exit. Hold L2 to direct a platoon to the stair landing, move the others up, then bring the covering formation out. If warned about the lower stair, units still below can take the signed inland bypass. The lower stair only closes after an allied unit reaches the landing, the gate itself is empty, and the shared inland route is still passable. The prototype has no levy combat, rescue interaction, or campaign launch wiring.
+Run `godot game/battlefield/mara_moonwash_playtest.tscn` to try Mara's standalone withdrawal on the same geometry. Guide the hero and both royal platoons to the upper exit. Hold L2 to direct a platoon to the stair landing, move the others up, then bring the covering formation out. If warned about the lower stair, units still below can take the signed inland bypass. The lower stair only closes after an allied unit reaches the landing, the gate itself is empty, and the shared inland route is still passable. One local levy patrol walks the lower quay. It only reacts to a nearby living unit it can actually see; breaking sight and moving away returns it to the patrol. A formation on Hold can screen it, or the whole detachment can use the inland bypass before being spotted. Physical contact blocks movement but does not resolve damage. Ilyra's rescue is not part of this mission.
 
-The live input check is `godot --headless --script tests/mara_moonwash_playtest.gd`.
+The live input checks are `godot --headless --script tests/mara_moonwash_playtest.gd` for withdrawal and closure and `godot --headless --script tests/mara_moonwash_levy.gd` for contact and a no-contact bypass.
 
 ## Tactical geography
 

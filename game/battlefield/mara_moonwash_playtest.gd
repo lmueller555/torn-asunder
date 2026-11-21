@@ -3,6 +3,8 @@ extends "res://game/battlefield/command_harness.gd"
 
 signal mission_finished(won: bool)
 
+const Levy := preload("res://game/battlefield/moonwash_levy_patrol.gd")
+const Patrol := preload("res://game/battlefield/patrol_detection_policy.gd")
 const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
 const EXIT_RADIUS := 3.8
 const CUE_RADIUS := 12.0
@@ -11,7 +13,13 @@ const SAFE_COLOR := Color("#a3ebda")
 const HAZARD_COLOR := Color("#ffb179")
 const SAFE_ROUTE := ["QuaySafeTurn", "InlandBypass", "InlandApproach", "InlandStairTop", "UpperQuay", "UpperQuayExit"]
 
+@export var levy_enabled := true
+
 var objective := Quay.new()
+var levy: Levy
+var _levy_visual: Node3D
+var _levy_label: Label3D
+var _levy_ring: MeshInstance3D
 var _exit: Marker3D
 var _landing: Marker3D
 var _foot: Marker3D
@@ -29,6 +37,7 @@ var _hero_down := false
 
 @onready var _goal: Label = $WithdrawalHUD/Panel/Margin/Readout/Goal
 @onready var _roster: Label = $WithdrawalHUD/Panel/Margin/Readout/Roster
+@onready var _levy_status: Label = $WithdrawalHUD/Panel/Margin/Readout/Levy
 @onready var _route: Label = $WithdrawalHUD/Panel/Margin/Readout/Route
 @onready var _restart: Button = $WithdrawalHUD/Panel/Margin/Readout/Restart
 
@@ -41,6 +50,8 @@ func _ready() -> void:
 	_fracture = battlefield_marker(^"Markers/PhaseZones/FracturedSlab")
 	_gate = battlefield_marker(^"Markers/PhaseZones/LowerStairClosure")
 	_build_hazard()
+	_build_levy_visual()
+	_reset_levy()
 	_signpost(_exit, "UPPER QUAY EXIT", SAFE_COLOR, EXIT_RADIUS)
 	_signpost(_landing, "STAIR LANDING", SAFE_COLOR)
 	_signpost(_route_marker("QuaySafeTurn"), "INLAND BYPASS", SAFE_COLOR)
@@ -75,7 +86,79 @@ func _physics_process(delta: float) -> void:
 	_warned_in_prior_step = objective.lower_quay == Quay.LowerQuay.WARNED
 	_refresh_withdrawal()
 	if objective.phase != Quay.Phase.WITHDRAWING:
+		_levy_status.hide()
 		mission_finished.emit(objective.phase == Quay.Phase.SUCCEEDED)
+
+
+func _after_battle_step(delta: float) -> void:
+	if levy:
+		levy.advance(delta, battle, not _hero_down and not objective.hero_extracted)
+		_refresh_levy()
+
+
+func _movement_check() -> Callable:
+	return _can_pass_levy if levy else super._movement_check()
+
+
+func _can_pass_levy(from: Vector2, to: Vector2, is_formation: bool) -> bool:
+	return not levy.blocks_move(from, to, is_formation) and _terrain.can_move(from, to, is_formation)
+
+
+func _reset_levy() -> void:
+	var start := battlefield_marker(^"Markers/Spawns/LocalLevy")
+	var turnaround := _route_marker("FracturedQuay")
+	levy = Levy.new(PackedVector2Array([_marker_position(start), _marker_position(turnaround)]), _terrain) \
+		if levy_enabled and start and turnaround else null
+	_refresh_levy()
+
+
+func _build_levy_visual() -> void:
+	_levy_visual = Node3D.new()
+	_levy_visual.name = "LocalLevy"
+	add_child(_levy_visual)
+	var coat := _material(Color("#a4845b"))
+	var iron := _material(Color("#89786d"))
+	_mesh(_levy_visual, _box(Vector3(0.72, 1.02, 0.50)), coat, Vector3(0, 0.79, 0))
+	_mesh(_levy_visual, _box(Vector3(0.51, 0.43, 0.45)), iron, Vector3(0, 1.52, 0))
+	_mesh(_levy_visual, _box(Vector3(0.63, 0.60, 0.15)), iron, Vector3(0, 0.88, -0.32))
+	_levy_ring = _mesh(_levy_visual, _ring(0.62, 0.78), _material(HAZARD_COLOR, true), Vector3.UP * 0.075)
+	_levy_label = Label3D.new()
+	_levy_label.position.y = 2.48
+	_levy_label.pixel_size = 0.022
+	_levy_label.font_size = 44
+	_levy_label.outline_size = 11
+	_levy_label.modulate = HAZARD_COLOR
+	_levy_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_levy_visual.add_child(_levy_label)
+
+
+func _refresh_levy() -> void:
+	_levy_visual.visible = levy != null
+	_levy_status.visible = false
+	if not levy:
+		return
+	_levy_visual.position = _ground(levy.position)
+	_levy_visual.rotation.y = atan2(-levy.heading.x, -levy.heading.y)
+	var known := not levy.decision.visible_contacts.is_empty()
+	_levy_label.visible = known
+	_levy_ring.visible = known
+	_levy_label.text = "LEVY · CONTACT" if levy.decision.intent == Patrol.Intent.ENGAGE else "LEVY · ALERT"
+	match levy.decision.intent:
+		Patrol.Intent.ENGAGE:
+			_levy_status.text = "%s is in contact with the levy. Make room or take the inland bypass." % levy.decision.contact_id
+			for group in battle.formations:
+				if StringName(group.title) == levy.decision.contact_id and group.order == Battle.Order.HOLD:
+					_levy_status.text = "%s is screening the levy. Move the others around." % group.title
+					break
+		Patrol.Intent.PURSUE:
+			_levy_status.text = "The levy spotted %s. Withdraw uphill or break sight." % levy.decision.contact_id
+		Patrol.Intent.INVESTIGATE:
+			_levy_status.text = "The levy is checking the last contact." if known \
+				else "The levy lost sight and is checking the last contact."
+		_:
+			if known:
+				_levy_status.text = "The levy sees movement but is holding its patrol ground."
+	_levy_status.visible = known or levy.decision.intent == Patrol.Intent.INVESTIGATE
 
 
 func _platoon_observation(slot: Quay.Platoon) -> Quay.PlatoonObservation:
@@ -153,6 +236,7 @@ func restart_mission() -> void:
 	_restart.release_focus()
 	restart_battle()
 	_name_platoons()
+	_reset_levy()
 	for group in _formation_members:
 		for member: Node3D in group:
 			member.show()
