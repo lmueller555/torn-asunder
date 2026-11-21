@@ -6,7 +6,10 @@ import shutil
 import tempfile
 import unittest
 
-from tools.report_deployment_art import DEVELOPMENT, KITS, _battlefield, _deployments, _verify_kit, build_report
+from tools.report_deployment_art import (
+    CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, DEVELOPMENT, KITS,
+    _battlefield, _deployments, _verify_custody_case, _verify_kit, build_report,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +30,21 @@ class DeploymentArtReportTest(unittest.TestCase):
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["receipt"], KITS[0].receipt)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["verified_files"], 30)
+        self.assertEqual(
+            [row["receipt"] for row in rows[CASE_MISSION]["verified_kit_receipts"]],
+            [KITS[0].receipt, CASE_RECEIPT],
+        )
+        case = rows[CASE_MISSION]["verified_kit_receipts"][1]
+        self.assertEqual(case["placement_scope"], "mission_deployment")
+        self.assertEqual(case["placement_scene"], CASE_DEPLOYMENT)
+        self.assertEqual(case["verified_files"], 10)
+        self.assertEqual(
+            {m for m, row in rows.items() if any(kit["receipt"] == CASE_RECEIPT
+                                                for kit in row["verified_kit_receipts"])},
+            {CASE_MISSION},
+        )
+        self.assertEqual(rows["orc_mine_witness"]["verified_kit_receipts"][0]["placement_scope"],
+                         "shared_battlefield")
         cut = rows["sereth_voices_at_the_cut"]
         self.assertEqual(cut["battlefield_scene"], KITS[1].battlefield)
         self.assertEqual(cut["verified_kit_receipts"][0]["receipt"], KITS[1].receipt)
@@ -85,3 +103,27 @@ class DeploymentArtReportTest(unittest.TestCase):
                                        if 'instance=ExtResource("1_stair")' not in line))
             with self.assertRaisesRegex(ValueError, "not instanced"):
                 _verify_kit(root, kit)
+
+    def test_case_depends_on_current_mara_binding_not_historical_script_bytes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            files = json.loads((ROOT / CASE_RECEIPT).read_text())["files"]
+            for path in [CASE_RECEIPT, CASE_BASE, CASE_DEPLOYMENT, CASE_CONSUMER, *files]:
+                (root / path).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / path, root / path)
+            deployments = {CASE_MISSION: CASE_DEPLOYMENT}
+            consumer = root / CASE_CONSUMER
+            original = consumer.read_text()
+            consumer.write_text(original + "\n# Unrelated gameplay maintenance; no change to case placement.\n")
+            self.assertEqual(_verify_custody_case(root, deployments)["verified_files"], 10)
+            consumer.write_text(original.replace("custody_case_scene.instantiate()", "other_scene.instantiate()"))
+            with self.assertRaisesRegex(ValueError, "consumer does not instantiate"):
+                _verify_custody_case(root, deployments)
+            consumer.write_text(original)
+            scene = root / CASE_DEPLOYMENT
+            scene.write_text("\n".join(line for line in scene.read_text().splitlines()
+                                       if not line.startswith("custody_case_scene =")))
+            with self.assertRaisesRegex(ValueError, "does not select the reviewed case"):
+                _verify_custody_case(root, deployments)
+            with self.assertRaisesRegex(ValueError, "reviewed deployment scene is not registered"):
+                _verify_custody_case(root, {CASE_MISSION: CASE_BASE})
