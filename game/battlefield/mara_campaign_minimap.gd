@@ -9,6 +9,7 @@ const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+const ShieldFollow := preload("res://game/battlefield/mara_shield_follow_camera.gd")
 const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 
 const SIGHT_RANGE := 48.0
@@ -30,6 +31,7 @@ class AimReticle extends Control:
 
 var _reticle := AimReticle.new()
 var _route_overlay := RouteOverlay.new()
+var _shield_follow := ShieldFollow.new()
 var _routes := Routes.new()
 var _route_battle: Battle
 var _sending_route_order := false
@@ -96,6 +98,8 @@ func _input(event: InputEvent) -> void:
 	if not _mission.is_node_ready():
 		return
 	_bind_route_battle()
+	if _shield_follow.active and _input_leaves_follow(event):
+		_shield_follow.restore(_mission)
 	var swallow := false
 	if event is InputEventJoypadButton and _mission._uses_joypad(event.device):
 		swallow = _capture_button(event)
@@ -108,6 +112,17 @@ func _input(event: InputEvent) -> void:
 	if swallow:
 		# Trap the event before the camera and combat's unhandled bindings.
 		get_viewport().set_input_as_handled()
+
+
+# Restore the ordinary projection before mouse ray picking or any explicit
+# command. Do not consume these events or introduce a second input mode.
+func _input_leaves_follow(event: InputEvent) -> bool:
+	if event is InputEventJoypadMotion and _mission._uses_joypad(event.device):
+		return (event.axis == JOY_AXIS_TRIGGER_LEFT and event.axis_value <= _mission.L2_RELEASE) \
+			or (event.axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y] and absf(event.axis_value) > _mission.STICK_DEADZONE)
+	if event is InputEventJoypadButton:
+		return event.pressed and _mission._uses_joypad(event.device)
+	return event is InputEventMouse or event is InputEventKey
 
 
 func _capture_button(event: InputEventJoypadButton) -> bool:
@@ -382,6 +397,7 @@ func _physics_process(delta: float) -> void:
 		var aim := Vector2(_map_axes.get(JOY_AXIS_LEFT_X, 0.0), _map_axes.get(JOY_AXIS_LEFT_Y, 0.0))
 		if aim.length() > _mission.STICK_DEADZONE:
 			_step_draft(aim.limit_length() * CURSOR_SPEED * delta)
+	_shield_follow.frame(_mission, _draft_battle != null, delta)
 	refresh()
 
 
