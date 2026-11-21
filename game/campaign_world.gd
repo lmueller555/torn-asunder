@@ -138,19 +138,19 @@ const _MAPS := {
 				"id": "isolated_grove_nursery", "label": "Isolated Grove", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.54, 0.63), "mission_id": "neris_failing_grove",
 			},
-			"spanwater_lock": {
-				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.69, 0.87), "mission_id": "neris_spanwater_feeder",
+			"cairnspine_boundary_post": {
+				"id": "cairnspine_boundary_post", "label": "Cairnspine Boundary Post", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.58, 0.42), "mission_id": "neris_cairnspine_survey",
 			},
-			"cairnspine_vault_road": {
-				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.86, 0.76), "mission_id": "neris_cairnspine_passage",
+			"year_one_mine": {
+				"id": "year_one_mine", "label": "Greyhollow Mine", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.49, 0.34), "mission_id": "neris_greyhollow",
 			},
 		},
 		"routes": [
 			{"from_id": "grove_camp", "to_id": "isolated_grove_nursery"},
-			{"from_id": "isolated_grove_nursery", "to_id": "spanwater_lock", "required_clear_id": "neris_failing_grove"},
-			{"from_id": "spanwater_lock", "to_id": "cairnspine_vault_road", "required_clear_id": "neris_spanwater_feeder"},
+			{"from_id": "isolated_grove_nursery", "to_id": "cairnspine_boundary_post", "required_clear_id": "neris_failing_grove"},
+			{"from_id": "cairnspine_boundary_post", "to_id": "year_one_mine", "required_clear_id": "neris_cairnspine_survey"},
 		],
 	},
 	"sereth": {

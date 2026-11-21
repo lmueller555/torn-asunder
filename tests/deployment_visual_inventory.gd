@@ -24,7 +24,7 @@ func _run() -> void:
 	var beach: Array = matches[0].nodes if matches.size() == 1 and matches[0].mission_id == "ilyra_coast_survey" else []
 	var stand := _find(beach, "StandVisual", BEACH_ART)
 	var discarded := _find(beach, "BeachFlag/Mesh", SHORE)
-	var original := _find(missions.get("neris_spanwater_feeder", []), "SpillwayWheelModel",
+	var original := _find(missions.get("ilyra_spanwater_evacuation", []), "SpillwayWheelModel",
 		"res://game/battlefields/spanwater_lock_campaign.tscn")
 	var wheel := _find(missions.get("orc_spanwater_release", []), "SpillwayWheelArt/Near", WHEEL_ART)
 	var shadow := _find(missions.get("orc_spanwater_release", []), "SpillwayWheelArt/WheelShadowProxy", WHEEL_ART)

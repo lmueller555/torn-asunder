@@ -38,6 +38,10 @@ const ILYRA_SPANWATER_DISPATCH := &"ilyra_spanwater_dispatch"
 const ILYRA_SPANWATER_DEBRIEF := &"ilyra_spanwater_debrief"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
+const NERIS_SURVEY_DISPATCH := &"neris_survey_dispatch"
+const NERIS_SURVEY_DEBRIEF := &"neris_survey_debrief"
+const NERIS_GREYHOLLOW_DISPATCH := &"neris_greyhollow_dispatch"
+const NERIS_GREYHOLLOW_DEBRIEF := &"neris_greyhollow_debrief"
 const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
 const NERIS_SPANWATER_FEEDER_DEBRIEF := &"neris_spanwater_feeder_debrief"
 const NERIS_CAIRNSPINE_PASSAGE_DISPATCH := &"neris_cairnspine_passage_dispatch"
@@ -432,7 +436,7 @@ const BEATS := {
 		"title": "What We Planted Here",
 		"location": "Isolated grove · Before the transplant",
 		"lines": [
-			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I thought I could bring the Deepwood to your roots. The river's new cut has left you dry."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I thought I could bring the Deepwood to your roots. Two winters without rain, and I still can't keep this ground wet."},
 			{"speaker": GROVE_ENVOY, "text": "Your crossing would run under the wells of the town that gave us this ground. The grove said no. We asked you here to help move a tree."},
 			{"speaker": FEEDER_KEEPER, "text": "The nursery has watered ground for the first one. Help us keep the old feeder open, and we'll keep that plot for you. The well is still the town's."},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "No crossing. Show me the loading yard. I'll call the volunteers once we're there."},
@@ -446,8 +450,49 @@ const BEATS := {
 			{"speaker": GROVE_ENVOY, "text": "The first tree is upright. Reach down past the cloth. The soil is wet all the way to the root ball."},
 			{"speaker": FEEDER_KEEPER, "text": "I can water this plot. I can't fit the whole grove here today. The feeder needs hands before I can spare any more ground."},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
-			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
-			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
+			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. But since you asked about the Godbridle: my grandmother knew a verse about it. She said if the Marches reached it, there'd be no world left to root in."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Who taught her the verse? I want the words she heard, not what I wish they meant."},
+		],
+	},
+	NERIS_SURVEY_DISPATCH: {
+		"title": "Where the Road Goes",
+		"location": "Cairnspine boundary · Before the survey",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "The verse says to look where they haul stone uphill before dawn. That's half the Cairnspine."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The old road is the only one that drops into the Marches without passing a toll gate. I want to know who's been taking it."},
+			{"speaker": GROVE_ENVOY, "text": "Look at the wheel ruts first. If the carters are still using the post, they'll have put their next stop on the slate. Don't give the watch an excuse to keep us there."},
+		],
+	},
+	NERIS_SURVEY_DEBRIEF: {
+		"title": "An Address, Not Proof",
+		"location": "Cairnspine boundary · Eastern turn-off",
+		"lines": [
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The ruts head east. Greyhollow is the next stop on the slate. They're sending more teams in before first light."},
+			{"speaker": GROVE_ENVOY, "text": "That tells us where the carters are going. It doesn't tell us what anybody found."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I know. I'd rather warn the wrong mine than arrive at the right one after the damage is done."},
+		],
+	},
+	NERIS_GREYHOLLOW_DISPATCH: {
+		"title": "Before They Reach It",
+		"location": "Greyhollow · Above the mine yard",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "There are miners down there, Neris. Not just soldiers. We haven't seen the thing the verse warns us about."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "No. But if we're right and the Marches take it, there won't be anyone left to tell us we should have acted."},
+			{"speaker": GROVE_ENVOY, "text": "And if you're wrong?"},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Then this is on me. Take the yard and cut off the royal detachment. Leave the east track open for our own people."},
+		],
+	},
+	NERIS_GREYHOLLOW_DEBRIEF: {
+		"title": "Out of Our Hands",
+		"location": "Greyhollow · East flank, after the withdrawal",
+		"presentation": &"cinematic",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "Both our companies are here. The miners took the south tunnel under Human guard."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Can we reach them at the western shelter?"},
+			{"speaker": GROVE_ENVOY, "text": "Not without going through a second line of shields. We saw someone carry a bundle in. We did not see what was in it."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Then there was still time. And I spent it putting soldiers between people and a way out."},
+			{"speaker": GROVE_ENVOY, "text": "We need to move. Everyone who made it here can walk."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Take them home. I'll tell the grove what we saw. Only what we saw."},
 		],
 	},
 	NERIS_SPANWATER_FEEDER_DISPATCH: {

@@ -108,21 +108,21 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "ISOLATED GROVE · RAISED NURSERY ROAD",
 		"orders": "Speak to the grove envoy, then call the volunteers. Hold the low-track approach to keep the loading yard clear. Follow the sled along the raised road and help plant the tree at the nursery. Leave the town well alone.",
 	},
-	"neris_spanwater_feeder": {
-		"scene": preload("res://game/battlefield/neris_spanwater_playtest.tscn"),
-		"dispatch": Beats.NERIS_SPANWATER_FEEDER_DISPATCH,
+	"neris_cairnspine_survey": {
+		"scene": preload("res://game/battlefield/neris_cairnspine_survey.tscn"),
+		"dispatch": Beats.NERIS_SURVEY_DISPATCH,
+		"debrief": Beats.NERIS_SURVEY_DEBRIEF,
 		"briefing_dispatch": true,
-		"debrief": Beats.NERIS_SPANWATER_FEEDER_DEBRIEF,
-		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
-		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
+		"battlefield_label": "CAIRNSPINE BOUNDARY POST · TRAIL AND FREIGHT ROAD",
+		"orders": "Follow the covered sheep track and examine the wheel ruts. Read the freight slate at the post, then report from the eastern turn-off. Break the watch's sightline if it spots you.",
 	},
-	"neris_cairnspine_passage": {
-		"scene": preload("res://game/battlefield/neris_cairnspine_passage_playtest.tscn"),
-		"dispatch": Beats.NERIS_CAIRNSPINE_PASSAGE_DISPATCH,
+	"neris_greyhollow": {
+		"scene": preload("res://game/battlefield/neris_greyhollow_campaign.tscn"),
+		"dispatch": Beats.NERIS_GREYHOLLOW_DISPATCH,
+		"debrief": Beats.NERIS_GREYHOLLOW_DEBRIEF,
 		"briefing_dispatch": true,
-		"debrief": Beats.NERIS_CAIRNSPINE_PASSAGE_DEBRIEF,
-		"battlefield_label": "CAIRNSPINE PASS · ROAD TO THE WITNESS TERRACE",
-		"orders": "Meet the refugee guide and signal the witness guide. Confirm a route for each party. Hold the contested rejoin or guide a waiting party back to take the other path. Both parties must reach the terrace. Leave the vault to its own escort.",
+		"battlefield_label": "GREYHOLLOW MINE · YARD AND EAST FLANK",
+		"orders": "Advance on the mine yard. If the Humans break through to the south tunnel, hold the rear screen and withdraw along the east flank. Get Neris and both Dryad platoons out.",
 	},
 	"sereth_voices_at_the_cut": {
 		"scene": preload("res://game/battlefield/sereth_cut_playtest.tscn"),

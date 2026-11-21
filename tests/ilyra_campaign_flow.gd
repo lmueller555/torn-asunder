@@ -35,7 +35,8 @@ const OTHER_SAVES := {
 		["year_one_mine", "marches_road", "marches_crossing", "moonwash_road", HARBOR]],
 	"raska": [["orc_mine_witness", "orc_well_road", "orc_spanwater_release"],
 		["year_one_mine", "basin_well_road", SPANWATER]],
-	"neris": [["neris_failing_grove", "neris_spanwater_feeder"], ["isolated_grove_nursery", SPANWATER]],
+	"neris": [["neris_failing_grove", "neris_cairnspine_survey"],
+		["isolated_grove_nursery", "cairnspine_boundary_post", "year_one_mine"]],
 	"sova": [["sova_mine_tunnels"], ["year_one_mine", "cairnspine_assembly"]],
 }
 

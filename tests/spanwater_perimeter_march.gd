@@ -7,6 +7,7 @@ const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Scale := preload("res://game/battlefield/battlefield_march_scale.gd")
 const Raska := preload("res://game/battlefield/raska_spanwater.gd")
 
+const LEGACY := preload("res://game/battlefield/neris_spanwater_playtest.tscn")
 const MISSION_IDS := ["neris_spanwater_feeder", "ilyra_spanwater_evacuation", "orc_spanwater_release"]
 const DT := 1.0 / 60.0
 # Battlefield-local XZ from north town-bank crags via the western bank,
@@ -26,7 +27,8 @@ func _initialize() -> void:
 func _run() -> void:
 	for mission_id: String in MISSION_IDS:
 		var deployment := Deployments.for_mission(mission_id)
-		var scene: PackedScene = deployment.get("scene")
+		# Neris's later mission is retained as a standalone historical prototype.
+		var scene: PackedScene = LEGACY if mission_id == "neris_spanwater_feeder" else deployment.get("scene")
 		if scene == null:
 			_fail("Missing registered Spanwater deployment: %s" % mission_id)
 			return

@@ -35,9 +35,9 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION, BRIDGE_MISSION, VAULT_MISSION},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "neris_greyhollow", "neris_cairnspine_survey", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION, BRIDGE_MISSION, VAULT_MISSION},
         )
-        for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
+        for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "neris_greyhollow"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["receipt"], KITS[0].receipt)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["verified_files"], 30)
@@ -77,7 +77,9 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertEqual([item["receipt"] for item in wheel], [WHEEL_RECEIPT])
         self.assertEqual(wheel[0]["placement_scope"], "mission_deployment")
         self.assertEqual(wheel[0]["verified_files"], 8)
-        for mission in ("ilyra_spanwater_evacuation", "neris_spanwater_feeder"):
+        self.assertNotIn("neris_spanwater_feeder", rows)
+        self.assertNotIn("neris_cairnspine_passage", rows)
+        for mission in ("ilyra_spanwater_evacuation",):
             self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
             self.assertEqual(rows[mission]["verified_kit_receipts"], [])
 
