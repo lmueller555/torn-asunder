@@ -1,6 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
-## Standalone graybox for Raska's Spanwater release. Motion and control are
+## Campaign-scale graybox for Raska's Spanwater release. Motion and control are
 ## observable world conditions; neither the water ribbon nor troops model fluid or damage.
+
+signal mission_finished(won: bool)
 
 const Release := preload("res://game/battlefield/raska_spanwater_release.gd")
 const DEFENDERS := ^"Markers/Routes/MarchCounterattackApproach"
@@ -106,6 +108,8 @@ func _after_battle_step(delta: float) -> void:
 	_interact = false
 	objective.advance(observation)
 	_refresh_objective(observation.wheel_control)
+	if _finished():
+		mission_finished.emit(objective.phase == Release.Phase.SUCCEEDED)
 
 
 func _unhandled_input(event: InputEvent) -> void:

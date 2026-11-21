@@ -276,13 +276,17 @@ func _show_world_map() -> void:
 func _on_waypoint_arrived(_id: String) -> void:
 	if _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The arrived waypoint could not be saved."
-	if not _show_waypoint_intermission() and _campaign_world.mission_at_current_waypoint().is_empty():
+	if not _show_waypoint_intermission(false) and _campaign_world.mission_at_current_waypoint().is_empty():
 		_show_campaign_warning()
 
 
-func _show_waypoint_intermission() -> bool:
+func _show_waypoint_intermission(include_victory_coda := true) -> bool:
 	var campaign_id := _campaign_world.campaign_id()
 	var beat := CampaignDeployments.intermission_at(campaign_id, _campaign_world.current_waypoint_id())
+	if beat == &"" and include_victory_coda:
+		var mission_id := _campaign_world.mission_at_current_waypoint()
+		if _profile.completed_missions(campaign_id).has(mission_id):
+			beat = CampaignDeployments.for_mission(mission_id).get("victory_coda", &"")
 	if beat == &"" or _profile.has_seen_intermission(campaign_id, beat):
 		return false
 	_present_campaign_dialogue(beat, _finish_waypoint_intermission.bind(campaign_id, beat))
@@ -383,7 +387,12 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 
 func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
 	if mission == _campaign_battle:
-		_present_campaign_dialogue(debrief, _show_world_map)
+		_present_campaign_dialogue(debrief, _return_from_campaign_debrief)
+
+
+func _return_from_campaign_debrief() -> void:
+	if not _show_waypoint_intermission():
+		_show_world_map()
 
 
 func _return_from_campaign_battle() -> void:
