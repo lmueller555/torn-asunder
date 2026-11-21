@@ -1,0 +1,66 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/battlefield/command_harness.gd" id="1_harness"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.236, 0.273, 0.24, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(38, 0.3, 28)
+
+[sub_resource type="Environment" id="Environment_harness"]
+ambient_light_source = 3
+ambient_light_color = Color(0.8, 0.88, 1, 1)
+ambient_light_energy = 0.65
+
+[node name="CommandHarness" type="Node3D"]
+script = ExtResource("1_harness")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_harness")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-53, -28, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+shadow_enabled = true
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.15, 0)
+mesh = SubResource("BoxMesh_floor")
+
+[node name="HeroCamera" type="Camera3D" parent="."]
+current = true
+fov = 65.0
+
+[node name="CommandCamera" type="Camera3D" parent="."]
+projection = 1
+size = 46.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 20
+offset_top = 20
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="HUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Mode" type="Label" parent="HUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.82, 0.54, 1)
+theme_override_font_sizes/font_size = 23
+
+[node name="Formation" type="Label" parent="HUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 20
+
+[node name="Controls" type="Label" parent="HUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.76, 0.82, 0.85, 1)
+theme_override_font_sizes/font_size = 16
