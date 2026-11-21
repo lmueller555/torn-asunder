@@ -1,6 +1,7 @@
 extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
+const Training := preload("res://game/combat/mara_subordinate_training.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
@@ -9,6 +10,8 @@ const CAMPAIGNS := "campaigns"
 const MISSION_PROGRESS := "mission_progress"
 const MISSION_RESULTS := "mission_results"
 const CAMPAIGN_INTERMISSIONS := "campaign_intermissions"
+const SUBORDINATE_TRAINING := "subordinate_training"
+const MARA_SHIELD_DRILL := "mara_shield_infantry_formation_drill"
 const MARA := "mara"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
@@ -47,7 +50,11 @@ func mark_played(id: String) -> Error:
 
 ## Mission IDs are independent of the campaign's last-played sequence.
 func completed_missions(id: String) -> PackedStringArray:
-	var value: Variant = _config.get_value(MISSION_PROGRESS, id, PackedStringArray())
+	return _confirmed_missions(_config, id)
+
+
+func _confirmed_missions(config: ConfigFile, id: String) -> PackedStringArray:
+	var value: Variant = config.get_value(MISSION_PROGRESS, id, PackedStringArray())
 	if value is PackedStringArray:
 		return value.duplicate()
 	return PackedStringArray()
@@ -65,6 +72,39 @@ func record_mission_clear(id: String, mission_id: String) -> Error:
 		return OK
 	completed.append(mission_id)
 	return _set_value(MISSION_PROGRESS, id, completed)
+
+
+## Detached plan for the one Human slot. Old saves without the marker are
+## untrained; a marker without the qualifying clear cannot restore a purchase.
+func mara_shield_infantry_training() -> Training:
+	return _mara_training_plan(_config)
+
+
+## Explicit, voluntary purchase. No caller-supplied clear, rank, or roster ID.
+## Re-read the current file so another store's completed changes are preserved
+## and an old in-memory clear cannot authorize a spend on a replaced profile.
+func purchase_mara_shield_infantry_drill() -> Error:
+	var latest := ConfigFile.new()
+	var result := latest.load(_path)
+	if result != OK:
+		return ERR_UNAUTHORIZED if result == ERR_FILE_NOT_FOUND else result
+	var plan := Training.new(MARA, _confirmed_missions(latest, MARA))
+	if not plan.train_formation_drill(Training.SHIELD_INFANTRY_SLOT):
+		return ERR_UNAUTHORIZED
+	var purchased: Variant = latest.get_value(SUBORDINATE_TRAINING, MARA_SHIELD_DRILL, false)
+	if not purchased is bool:
+		return ERR_INVALID_DATA
+	if purchased:
+		return ERR_ALREADY_IN_USE
+	return _set_values({SUBORDINATE_TRAINING: {MARA_SHIELD_DRILL: true}}, latest)
+
+
+func _mara_training_plan(config: ConfigFile) -> Training:
+	var plan := Training.new(MARA, _confirmed_missions(config, MARA))
+	var purchased: Variant = config.get_value(SUBORDINATE_TRAINING, MARA_SHIELD_DRILL, false)
+	if purchased is bool and purchased:
+		plan.train_formation_drill(Training.SHIELD_INFANTRY_SLOT)
+	return plan
 
 
 ## The saved council outcome, not the latest attempt. Legacy clears may have no result.
@@ -175,27 +215,30 @@ func _set_value(section: String, key: String, value: Variant) -> Error:
 
 
 # All changed keys share the existing temp-file/rename transaction and rollback.
-func _set_values(values: Dictionary) -> Error:
+func _set_values(values: Dictionary, snapshot: ConfigFile = null) -> Error:
+	var config := snapshot if snapshot != null else _config
 	var previous: Array[Dictionary] = []
 	for section: String in values:
 		for key: String in values[section]:
-			var existed := _config.has_section_key(section, key)
+			var existed := config.has_section_key(section, key)
 			previous.append({
 				"section": section, "key": key, "existed": existed,
-				"value": _config.get_value(section, key) if existed else null,
+				"value": config.get_value(section, key) if existed else null,
 			})
-			_config.set_value(section, key, values[section][key])
+			config.set_value(section, key, values[section][key])
 
 	var temporary := _path + ".tmp"
-	var result := _config.save(temporary)
+	var result := config.save(temporary)
 	if result == OK:
 		result = DirAccess.rename_absolute(temporary, _path)
-	if result != OK:
+	if result == OK:
+		_config = config
+	else:
 		for entry in previous:
 			if entry.existed:
-				_config.set_value(entry.section, entry.key, entry.value)
+				config.set_value(entry.section, entry.key, entry.value)
 			else:
-				_config.erase_section_key(entry.section, entry.key)
+				config.erase_section_key(entry.section, entry.key)
 		if FileAccess.file_exists(temporary):
 			DirAccess.remove_absolute(temporary)
 	return result
