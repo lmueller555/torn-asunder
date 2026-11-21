@@ -13,6 +13,9 @@ const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
 const MARA_GRAIN_SEED_DEBRIEF := &"mara_grain_debrief_seed_only"
 const MARA_GRAIN_BREAD_DEBRIEF := &"mara_grain_debrief_bread_only"
 const MARA_GRAIN_BOTH_DEBRIEF := &"mara_grain_debrief_both"
+const MARA_WATER_REQUEST := &"mara_water_request"
+const MARA_HIGH_QUAY_DISPATCH := &"mara_high_quay_dispatch"
+const MARA_HIGH_QUAY_DEBRIEF := &"mara_high_quay_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
@@ -26,6 +29,8 @@ const GUARD := "Cairnspine Guard"
 const CLERK := "Council Clerk"
 const MILLER := "Mill Steward"
 const BAKER := "Town Baker"
+const JUDGE := "Marches Judge"
+const ENVOY := "Allied Envoy"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -131,6 +136,36 @@ const BEATS := {
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Two receipts at last. How long can we feed the towns before another shipment is due?"},
 			{"speaker": CLERK, "text": "Not long enough. Our ally won't send another cart and will call its troops home unless the water comes back."},
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Keep the receipts. Bring the Godbridle and the headwater map. We still need to speak to Orrun."},
+		],
+	},
+	MARA_WATER_REQUEST: {
+		"title": "The Dry Channels",
+		"location": "Marches council chamber · After the Grain debrief",
+		"lines": [
+			{"speaker": CLERK, "text": "The envoy is still downstairs. If he goes home without an answer, his crown will call its troops back and send us no more grain."},
+			{"speaker": JUDGE, "text": "I see the dry channels on your map. Whose water will fill them?"},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "I'll name the channels, not a river. And I'll tell him what to leave alone. Bring the case here."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Orrun, return water to the dry headwater channels of the Marches. Take none from the towns or fields of our neighbors."},
+		],
+	},
+	MARA_HIGH_QUAY_DISPATCH: {
+		"title": "Orders for the High Quay",
+		"location": "Marches command post · Before the Moonwash withdrawal",
+		"lines": [
+			{"speaker": CAPTAIN, "text": "A pilot at Moonwash saw the current running inland. Her letter doesn't say where it turned. No one here has seen it."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Take both platoons to Moonwash. Warn the pilots before any more boats go out. Bring me an account from someone who saw where the current changed."},
+			{"speaker": CAPTAIN, "text": "If we need to pull back, the pilots mark the upper stairs with flags. The town will need the lower stair for its own people."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Use the upper stairs, and cover each other's way up. Leave the boats to Ilyra. You're there to warn the harbor, not take it."},
+		],
+	},
+	MARA_HIGH_QUAY_DEBRIEF: {
+		"title": "Two Reports",
+		"location": "Marches council chamber · After the withdrawal",
+		"lines": [
+			{"speaker": CAPTAIN, "text": "Both platoons are out. I saw walls rise between the ships. Some are still stranded on stone, and Ilyra's pilots were hauling crews off them when we left."},
+			{"speaker": CLERK, "text": "Here's the other report. Water reached some of the Marches. There are farms on your list that haven't had a drop."},
+			{"speaker": ENVOY, "text": "Then speak to him again. At least get water to the farms you promised it to."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Leave your report beside his. Close the case and leave my seal on it. There won't be a second order."},
 		],
 	},
 }
