@@ -1,6 +1,6 @@
 # Cairnspine assembly and vault road: shared campaign graybox
 
-The fixed terrain in `game/battlefields/cairnspine_vault_road.tscn` belongs to the Year Five [Druid vault return](campaigns/druids.md#3-no-new-command), [Dryad passage](campaigns/dryads.md#3-a-road-we-can-share--year-five-neris_cairnspine_passage), and [Undead court stand](campaigns/undead.md#3-the-lamp-in-the-window--year-five-sereth_no_proxy). The valley's assembly area also provides the separate Year Two [public hearing](campaigns/druids.md#2-let-them-walk-out) venue. There are no live campaign controllers, inhabitants, objectives, or hearing scripts in this scene.
+The fixed terrain in `game/battlefields/cairnspine_vault_road.tscn` belongs to the Year Five [Druid vault return](campaigns/druids.md#3-no-new-command), [Dryad passage](campaigns/dryads.md#3-a-road-we-can-share--year-five-neris_cairnspine_passage), and [Undead court stand](campaigns/undead.md#3-the-lamp-in-the-window--year-five-sereth_no_proxy). The valley's assembly area also provides the separate Year Three [public hearing](campaigns/druids.md#2-let-them-walk-out) venue. There are no live campaign controllers, inhabitants, objectives, or hearing scripts in this scene.
 
 Run `tests/cairnspine_vault_road_preview.tscn` with F6. **1** gives the whole pass, **2** the local tactical sector around the forecourt, and **3** a hero-height view along the narrow shelf. Capsule figures are 1.8 m scale references, not actual units.
 
@@ -17,7 +17,7 @@ The support plane is **340 × 250 m**, with one unit per meter, **+X toward the 
 - **Valley assembly.** The wide foot of the pass holds separate assembly, refugee, and witness staging points. The short-shelf and long-side decision markers branch from the same safe staging ground. Neither path is gated.
 - **Shelf or flank.** The shelf is **218 m** from safe staging to the forecourt, with a 9 m crest, a solid inner screen, and a genuine open drop on the outer edge. The flank is **287 m** between the same endpoints: a wider bench with two slopes and a blind bend, then a dogleg to the rejoin. The different heights, cover and paths affect orders; one isn't a uniformly scaled copy of the other.
 - **Forecourt, terrace and vault.** A screened north reserve can reach the forecourt after rounding its cover. The route to the witness terrace branches before the custody line. Witnesses can see the vault entrance from their own terrace, without walking through custody or closure. The forecourt, custody line, bridle return, and terrace are separate hooks for Sereth, Sova and Neris.
-- **Public hearing.** The valley contains two different Year Two lectern placements. The open dais can be approached from the north or west; the recessed dais has solid rear/side cover and a narrower public approach. Each has an independent ring footprint, scribe placement and clear public exit. None of the Year Five objectives is used to run the hearing.
+- **Public hearing.** The valley contains two different Year Three lectern placements. The open dais can be approached from the north or west; the recessed dais has solid rear/side cover and a narrower public approach. Each has an independent ring footprint, scribe placement and clear public exit. None of the Year Five objectives is used to run the hearing.
 
 ## Measured perimeter march
 
