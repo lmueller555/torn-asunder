@@ -9,6 +9,7 @@ const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
 const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
+const MaraTraining := preload("res://game/combat/mara_subordinate_training.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
@@ -42,7 +43,7 @@ const DARK := Color("#171a1a")
 enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
-	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS,
+	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
 }
 
 const RATING_NAMES := {
@@ -182,6 +183,11 @@ func _go_back() -> void:
 		Page.UNIT_PROGRESSION:
 			_show_briefing()
 			_stage.get_node("Unit Progression").grab_focus()
+		Page.MARA_SHIELD_DRILL:
+			_show_briefing()
+			var drill := _stage.get_node_or_null("Shield Infantry Drill") as Button
+			if drill:
+				drill.grab_focus()
 		Page.ROSTER_REQUIREMENTS:
 			_show_unit_progression(true)
 			_stage.get_node("Preview Advancement").grab_focus()
@@ -494,7 +500,61 @@ func _show_briefing() -> void:
 		_link_focus(drills, SIDE_BOTTOM, dispatch)
 		_link_focus(progression, SIDE_BOTTOM, dispatch)
 		_link_focus(dispatch, SIDE_TOP, drills)
+		if _has_mara_shield_drill():
+			var shield := _button("Shield Infantry Drill", Rect2(736, 636, 290, 57), _show_mara_shield_drill)
+			_link_focus(shield, SIDE_TOP, progression)
+			_link_focus(dispatch, SIDE_RIGHT, shield)
+			_link_focus(shield, SIDE_LEFT, dispatch)
 	back.grab_focus()
+
+
+func _has_mara_shield_drill() -> bool:
+	return (_campaign_world != null and _active_campaign.get("id") == MaraTraining.CAMPAIGN_ID
+		and _campaign_world.campaign_id() == MaraTraining.CAMPAIGN_ID)
+
+
+func _show_mara_shield_drill() -> void:
+	if not _has_mara_shield_drill():
+		return
+	var plan := _profile.mara_shield_infantry_training()
+	var slot := MaraTraining.SHIELD_INFANTRY_SLOT
+	var rank := plan.formation_drill_rank(slot)
+	var credit := plan.available_drill_credit(slot)
+	_open_page(Page.MARA_SHIELD_DRILL)
+	var back := _heading("Shield Infantry Drill", "Mara’s development playtest · Training is separate from lead stats and Battle Points.")
+	var rank_label := _label(_stage, "Formation Drill: Rank %d" % rank, Rect2(76, 236, 1040, 65), 39, IVORY, DISPLAY_FACE)
+	rank_label.name = "ShieldDrillRank"
+	var credit_label := _label(_stage, "Available drill credit: %d" % credit, Rect2(76, 314, 1040, 35), 25, GOLD)
+	credit_label.name = "ShieldDrillCredit"
+	var summary: String
+	if plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT):
+		summary = "Qualified for Heavy Infantry."
+	elif credit > 0:
+		summary = "Spend 1 drill credit to reach Rank 2 and qualify for Heavy Infantry."
+	else:
+		summary = "Locked: Clear The Pass Below the Mine to earn 1 drill credit."
+	var status := _label(_stage, summary, Rect2(76, 381, 1040, 68), 26, IVORY)
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.name = "ShieldDrillStatus"
+	var availability := _label(_stage, "Heavy Infantry cannot be deployed in this campaign build. Your roster stays unchanged.",
+		Rect2(76, 459, 1040, 63), 22, MUTED)
+	availability.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	availability.name = "ShieldDrillAvailability"
+	if credit > 0:
+		var confirm := _button("Confirm Training (1 drill credit)", Rect2(76, 572, 450, 57), _purchase_mara_shield_drill)
+		_link_focus(back, SIDE_BOTTOM, confirm)
+		_link_focus(confirm, SIDE_TOP, back)
+	back.grab_focus()
+
+
+func _purchase_mara_shield_drill() -> void:
+	if _page != Page.MARA_SHIELD_DRILL or not _has_mara_shield_drill():
+		return
+	var result := _profile.purchase_mara_shield_infantry_drill()
+	if result == OK:
+		_show_mara_shield_drill()
+	else:
+		_show_notice("Training could not be saved. The purchase was not applied.")
 
 
 func _show_unit_progression(keep_training: bool = false) -> void:
