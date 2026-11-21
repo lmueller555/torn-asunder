@@ -19,7 +19,16 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The other five starter rosters below add metadata only.
+### Human roster: Marches infantry and archers
+
+`UnitCatalog.faction_roster()` reads the existing **Melee Power 10** gate for Infantry → Heavy Infantry from the live catalog entry. The ranged line is separate. [Mara’s Mine escort](campaigns/humans.md) already has Archers covering the road from a ridge; it does not field Marches Longbows.
+
+| Unit key | Form and role | Advance from Archer | Tradeoff to test later |
+|---|---|---|---|
+| `human_archer` | **Archer**, Ranged | Existing starting unit | General-purpose bow platoon for local cover. Keep this the more flexible choice when the escort moves or the line of sight changes. |
+| `human_marches_longbows` | **Marches Longbows**, Ranged | Ranged Power **8** and Formation Drill **2** | Take a screened ridge and cover a longer open lane. Coordinated long-range volleys take longer to set up after a move; broken sight lines and pressure on the flank can force a costly redeployment. A close fight still shuts down the bows. |
+
+The [official *Kingdom Under Fire: Heroes* Human unit guide](https://www.kufheroes.com/eng/characters/unit_human.asp) is precedent for a longer-reaching bow specialist. The Marches branch uses Torn Asunder’s own ratings, training and positioning tradeoff. It is **provisional roster metadata only**: neither threshold grants a playable promotion. It adds no model, studio or skirmish entry and changes none of the [existing Archer prototype’s volley behavior](combat.md#human-archer-prototype), fixed campaign formations or live Heavy Infantry rules. The other five starter rosters below also add metadata only.
 
 ### Orc starter tree: Red Basin companies
 

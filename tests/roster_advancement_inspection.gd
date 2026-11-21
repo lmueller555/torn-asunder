@@ -29,6 +29,12 @@ func _check_six_factions() -> void:
 		[Roster.HUMANS, Catalog.HUMAN_INFANTRY, {MELEE: 8}, {}, [
 			_row(Catalog.HUMAN_HEAVY_INFANTRY, false, {MELEE: _need(8, 10, 2)}, {}),
 		]],
+		[Roster.HUMANS, Catalog.HUMAN_ARCHER, {RANGED: 7}, {DRILL: 1}, [
+			_row(Catalog.HUMAN_MARCHES_LONGBOWS, false, {RANGED: _need(7, 8, 1)}, {DRILL: _need(1, 2, 1)}),
+		]],
+		[Roster.HUMANS, Catalog.HUMAN_ARCHER, {RANGED: 8}, {DRILL: 2}, [
+			_row(Catalog.HUMAN_MARCHES_LONGBOWS, true, {RANGED: _need(8, 8, 0)}, {DRILL: _need(2, 2, 0)}),
+		]],
 		[Roster.ORCS, Catalog.ORC_BASIN_REGULARS, {MELEE: 5, RANGED: 5}, {BRACE: 1, SCOUT: 2}, [
 			_row(Catalog.ORC_BRACE_INFANTRY, false, {MELEE: _need(5, 5, 0)}, {BRACE: _need(1, 2, 1)}),
 			_row(Catalog.ORC_BASIN_ARCHERS, false, {RANGED: _need(5, 6, 1)}, {SCOUT: _need(2, 2, 0)}),

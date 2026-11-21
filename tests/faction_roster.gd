@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_check_taxonomy()
 	_check_branches()
 	_check_live_catalog()
+	_check_human_ranged_catalog()
 	_check_orc_catalog()
 	_check_elf_catalog()
 	_check_druid_catalog()
@@ -101,16 +102,49 @@ func _check_branches() -> void:
 
 func _check_live_catalog() -> void:
 	var roster := Catalog.faction_roster()
-	_check(roster.units_for_faction(Roster.HUMANS).size() == 3
-		and roster.has_label(Catalog.HUMAN_ARCHER, Roster.RANGED)
+	_check(roster.has_label(Catalog.HUMAN_ARCHER, Roster.RANGED)
 		and roster.has_label(Catalog.HUMAN_HEAVY_INFANTRY, Roster.MELEE)
 		and not Catalog.TYPES.has(Catalog.HUMAN_ARCHER),
-		"The real first slice covers existing Human Infantry, Heavy Infantry and the established Archer without faking an art entry.")
+		"The established Archer is classified without faking an art entry.")
 	for rating in [1, 9, 10, 11]:
 		var read_rating := func(_stat: int) -> int: return rating
 		_check(roster.can_advance(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating)
 			== Catalog.can_promote_with_ratings(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating),
 			"New metadata matches the live Heavy Infantry rule at rating %d." % rating)
+
+
+func _check_human_ranged_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var archers := Catalog.HUMAN_ARCHER
+	var longbows := Catalog.HUMAN_MARCHES_LONGBOWS
+	var entry := roster.unit(longbows)
+	_check(roster.units_for_faction(Roster.HUMANS) == [
+		Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, archers, longbows,
+	] and entry.get("display_name") == "Marches Longbows" and entry.get("primary_family") == Roster.RANGED
+		and entry.get("secondary_tags") == [] and entry.get("elite_support") == false,
+		"Marches Longbows are a Human ranged specialist, not elite support or a hybrid.")
+	for fixture: Array in [[7, 2, false], [8, 1, false], [8, 2, true], [9, 3, true]]:
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.RANGED: fixture[0], Unit.Damage.MELEE: 10})
+		var platoon := Platoon.new([soldier], {Platoon.Skill.FORMATION_DRILL: fixture[1], Platoon.Skill.SCOUTING: 5})
+		_check(roster.can_advance(archers, longbows, soldier.rating, platoon.rank) == fixture[2],
+			"Ranged Power %d and Formation Drill %d are separate Archer gates." % [fixture[0], fixture[1]])
+
+	var read_rating := func(_stat: int) -> int: return 10
+	var read_training := func(_stat: int) -> int: return 5
+	_check(roster.eligible_advances(archers, read_rating, read_training) == [longbows]
+		and roster.eligible_advances(Catalog.HUMAN_INFANTRY, read_rating, read_training) == [Catalog.HUMAN_HEAVY_INFANTRY]
+		and not roster.can_advance(Catalog.HUMAN_HEAVY_INFANTRY, longbows, read_rating, read_training)
+		and roster.eligible_advances(longbows, read_rating, read_training).is_empty(),
+		"Archers and Infantry stay on their own lines; there is no skip or reverse advancement.")
+	for faction: StringName in Roster.FACTIONS:
+		if faction != Roster.HUMANS:
+			_check(roster.inspect_advances(archers, faction, read_rating, read_training).is_empty(),
+				"Only the Human roster can inspect this Archer branch.")
+			for source: StringName in roster.units_for_faction(faction):
+				_check(not roster.can_advance(source, longbows, read_rating, read_training),
+					"No other faction's troops can advance to Marches Longbows.")
+	_check(not Catalog.TYPES.has(longbows) and not Catalog.can_promote_with_ratings(archers, longbows, read_rating),
+		"Qualifying for Marches Longbows grants no live promotion or model entry.")
 
 
 func _check_orc_catalog() -> void:
