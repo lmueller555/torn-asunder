@@ -8,7 +8,11 @@ The tactical orientation, troop selection and visibility cues take inspiration f
 
 The campaign-size escort uses a lower-right minimap that stays passive in hero view. The pickup changes to the east exit once Mara has the Godbridle; holding L2 shows the active command camera's footprint. When interception is reported, the warning marks the pass, not the Orc's position. The Orc only appears as a live contact when Mara or a living allied formation is within 48 m with an unobstructed view. The contact disappears when sight is lost or the Orc is defeated. The small mine prototype is unchanged.
 
-Hold **L2 / Shift** to make the minimap interactive. Left-click a map point to inspect that tactical sector. Right-click walkable ground to issue a Move to the selected platoon. Clicking the map margin or a solid obstacle never issues a world order through the HUD. The minimap stays passive in hero view. This is mouse interaction; a controller-operated minimap and queued routes on it are separate work.
+Hold **L2 / Shift** to make the minimap interactive. Left-click a map point to inspect that tactical sector. Right-click walkable ground to issue a Move to the selected platoon. Clicking the map margin or a solid obstacle never issues a world order through the HUD. The minimap stays passive in hero view. Mara’s live minimap remains mouse-only. Controller cursor input is available in the separate development preview below; neither HUD queues waypoints on the map.
+
+## Controller cursor development preview
+
+Run `godot game/battlefield/controller_minimap_playtest.tscn` after importing. In tactical or ally-follow view, press **D-pad Up / N** to enlarge the minimap and start a Move draft for the selected platoon. Use the left stick, D-pad, or keyboard arrows to aim. **Cross / Enter** sends one Move; **Circle / Esc** closes without changing the order. Existing orders keep running. Entering direct hero action cancels the unfinished draft, and a stick held through close must return to neutral before it can move the hero. This uses the existing debug field and minimap, with no change to Mara’s mouse bindings.
 
 ## Preview
 
