@@ -2,14 +2,16 @@ extends RefCounted
 ## The High Quay's local levy. This adapter can move and hold physical contact,
 ## but does not spend BP, attack, inflict damage, or decide the withdrawal.
 
+const EnemyAggro := preload("res://game/combat/enemy_aggro.gd")
 const Patrol := preload("res://game/battlefield/patrol_detection_policy.gd")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 
-# Local playtest values, not shared scouting/melee constants.
-const SIGHT_RANGE := 21.5
+const SIGHT_RANGE := EnemyAggro.RADIUS_METRES
+# Movement extent, memory and physical contact stay local to the quay.
 const LEASH := 18.0
 const MEMORY := 2.4
+const ALERT_PAUSE := 0.35
 const PATROL_SPEED := 2.3
 const PURSUIT_SPEED := 2.9
 const LEVY_RADIUS := 0.48
@@ -20,12 +22,13 @@ const HERO_ID := &"Hero"
 var position: Vector2
 var heading := Vector2.LEFT
 var decision := Patrol.Decision.new(Patrol.Intent.PATROL)
-var _policy := Patrol.new(SIGHT_RANGE, LEASH, MEMORY)
+var _policy := Patrol.new(SIGHT_RANGE, LEASH, MEMORY, true)
 var _terrain: Terrain
 var _route: PackedVector2Array
 var _leg := 1
 var _anchor: Vector2
 var _left_route := false
+var _alert_pause_left := 0.0
 var _sightings: Array[Patrol.Sighting] = []
 
 
@@ -50,7 +53,19 @@ func advance(delta: float, battle: Battle, hero_active: bool) -> void:
 		if group.can_receive_orders():
 			_add_sighting(StringName(group.title), group.position, true)
 	obs.candidates = _sightings
+	var previous := decision
 	decision = _policy.advance(delta, obs)
+	if decision.intent == Patrol.Intent.ALERT:
+		if previous.intent != Patrol.Intent.ALERT or previous.contact_id != decision.contact_id:
+			_alert_pause_left = ALERT_PAUSE
+		if _alert_pause_left > 0.0:
+			_alert_pause_left = maxf(0.0, _alert_pause_left - delta)
+			for contact in decision.visible_contacts:
+				if contact.id == decision.contact_id:
+					_face(contact.position)
+					return
+	else:
+		_alert_pause_left = 0.0
 	match decision.intent:
 		Patrol.Intent.ENGAGE:
 			_left_route = true
@@ -58,7 +73,9 @@ func advance(delta: float, battle: Battle, hero_active: bool) -> void:
 		Patrol.Intent.PURSUE, Patrol.Intent.INVESTIGATE:
 			_left_route = true
 			_toward(decision.destination, PURSUIT_SPEED * delta)
-		Patrol.Intent.PATROL:
+		Patrol.Intent.ALERT, Patrol.Intent.PATROL:
+			# After turning to identify a distant target, resume the usual
+			# patrol/return. Distant contact cannot drag the levy off route.
 			if _left_route:
 				_toward(_anchor, PATROL_SPEED * delta)
 				_left_route = not position.is_equal_approx(_anchor)

@@ -108,8 +108,9 @@ func _run() -> void:
 		and not _mission._terrain.clear_ranged_lane(_mission._ground(patrol.position, 1.38),
 			_mission._ground(_mission.battle.hero_position, 1.30)), "The authored storehouse supplies nearby solid cover.")
 	_tick()
-	_check(patrol.decision.intent == Patrol.Intent.PATROL and patrol.decision.visible_contacts.is_empty(),
-		"The actual geometry blocks acquisition despite short range.")
+	_check(patrol.decision.contact_id != Levy.HERO_ID \
+		and not patrol.decision.visible_contacts.any(func(contact: Patrol.Contact) -> bool: return contact.id == Levy.HERO_ID),
+		"The actual geometry blocks acquisition of the covered hero even if an uncovered formation alerts the levy.")
 
 	_joy(JOY_BUTTON_START)
 	_check(_mission.levy != patrol and _mission.levy.position == spawn and not _mission._levy_status.visible
@@ -117,7 +118,7 @@ func _run() -> void:
 	_observed_contact = false
 	_run_bypass()
 	_check(_mission.objective.phase == Quay.Phase.SUCCEEDED and not _observed_contact and _mission._follow_shift == Vector3.ZERO,
-		"An actual full withdrawal along the inland approach finishes without contact or a follow camera.")
+		"An actual full withdrawal along the inland approach finishes without physical contact or a follow camera.")
 
 	_mission.queue_free()
 	await process_frame
@@ -362,7 +363,7 @@ func _point(id: String) -> Vector2:
 func _tick(count := 1) -> void:
 	for step in range(count):
 		_mission._physics_process(DT)
-		_observed_contact = _observed_contact or not _mission.levy.decision.visible_contacts.is_empty()
+		_observed_contact = _observed_contact or _mission.levy.decision.intent == Patrol.Intent.ENGAGE
 
 
 func _axis(code: JoyAxis, value: float) -> void:

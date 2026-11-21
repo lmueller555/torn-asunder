@@ -1,5 +1,6 @@
 extends RefCounted
 
+const Aggro := preload("res://game/combat/enemy_aggro.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Setup := preload("res://game/combat/skirmish_setup.gd")
@@ -437,7 +438,7 @@ func _scan_for_enemy(index: int) -> void:
 		if not enemy.unit.is_alive():
 			continue
 		var distance := soldier.position.distance_squared_to(enemy.position)
-		if distance < nearest_distance:
+		if distance<=Aggro.RADIUS_METRES*Aggro.RADIUS_METRES and distance < nearest_distance:
 			soldier.pursuit = rival
 			nearest_distance = distance
 		if distance <= ENGAGEMENT_RANGE * ENGAGEMENT_RANGE and _has_slot(index, rival):
