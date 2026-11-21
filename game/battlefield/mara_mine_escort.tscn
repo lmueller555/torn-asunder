@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_mine.tscn" id="1_mine"]
+[ext_resource type="Script" path="res://game/battlefield/mara_mine_escort.gd" id="2_mission"]
+
+[node name="MaraMineEscort" instance=ExtResource("1_mine")]
+script = ExtResource("2_mission")
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -166.0
+offset_right = 540.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+text = "MARA  /  YEAR ONE MINE ESCORT"
+theme_override_colors/font_color = Color(1, 0.82, 0.54, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 20
+
+[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.83, 0.89, 0.93, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
+size_flags_horizontal = 0
+text = "Restart  ·  Options / Backspace"

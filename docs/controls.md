@@ -36,3 +36,9 @@ After importing the project, run `godot --headless --script tests/command_harnes
 To try the same controls on the shared Year One mine, run `godot game/battlefield/command_mine.tscn`. Formations take a straight path: if the path is blocked by solid terrain or cover, they stop and show **Blocked**. Issue a new Move around the obstruction. The main road is open, and the ridge is accessible via its ramps. To reach the overlook from the west, move the archers up the center of the ramp before turning toward the overlook. This is a movement playtest, not the escort objective or a combat encounter.
 
 Run `godot --headless --script tests/command_mine.gd` to check the shared mine spawns, road and ridge movement, cursor picking, and blocking.
+
+## Mara's mine escort prototype
+
+Run `godot game/battlefield/mara_mine_escort.tscn`. Walk to the gold Godbridle marker, press **Cross** or **Space** in hero view, then carry it along the road to the marked east exit. **Cross** still issues Hold while L2 is down. Choose **Restart**, press **Options**, or press **Backspace** to try the route again.
+
+This standalone scene tests pickup, delivery, and commands. It has no enemies, combat, or campaign progression. The failure outcomes are tested separately because no combat in this scene can trigger them. The full route and input check is `godot --headless --script tests/mara_mine_escort.gd`.
