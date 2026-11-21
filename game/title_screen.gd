@@ -4,6 +4,7 @@ const Campaigns := preload("res://game/campaigns.gd")
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
 const Drills := preload("res://game/combat/drills.gd")
+const BattlePointsDrill := preload("res://game/combat/battle_points_drill.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
@@ -24,7 +25,7 @@ const MUTED := Color("#b5afa2")
 const HAIRLINE := Color("#716451")
 const DARK := Color("#171a1a")
 
-enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH_SETUP, SKIRMISH }
+enum Page { TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL, UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL }
 
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
@@ -115,6 +116,9 @@ func _go_back() -> void:
 			_show_quit()
 		Page.DRILLS, Page.UNIT_PROGRESSION:
 			_show_briefing()
+		Page.BATTLE_POINTS_DRILL:
+			_show_drills()
+			_stage.get_node("Battle Points Drill").grab_focus()
 		Page.UNIT_MODEL:
 			_show_unit_progression(true)
 		Page.SKIRMISH:
@@ -552,7 +556,11 @@ func _show_drills() -> void:
 		var button := _button(exercise.name, Rect2(76, 225 + 67 * index, 345, 55), _select_drill.bind(index))
 		button.focus_entered.connect(_select_drill.bind(index))
 		_drill_buttons.append(button)
-	_link_cycle(_drill_buttons, SIDE_TOP, SIDE_BOTTOM)
+	var points := _button("Battle Points Drill", Rect2(76, 694, 345, 45), _show_battle_points_drill)
+	var drill_choices := _drill_buttons.duplicate()
+	drill_choices.append(points)
+	_link_cycle(drill_choices, SIDE_TOP, SIDE_BOTTOM)
+	_link_focus(points, SIDE_RIGHT, back)
 
 	_color_rect(_stage, Rect2(464, 225, 900, 457), Color(0.047, 0.054, 0.055, 0.9))
 	_rule(Rect2(464, 225, 900, 1), HAIRLINE)
@@ -588,6 +596,14 @@ func _show_drills() -> void:
 
 	_select_drill(_drill_index)
 	_drill_buttons[_drill_index].grab_focus()
+
+
+func _show_battle_points_drill() -> void:
+	_open_page(Page.BATTLE_POINTS_DRILL)
+	var back := _heading("Battle Points Drill", "Earn points with one platoon and spend from the same pool with another.")
+	var drill := BattlePointsDrill.new()
+	_stage.add_child(drill)
+	drill.initialize(back)
 
 
 func _select_drill(index: int) -> void:
