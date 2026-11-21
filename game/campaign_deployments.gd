@@ -39,6 +39,14 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.SOVA_MINE_DEBRIEF,
 		"orders": "Release both groups at the tunnel mouth and bend. The evacuation is complete when both reach Druid safety and the willing witness is waiting at the outlet. The Godbridle is not your objective.",
 	},
+	"sova_public_record": {
+		"scene": preload("res://game/battlefield/sova_public_record_playtest.tscn"),
+		"dispatch": Beats.SOVA_PUBLIC_RECORD_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SOVA_PUBLIC_RECORD_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE ASSEMBLY · PUBLIC HEARING",
+		"orders": "Choose one lectern and read all three passages with the public scribe. Hold armed formations outside the hearing ring and leave its public exit clear. Keepers who walk out are not targets.",
+	},
 	"ilyra_moonwash_rescue": {
 		"scene": preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.tscn"),
 		"dispatch": Beats.ILYRA_MOONWASH_DISPATCH,
