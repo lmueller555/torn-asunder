@@ -7,6 +7,7 @@ const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
+const Points := preload("res://game/combat/battle_points.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const DT := 1.0 / 60.0
 
@@ -26,6 +27,10 @@ func _run() -> void:
 	await physics_frame
 
 	var fight := _mission.encounter
+	var original_frame := _mission.team_battle_points_frame()
+	_check(original_frame.balance == 400 and original_frame.capacity == 700 and original_frame.lead_level == fight.hero.level
+		and _mission._combat_hp.text.contains("Team 400 / 700 BP (lead Lv 1)"),
+		"Live campaign HUD reads the team frame's balance, cap and founding lead level.")
 	var hero_camera := root.get_camera_3d()
 	_check(_mission._special_status.visible and _mission._special_status.text.contains("150 BP · Ready")
 		and fight.points.balance == 400, "Campaign HUD names the input, shared cost, and initial readiness.")
@@ -37,6 +42,8 @@ func _run() -> void:
 	_check(_mission.command_view and root.get_camera_3d() != hero_camera and fight.points.balance == 400
 		and fight.defense.attack_phase == Attack.Phase.IDLE and _mission._special_status.text.contains("Hero view only"),
 		"R2 and V in command view do not spend or change the current camera.")
+	_check(_mission.team_battle_points_frame().balance == original_frame.balance,
+		"Denied command-camera input does not spend or award any Battle Points.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_axis(JOY_AXIS_TRIGGER_RIGHT, 0.90)
 	_tick()
@@ -67,6 +74,8 @@ func _run() -> void:
 	_key(KEY_V)
 	_check(fight.defense.attack_kind == Attack.Attack.LIGHT and fight.points.balance == 250,
 		"An existing light windup blocks both special inputs without spending.")
+	_check(_mission.team_battle_points_frame().balance == 250 and original_frame.balance == 400,
+		"Denied busy commands leave the live budget and detached starting frame unchanged.")
 	_tick(35)
 	_key(KEY_U)
 	_key(KEY_V)
@@ -80,6 +89,9 @@ func _run() -> void:
 	_key(KEY_V)
 	_check(fight.defense.attack_phase == Attack.Phase.IDLE and fight.points.balance == 100
 		and _mission._special_status.text.contains("Not enough BP"), "Insufficient BP is shown and denies both input paths.")
+	var spent_frame := _mission.team_battle_points_frame()
+	_check(spent_frame.spend_status(Mission.SUNDERING_COST) == Points.SpendStatus.INSUFFICIENT
+		and spent_frame.balance == 100, "The typed frame agrees with the insufficient HUD and denied attack.")
 	_key(KEY_BACKSPACE)
 	fight = _mission.encounter
 	_axis(JOY_AXIS_TRIGGER_RIGHT, 0.86)
@@ -108,6 +120,8 @@ func _run() -> void:
 	_tick(18)
 	_check(not fight.enemy.is_alive() and fight.points.balance == 262 and _mission.objective.phase == Escort.Phase.ESCORTING,
 		"Basic attacks still earn BP after the special and the combat kill does not clear the objective.")
+	_check(_mission.team_battle_points_frame().balance == 262 and spent_frame.balance == 100
+		and original_frame.balance == 400, "Only confirmed earned BP changes current frames; retry and hits do not rewrite past frames.")
 
 	var pocket := Pocket.instantiate()
 	_check(not pocket.sundering_strike_enabled, "The separate pocket stays opt-out.")
