@@ -33,6 +33,9 @@ const MARKER_BEAM_HEIGHT := 9.0
 @export var field_bounds := Battle.FLAT_BOUNDS
 @export var enable_sector_camera := false
 @export_range(16.0, 150.0) var local_sector_size := 58.0
+## Optional normalized rectangle outside this scene's HUD. Only whole-field
+## overview uses it; the default preserves every existing deployment.
+@export var overview_safe_frame := Rect2()
 @export var hero_spawn: NodePath
 @export var formation_spawns: Array[NodePath] = []
 
@@ -267,7 +270,11 @@ func _on_lead_engagement_changed(_engaged: bool) -> void:
 func _step_sector_cursor(movement: Vector2, delta: float) -> bool:
 	if not movement.is_zero_approx():
 		_mouse_cursor_active = false
-		var speed := _sector.view_size(_viewport_aspect()) * 0.54
+		var aspect := _viewport_aspect()
+		var span := _sector.view_size(aspect)
+		if _sector.overview and overview_safe_frame.has_area():
+			span = _sector.projection(aspect, _command_yaw, _command_pitch, overview_safe_frame).x
+		var speed := span * 0.54
 		cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * speed * delta)
 	if _mouse_cursor_active:
 		var edge := SectorCamera.pointer_edge(_mouse_position, get_viewport().get_visible_rect())
@@ -469,11 +476,23 @@ func _update_cameras() -> void:
 	var focus := to_global(hero + Vector3(0.0, 0.0, look_ahead).rotated(Vector3.UP, _hero_yaw))
 	if _hero_camera.global_position.distance_squared_to(focus) > 0.0001:
 		_hero_camera.look_at(focus)
+	var command_pitch := _command_pitch
+	var frame_shift := Vector2.ZERO
 	if _sector:
-		_command_camera.size = _sector.view_size(_viewport_aspect())
+		var aspect := _viewport_aspect()
+		if _sector.overview and overview_safe_frame.has_area():
+			var projection := _sector.projection(aspect, _command_yaw, _command_pitch, overview_safe_frame)
+			_command_camera.size = projection.x
+			command_pitch = projection.y
+			frame_shift = Vector2(projection.z, projection.w)
+		else:
+			_command_camera.size = _sector.view_size(aspect)
 	var overview := _world(_sector.view_center() if _sector else battle.bounds.get_center())
-	_command_camera.position = overview + Vector3(0.0, sin(_command_pitch), cos(_command_pitch)).rotated(Vector3.UP, _command_yaw) * _command_camera.size
+	_command_camera.position = overview + Vector3(0.0, sin(command_pitch), cos(command_pitch)).rotated(Vector3.UP, _command_yaw) * _command_camera.size
 	_command_camera.look_at(to_global(overview))
+	if not frame_shift.is_zero_approx():
+		var axes := _command_camera.transform.basis
+		_command_camera.position += axes.x * frame_shift.x + axes.y * frame_shift.y
 
 
 func _sync_view() -> void:
