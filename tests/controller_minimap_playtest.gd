@@ -6,6 +6,7 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Mode := Preview.Mode
+const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const DT := 1.0 / 60.0
 
 var _preview: Preview
@@ -20,11 +21,12 @@ func _run() -> void:
 	root.add_child(_preview)
 	_preview.set_physics_process(false)
 	await process_frame
-	var passed := _cancel_draft() and _confirm_and_walk() and _keyboard_cancel() and _follow_then_hero()
+	var passed := _cancel_draft() and _confirm_and_walk() and _keyboard_cancel() \
+		and _shared_route_walk() and _cap_and_replace_route() and _follow_then_hero()
 	_preview.queue_free()
 	await process_frame
 	if passed:
-		print("Controller minimap: bounded north-up draft, cancel/neutral isolation, actual Move, ally follow, and physical hero action handoff passed.")
+		print("Controller minimap: bounded draft, no input leak, shared tactical/minimap two-leg walk, route cap/replacement, ally follow and hero handoff passed.")
 	quit(0 if passed else 1)
 
 
@@ -103,6 +105,73 @@ func _keyboard_cancel() -> bool:
 		or _fail("Keyboard cancel did not preserve the world and prior order.")
 
 
+func _shared_route_walk() -> bool:
+	var shields := _preview.battle.formations[Preview.SHIELDS]
+	var original := shields.position
+	_aim(Vector2(-10.0, 8.0))
+	var first := _preview.cursor
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	if _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([first]) or shields.destination != first:
+		return _fail("Tactical R1 did not append to the selected shield platoon's route.")
+	_button(JOY_BUTTON_DPAD_UP)
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_button(JOY_BUTTON_DPAD_DOWN)
+	var second := _preview._map_cursor
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	var expected := PackedVector2Array([first, second])
+	if not _preview._map_open or _preview._routes.snapshot(Preview.SHIELDS) != expected \
+			or shields.destination != first or _preview._reticle.route.size() != 2 \
+			or not _preview._map_title.text.contains("Shield Infantry"):
+		return _fail("Map R1 replaced the first leg, hid the combined route, or changed its named receiver.")
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_button(JOY_BUTTON_B)
+	if _preview._map_open or _preview.cursor != first or _preview._routes.snapshot(Preview.SHIELDS) != expected:
+		return _fail("Cancel did not discard only the unsent draft or restore the tactical cursor.")
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	if not _preview._routes.snapshot(Preview.SCOUTS).is_empty():
+		return _fail("The mixed controls appended to a different named platoon.")
+	_button(JOY_BUTTON_DPAD_LEFT)
+	if not _wait(func() -> bool: return shields.position.is_equal_approx(first), 240) \
+			or shields.position == original or shields.destination != second \
+			or _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([second]):
+		return _fail("The second Move did not wait for first physical waypoint arrival.")
+	return _wait(func() -> bool:
+		return shields.order == Battle.Order.HOLD and shields.position.is_equal_approx(second) \
+			and _preview._routes.snapshot(Preview.SHIELDS).is_empty(), 140
+	) or _fail("The platoon did not physically walk the second leg of the same route.")
+
+
+func _cap_and_replace_route() -> bool:
+	_aim(Vector2(-13.0, 7.0))
+	var first := _preview.cursor
+	_key(KEY_G)
+	_button(JOY_BUTTON_DPAD_UP)
+	_key(KEY_G)
+	if not _preview._map_note.contains("Already on this route") \
+			or _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([first]):
+		return _fail("A repeated point from the other input source duplicated the shared route.")
+	for _index in Queue.MAX_WAYPOINTS - 1:
+		_button(JOY_BUTTON_DPAD_RIGHT)
+		_key(KEY_G)
+	var full := _preview._routes.snapshot(Preview.SHIELDS)
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	if full.size() != Queue.MAX_WAYPOINTS or _preview._routes.snapshot(Preview.SHIELDS) != full \
+			or not _preview._map_note.contains("Route full") or not _preview._map_open:
+		return _fail("Controller and keyboard append did not share the same eight-point cap.")
+	_button(JOY_BUTTON_B)
+	_button(JOY_BUTTON_DPAD_UP)
+	_button(JOY_BUTTON_DPAD_DOWN)
+	var replacement := _preview._map_cursor
+	_button(JOY_BUTTON_A)
+	if _preview._map_open or _preview._routes.snapshot(Preview.SHIELDS) != PackedVector2Array([replacement]):
+		return _fail("Direct map Move did not replace the accepted queued route.")
+	_key(KEY_H)
+	return _preview._routes.snapshot(Preview.SHIELDS).is_empty() \
+		and _preview.battle.formations[Preview.SHIELDS].order == Battle.Order.HOLD \
+		or _fail("World Hold did not clear the map-built route.")
+
+
 func _follow_then_hero() -> bool:
 	var shields := _preview.battle.formations[Preview.SHIELDS]
 	if not _project(Vector2(-8.0, -5.0)) or not _wait(func() -> bool:
@@ -142,9 +211,21 @@ func _follow_then_hero() -> bool:
 	_button(JOY_BUTTON_DPAD_UP)
 	if _preview._map_open or not _preview._map_help.text.contains("Read-only"):
 		return _fail("The controller opened a command draft in hero action.")
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	_key(KEY_G)
+	if not _preview._routes.snapshot(Preview.HERO).is_empty() \
+			or _preview.battle.formations[Preview.HERO].order != Battle.Order.HOLD \
+			or _preview.defense.attack_phase != Attack.Phase.IDLE:
+		return _fail("R1/G edited or triggered a route or attack in direct hero action.")
 	_button(JOY_BUTTON_X)
 	return _preview.defense.attack_phase == Attack.Phase.WINDUP \
 		or _fail("A fresh explicit hero action remained muted after releasing modal input.")
+
+
+func _aim(point: Vector2) -> void:
+	var event := InputEventMouseMotion.new()
+	event.position = _preview._command_camera.unproject_position(_preview._ground(point))
+	root.push_input(event, true)
 
 
 func _project(point: Vector2, check := true) -> bool:
