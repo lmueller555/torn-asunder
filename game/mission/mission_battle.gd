@@ -341,7 +341,7 @@ func _create_squad(entry: Dictionary, levels: Dictionary) -> Squad:
 	squad.persist = entry.get("persist", "")
 	squad.level = maxi(int(entry.get("level", 1)), int(levels.get(squad.persist, 0)))
 	squad.commandable = entry.get("commandable", squad.team == PLAYER_TEAM)
-	squad.aggro = Aggro.configured(float(entry.get("aggro",0.0)))
+	squad.aggro = Aggro.configured(float(entry.get("aggro", 0.0)))
 	squad.order = entry.get("order", {"kind": "hold"}).duplicate()
 	squad.anchor = _point(entry.pos)
 	squad.facing = entry.get("facing", Vector2.DOWN if squad.team == ENEMY_TEAM else Vector2.UP).normalized()
@@ -360,17 +360,36 @@ func _spawn_squad(squad: Squad) -> void:
 		return
 	squad.spawned = true
 	var entry := squad.definition
-	var count: int = entry.get("count", 1 if squad.info.get("role") == Units.Role.HERO else 16)
-	var columns: int = entry.get("columns", clampi(ceili(sqrt(count * 1.4)), 1, 8))
+	var authored_count: int = entry.get("count", 1 if squad.info.get("role") == Units.Role.HERO else 16)
+	var count := Units.platoon_count(squad.type_id,authored_count)
+	var columns: int = entry.get("columns", clampi(ceili(sqrt(authored_count * 1.4)), 1, 8))
+	var regular_melee: bool = squad.info.get("role",-1)==Units.Role.MELEE
+	var collision_radius := BODY_RADIUS*float(squad.info.get("scale",1.0))
+	var formation_origin := _free_point(squad.anchor) if regular_melee else Vector2.ZERO
+	var reserved := PackedVector2Array()
+	if regular_melee:
+		for i in range(count):
+			var j := _placement_slot(i,columns)
+			var point := squad.anchor+Vector2(-squad.facing.y,squad.facing.x)*j.x+squad.facing*j.y
+			point+=Vector2(_random.randf_range(-0.2,0.2),_random.randf_range(-0.2,0.2))
+			var seat := _regular_spawn_point(point,formation_origin,collision_radius,reserved)
+			if not seat.is_finite():
+				# No silently reduced or half-spawned platoon.
+				squad.spawned=false
+				push_error("No distinct walkable placement for %s member %d." % [squad.id,i+1])
+				return
+			reserved.append(seat)
 	var roster: Array[Unit] = []
 	var right := Vector2(-squad.facing.y, squad.facing.x)
 	for i in range(count):
-		var column := i % columns
-		var row := floori(float(i) / columns)
-		var slot := Vector2((column - (columns - 1) * 0.5) * SLOT_SPACING, -row * SLOT_SPACING)
+		var slot := _placement_slot(i,columns)
 		var spawn := squad.anchor + right * slot.x + squad.facing * slot.y
-		spawn += Vector2(_random.randf_range(-0.2, 0.2), _random.randf_range(-0.2, 0.2))
-		var fighter := _add_fighter(squad.type_id, squad.info, squad.team, squad.level, _free_point(spawn))
+		if regular_melee:
+			spawn=reserved[i]
+		else:
+			spawn+=Vector2(_random.randf_range(-0.2,0.2),_random.randf_range(-0.2,0.2))
+			spawn=_free_point(spawn)
+		var fighter := _add_fighter(squad.type_id,squad.info,squad.team,squad.level,spawn)
 		fighter.platoon = squad.index
 		fighter.slot = slot
 		fighter.facing = squad.facing
@@ -443,6 +462,52 @@ func _free_point(point: Vector2) -> Vector2:
 	if not _blocked(point, BODY_RADIUS):
 		return point
 	return Vector2(_free_cell(_cell(point))) * PATH_CELL
+
+
+static func _placement_slot(index: int, columns: int) -> Vector2:
+	return Vector2((index%columns-(columns-1)*0.5)*SLOT_SPACING,
+		-floori(float(index)/columns)*SLOT_SPACING)
+
+
+## Distinct legal starts for a full regular melee formation. Do not snap several
+## blocked files to the same nav-cell center. Other roles keep their old placement.
+func _regular_spawn_point(desired: Vector2, origin: Vector2, radius: float, reserved: PackedVector2Array) -> Vector2:
+	if _can_place_regular(desired,origin,radius,reserved):
+		return desired
+	var step := maxf(0.85,radius*2.0+0.05)
+	for ring in range(1,25):
+		var points: Array[Vector2] = []
+		for offset in range(-ring,ring+1):
+			points.append(desired+Vector2(offset,-ring)*step)
+			points.append(desired+Vector2(offset,ring)*step)
+		for offset in range(-ring+1,ring):
+			points.append(desired+Vector2(-ring,offset)*step)
+			points.append(desired+Vector2(ring,offset)*step)
+		points.sort_custom(func(a: Vector2,b: Vector2) -> bool:
+			return a.distance_squared_to(desired)<b.distance_squared_to(desired))
+		for point: Vector2 in points:
+			if _can_place_regular(point,origin,radius,reserved):
+				return point
+	return Vector2.INF
+
+
+func _can_place_regular(point: Vector2, origin: Vector2, radius: float, reserved: PackedVector2Array) -> bool:
+	if not bounds.grow(-radius).has_point(point) or _blocked(point,radius):
+		return false
+	for fighter: Fighter in fighters:
+		if fighter.is_alive() and not fighter.removed:
+			var gap := radius + fighter.radius
+			if fighter.position.distance_squared_to(point)<gap*gap:
+				return false
+	for other: Vector2 in reserved:
+		if other.distance_squared_to(point)<4.0*radius*radius:
+			return false
+	if _clear_line(origin,point):
+		return true
+	var here := _free_cell(_cell(origin))
+	var there := _free_cell(_cell(point))
+	# find_path() can return the goal on a disconnected graph; not valid proof.
+	return here==there or not _astar.get_id_path(here,there).is_empty()
 
 
 func find_path(from: Vector2, to: Vector2) -> PackedVector2Array:

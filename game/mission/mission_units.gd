@@ -4,6 +4,7 @@ extends RefCounted
 ## Every type shares the rigged Human Infantry model. Faction tints and body scale tell
 ## the armies apart until each people has its own model.
 
+const PlatoonSize := preload("res://game/combat/platoon_size.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 
 enum Role { MELEE, RANGED, CIVILIAN, HERO, STRUCTURE }
@@ -267,6 +268,12 @@ static func definition(type_id: StringName) -> Dictionary:
 	if TYPES.has(type_id):
 		return TYPES[type_id]
 	return HEROES.get(type_id, {})
+
+
+## Regular melee has a uniform platoon headcount; other roles stay authored.
+static func platoon_count(type_id: StringName, authored_count: int) -> int:
+	var info := definition(type_id)
+	return PlatoonSize.count_for(authored_count, info.get("role", -1)==Role.MELEE)
 
 
 ## Builds one unit at a level. Earned points go to the type's primary ratings in turn.

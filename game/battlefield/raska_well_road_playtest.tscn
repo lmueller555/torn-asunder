@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://game/battlefield/marches_rival_reserve.gd" id="4_reserve"]
 
 [node name="RaskaWellRoadPlaytest" instance=ExtResource("1_harness")]
+formation_roles = Array[int]([1, 2])
 script = ExtResource("3_mission")
 battlefield_scene = ExtResource("2_basin")
 field_bounds = Rect2(-154, -98, 316, 199)

@@ -66,7 +66,7 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 			else:
 				var remaining := distance - STOP_RANGE if distance > REACH else distance
 				var next := battle.clamp_to_field(group.position + direction * minf(remaining, group.move_speed * delta))
-				if next.is_equal_approx(group.position) or not can_move.call(group.position, next, true):
+				if next.is_equal_approx(group.position) or not can_move.call(group.position, next, true) or not group.footprint_fits(next):
 					group.order = Battle.Order.BLOCKED
 					_reset()
 				else:

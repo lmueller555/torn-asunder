@@ -250,15 +250,16 @@ func _platoon_observation(slot: Quay.Platoon) -> Quay.PlatoonObservation:
 	var state := Quay.PlatoonObservation.new()
 	if battle.formations[slot].order == Battle.Order.DEFEATED:
 		return state
-	for index in range(_formation_members[slot].size()):
-		var member: Node3D = _formation_members[slot][index]
-		var id := str(index)
-		# The placeholders are all alive unless the living group has been wiped.
-		# Keeping past crossers in the live roster supports a staggered exit.
+	var formation := battle.formations[slot]
+	for member in formation.members:
+		var id := str(member.index)
+		# Authoritative indexed feet cross; rendering is not a condition of
+		# extraction. The objective keeps prior crossers in the living roster.
 		state.living_members.append(id)
-		if member.visible and _in_exit(member.global_position):
+		if not member.crossed and _in_exit(to_global(_ground(formation.member_position(member)))):
 			state.crossed_upper_exit.append(id)
-			member.hide()
+			member.crossed = true
+			_formation_members[slot][member.index].hide()
 	return state
 
 

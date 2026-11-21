@@ -2,6 +2,8 @@ extends RefCounted
 
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
+const PlatoonSize := preload("res://game/combat/platoon_size.gd")
+const SMALL_EXAMPLE_SIZE := 10
 
 const EXERCISES: Array[Dictionary] = [
 	{
@@ -19,7 +21,7 @@ const EXERCISES: Array[Dictionary] = [
 	{
 		"id": &"formation_drill",
 		"name": "Formation Drill",
-		"description": "Take one casualty in a ten-unit platoon, then spend two seconds reforming.",
+		"description": "Take one casualty in a %d-soldier infantry platoon, then spend two seconds reforming." % PlatoonSize.REGULAR_MELEE,
 		"metrics": ["Cohesion after casualty", "Cohesion after reforming"],
 	},
 	{
@@ -64,7 +66,7 @@ static func run(exercise: StringName, level: int) -> Array[String]:
 				"%.1f s" % platoon.mounted_maneuver_seconds(8.0),
 			]
 		&"formation_drill":
-			var platoon := _platoon(Platoon.Skill.FORMATION_DRILL, level)
+			var platoon := _formation_drill_platoon(level)
 			platoon.hit_unit(0, Unit.new(), {Unit.Damage.MELEE: Unit.STARTING_HP})
 			var after_casualty := platoon.cohesion
 			platoon.reform(2.0)
@@ -101,8 +103,12 @@ static func run(exercise: StringName, level: int) -> Array[String]:
 	return []
 
 
-static func _platoon(skill: Platoon.Skill, training_rank: int) -> Platoon:
+static func _formation_drill_platoon(training_rank: int) -> Platoon:
+	return _platoon(Platoon.Skill.FORMATION_DRILL, training_rank, PlatoonSize.REGULAR_MELEE)
+
+
+static func _platoon(skill: Platoon.Skill, training_rank: int, count: int = SMALL_EXAMPLE_SIZE) -> Platoon:
 	var roster: Array[Unit] = []
-	for index in range(10):
+	for index in range(count):
 		roster.append(Unit.new())
 	return Platoon.new(roster, {skill: training_rank})

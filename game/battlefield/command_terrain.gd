@@ -13,6 +13,7 @@ var _field: Node3D
 var _terrain_bodies: Array[RID] = []
 var _hero_probe := _cylinder(HERO_RADIUS, 1.75)
 var _formation_probe := _cylinder(FORMATION_RADIUS, 1.15)
+var _oriented_formation_probe := BoxShape3D.new()
 
 
 func _init(field: Node3D) -> void:
@@ -72,6 +73,37 @@ func can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 ## Pair with a walkable-surface ray for a destination picked from overhead.
 func formation_fits_at(point: Vector2) -> bool:
 	return _footprint_clear(point, ground_height(point), true)
+
+
+## Keep the eight files in supported terrain. Edge/midpoint rays and the
+## oriented body hull avoid 32 more solid-shape queries per moving platoon.
+func oriented_formation_fits_at(point: Vector2, heading: Vector2, half_size: Vector2, feet_half_size := Vector2.ZERO) -> bool:
+	var floor_hit := _walkable_floor_hit(point)
+	if floor_hit.is_empty():
+		return false
+	var floor := _field.to_local(floor_hit.position).y
+	# Foot support probes at actual foot anchors for compact placeholder squads;
+	# the solid shape still covers their silhouettes and kit.
+	var support := feet_half_size if feet_half_size != Vector2.ZERO else half_size
+	var across := Vector2(-heading.y, heading.x) * support.x
+	var back := -heading * support.y
+	for offset: Vector2 in [across, -across, back, -back, across + back, across - back, -across + back, -across - back]:
+		var edge_hit := _walkable_floor_hit(point + offset)
+		if edge_hit.is_empty() or absf(_field.to_local(edge_hit.position).y - floor) > STEP_HEIGHT + offset.length() * 0.32:
+			return false
+	_oriented_formation_probe.size = Vector3(half_size.x * 2.0, 1.15, half_size.y * 2.0)
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.collision_mask = SOLID_MASK
+	query.exclude = _terrain_bodies
+	query.shape = _oriented_formation_probe
+	var yaw := atan2(-heading.x, -heading.y)
+	query.transform = Transform3D(_field.global_basis.orthonormalized() * Basis(Vector3.UP, yaw),
+		_field.to_global(Vector3(point.x, floor + _oriented_formation_probe.size.y / 2.0 + 0.04, point.y)))
+	return _field.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+
+
+func _walkable_floor_hit(point: Vector2) -> Dictionary:
+	return _ray(Vector3(point.x, 20.0, point.y), Vector3(point.x, -8.0, point.y), WALKABLE_MASK)
 
 
 func _footprint_clear(to: Vector2, floor: float, is_formation: bool) -> bool:

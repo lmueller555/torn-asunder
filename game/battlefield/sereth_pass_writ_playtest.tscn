@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://game/battlefield/sereth_pass_writ_playtest.gd" id="3_playtest"]
 
 [node name="SerethPassWritPlaytest" instance=ExtResource("1_harness")]
+formation_roles = Array[int]([1, 1])
 script = ExtResource("3_playtest")
 battlefield_scene = ExtResource("2_post")
 field_bounds = Rect2(-145, -89, 290, 178)

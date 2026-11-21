@@ -46,6 +46,17 @@ const MARKER_BEAM_HEIGHT := 9.0
 @export var overview_safe_frame := Rect2()
 @export var hero_spawn: NodePath
 @export var formation_spawns: Array[NodePath] = []
+## Explicit metadata for authored slots; absent declarations retain legacy size.
+@export var formation_roles: Array[Battle.FormationRole] = []
+## A cramped authored deployment can keep the same soldiers in more ranks.
+@export var regular_melee_slot_files: PackedInt32Array
+## Measured feet spacing for scenes that still use only their stock 0.49m troops.
+@export var regular_melee_spacing := Vector2(0.85, 0.78)
+## A narrow marching block may sit behind its command pivot. This is a fixed
+## deployment offset for every member, not a teleport/refile during movement.
+@export var regular_melee_trailing_bias := 0.0
+## Small local staging offsets only where the old marker fits a shorter platoon.
+@export var regular_melee_staging_offsets: PackedVector2Array
 
 ## Off restores the free-walking leader for scenes that model their own hero platoon.
 @export var lead_platoon_enabled := true
@@ -102,7 +113,6 @@ var _destination_marker: MeshInstance3D
 @onready var _formation_label: Label = $HUD/Panel/Margin/Readout/Formation
 var _roster_label: Label
 var _lead_was_engaged := false
-var _r2_down := false
 var _pre_combat_index := Battle.LEAD_INDEX
 @onready var _controls_label: Label = $HUD/Panel/Margin/Readout/Controls
 
@@ -118,6 +128,7 @@ func _ready() -> void:
 	battle.lead_platoon_enabled = lead_platoon_enabled
 	routes.reset(battle)
 	selected_index = 0
+	_configure_formation_roles()
 	_configure_field()
 	_build_placeholders()
 	_reset_march_marker()
@@ -415,18 +426,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_G: if march_mode(): add_march_waypoint()
 				KEY_J: if march_mode(): queue_march_waypoint()
 				KEY_T: if march_mode(): clear_march_route()
-				KEY_I: step_formation(-1)
-				KEY_O: step_formation(1)
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
 		if event.axis == JOY_AXIS_TRIGGER_LEFT:
 			_l2_down = event.axis_value > L2_RELEASE if _l2_down else event.axis_value >= L2_PRESS
 			_update_mode()
-		elif event.axis == JOY_AXIS_TRIGGER_RIGHT:
-			var was_down := _r2_down
-			_r2_down = event.axis_value > L2_RELEASE if was_down else event.axis_value >= L2_PRESS
-			if _r2_down and not was_down:
-				step_formation(1)
 	elif event is InputEventJoypadButton and event.pressed and _uses_joypad(event.device):
 		# Godot names face buttons by their Xbox positions: X is Square and A is Cross.
 		match event.button_index:
@@ -439,7 +443,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif march_mode():
 					queue_march_waypoint()
 			JOY_BUTTON_B: if march_mode(): clear_march_route()
-			JOY_BUTTON_LEFT_SHOULDER: step_formation(-1)
 			JOY_BUTTON_A: _hold_selected()
 			JOY_BUTTON_RIGHT_STICK: _toggle_overview()
 			JOY_BUTTON_LEFT_STICK: _center_on_hero()
@@ -462,7 +465,6 @@ func _notification(what: int) -> void:
 		_keys.clear()
 		_axes.clear()
 		_l2_down = false
-		_r2_down = false
 		_update_mode()
 
 
@@ -473,7 +475,6 @@ func _uses_joypad(device: int) -> bool:
 		if _input_device >= 0:
 			_axes.clear()
 			_l2_down = false
-			_r2_down = false
 		_input_device = device
 	return _input_device == device
 
@@ -484,7 +485,6 @@ func _on_joy_connection_changed(device: int, connected: bool) -> void:
 		_input_device = devices[0] if not devices.is_empty() else -1
 		_axes.clear()
 		_l2_down = false
-		_r2_down = false
 		_update_mode()
 
 
@@ -615,14 +615,12 @@ func _sync_view() -> void:
 		var yaw := atan2(-formation.heading.x, -formation.heading.y)
 		var origin := _ground(formation.position)
 		var moved := model.position != origin or not is_equal_approx(model.rotation.y, yaw)
-		moved = _apply_spread(_formation_members[index], formation.spread) or moved
 		model.position = origin
 		model.rotation.y = yaw
 		if _terrain and moved:
-			for member: Node3D in _formation_members[index]:
-				var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, model.rotation.y)
-				var feet := formation.position + Vector2(offset.x, offset.z)
-				member.position.y = _terrain.ground_height(feet) - model.position.y
+			for slot in formation.members:
+				var anchor := _formation_members[index][slot.index] as Node3D
+				anchor.position.y = _terrain.ground_height(formation.member_position(slot)) - model.position.y
 	_selection.position = _ground(selected.position, 0.05)
 	_selection.visible = command_view and selected.can_receive_orders()
 	_cursor_marker.position = _ground(cursor, 0.10)
@@ -634,13 +632,11 @@ func _sync_view() -> void:
 		status = "In combat · direct control"
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else ("HERO VIEW  /  COMBAT" if battle.lead_engaged else "HERO VIEW  /  MARCHING")
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
-	if battle.lead_platoon_enabled and selected.uses_formations():
-		_formation_label.text += "  ·  %s formation" % selected.spacing_name()
 	_sync_roster()
 	if command_view:
 		if _sector:
 			_mode_label.text = "%s  /  LIVE" % ("FIELD OVERVIEW" if _sector.overview else "TACTICAL SECTOR")
-		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold\nL1 / I: tighter formation   ·   R2 / O: wider formation"
+		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold"
 		if _sector:
 			_controls_label.text += "\nR3 / M: overview / sector   ·   L3 / Home: center on hero"
 			if not _sector.overview:
@@ -657,7 +653,7 @@ func _sync_view() -> void:
 
 
 func _march_route_controls() -> String:
-	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon\nL1 / I: tighter formation   ·   R2 / O: wider formation"
+	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon"
 
 
 ## The platoon roster under the selected platoon: every platoon you can switch to
@@ -714,8 +710,35 @@ func _configure_field() -> void:
 	_place_at_spawns()
 
 
+func _configure_formation_roles() -> void:
+	for index in range(battle.formations.size()):
+		var group := battle.formations[index]
+		var role := formation_roles[index] if index < formation_roles.size() else Battle.FormationRole.UNSPECIFIED
+		var files := regular_melee_slot_files[index] if index < regular_melee_slot_files.size() else Battle.AUTHORED_MELEE_FILES
+		group.configure_role(role, files, regular_melee_spacing, regular_melee_trailing_bias)
+		if role == Battle.FormationRole.REGULAR_MELEE:
+			group.member_footprint_check = _regular_melee_footprint_fits
+
+
+func _regular_melee_footprint_fits(group: Battle.Formation, center: Vector2) -> bool:
+	var near_slot := group.members.front() as Battle.Member
+	var far_slot := group.members.back() as Battle.Member
+	var feet_half_size := (far_slot.offset - near_slot.offset) * 0.5
+	var layout_center := (near_slot.offset + far_slot.offset) * 0.5
+	var half_size := feet_half_size + group.footprint_padding
+	var side := Vector2(-group.heading.y, group.heading.x)
+	var back := -group.heading
+	var hull_center := center + side * layout_center.x + back * layout_center.y
+	for corner in [side * half_size.x + back * half_size.y, side * half_size.x - back * half_size.y]:
+		if not battle.bounds.has_point(hull_center + corner) or not battle.bounds.has_point(hull_center - corner):
+			return false
+	var support := feet_half_size + Vector2(0.08, 0.08) if group.footprint_padding.x < 0.3 else Vector2.ZERO
+	return not _terrain or _terrain.oriented_formation_fits_at(hull_center, group.heading, half_size, support)
+
+
 func restart_battle() -> void:
 	battle = Battle.new()
+	_configure_formation_roles()
 	battle.bounds = field_bounds
 	battle.lead_platoon_enabled = lead_platoon_enabled
 	routes.reset(battle)
@@ -731,7 +754,6 @@ func restart_battle() -> void:
 	_keys.clear()
 	_axes.clear()
 	_l2_down = false
-	_r2_down = false
 	_hero_yaw = 0.0
 	_hero_pitch = deg_to_rad(23.0)
 	_command_yaw = 0.0
@@ -754,6 +776,8 @@ func _place_at_spawns() -> void:
 		if marker:
 			var formation := battle.formations[index]
 			formation.position = _marker_position(marker)
+			if formation.role == Battle.FormationRole.REGULAR_MELEE and index < regular_melee_staging_offsets.size():
+				formation.position += regular_melee_staging_offsets[index]
 			formation.heading = _marker_heading(marker)
 			formation.hold()
 
@@ -806,15 +830,14 @@ func _build_placeholders() -> void:
 		var uniform := _material(color)
 		var trim := _material(color.lightened(0.47))
 		var members: Array[Node3D] = []
-		for x in range(4):
-			for z in range(3):
-				var member := Node3D.new()
-				member.position = Vector3((x - 1.5) * 0.85, 0.0, (z - 1.0) * 0.78)
-				group.add_child(member)
-				members.append(member)
-				if not _add_formation_member_visual(member, index):
-					_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
-					_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+		for slot in battle.formations[index].members:
+			var member := Node3D.new()
+			member.position = Vector3(slot.offset.x, 0.0, slot.offset.y)
+			group.add_child(member)
+			members.append(member)
+			if not _add_formation_member_visual(member, index):
+				_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
+				_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
 		_formation_members.append(members)
 		var banner := Label3D.new()
 		banner.text = battle.formations[index].title
@@ -947,45 +970,10 @@ func _sync_lead_platoon() -> void:
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
 	_lead_model.rotation.y = yaw
-	_apply_spread(_lead_members, battle.lead.spread)
 	if _terrain:
 		for member in _lead_members:
 			var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, yaw)
 			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin.y
-
-
-## Gathers soldiers in or fans them out from their Normal places as a platoon changes
-## formation. Returns true if any soldier moved.
-static func _apply_spread(members: Array, spread: float) -> bool:
-	var moved := false
-	for member: Node3D in members:
-		if not member.has_meta(&"formation_base"):
-			member.set_meta(&"formation_base", Vector2(member.position.x, member.position.z))
-		var base: Vector2 = member.get_meta(&"formation_base")
-		var target := base * spread
-		if not is_equal_approx(member.position.x, target.x) or not is_equal_approx(member.position.z, target.y):
-			member.position.x = target.x
-			member.position.z = target.y
-			moved = true
-	return moved
-
-
-## L1 / I: one formation tighter. R2 / O: one formation wider. Works while marching
-## and in command view, for the selected platoon.
-func step_formation(direction: int) -> bool:
-	if not battle.lead_platoon_enabled or not (march_mode() or command_view):
-		return false
-	var selected := battle.formation_at(selected_index)
-	if selected == null:
-		return false
-	if not battle.step_spacing(selected_index, direction):
-		if not selected.uses_formations():
-			_march_note = "%s keep a single formation" % selected.title
-		_sync_view()
-		return false
-	_march_note = "%s: %s formation" % [selected.title, selected.spacing_name()]
-	_sync_view()
-	return true
 
 
 ## Scenes may fill the existing feet anchor without changing simulation or formations.

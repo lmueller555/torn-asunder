@@ -7,6 +7,7 @@ const Battle := preload("res://game/mission/mission_battle.gd")
 var battle: Battle
 var _swing := 0
 var _goal_index := -1
+var _hearing_screen_target := ""
 
 
 func _init(target: Battle) -> void:
@@ -50,6 +51,8 @@ func drive() -> void:
 	elif goal != Vector2.INF and goal.distance_to(hero.position) > 2.0:
 		input.move = _steer(hero.position, goal)
 	battle.set_hero_input(input)
+	if battle.mission.id == "sova_public_record":
+		_screen_public_hearing()
 
 
 ## Orders carts forward and squads along, the way a player would from the command view.
@@ -68,6 +71,40 @@ func _command() -> void:
 				var squad := battle.squad(who)
 				if squad and squad.order.get("kind") != "move":
 					battle.command(squad.index, {"kind": "move", "to": item.zone})
+
+
+## The archive hearing is a defended reading. Put the three regular screen
+## squads on the live spoiler group nearest the scribes and have Sova assist
+## the screen before returning to the lectern. Only ordinary player orders
+## and hero movement; neutral departing Keepers are never eligible targets.
+func _screen_public_hearing() -> void:
+	var scribes := battle.squad("scribes")
+	if not scribes or scribes.alive_count(battle) == 0:
+		return
+	var witnesses := scribes.centroid(battle)
+	var target := ""
+	var contact := Vector2.INF
+	var nearest := INF
+	for id in ["spoilers_shelf", "spoilers_east", "spoilers_exit", "spoilers_last"]:
+		var opposing := battle.squad(id)
+		if not opposing or opposing.team != Battle.ENEMY_TEAM or not opposing.spawned \
+				or opposing.departed or opposing.alive_count(battle) == 0:
+			continue
+		var at := opposing.centroid(battle)
+		var distance := witnesses.distance_to(at)
+		if distance < nearest:
+			nearest = distance
+			contact = at
+			target = id
+	if target != _hearing_screen_target:
+		_hearing_screen_target = target
+		for id in ["wardens", "valley", "callers"]:
+			var defender := battle.squad(id)
+			if defender and defender.commandable and defender.alive_count(battle) > 0:
+				var order := {"kind": "hold"} if target.is_empty() else {"kind": "attack", "target": target}
+				battle.command(defender.index, order)
+	if contact.is_finite() and contact.distance_to(battle.hero.position) > 6.0:
+		battle.set_hero_input({"move": _steer(battle.hero.position, contact)})
 
 
 func _steer(from: Vector2, to: Vector2) -> Vector2:

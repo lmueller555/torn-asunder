@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://game/battlefield/sova_mine_evacuation.gd" id="2_mission"]
 
 [node name="SovaMineEvacuation" instance=ExtResource("1_mine")]
+formation_roles = Array[int]([1, 1])
 script = ExtResource("2_mission")
 hero_spawn = NodePath("Markers/Spawns/DruidGuard")
 formation_spawns = Array[NodePath]([NodePath("Markers/Routes/MineYard"), NodePath("Markers/Routes/EvacuationTrail")])
