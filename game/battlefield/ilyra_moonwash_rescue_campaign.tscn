@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/moonwash_harbor_campaign.tscn" id="2_harbor"]
+[ext_resource type="Script" path="res://game/battlefield/ilyra_moonwash_rescue_campaign.gd" id="3_rescue"]
+
+[node name="IlyraMoonwashRescueCampaign" instance=ExtResource("1_harness")]
+script = ExtResource("3_rescue")
+battlefield_scene = ExtResource("2_harbor")
+field_bounds = Rect2(-144, -118, 288, 242)
+enable_sector_camera = true
+local_sector_size = 105.0
+hero_spawn = NodePath("Markers/Spawns/ElfHero")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/ShipArchers"), NodePath("Markers/Spawns/ShoreMarines")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 425.0
+
+[node name="ObjectiveHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="ObjectiveHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -226.0
+offset_right = 710.0
+offset_bottom = -20.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.83, 0.57, 1)
+theme_override_font_sizes/font_size = 21
+text = "ILYRA  /  HULLS ON STONE  /  PROTOTYPE"
+
+[node name="Progress" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Pressure" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(1, 0.74, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Hint" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.83, 0.89, 0.93, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
+size_flags_horizontal = 0
+text = "Restart  ·  Options / Backspace"
