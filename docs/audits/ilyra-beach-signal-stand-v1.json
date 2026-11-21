@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "scope": "Static V1 stone-footed signal mast, iron hardware, rope and fixed pennant only at Ilyra’s existing Beach Relay in Two Shorelines. No approval of Headland Relay, lighting, sea, terrain, cutters, figures, or live signal effects.",
+  "author": "Torn Asunder coastal environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independently examined matched native 1280 × 720 actual hero before transmission, while transmitting and while contested, ordinary 105 m sector before/active, and held-stop/acknowledgment evidence. The original #223 label layout, HUD, relay marker and adjacent geometry remain.",
+    "close_up": "Native landward and seaward hero shoulder views show the blue woven pennant attached to its spar, the dark mast seated into its stone foot, and visible iron bands and hoisting hardware. Close views supplement, rather than replace, normal play distance.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, Mesa llvmpipe. From Ilyra’s campaign map travel to Moonwash Survey Shore and confirm Two Shorelines. Record the ancestral stone and fishing inlet, hold the Shore Detachment at the beach guard ring, wait for cutter to stop clear of the headland, and transmit as Ilyra. Compare the original and replacement before and during transmission, then suppress the guard in a fresh attempt for the contested view. Hold Shift/L2 for the 105 m tactical sector. tests/ilyra_beach_signal_stand.gd verifies live registered scene, exact placement, intact collision, target and ray.",
+    "measurements": "Exact one-surface 924-triangle opaque procedural mesh, 2,310 vertices and 2,772 indices; no artist textures or texture uniforms. Added 900 submitted primitives in both views, two fewer hero draw calls and three fewer command calls. Scene-relative budget: at most 1,000 added primitives in each camera and no draw-call increase. Pooled interleaved software medians hero 85.446→84.048 ms, sector 95.318→96.602 ms; sector blocks varied (+14.009%, −2.476%). No console or GPU performance claim."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "A seated mast, layered stone socket, iron collars, modest scarf and hoist components, credible spar join and shallow pennant folds replace two nondescript boxes within the exact original solid envelopes."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Warm shaped wood grain, cool stone, darker iron and muted blue woven pennant separate under the live coastline lighting. Slight stylization is intentional; the static finish does not introduce a competing glow."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The full-HUD hero states keep yardage and readable objective cue. At sector distance the authoritative cue is still the original marker/HUD, not the miniature pennant: only 147 pixels change, limited to the stand and its shadow."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "A stationary timber assembly with a fixed cloth shape. Live signal marker, movement, cutter acknowledgment, and sail animation are not included in the review."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "No new collision or interactions. Real reading locks, landform occlusion, outside and inside range, unguarded contest, Hold, interrupted transmission, acknowledgment and retry remain. Whole-scene visible submission counters meet the scoped limits; software timing is supplementary."
+    }
+  },
+  "files": {
+    "assets/models/environment/ilyra_beach_signal/beach_signal_stand.gd": "24a1aa5a7d93d57a0b5ace32ac524eec3392103d942f781c974c476978c87a07",
+    "assets/models/environment/ilyra_beach_signal/beach_signal_stand.gd.uid": "2e27ce6a31ff145196c09df925f4164acf8a12a1a079660943d0485b28fc263c",
+    "assets/models/environment/ilyra_beach_signal/beach_signal_stand.gdshader": "fa623eed9aad58b135610f9cf2a0ce0f736306104dadaa4b7abc2831abdbba8f",
+    "assets/models/environment/ilyra_beach_signal/beach_signal_stand.gdshader.uid": "21b2273a9588e54999d761004d9f4f56ce74fbfe37372d603408279112b7082f",
+    "assets/models/environment/ilyra_beach_signal/beach_signal_stand.tscn": "1ff05fee138a9695b2ad9612faae710f28e79d3cbe10e9d553fd328d3fee917b",
+    "game/battlefield/props/ilyra_beach_signal_stand_binding.gd": "e5d18bbc581f7cea7eccdeb22b3297ef052fc75509272785f9535d94cbb55e8c",
+    "game/battlefield/props/ilyra_beach_signal_stand_binding.gd.uid": "eb26067c184bf89f91030b517676df4f0236c83a17c9eb2a6ae4575613f3ce82"
+  },
+  "integration_scope": {
+    "reviewed_deployment_path": "game/battlefield/ilyra_coast_survey_campaign.tscn",
+    "reviewed_battlefield_path": "game/battlefields/moonwash_survey_shore.tscn",
+    "reviewed_binding_sha256_at_delivery": {
+      "game/battlefield/ilyra_coast_survey_campaign.tscn": "06d92612a2c5dab3c0278756e6a5f7605a9b78fef65100953d4bff92016bdca9",
+      "game/battlefields/moonwash_survey_shore.tscn": "5053f25e9fe2ee8f66be7d5e9c4d259940b1679f9d5fffbada9b60321bfc8d51"
+    },
+    "context": "The reviewed adapter is mounted only in the registered Ilyra deployment; it checks the exact shared terrain and switches off only the original visual meshes after creating the new art. Both solid bodies stay present."
+  },
+  "offline_evidence_sha256": {
+    "stock-hero-before.png": "7d0a19fd47d72007e6252c6a2d67c7c90ca7dbac105cf29a0b4bf77bcb546156",
+    "kit-hero-before.png": "fa3bff9f811cd69f58cf6810ad6f735465b19919ffbd329e75072f5bf5290db5",
+    "kit-hero-transmitting.png": "9367ebf85dbdc8786b7741b2f3207a70f45f52c4692ff6acacc5e14fcda4907a",
+    "kit-hero-contested.png": "724d7ced1d349a479709bffb62d86cfd16a3cacdbf4049cb3ac50951db12adb5",
+    "stock-command-transmitting.png": "f004eac70855de650d381e957153e2e2fe19251c607468a55e12c7ef3c4c16c0",
+    "kit-command-transmitting.png": "3f2a286437337c29859c4103809906cd47f4c316c112be76a98bad5e7bbebd68",
+    "kit-close-landward.png": "c9e2403a13b4844e425a883821e6f93be75deffe9a04ad52032ca3578aa45198",
+    "kit-close-seaward.png": "e19c274f1d6efda50488780554bf2a01479c40d00d27ad8a68aa43315816a587",
+    "native.log": "8d1eaf05fd626222d1b24cdda76ffde303df47bbc9110aff23b1bb6b71531a3c",
+    "registered-pixels.txt": "3f462ee67d04253a5345f0b460648e2ebc5691db793fb980c9d9cc47b7d377a2",
+    "cost-summary.txt": "df66634e20429cbb560c2aaae45f8e20a46089128d4c99d2bd77dafaec61b8b7"
+  },
+  "measurements": {
+    "base_triangles": 924,
+    "authored_vertices": 2310,
+    "indices": 2772,
+    "art_textures": 0,
+    "added_primitives_hero_sector": [
+      900,
+      900
+    ],
+    "draw_call_deltas_hero_sector": [
+      -2,
+      -3
+    ],
+    "stock_software_medians_ms_hero_sector": [
+      85.446,
+      95.3175
+    ],
+    "candidate_software_medians_ms_hero_sector": [
+      84.048,
+      96.6015
+    ],
+    "hardware_fps_claim": false
+  }
+}

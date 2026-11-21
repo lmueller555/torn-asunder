@@ -11,10 +11,11 @@ import unittest
 from unittest.mock import patch
 
 from tools.report_deployment_art import (
-    CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
+    BEACH_BATTLEFIELD, BEACH_DEPLOYMENT, BEACH_MISSION, BEACH_RECEIPT, CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
     CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
     WHEEL_MISSION, WHEEL_RECEIPT,
-    _battlefield, _deployments, _verify_custody_case, _verify_kit, _verify_raska_spillway_wheel, build_report, main,
+    _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_kit,
+    _verify_raska_spillway_wheel, build_report, main,
 )
 
 
@@ -30,7 +31,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
-            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION},
+            {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION},
         )
         for mission in ["mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels"]:
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
@@ -83,6 +84,30 @@ class DeploymentArtReportTest(unittest.TestCase):
         for mission in ("ilyra_spanwater_evacuation", "neris_spanwater_feeder"):
             self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
             self.assertEqual(rows[mission]["verified_kit_receipts"], [])
+
+    def test_beach_approval_is_only_for_active_ilyra_stand_binding(self):
+        report = build_report(ROOT)
+        matching = [(row, receipt) for row in report["deployments"] for receipt in row["verified_kit_receipts"]
+                    if receipt["receipt"] == BEACH_RECEIPT]
+        self.assertEqual(len(matching), 1)
+        row, receipt = matching[0]
+        self.assertEqual(row["mission_id"], BEACH_MISSION)
+        self.assertEqual(row["battlefield_scene"], BEACH_BATTLEFIELD)
+        self.assertEqual(row["art_status"], DEVELOPMENT)
+        self.assertEqual(receipt["placement_scope"], "mission_deployment")
+        self.assertEqual(receipt["placement_scene"], BEACH_DEPLOYMENT)
+        self.assertEqual(receipt["verified_files"], 7)
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / BEACH_DEPLOYMENT
+            target.parent.mkdir(parents=True)
+            target.write_text((ROOT / BEACH_DEPLOYMENT).read_text(encoding="utf-8")
+                              .replace('script = ExtResource("4_stand_binding")', ''), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact adapter is not attached"):
+                _verify_ilyra_beach_stand(root, {BEACH_MISSION: BEACH_DEPLOYMENT}, {BEACH_MISSION: BEACH_BATTLEFIELD})
+            with self.assertRaisesRegex(ValueError, "reviewed placement is not registered"):
+                _verify_ilyra_beach_stand(root, {BEACH_MISSION: BEACH_DEPLOYMENT}, {})
 
     def test_wheel_requires_its_reviewed_deployment_binding(self):
         with tempfile.TemporaryDirectory() as temp:

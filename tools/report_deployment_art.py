@@ -55,6 +55,12 @@ WHEEL_BATTLEFIELD = "game/battlefields/spanwater_lock_campaign.tscn"
 WHEEL_BINDING = "game/battlefield/props/raska_spillway_wheel_binding.gd"
 WHEEL_ASSET = "assets/models/environment/raska_spillway_wheel/spillway_wheel.tscn"
 WHEEL_RECEIPT = "docs/audits/raska-spanwater-wheel-v11.json"
+BEACH_MISSION = "ilyra_coast_survey"
+BEACH_DEPLOYMENT = "game/battlefield/ilyra_coast_survey_campaign.tscn"
+BEACH_BATTLEFIELD = "game/battlefields/moonwash_survey_shore.tscn"
+BEACH_BINDING = "game/battlefield/props/ilyra_beach_signal_stand_binding.gd"
+BEACH_ASSET = "assets/models/environment/ilyra_beach_signal/beach_signal_stand.tscn"
+BEACH_RECEIPT = "docs/audits/ilyra-beach-signal-stand-v1.json"
 DEVELOPMENT = "still uses development art"
 ID = r"[a-z][a-z0-9_]*"
 PACKED_RESOURCE = re.compile(
@@ -201,17 +207,29 @@ def _verify_raska_spillway_wheel(root: Path, deployments: dict[str, str], battle
     # of one deployment. The other Spanwater missions inherit the stock wheel.
     if deployments.get(WHEEL_MISSION) != WHEEL_DEPLOYMENT or battlefields.get(WHEEL_MISSION) != WHEEL_BATTLEFIELD:
         raise ValueError("Raska spillway wheel: reviewed placement is not registered")
-    scene = (root / WHEEL_DEPLOYMENT).read_text(encoding="utf-8")
-    ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(WHEEL_BINDING)}" id="([^"]+)"\]$',
+    _verify_adapter(root, WHEEL_DEPLOYMENT, WHEEL_BINDING, "SpillwayWheelVisualBinding", "Raska spillway wheel")
+    return _receipt_record(root, "Raska’s Spanwater spillway wheel and stand (V1.1)", WHEEL_RECEIPT, 8,
+                           {WHEEL_ASSET, WHEEL_BINDING}, "mission_deployment", WHEEL_DEPLOYMENT)
+
+
+def _verify_ilyra_beach_stand(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    if deployments.get(BEACH_MISSION) != BEACH_DEPLOYMENT or battlefields.get(BEACH_MISSION) != BEACH_BATTLEFIELD:
+        raise ValueError("Ilyra Beach Signal Stand: reviewed placement is not registered")
+    _verify_adapter(root, BEACH_DEPLOYMENT, BEACH_BINDING, "BeachSignalStandBinding", "Ilyra Beach Signal Stand")
+    return _receipt_record(root, "Ilyra’s fixed Beach Relay signal stand (V1)", BEACH_RECEIPT, 7,
+                           {BEACH_ASSET, BEACH_BINDING}, "mission_deployment", BEACH_DEPLOYMENT)
+
+
+def _verify_adapter(root: Path, deployment: str, script: str, node: str, context: str) -> None:
+    scene = (root / deployment).read_text(encoding="utf-8")
+    ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(script)}" id="([^"]+)"\]$',
                      scene, re.M)
     mounted = re.findall(
-        r'^\[node name="SpillwayWheelVisualBinding" type="Node" parent="\."\]\nscript = ExtResource\("([^"]+)"\)$',
+        rf'^\[node name="{re.escape(node)}" type="Node" parent="\."\]\nscript = ExtResource\("([^"]+)"\)$',
         scene, re.M,
     )
     if len(ext) != 1 or ext != mounted:
-        raise ValueError("Raska spillway wheel: exact adapter is not attached to its deployment")
-    return _receipt_record(root, "Raska’s Spanwater spillway wheel and stand (V1.1)", WHEEL_RECEIPT, 8,
-                           {WHEEL_ASSET, WHEEL_BINDING}, "mission_deployment", WHEEL_DEPLOYMENT)
+        raise ValueError(f"{context}: exact adapter is not attached to its deployment")
 
 
 def _receipt_record(root: Path, name: str, receipt: str, file_count: int, required: set[str],
@@ -240,6 +258,7 @@ def build_report(root: Path) -> dict:
         verified.setdefault(kit.battlefield, []).append(_verify_kit(root, kit))
     custody_case = _verify_custody_case(root, deployments)
     spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
+    beach_stand = _verify_ilyra_beach_stand(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -251,7 +270,8 @@ def build_report(root: Path) -> dict:
                 "art_status": DEVELOPMENT,
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
                 + ([custody_case] if mission == CASE_MISSION else [])
-                + ([spillway_wheel] if mission == WHEEL_MISSION else []),
+                + ([spillway_wheel] if mission == WHEEL_MISSION else [])
+                + ([beach_stand] if mission == BEACH_MISSION else []),
             }
             for mission, scene in deployments.items()
         ],
