@@ -37,7 +37,7 @@ theme_override_constants/margin_bottom = 10
 mouse_filter = 2
 
 [node name="Title" type="Label" parent="HearingHUD/Panel/Margin/Readout"]
-text = "LET THEM WALK OUT  /  YEAR TWO HEARING PLAYTEST"
+text = "LET THEM WALK OUT  /  YEAR THREE HEARING PLAYTEST"
 theme_override_colors/font_color = Color(0.65, 0.90, 0.80, 1)
 theme_override_font_sizes/font_size = 20
 

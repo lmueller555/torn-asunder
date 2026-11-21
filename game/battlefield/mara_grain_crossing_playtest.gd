@@ -107,6 +107,8 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Grain uses R1/G and T for cart orders. Give the hero marker separate
+	# append/clear shortcuts; D-pad Up already clears via the harness.
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_BACKSPACE:
@@ -120,6 +122,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 			KEY_T:
 				_request_withdrawal()
+				return
+			KEY_V:
+				if objective.outcome == Grain.Outcome.ACTIVE:
+					add_march_waypoint()
+				return
+			KEY_B:
+				if objective.outcome == Grain.Outcome.ACTIVE:
+					clear_march_route()
 				return
 	elif event is InputEventJoypadButton and event.pressed and _uses_joypad(event.device):
 		match event.button_index:
@@ -135,8 +145,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			JOY_BUTTON_Y:
 				_request_withdrawal()
 				return
+			JOY_BUTTON_DPAD_DOWN:
+				if objective.outcome == Grain.Outcome.ACTIVE:
+					add_march_waypoint()
+				return
 	if objective.outcome == Grain.Outcome.ACTIVE:
 		super._unhandled_input(event)
+
+
+func _march_route_controls() -> String:
+	return "D-pad Down / V: add waypoint\nD-pad Up / B: clear route   ·   D-pad Left/Right / Z X: change platoon"
 
 
 func _build_placeholders() -> void:
