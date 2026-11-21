@@ -19,8 +19,12 @@ const APPROACH_AHEAD := 4.0
 const APPROACH_HALF_WIDTH := 9.0
 const WARM_LIGHT := Color("#ffd382")
 const EXIT_LIGHT := Color("#8de5d1")
+const SUNDERING_COST: int = Attack.PROFILES[Attack.Attack.SUNDERING_STRIKE]["bp_cost"]
+const SPECIAL_PRESS := 0.52
+const SPECIAL_RELEASE := 0.32
 
 @export var opposition_enabled := true
+@export var sundering_strike_enabled := false
 @export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
 @export var interception_approach: NodePath
 @export var interception_route: Array[NodePath] = []
@@ -39,6 +43,7 @@ var _hero_incapacitated := false
 var _bridle_lost := false
 var _guard_key := false
 var _guard_pad := false
+var _special_pad_down := false
 var _enemy_visual: Node3D
 var _enemy_weapon: MeshInstance3D
 var _enemy_warning: MeshInstance3D
@@ -53,12 +58,15 @@ var _hero_guard: MeshInstance3D
 @onready var _combat_hp: Label = $CombatHUD/Panel/Margin/Readout/Health
 @onready var _infantry_hp: Label = $CombatHUD/Panel/Margin/Readout/Infantry
 @onready var _archer_status: Label = $CombatHUD/Panel/Margin/Readout/Archers
+@onready var _special_status: Label = $CombatHUD/Panel/Margin/Readout/Sundering
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
 
 func _ready() -> void:
 	super._ready()
+	if sundering_strike_enabled and _input_device >= 0:
+		_special_pad_down = Input.get_joy_axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
 	_pickup = battlefield_marker(^"Markers/Objectives/GodbridlePickup")
 	_exit = battlefield_marker(^"Markers/Objectives/GodbridleExit")
 	_pass_release = battlefield_marker(interception_approach)
@@ -99,6 +107,8 @@ func _physics_process(delta: float) -> void:
 	objective.advance(observation)
 	_refresh_objective_view(feet)
 	if _finished():
+		if encounter:
+			_refresh_sundering_readout()
 		mission_finished.emit(objective.phase == Escort.Phase.SUCCEEDED)
 
 
@@ -122,6 +132,13 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if sundering_strike_enabled and event is InputEventJoypadMotion \
+		and event.axis == JOY_AXIS_TRIGGER_RIGHT and _uses_joypad(event.device):
+		var was_down := _special_pad_down
+		_special_pad_down = event.axis_value > SPECIAL_RELEASE if was_down else event.axis_value >= SPECIAL_PRESS
+		if _special_pad_down and not was_down:
+			_try_sundering_strike()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE:
 			restart_mission()
@@ -175,6 +192,9 @@ func _handle_combat_input(event: InputEvent) -> bool:
 			return true
 		if not event.pressed:
 			return false
+		if key == KEY_V and sundering_strike_enabled:
+			_try_sundering_strike()
+			return true
 	elif event is InputEventJoypadButton and _uses_joypad(event.device):
 		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
 			_guard_pad = event.pressed
@@ -207,16 +227,27 @@ func _handle_combat_input(event: InputEvent) -> bool:
 	return true
 
 
+func _try_sundering_strike() -> void:
+	if not encounter or command_view or _finished() or _hero_incapacitated:
+		return
+	encounter.defense.set_guard(_guard_key or _guard_pad, true)
+	# HeroDefense admits the action; HeroAttackSequence alone charges the pool.
+	if encounter.defense.start_attack(Attack.Attack.SUNDERING_STRIKE, true):
+		_refresh_combat_view()
+
+
 func _notification(what: int) -> void:
 	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_EXIT_TREE]:
 		_guard_key = false
 		_guard_pad = false
+		_special_pad_down = false
 		_interact_requested = false
 
 
 func _on_joy_connection_changed(device: int, connected: bool) -> void:
 	if device == _input_device and not connected:
 		_guard_pad = false
+		_special_pad_down = false
 	super._on_joy_connection_changed(device, connected)
 
 
@@ -384,7 +415,12 @@ func _refresh_combat_view() -> void:
 	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
 	var attack_phase := encounter.defense.attack_phase
-	_hero_weapon.rotation.x = -0.9 if attack_phase == Attack.Phase.WINDUP else (0.9 if attack_phase == Attack.Phase.RECOVERY else 0.15)
+	var special := encounter.defense.attack_kind == Attack.Attack.SUNDERING_STRIKE
+	match attack_phase:
+		Attack.Phase.WINDUP: _hero_weapon.rotation.x = -1.40 if special else -0.90
+		Attack.Phase.RECOVERY: _hero_weapon.rotation.x = 1.26 if special else 0.90
+		_: _hero_weapon.rotation.x = 0.15
+	_refresh_sundering_readout()
 	_combat_hp.text = "Mara %d / %d HP    ·    Team %d / %d BP" % [
 		ceili(encounter.hero.hp), roundi(encounter.hero.max_hp), encounter.points.balance, encounter.points.capacity,
 	]
@@ -411,7 +447,10 @@ func _refresh_combat_view() -> void:
 	elif encounter.enemy_phase == Encounter.EnemyPhase.AT_RESERVE:
 		_combat_tell.text = "No enemy on the escort road"
 	elif attack_phase == Attack.Phase.WINDUP:
-		_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
+		if special:
+			_combat_tell.text = "Mara winding up Sundering Strike"
+		else:
+			_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
 	elif target_selected:
 		_combat_tell.text = "Triangle / K: order %s to attack" % selected.title
 	elif archers.order == Battle.Order.ATTACK and encounter.archer_attack.volley.phase == Archer.Phase.IDLE:
@@ -421,6 +460,29 @@ func _refresh_combat_view() -> void:
 	else:
 		_combat_tell.text = "Road guard %d / %d HP" % [ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
 
+
+
+func _refresh_sundering_readout() -> void:
+	_special_status.visible = sundering_strike_enabled
+	if not sundering_strike_enabled:
+		return
+	var defense := encounter.defense
+	var status: String
+	if _finished() or _hero_incapacitated or not encounter.hero.is_alive():
+		status = "Unavailable"
+	elif defense.attack_kind == Attack.Attack.SUNDERING_STRIKE and defense.attack_phase == Attack.Phase.WINDUP:
+		status = "Windup %d%%" % floori(defense.attack_progress() * 100.0)
+	elif defense.attack_kind == Attack.Attack.SUNDERING_STRIKE and defense.attack_phase == Attack.Phase.RECOVERY:
+		status = "Recovering"
+	elif command_view:
+		status = "Hero view only"
+	elif defense.phase != Defense.Phase.FREE or defense.attack_phase != Attack.Phase.IDLE:
+		status = "Busy"
+	elif not encounter.points.can_afford(SUNDERING_COST):
+		status = "Not enough BP"
+	else:
+		status = "Ready"
+	_special_status.text = "Sundering Strike · R2 / V · %d BP · %s" % [SUNDERING_COST, status]
 
 
 func _refresh_archer_readout() -> void:
