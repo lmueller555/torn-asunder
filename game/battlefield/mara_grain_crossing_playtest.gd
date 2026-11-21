@@ -1,5 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
 
+const CharacterArt := preload("res://game/battlefield/mara_campaign_character_art.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const CART_SPEED := 7.5
@@ -71,6 +72,7 @@ func _ready() -> void:
 	_restart_button.pressed.connect(restart_mission)
 	_reset_escort()
 	_refresh_objective()
+	CharacterArt.attach(self)
 
 
 func _physics_process(delta: float) -> void:

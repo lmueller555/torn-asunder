@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scope": "Mara Halden, Ser Aldric Thorne and the royal Longbow Lieutenant exact character presentation in the three registered Human deployments: Greyhollow, Grain on Credit and High Quay. No gameplay, enemy, terrain, standard unit, UI or other campaign asset approval.",
+  "author": "Torn Asunder campaign character art authors",
+  "reviewer": "Independent Godot campaign character art and integration review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Matched native 1280x720 Greyhollow, Grain and High Quay hero march and local command frames; native Greyhollow march, rear, flank, front and action-camera views. Both tier variants independently inspected at closest expected player distances and in the formations.",
+    "close_up": "Native flank, rear and shield angle review rechecked the exact Aldric R6 mantle hanger, greaves, shield glove and closed contour. Mara’s crown and asymmetric wool, and the lieutenant’s bow, quiver, collar and tunic, were compared with approved Human Infantry in hero camera and with alternate zoom.",
+    "motion": "Six consecutive authored gameplay input samples from a live Move and nine live Greyhollow guard/windup/strike/recovery frames. Existing strike damage and confirmed-hit BP reproduced. Close-range held/default, march, return to Idle, and all three distance swaps preserve allowed roles.",
+    "reproduction": "Godot 4.7.2 Compatibility: import the project, then run godot --headless --script res://tests/mara_campaign_character_art.gd. In the three registered Human missions use the controller command camera and Lead Move, then release back to hero camera. At Greyhollow approach the existing Dryad contact, guard, light strike, and Retry. Standalone development preview does not mount the trio.",
+    "measurements": "Mara 40,499 / 7,625, Aldric 33,750 / 7,845, Longbow Lieutenant 34,322 / 7,717 triangles close/command (includes common pieces in each pair), each using one common 50-joint rig. Largest six-view stock deltas +108,475 triangles / +24 draws close and +23,091 / +18 draws tactical; actual player distances and 1280x720. No hardware claim.",
+    "latest_main_context": "Rechecked with the normal Godot importer on main 8ac6e57c3fca6fe8cbbd1117bc8bb66876955e72 after its control remapping and pause changes. Only the two focused callsites needed new host-file identities; all reviewed models, sources, and imported materials are identical. A 44-check real composition replay, full Mara campaign flow including retry/Continue, familiar controller handling, pause/freeze/resume, and actual guard-to-strike behavior passed. The six matched frames retained the same camera, path, submitted triangles, and draws. An independent Grain fixture still expects old shortcut hints and fails on both upstream and the art overlay, with no change to its behavior here."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Mara has an open, mature crowned face, an anchored rust wool half-mantle, a waisted guard shield, and a readable steel blade. Aldric has a separate leather hanger seated against his shoulder, his cloth hem stays free, and the calf closures and shield grip seat correctly. The Longbow Lieutenant has a distinct olive silhouette with fitted lamella, tapered hair, an intact tunic hem, and a visible stowed bow and quiver. The independent reviewer rechecked both Aldric tiers from matching near and rear/flank views after each fit revision."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "In existing mission lighting the three silhouettes separate from approved blue Infantry and use independently readable steel, leather, wool, and fittings. Native orbit and both action angles were checked in the Greyhollow deployment; no new light rigs or color changes to the rest of the field."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Hero and officer silhouettes are distinct at player distance and adjacent to the unchanged Infantry benchmark. At tactical and overview distances the unchanged formation markers carry selection and location; individual faces are deliberately not legible. Existing in-world guard and strike cues are retained."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Real Lead Move drove Run and settled to Idle across the three fields, with no pose restart when only the camera changed. The Greyhollow sequence progressed through real guard, strike windup, recovery, and Idle; the existing light strike changed raider HP 260 to about 199.52 and party BP 400 to 412. Aldric and the lieutenant are render-only officer roles; no officer attack or new draw animations are claimed."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact native mounts reuse the hero origin and two existing visible lead anchors; no extra game units, objectives, collision or actor behavior. Missing or incompatible assets keep all stock visuals. Compared deterministic 1280x720 Compatibility renderer totals against the same six stock march and command poses; the three assets added at most 108,475 submitted triangles and 24 draws close, 23,091 triangles and 18 draws tactical. These are renderer deltas on Mesa llvmpipe, not hardware frame-rate qualification."
+    }
+  },
+  "files": {
+    "assets/models/campaign/humans/aldric_thorne.glb": "1db74139fcd703b513b4d8c044d585ddd5a88aa05be372436b1d8fb7f3504332",
+    "assets/models/campaign/humans/aldric_thorne.glb.import": "54f2d1f7a0bf07675f38e5bfc5509d383af67b3ed5b9cb521a66b08a7dd37dc2",
+    "assets/models/campaign/humans/longbow_lieutenant.glb": "e824218c091c9de6c2646588f19f1fe9743f43d7847a5a1def46d38018c580fa",
+    "assets/models/campaign/humans/longbow_lieutenant.glb.import": "1c5c197ce9f9785caf57db44a2170e0320e3c89531a48ff30d4662a80dfaecde",
+    "assets/models/campaign/humans/mara_halden.glb": "fc4a62240dd5c31d1d07963fd7a6537e10bbee4abc0e7a2041b02349aaaf16fb",
+    "assets/models/campaign/humans/mara_halden.glb.import": "b545ee11b63df9572046b8ce7155f8eabb43c9a41d6ed2f7d7e6fbf7bad14de0",
+    "assets/source/campaign/humans/aldric_thorne.blend": "64ee47262f2d56816d4607a3dbf4db2b72263a79e3db1f8ebda7d7df45883bc9",
+    "assets/source/campaign/humans/longbow_lieutenant.blend": "2d29593b916f979d4bb71cca07714fc6cb8da44304c8b8debd998ecebd88c7c4",
+    "assets/source/campaign/humans/mara_halden.blend": "6a994b0d180e83387472fb30d437bafe397c0ad1940aa57f6cb7d12f526282d0",
+    "game/battlefield/mara_campaign_character_art.gd": "647d4d16a65c8ed8c242653a69792f0ee28284b5bf4387b8c2d11fe95f9b3934",
+    "game/battlefield/mara_campaign_character_art.gd.uid": "685a917bb7c590aba125a7f83bc0693a52cab6b6f89e6464732f9f0288435e2a",
+    "game/battlefield/mara_grain_crossing_playtest.gd": "a1e8e91fff6326cf24d1b3bb35d0d22d04a05fa40c49adeb9423ecb4c71aa4d3",
+    "game/battlefield/mara_greyhollow_rescue.gd": "cdf2cc9c6cc3fed2c81f59f373d5f0c368373b16ebceffded52c8f82dce5b9e5",
+    "game/battlefield/mara_moonwash_playtest.gd": "b9a17798c6df07176ca164a871264efdd87e378170218a6efe8a5fd765fdf7c2"
+  }
+}
