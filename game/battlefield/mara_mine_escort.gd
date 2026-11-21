@@ -533,6 +533,9 @@ func _reset_encounter() -> void:
 	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane,
 		_launch_lead_level, infantry, _launch_lead_melee_invested, _enemy_title()) \
 		if opposition_enabled and guard_marker else null
+	if encounter:
+		encounter.aggro_sight = _clear_enemy_aggro_sight
+		encounter.hold_story_lane = _pass_release != null
 	if encounter and _pass_release:
 		var route := PackedVector2Array()
 		for path in interception_route:
@@ -543,6 +546,10 @@ func _reset_encounter() -> void:
 			route.append(_marker_position(waypoint))
 		encounter.stage_interception(route)
 	_refresh_combat_view()
+
+
+func _clear_enemy_aggro_sight(from: Vector2, to: Vector2) -> bool:
+	return from == to or _terrain.clear_ranged_lane(_ground(from, 1.38), _ground(to, 1.30))
 
 
 func _enemy_color() -> Color:
@@ -647,6 +654,13 @@ func _refresh_combat_view() -> void:
 		_combat_tell.text = "Archers need distance. Move them away from the %s." % _enemy_title().to_lower().trim_prefix("road ")
 	elif infantry.order == Battle.Order.ATTACK:
 		_combat_tell.text = "%s attacking the %s" % [infantry.title, _enemy_title().to_lower()]
+	elif encounter.enemy_phase == Encounter.EnemyPhase.ALERT:
+		var spotted := "Mara"
+		if encounter.alert_target == Encounter.Target.INFANTRY:
+			spotted = infantry.title
+		elif encounter.alert_target == Encounter.Target.ARCHERS:
+			spotted = archers.title
+		_combat_tell.text = "%s spotted %s and is holding position" % [_enemy_title(), spotted]
 	else:
 		_combat_tell.text = "%s %d / %d HP" % [_enemy_title(), ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
 

@@ -1,6 +1,7 @@
 extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
+const Beats := preload("res://game/campaign_dialogues.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
 const LeadAllocation := preload("res://game/combat/campaign_stat_allocation.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
@@ -253,14 +254,37 @@ func has_seen_intermission(campaign_id: String, beat: StringName) -> bool:
 
 ## Mark after the player finishes or deliberately skips an intermission.
 func record_intermission_seen(campaign_id: String, beat: StringName) -> Error:
+	return _record_intermission_seen(campaign_id, beat, _config)
+
+
+func _record_intermission_seen(campaign_id: String, beat: StringName, config: ConfigFile) -> Error:
 	if campaign_id.is_empty() or beat == &"":
 		return ERR_INVALID_PARAMETER
-	var saved: Variant = _config.get_value(CAMPAIGN_INTERMISSIONS, campaign_id, PackedStringArray())
+	var saved: Variant = config.get_value(CAMPAIGN_INTERMISSIONS, campaign_id, PackedStringArray())
 	var seen: PackedStringArray = saved.duplicate() if saved is PackedStringArray else PackedStringArray()
 	if seen.has(String(beat)):
+		_config = config
 		return OK
 	seen.append(String(beat))
-	return _set_value(CAMPAIGN_INTERMISSIONS, campaign_id, seen)
+	return _set_values({CAMPAIGN_INTERMISSIONS: {campaign_id: seen}}, config)
+
+
+## Development coast rollout only; never acknowledge an unsaved or stale arrival.
+func record_mara_water_request_seen_at(waypoint_id: String) -> Error:
+	if waypoint_id not in ["moonwash_road", "moonwash_harbor"]:
+		return ERR_INVALID_PARAMETER
+	var latest := ConfigFile.new()
+	var result := latest.load(_path)
+	if result != OK:
+		return result
+	if latest.get_value(CAMPAIGN_WAYPOINTS, MARA, "") != waypoint_id:
+		return ERR_BUSY
+	var clears := _confirmed_missions(latest, MARA)
+	if not clears.has(Grain.MISSION_ID) or World.new(MARA, waypoint_id, clears).current_waypoint_id() != waypoint_id:
+		return ERR_UNAUTHORIZED
+	if latest.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false) == true:
+		return ERR_UNAUTHORIZED
+	return _record_intermission_seen(MARA, Beats.MARA_WATER_REQUEST, latest)
 
 
 ## Restore only position. An invalid/old save falls back to the authored start without a write.
@@ -327,3 +351,38 @@ func _set_values(values: Dictionary, snapshot: ConfigFile = null) -> Error:
 		if FileAccess.file_exists(temporary):
 			DirAccess.remove_absolute(temporary)
 	return result
+
+
+class EdgeCommit:
+	var error: Error
+	var world: World
+
+	func _init(result: Error, candidate: World = null) -> void:
+		error = result
+		world = candidate
+
+
+## Persist an adjacent move without moving the active session. Resolve against the
+## current disk snapshot so a stale store can't overwrite newer progress or travel.
+func commit_world_edge(origin: World, destination: String) -> EdgeCommit:
+	if origin == null or origin.get_script() != World or destination.is_empty():
+		return EdgeCommit.new(ERR_INVALID_PARAMETER)
+	var latest := ConfigFile.new()
+	var read := latest.load(_path)
+	if read != OK:
+		return EdgeCommit.new(read)
+	var id := origin.campaign_id()
+	var stored: Variant = latest.get_value(CAMPAIGN_WAYPOINTS, id, null)
+	if not stored is String or stored != origin.current_waypoint_id():
+		return EdgeCommit.new(ERR_BUSY)
+	var clears := _confirmed_missions(latest, id)
+	var reachable_origin := World.new(id, stored, clears)
+	if reachable_origin.current_waypoint_id() != stored:
+		return EdgeCommit.new(ERR_UNAUTHORIZED)
+	var candidate := origin.fork_for_travel() as World
+	if candidate == null or candidate.travel_to(destination, clears) != World.TravelResult.ARRIVED:
+		return EdgeCommit.new(ERR_UNAUTHORIZED)
+	var written := _set_values({CAMPAIGN_WAYPOINTS: {id: destination}}, latest)
+	if written != OK:
+		return EdgeCommit.new(written)
+	return EdgeCommit.new(OK, candidate)

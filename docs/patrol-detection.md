@@ -10,3 +10,15 @@
 An inactive or defeated patrol should not receive further battle observations. The movement adapter still owns reachability, collision, and what happens when an autonomous pursuit meets solid cover. None of these decisions forces a path, attack, or teleport.
 
 Run `godot --headless --script tests/patrol_detection_policy.gd`.
+
+## Standard enemy aggro
+
+The shared proximity trigger is **50 m**, inclusive, in world units. Generic mission layouts do not multiply it with map scale. Enemies still need an unobstructed view through opaque terrain: water alone does not block sight. An authored group with proximity aggro disabled is still passive unless the scenario issues an order. Skirmish target acquisition uses 50 m while its close engagement and attack distances are unchanged.
+
+Seeing and targeting an opponent does not grant attack reach or permission to leave a scripted position:
+
+- The Greyhollow campaign guard locks on, turns to identify the threat, and holds its post unless the target enters its local chase boundary. The original rescue and civilian triggers are separate. The corresponding practice guard can pursue at the full detection range.
+- High Quay can spot and react to a target at 50 m with clear sight, but the levy follows its authored patrol and only pursues within its 18 m territory. It does not trigger the combat camera without physical contact.
+- The Pass Writ's hostile sentry alarm uses 50 m, clear sight, and the existing warning delay. The separate courier and yard requirements are unchanged.
+
+The 48 m map spotting setting and weapon/ability reach are not aggro. Run `tests/enemy_aggro_radius.gd` and `tests/authored_enemy_aggro.gd` after normal Godot import to test the exact boundary and scenario constraints.

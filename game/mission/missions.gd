@@ -6,6 +6,7 @@ extends RefCounted
 ## alongside these missions. Shared battlefields keep one layout; only starts, orders and
 ## objectives differ by campaign.
 
+const Aggro := preload("res://game/combat/enemy_aggro.gd")
 const Maps := preload("res://game/mission/maps.gd")
 
 ## Battlefields are authored compactly and played at this scale.
@@ -67,13 +68,15 @@ static func find(mission_id: String) -> Dictionary:
 	return {}
 
 
-## Scales every position, route, rectangle and obstacle in a mission. Directions and radii do not scale.
+## Scales map geometry and scripted distances. Combat aggro is a fixed world radius.
 static func _scale(value: Variant, k: float, key: String = "") -> Variant:
 	if key == "facing":
 		return value
 	if key == "radius" and (value is float or value is int):
 		return value * sqrt(k)
-	if (key == "aggro" or key == "wait_for_hero" or key == "pause_if_threatened") and (value is float or value is int):
+	if key == "aggro" and (value is float or value is int):
+		return Aggro.configured(float(value))
+	if (key == "wait_for_hero" or key == "pause_if_threatened") and (value is float or value is int):
 		return value * k
 	if value is Vector2:
 		return value * k

@@ -56,7 +56,8 @@ func _stage_real_escort() -> bool:
 		if not _walk("Routes/" + id):
 			return false
 	var fight := _mission.encounter
-	if not _until(func() -> bool: return foot.position.distance_to(_position("Routes/EastPass")) < 0.2 			and fight.enemy_phase == Fight.EnemyPhase.WATCHING, 6000):
+	if not _until(func() -> bool: return foot.position.distance_to(_position("Routes/EastPass")) < 0.2 			and fight.enemy_phase in [Fight.EnemyPhase.WATCHING, Fight.EnemyPhase.ALERT] \
+		and fight.enemy_position.distance_to(_position("Routes/InterceptRoadMerge")) < 0.1, 6000):
 		return _fail("The queued infantry or existing guard did not reach the actual pass.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_RIGHT_STICK)

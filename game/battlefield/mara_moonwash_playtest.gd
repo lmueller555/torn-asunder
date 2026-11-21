@@ -233,6 +233,8 @@ func _refresh_levy() -> void:
 					break
 		Patrol.Intent.PURSUE:
 			_levy_status.text = "The levy spotted %s. Withdraw uphill or break sight." % levy.decision.contact_id
+		Patrol.Intent.ALERT:
+			_levy_status.text = "The levy spotted %s but is holding its patrol ground." % levy.decision.contact_id
 		Patrol.Intent.INVESTIGATE:
 			_levy_status.text = "The levy is checking the last contact." if known \
 				else "The levy lost sight and is checking the last contact."

@@ -3,7 +3,7 @@ extends RefCounted
 ## ground/cover queries, melee admission, and the authored patrol/guard route.
 
 enum AuthoredOrder { GUARD, PATROL }
-enum Intent { GUARD, PATROL, PURSUE, INVESTIGATE, ENGAGE, INTERCEPT }
+enum Intent { GUARD, PATROL, PURSUE, INVESTIGATE, ENGAGE, INTERCEPT, ALERT }
 
 
 class Sighting:
@@ -64,6 +64,7 @@ class Decision:
 var _sight: float
 var _leash: float
 var _memory: float
+var _acquire_beyond_leash := false
 var _pursued: StringName
 var _last_seen := Vector2.ZERO
 var _remaining := 0.0
@@ -71,7 +72,8 @@ var _has_interception := false
 var _interception_point := Vector2.ZERO
 
 
-func _init(sight_range: float, pursuit_leash: float, memory_seconds: float) -> void:
+func _init(sight_range: float, pursuit_leash: float, memory_seconds: float, acquire_beyond_leash := false) -> void:
+	_acquire_beyond_leash = acquire_beyond_leash
 	_sight = _finite_nonnegative(sight_range)
 	_leash = _finite_nonnegative(pursuit_leash)
 	_memory = _finite_nonnegative(memory_seconds)
@@ -114,11 +116,18 @@ func advance(delta: float, observation: Observation) -> Decision:
 	if not _inside_leash(observation.patrol_position, observation.leash_anchor):
 		_forget()
 		return out
-	var pursuit := _choose_contact(visible, observation)
+	var pursuit := _choose_contact(visible, observation, true)
+	if not pursuit and _acquire_beyond_leash:
+		pursuit = _choose_contact(visible, observation, false)
 	if pursuit:
 		_pursued = pursuit.id
 		_last_seen = pursuit.position
 		_remaining = _memory
+		var in_leash := _inside_leash(pursuit.position, observation.leash_anchor)
+		if not in_leash:
+			out.intent = Intent.ALERT
+			out.contact_id = pursuit.id
+			return out
 		var next := Intent.ENGAGE if pursuit.melee_reachable else Intent.PURSUE
 		out.direct(next, pursuit.position, pursuit.id)
 		return out
@@ -142,11 +151,11 @@ func _visible(observation: Observation) -> Array[Sighting]:
 	return result
 
 
-func _choose_contact(visible: Array[Sighting], observation: Observation) -> Sighting:
+func _choose_contact(visible: Array[Sighting], observation: Observation, in_leash_only: bool) -> Sighting:
 	var nearest: Sighting
 	var best := INF
 	for item in visible:
-		if not _inside_leash(item.position, observation.leash_anchor):
+		if in_leash_only and not _inside_leash(item.position, observation.leash_anchor):
 			continue
 		if item.id == _pursued:
 			return item
