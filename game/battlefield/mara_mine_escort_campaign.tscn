@@ -8,6 +8,9 @@ battlefield_scene = ExtResource("2_valley")
 field_bounds = Rect2(-160, -108, 320, 224)
 enable_sector_camera = true
 local_sector_size = 116.0
+road_guard_spawn = NodePath("Markers/Routes/EastReserve")
+interception_approach = NodePath("Markers/Routes/PassRelease")
+interception_route = Array[NodePath]([NodePath("Markers/Routes/InterceptMouth"), NodePath("Markers/Routes/InterceptRoadMerge")])
 hero_spawn = NodePath("Markers/Spawns/HumanEscort")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HumanInfantry"), NodePath("Markers/Spawns/HumanArchers")])
 

@@ -27,6 +27,11 @@ func _run() -> void:
 
 func _exercise(scene: PackedScene, road: String, tunnel_wall_flank: Vector2) -> void:
 	_mission = scene.instantiate() as Mission
+	if scene == Valley:
+		# This test isolates volley geometry and the active guard from the
+		# campaign release milestone exercised by mara_mine_escort_campaign.gd.
+		_mission.interception_approach = NodePath()
+		_mission.road_guard_spawn = ^"Markers/Spawns/MaraRoadGuard"
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame

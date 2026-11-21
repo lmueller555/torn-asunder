@@ -10,6 +10,7 @@ const DT := 1.0 / 60.0
 
 var _mission: Mission
 var _failures := 0
+var _interceptions := 0
 
 
 func _initialize() -> void:
@@ -22,6 +23,7 @@ func _run() -> void:
 	_mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
+	_mission.objective.interception_requested.connect(func() -> void: _interceptions += 1)
 	_key(KEY_BACKSPACE)
 	var spawn := _mission.battle.hero_position
 	var archer := _mission.battle.formations[1]
@@ -34,10 +36,19 @@ func _run() -> void:
 		and archer.position.is_equal_approx(_xz(_marker("Spawns/HumanArchers")))
 		and _mission.battle.formations[0].position.is_equal_approx(_xz(_marker("Spawns/HumanInfantry"))),
 		"Hero, infantry and archers start at their campaign-map markers.")
-	var guard_spawn := _marker("Spawns/MaraRoadGuard")
-	_check(guard_spawn != null and fight != null and fight.enemy_position.is_equal_approx(_xz(guard_spawn))
-		and fight.enemy_position.distance_to(_xz(_marker("Routes/EastPass"))) > 3.0,
-		"The road guard uses its authored approach spawn instead of falling back to the pass marker.")
+	var guard_spawn := _marker("Routes/EastReserve")
+	var reserve := _xz(guard_spawn)
+	_check(fight != null and fight.enemy_position.is_equal_approx(reserve)
+		and fight.enemy_phase == Encounter.EnemyPhase.AT_RESERVE,
+		"The existing Orc starts in the authored reserve pocket, not in the road.")
+	_mission.battle.hero_position = _xz(_marker("Routes/PassRelease"))
+	_tick(130)
+	_check(_interceptions == 0 and not _mission.objective.interception_triggered and fight.enemy_position == reserve,
+		"Exploring the pass and waiting there before pickup does not release the reserve.")
+	_key(KEY_BACKSPACE)
+	fight = _mission.encounter
+	hero_camera = root.get_camera_3d()
+	archer = _mission.battle.formations[1]
 	_check(_mission.get_node("ObjectiveHUD/Panel/Margin/Readout/Title").text.contains("PROTOTYPE"),
 		"The large-map one-guard encounter is explicitly labeled as a prototype.")
 
@@ -89,10 +100,25 @@ func _run() -> void:
 	for id: String in ["Routes/MineYard", "Routes/RoadWest", "Routes/RoadJunction", "Routes/RoadCut"]:
 		_drive_to(_marker(id))
 
+	_check(_interceptions == 0 and fight.enemy_position == reserve,
+		"Pickup and time on the western road do not trigger the interception.")
 	var pass_marker := _marker("Routes/EastPass")
-	_drive_to(pass_marker, true)
-	_check(fight.enemy_phase == Encounter.EnemyPhase.WINDUP and _mission._enemy_warning.visible,
-		"The active guard engages Mara on the road and exposes the windup warning.")
+	_drive_to(pass_marker)
+	var merge_point := _xz(_marker("Routes/InterceptRoadMerge"))
+	_check(_interceptions == 1 and _mission.objective.interception_triggered
+		and fight.enemy_position != reserve and fight.enemy_position.distance_to(merge_point) < reserve.distance_to(merge_point)
+		and _mission._instructions_label.text.contains("Orc movement ahead"),
+		"The living carrier entering the authored pass approach warns and advances the existing Orc without a pop spawn.")
+	_drive_to(_marker("Routes/RoadCut"))
+	_tick(60)
+	_check(fight.enemy_position.distance_to(merge_point) < 0.02,
+		"The Orc physically reaches the road merge as the carrier retreats west.")
+	_check(_interceptions == 1 and _mission.objective.interception_triggered,
+		"Retreat does not reset the interception.")
+	_drive_to(pass_marker)
+	_drive_to(_marker("Routes/InterceptRoadMerge"), true)
+	_check(_interceptions == 1 and fight.enemy_phase == Encounter.EnemyPhase.WINDUP and _mission._enemy_warning.visible,
+		"Re-entering the approach does not fire again, and the active guard still engages Mara.")
 	var hp := fight.hero.hp
 	_key(KEY_U)
 	_tick(43)
@@ -117,13 +143,27 @@ func _run() -> void:
 	_key(KEY_BACKSPACE)
 	_check(_mission.battle.hero_position.is_equal_approx(spawn) and _mission.encounter != fight
 		and _mission.objective.phase == Escort.Phase.AWAITING_PICKUP
+		and not _mission.objective.interception_triggered and _mission.encounter.enemy_position == reserve
 		and root.get_camera_3d() == hero_camera and _mission._field == field,
-		"Restart resets only the attempt, restoring the large-map spawns, guard and hero view.")
+		"Restart resets the attempt, reserve position and one-shot flag without replacing the field.")
+
+	# Start a new attempt at the mine pickup waypoint, then take the real southern
+	# traverse and never attack. Combat is a pressure beat, not a success gate.
+	_mission.battle.hero_position = _xz(_marker("Objectives/GodbridlePickup"))
+	_button(JOY_BUTTON_A)
+	_tick()
+	for id: String in ["Routes/MineYard", "Routes/RoadWest", "Routes/RoadJunction", "Routes/SouthReserve",
+		"Routes/SouthTraverse", "Routes/SouthFlankCut", "Routes/PassFallback", "Routes/PassRelease",
+		"Objectives/GodbridleExit"]:
+		_drive_to(_marker(id))
+	_check(_interceptions == 2 and _mission.objective.phase == Escort.Phase.SUCCEEDED and _mission.encounter.enemy.is_alive()
+		and _mission.encounter.points.balance == 400,
+		"A fresh attempt can warn once and deliver at the real exit without ever killing the Orc.")
 
 	_mission.queue_free()
 	await process_frame
 	if _failures == 0:
-		print("Campaign Mara escort: live camera projections, real command/hero inputs, ridge movement, guard, pickup, large-route delivery and retry verified.")
+		print("Campaign Mara escort: live camera projections, real command/hero inputs, ridge movement, conditional Orc approach, combat, no-kill delivery and retry verified.")
 	quit(0 if _failures == 0 else 1)
 
 

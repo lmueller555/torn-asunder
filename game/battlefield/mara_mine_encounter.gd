@@ -10,7 +10,7 @@ const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd"
 const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
 const Archer := preload("res://game/combat/human_archer_volley.gd")
 
-enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED }
+enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED, AT_RESERVE, INTERCEPTING }
 enum Target { NONE, HERO, INFANTRY, ARCHERS }
 
 const HERO_TEAM := 0
@@ -25,6 +25,7 @@ const AGGRO_RANGE := 8.0
 const WINDUP_TIME := 0.66
 const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
+const INTERCEPTION_SPEED := 5.4
 
 var points := Points.new()
 var infantry_attack := InfantryAttack.new()
@@ -43,12 +44,27 @@ var windup_target: Target:
 var _windup_target := Target.NONE
 var _enemy_seconds := 0.0
 var _feedback_seconds := 0.0
+var _interception_route := PackedVector2Array()
+var _interception_leg := 0
 
 
 func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable()) -> void:
 	enemy_position = spawn
 	_feet = feet
 	archer_attack = ArcherAttack.new(points, HERO_TEAM, ENEMY_TEAM, clear_ranged)
+
+
+func stage_interception(route: PackedVector2Array) -> void:
+	if not route.is_empty():
+		_interception_route = route.duplicate()
+		enemy_phase = EnemyPhase.AT_RESERVE
+
+
+func begin_interception() -> bool:
+	if enemy_phase != EnemyPhase.AT_RESERVE or not enemy.is_alive():
+		return false
+	enemy_phase = EnemyPhase.INTERCEPTING
+	return true
 
 
 func target_at(point: Vector2) -> bool:
@@ -105,6 +121,10 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 		return
 
 	match enemy_phase:
+		EnemyPhase.AT_RESERVE:
+			pass
+		EnemyPhase.INTERCEPTING:
+			_advance_interception(delta, battle, can_move)
 		EnemyPhase.WATCHING:
 			if _nearest_visible_target(battle, sight, clear_contact) != Target.NONE:
 				enemy_phase = EnemyPhase.PURSUING
@@ -137,6 +157,23 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 			_enemy_seconds -= delta
 			if _enemy_seconds <= 0.0:
 				enemy_phase = EnemyPhase.PURSUING
+
+
+func _advance_interception(delta: float, battle: Battle, can_move: Callable) -> void:
+	var destination := battle.clamp_to_field(_interception_route[_interception_leg])
+	var next := enemy_position.move_toward(destination, INTERCEPTION_SPEED * delta)
+	if next.distance_to(battle.hero_position) < BODY_CLEARANCE \
+		or not can_move.call(enemy_position, next, false):
+		# The guard can fight where he is, but never warp across a blocked approach.
+		enemy_phase = EnemyPhase.PURSUING
+		return
+	if next != enemy_position:
+		enemy_heading = (next - enemy_position).normalized()
+		enemy_position = next
+	if enemy_position == destination:
+		_interception_leg += 1
+		if _interception_leg == _interception_route.size():
+			enemy_phase = EnemyPhase.WATCHING
 
 
 func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: Callable) -> Target:
