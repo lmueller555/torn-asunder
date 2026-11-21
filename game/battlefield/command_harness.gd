@@ -17,6 +17,9 @@ const LEAD_RELEASE_RADIUS := 12.0
 const LEAD_RELEASE_SECONDS := 1.5
 
 @export var battlefield_scene: PackedScene
+## Optional authored terrain. Joined before the terrain adapter indexes
+## walkable shapes, without changing the identity of the shared battlefield.
+@export var battlefield_perimeter: PackedScene
 @export var field_bounds := Battle.FLAT_BOUNDS
 @export var enable_sector_camera := false
 @export_range(16.0, 150.0) var local_sector_size := 58.0
@@ -396,6 +399,13 @@ func _configure_field() -> void:
 	if not battlefield_scene:
 		return
 	_field = battlefield_scene.instantiate()
+	if battlefield_perimeter:
+		var perimeter := battlefield_perimeter.instantiate()
+		if perimeter is Node3D:
+			_field.add_child(perimeter)
+		else:
+			perimeter.free()
+			push_warning("A battlefield perimeter requires a Node3D root.")
 	add_child(_field)
 	$Floor.hide()
 	_terrain = Terrain.new(_field)
