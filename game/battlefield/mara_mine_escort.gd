@@ -37,6 +37,7 @@ const INFANTRY_RUN := &"Run"
 
 var objective := Escort.new()
 var encounter: Encounter
+var _launch_lead_level := 1
 var _pickup: Marker3D
 var _exit: Marker3D
 var _pass_release: Marker3D
@@ -68,6 +69,13 @@ var _infantry_animators: Array[AnimationPlayer] = []
 @onready var _special_status: Label = $CombatHUD/Panel/Margin/Readout/Sundering
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
+
+
+## Sampled from confirmed campaign clears at deployment, never read again
+## during the attempt or on local retry. This sets the BP cap, not Mara's stats.
+func configure_campaign_lead_level(level: int) -> void:
+	if not is_inside_tree():
+		_launch_lead_level = level
 
 
 func _ready() -> void:
@@ -414,7 +422,7 @@ func _reset_encounter() -> void:
 	var guard_marker := battlefield_marker(road_guard_spawn)
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
-	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane) \
+	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane, _launch_lead_level) \
 		if opposition_enabled and guard_marker else null
 	if encounter and _pass_release:
 		var route := PackedVector2Array()
