@@ -13,8 +13,9 @@ func _initialize() -> void:
 	_check_live_catalog()
 	_check_orc_catalog()
 	_check_elf_catalog()
+	_check_druid_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc and Elf branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc, Elf and Druid branches and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -128,7 +129,7 @@ func _check_orc_catalog() -> void:
 			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
 		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
 			"No Orc prototype should become an art entry or a live Human promotion.")
-	for faction in [Roster.DRUIDS, Roster.DRYADS, Roster.UNDEAD]:
+	for faction in [Roster.DRYADS, Roster.UNDEAD]:
 		_check(roster.units_for_faction(faction).is_empty(), "An unrelated faction was inadvertently populated.")
 	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
 		and not roster.has_label(archers, Roster.ANTI_RIDING),
@@ -209,6 +210,48 @@ func _check_elf_catalog() -> void:
 	_check(roster.can_advance(shore, marines, Callable(), trained)
 		and not roster.can_advance(shore, archers, Callable(), trained),
 		"Ship Archers need a rating reader; Shore Marines can qualify through training alone.")
+
+
+func _check_druid_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var tunnel := Catalog.DRUID_TUNNEL_GUARD
+	var outlet := Catalog.DRUID_OUTLET_SCREEN
+	var shelf := Catalog.DRUID_SHELF_GUARD
+	_check(roster.units_for_faction(Roster.DRUIDS) == [tunnel, outlet, shelf],
+		"The Druid starter tree contains only the three named guard formations.")
+	for fixture: Array in [[tunnel, "Tunnel Guard"], [outlet, "Outlet Screen"], [shelf, "Shelf Guard"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty()
+			and not roster.has_label(id, Roster.ELITE_SUPPORT) and not Catalog.TYPES.has(id),
+			"Druid guards don't imply spellcasting, elite standing or a model entry.")
+	# Melee, Formation Drill, Scouting. Neither Riding nor magic should satisfy these gates.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[6, 2, 2], []],
+		[[5, 3, 2], []],
+		[[1, 0, 3], [outlet]],
+		[[6, 3, 2], [shelf]],
+		[[6, 2, 3], [outlet]],
+		[[6, 3, 3], [outlet, shelf]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.NATURE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.FORMATION_DRILL: values[1], Platoon.Skill.SCOUTING: values[2],
+			Platoon.Skill.MOUNTED_TRAINING: 5,
+		})
+		_check(roster.eligible_advances(tunnel, soldier.rating, platoon.rank) == fixture[1],
+			"The Druid lanes require separate exact scouting or line-holding gates: %s." % str(values))
+		_check(not roster.can_advance(outlet, shelf, soldier.rating, platoon.rank)
+			and not roster.can_advance(shelf, outlet, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.ELF_SHORE_DETACHMENT, outlet, soldier.rating, platoon.rank)
+			and not roster.can_advance(tunnel, Catalog.ORC_BRACE_INFANTRY, soldier.rating, platoon.rank),
+			"Both Druid paths must originate at Tunnel Guard and stay within their faction.")
+	var trained := func(_stat: int) -> int: return 3
+	_check(roster.can_advance(tunnel, outlet, Callable(), trained) and not roster.can_advance(tunnel, shelf, Callable(), trained),
+		"The Outlet Screen can qualify without a rating reader; Shelf Guard cannot.")
 
 
 func _check(ok: bool, title: String) -> void:

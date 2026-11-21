@@ -19,7 +19,7 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc and Elf starter trees below add metadata only. The other faction rosters are not authored here.
+`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc, Elf, and Druid starter trees below add metadata only. The Dryad and Undead trees are not authored here.
 
 ### Orc starter tree: Red Basin companies
 
@@ -44,5 +44,17 @@ The [Elven campaign](campaigns/elves.md) already fields a **Shore Detachment** o
 | `elf_ship_archers` | **Ship Archers**, Ranged | Ranged **4** and Formation Drill **1** | Cover open moorings and boat approach lanes from a deck; harbor walls block their shots. They need a shore screen and cannot replace it. |
 
 The Marine branch needs platoon training only, while the Archer branch requires both a combat rating and formation training. Being shipboard does not grant Riding. These rows introduce no ship classes, movement modifiers, assets, combat logic or live equipment changes.
+
+### Druid starter tree: Cairnspine guards
+
+The [Druid campaign](campaigns/druids.md) names the **Tunnel Guard** and **Outlet Screen** at the mine, and the **Shelf Guard** on the vault road. The hearing's North and South Perimeters and the vault's Side Guard are positions to hold, not extra troop classes. These guard units do not cast spells or gain a claim to the Godbridle; the Keepers' decision to send guards beyond the Cairnspine is separate from a training gate.
+
+| Unit key | Form and role | Advance from Tunnel Guard | Tradeoff to test later |
+|---|---|---|---|
+| `druid_tunnel_guard` | **Tunnel Guard**, Melee | Starting unit | Hold the mouth while two groups stage in cover; moving the whole guard forward leaves that shelter unprotected. |
+| `druid_outlet_screen` | **Outlet Screen**, Melee | Scouting **3** | Spot an approaching detachment before releasing workers and cover the outlet while they pass. Chasing the detachment would leave the exit unscreened. |
+| `druid_shelf_guard` | **Shelf Guard**, Melee | Melee **6** and Formation Drill **3** | Hold a narrow shelf or screen the carrier at the forecourt. Pressure after a breach is hard to recover from in the cramped shelf lane; the side path still needs a separate screen. |
+
+These are **provisional roster gates only**. They do not change detection ranges, combat, the fixed campaign rosters, or how consent and custody work. The Outlet Screen's gate is training-only; neither melee investment alone nor rank alone qualifies for Shelf Guard.
 
 Run `godot --headless --script tests/faction_roster.gd`.
