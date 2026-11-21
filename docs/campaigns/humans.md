@@ -1,30 +1,34 @@
 # Human campaign: The King's Water
 
-King Mara Halden promises water as the price of allegiance. He first proves he can keep the Godbridle, then discovers that possession lets him make a promise he cannot control. The campaign begins at the mine in Year One and ends at Moonwash in Year Two, within the [shared war timeline](../war-timeline.md#six-campaign-windows). Mara makes the political decisions; the player commands his royal detachment and controls its field hero.
+King Mara Halden sends a royal detachment to save miners under Dryad attack. They do not know what the workers found until after the rescue. Later, Mara promises water as the price of allegiance and discovers that having the Godbridle lets him make a promise he cannot control. The campaign opens at Greyhollow around the midpoint of the [shared war timeline](../war-timeline.md#six-campaign-windows) and ends after the harbor rises at Moonwash. Mara makes the political decisions; the player commands his detachment and its field hero.
+
+This document describes the story target. Today's playable mine escort does not implement the Greyhollow rescue or its reveal.
 
 ## Mission order
 
-| ID | Mission | Year | Unlock |
-|---|---|---|---|
-| `mara_mine_escort` | The Pass Below the Mine | One | Start Mara's campaign |
-| `mara_grain_crossing` | Grain on Credit | Two | Clear `mara_mine_escort` |
-| `mara_moonwash_quay` | The High Quay | Two | Clear `mara_grain_crossing`, then see Mara's command to Orrun |
+| Mission | Year | Unlock |
+|---|---|---|
+| Get Them Out | Three | Start Mara's campaign |
+| Grain on Credit (`mara_grain_crossing`) | Three | Clear the rescue and show the discovery cutscene |
+| The High Quay (`mara_moonwash_quay`) | Three | Clear Grain on Credit, then see Mara's command to Orrun |
 
-These are stable design IDs under the existing campaign ID `mara`, not scene paths. Defeat restarts the mission from its briefing with no unlock or change to the shared history. Keep each successful clear and its debrief result for that campaign save. Replaying an earlier chapter does not reset or silently rewrite the active campaign's result. The last clear marks Mara's campaign complete; there is no playable Year Four handover here.
+Defeat restarts the mission with no unlock or change to the shared history. Preserve the active campaign's clear and debrief results; replaying an earlier chapter does not silently rewrite them. The last clear completes the campaign. The Year Four handover is not playable as Mara.
 
-## 1. The Pass Below the Mine
+## 1. Get Them Out
 
-**Briefing.** The Basin has lost its river, and an Orc company is already moving toward the road. Mara puts the Godbridle under his seal and orders the escort to bring it through the pass. The player does not yet have the workers' testimony or the dates from Sova's survey.
+**Briefing.** Dryads are attacking the Greyhollow mines. Workers are cut off from the road. Mara orders the detachment to rally at the south tunnel entrance, hold an escape route, and get the miners to safety. Neither Mara's briefing nor the mission's dialogue, objective text, or visible markers identify the Godbridle.
 
-**Victory.** The hero takes possession at `GodbridlePickup`; the living carrier reaches the road boundary at `GodbridleExit` with the bridle. Reaching the exit before pickup or clearing the enemy without the artifact does not complete the mission. **Defeat:** the field hero is defeated before delivery. For the first slice, the hero is the only carrier; do not require a drop, handoff, Orc relic capture, or troop-survival quota.
+**Victory.** Rally at the south `TunnelEntrance`. Screen the miners as they flee south through the tunnel and then west to `MinerEvacuation`. The required miners must reach this safe point. Clearing enemy formations or bringing the hero out alone does not complete the rescue. **Defeat:** the hero falls or the rescue can no longer be completed. The battle does not require finding, inspecting, picking up, or carrying a relic.
 
-**Teach: fix the enemy, keep the escort moving.** Use the [existing shared mine geography](../combat.md#year-one-battle-at-the-mine): shield infantry can hold the road pinch point and archers can cover it from the ridge. Give the player time to issue both orders. As the carrier approaches the pass, an Orc company intercepts; show the approach on the command view early enough to reposition. Return to the hero view for the break through the pass while the formations continue their orders. These are recommended tactics, not extra triggers the player must satisfy.
+**Teach: hold a route long enough for people to use it.** Keep the road pinch point, mine approaches, and ridge from the existing battlefield. Shield infantry can hold the pinch point and archers can cover movement from the ridge. Telegraph the Dryad pressure so the player can move the screen as the miners come through. These are tactics, not extra win conditions. The same movement and Human breakthrough are visible in the [Dryad finale](dryads.md#finale-greyhollow-mines--year-three).
 
-**Result and transition.** The royal seal reaches the Marches on the artifact, not on the workers. Outside the player's view, Sova gets the miners out through the tunnels, and one leaves willingly with Raska. In the debrief, a copy of her account reaches Mara: the spring and the dry river date to the same night. The next briefing jumps to the second bad harvest. Do not close the tunnel outlet, force the crew into Human custody, or show Raska taking the artifact.
+**Victory cutscene: What They Brought Out.** After the last required miners reach safety and the rescue succeeds, a miner tells the detachment what the crew found underground and reveals the Godbridle. This is the first confirmation for the Human campaign; do not put it in the briefing or play it on a lost or abandoned attempt. The cutscene does not make the artifact a reward the player must pick up on the battlefield.
+
+**Transition.** After the reveal, the workers test the bridle by asking for water, Orrun wakes enough to answer, and the camp spring and the Red Basin's dry river follow. Mara takes custody. Sova's evacuation and Raska's agreement with a witness happen after the water test, when the workers need to leave the mine area altogether, not during the initial flight from Dryad attack. The rest of Mara's campaign can introduce their testimony in a report instead of replaying either encounter.
 
 ## 2. Grain on Credit
 
-**Briefing.** Grain bought from an allied crown is on the far bank. Rival levies want to impound it before it reaches Mara's towns; the allied crown is already threatening to recall its grain and troops unless Mara makes good on water. Two loads can get through: seed grain to the mill yard by the bridge, and bread grain to a town store above the lower ford. The battle is over this shipment, not the ownership of the crossings.
+**Briefing.** Mara now has the Godbridle under his seal. The miner’s account and Sova’s survey connect the spring to the Basin’s dry river. Grain bought from an allied crown is on the far bank. Rival levies want to impound it before it reaches Mara's towns; the allied crown is already threatening to recall its grain and troops unless Mara makes good on water. Two loads can get through: seed grain to the mill yard by the bridge, and bread grain to a town store above the lower ford. The battle is over this shipment, not the ownership of the crossings.
 
 **Victory.** Get at least one of the two carts intact to its marked receiving yard. Resolve as soon as both arrive, or when one has arrived and the second is destroyed or ordered to turn back. **Defeat:** the hero is defeated before resolution, or both carts are lost or turned back before either arrives. Reaching a yard ends threats to that load. Display one status per cart and let the player turn back an exposed cart so an already earned victory cannot stall.
 
@@ -44,11 +48,11 @@ These are stable design IDs under the existing campaign ID `mara`, not scene pat
 
 ## Map and implementation handoff
 
-- **Mine:** One battlefield for the Human, Orc, and Druid views. Keep the road, ridge, and tunnel outlet fixed. Only spawn positions, orders, and active objectives differ by campaign. The Human attempt can ship first using only the two named objective markers and hero defeat, even if formation orders and briefings are still being built.
+- **Greyhollow:** One geography, two battles: the rescue shared with the Dryads, and the later departure shared by the Orcs and Druids. Preserve the road, ridge, and tunnel outlet. For the rescue, use the south tunnel and west safe point with visible worker and safety states. Do not reuse the live pickup/exit sequence, relabel an artifact as a miner, or require wins in other campaigns.
 - **Marches crossing:** One compact map with a fork, bridge, ford, and two receivers. The carts can follow authored paths; no campaign economy or supply simulation is required. The crossing layout can serve future Marches encounters with different orders.
 - **Moonwash:** Build the exposed harbor walls, moorings, upper quay and exits as one shared layout for Human withdrawal and Ilyra's rescue. Use distinct starts and objective markers, not distinct harbor geometry. The Human point of view establishes the cost of the command; it doesn't play Ilyra's decision or award the player her rescue.
 
 
-**Current campaign prototype.** All three Human missions are reachable through Mara's overworld. The first arrival on the Road to Moonwash after Grain on Credit presents the Water Request intermission; once read or skipped, it does not replay on revisits. At Moonwash Harbor, open the High Quay briefing before deploying. A successful withdrawal clears the third mission and marks the campaign complete on the map. The harbor playtest uses the shared large graybox and does not yet include levy combat.
+**Current campaign prototype (not the story target).** Mara's overworld still launches `mara_mine_escort` (“The Pass Below the Mine”), an artifact escort using `GodbridlePickup` and `GodbridleExit`. That clear still opens Grain on Credit, Road to Moonwash, and The High Quay in order. Existing mission/save IDs, dialogue, and objectives have not changed. The water request on the road is Mara's later command, not the miners' first test. The harbor runs the shared graybox and does not yet include levy combat.
 
-Acceptance passes: try leaving the mine without the bridle and then with it; play the crossing with no deliveries, each single-load result, and both loads delivered; reverse which platoon leads the retreat at Moonwash. Verify only clears advance, all successful cart results can reach the same ending, and no Human objective can invalidate the Orc, Druid, or Elven account.
+**Acceptance for the new opening.** Play from a fresh Human save. Before rescue success, verify no objective, briefing, in-battle dialogue, or marker confirms the discovery. Try a lost or abandoned attempt and an exit without the miners; none should reveal the artifact or advance the campaign. On a successful rescue, verify the cutscene reveals the find only after the miners are safe and the next chapter unlocks. Check that replays cannot change the shared history.
