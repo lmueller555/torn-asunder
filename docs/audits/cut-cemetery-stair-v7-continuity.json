@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "scope": "Historical cemetery stair V7 continuity in the exact Record Room V3.1 shared host context. No stair redesign or map approval.",
+  "author": "Torn Asunder terrain asset author",
+  "reviewer": "Dot, independent render review",
+  "evidence": {
+    "godot_context": "Historical and combined 1280×720 native hero foot/crest, sector and overview at exact same camera transforms/FOV. Foot, crest and sector have zero changed pixels; 1,284 overview changed pixels are confined to the distant Record Room.",
+    "close_up": "Exact paired foot and crest images plus the full 11.07 s ascent with steps and reverse view inspected using the real mission lens.",
+    "reproduction": "Run game/battlefield/sereth_cut_playtest.tscn with Godot 4.7.2 GL Compatibility. Compare the original #180 scene and exact combined host. Descend from the village toward XZ (-82.72, 66.65), ascend, then press Shift/Home and M; keep both cameras and light unchanged.",
+    "measurements": "Same ascent endpoint (-82.72, -0.000001, 33.64982), yaw zero and centered sector in both; unchanged terrain, physics and stair geometry. Still difference 0/0/0/1,284 pixels in foot/crest/sector/overview respectively.",
+    "continuity": "Reversing only the Record Room render edits (seven shadow-only flags, hidden old roof, replacement PackedScene plus visual/shadow nodes and editable entry) restores the exact full historical shared scene SHA-256. All five original stair payload hashes and actual bindings are identical. Independently reviewed scene and paired native motion; full original receipt pinned below."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Both stair elevations, retaining sides and footing use byte-identical reviewed geometry. Hero foot and crest pixels are identical to the historical host."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Named stair materials, light settings and local tactical lens are unchanged. Verified the only changed overview region is at the remote Record Room, outside the stairs."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The matched actual hero ascent and local tactical context retain evidence for the reviewed stair. Overview marks elsewhere are not covered."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Both combined and historical real input complete the same ascent and turn, show the same camera pose and switch to overview. No new stair mesh/texture work or physics; five current game suites passed."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Static unchanged kit; physical stair and camera traversal separately rechecked."
+    }
+  },
+  "files": {
+    "assets/models/environment/cut_cemetery_stair.glb": "ad1e3b4209a37c786519c272d1a464f0c9ea6378e8d94f8b04125923d7a42442",
+    "assets/models/environment/cut_cemetery_stair.glb.import": "aeea3d0f85826fa3e10d6a04c96840dc041514c5679b332e28a0f80f0ddbb4b8",
+    "assets/models/environment/cut_cemetery_stair_import.gd": "ef33d923e711b374df1117e3d3289274aafb30ab7d4b7af540196d978552449b",
+    "assets/models/environment/cut_cemetery_stair_import.gd.uid": "ebe012341d93c24515966ccea5bb18858ae7e444332c30f771d95e61da460d9e",
+    "assets/source/still_kingdom_cut/cut_cemetery_stair.blend": "620b4b5bf723bd6b6ee50fbaae09ea019bff5d2e2b9fc8679d39832bfbb0d1c7",
+    "game/battlefields/still_kingdom_cut.tscn": "fbdb67cd244f23b96185212910cd6a7e6fd49c61b444a9f64f4c073f8e0c5070"
+  },
+  "continuity": {
+    "previous_receipt": "docs/audits/cut-cemetery-stair-v7.json",
+    "previous_receipt_sha256": "cebadd861eab16ddcbb773f75bf7b5014b967d9db7479ceaf4e4d53ce66868c6",
+    "battlefield": "game/battlefields/still_kingdom_cut.tscn",
+    "previous_battlefield_sha256": "78261ad566959d1d663b7d39560573a0d30d51264de6b4ec097107489b1b19e4"
+  },
+  "offline_evidence_sha256": {
+    "exact-host-inverse.txt": "69a822574f5e025207beffaeb482b33307c4e96b91a02e394e4c04bb8f950f18",
+    "matched-pixel-comparison.txt": "90c385787a6ea5725e2b5c899bb2f40832ef8d90e253893cff8e4e719a0890e3",
+    "historical-ascent.mp4": "0688fe3aba3920b1f60de8711ed585d42597bebc1dffeeb74572c21b683cff51",
+    "combined-ascent.mp4": "17fa84b4ba7092ff437cfef5788f2d310f0cbd35eab40a0e27004a2e8947cd65",
+    "historical-ascent.txt": "0cec987b37192f41688596cc91220b711c1530c926bcd449d47e0b22728895cb",
+    "combined-ascent.txt": "99395b9895ffdae3efeea37f4bb9b612b028667b01ee39b3801bd01d37c22cd8",
+    "fresh-main-gameplay-regression.txt": "88b1408b6b01d9d33dc4bb0c97a3757f1adad6efa654ed2dd566a67eda195121"
+  },
+  "tests": [
+    "Clean Godot 4.7.2 headless editor import",
+    "still_kingdom_cut.gd",
+    "sereth_cut_playtest.gd",
+    "sereth_voices_at_the_cut.gd",
+    "sector_camera.gd",
+    "sereth_campaign_flow.gd",
+    "Original vs combined physical ascent and all four camera matches"
+  ]
+}
