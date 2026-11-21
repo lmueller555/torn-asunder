@@ -5,6 +5,7 @@ const Campaigns := preload("res://game/campaigns.gd")
 const Points := preload("res://game/combat/battle_points.gd")
 const Battle := preload("res://game/combat/infantry_skirmish.gd")
 const Drill := preload("res://game/combat/battle_points_drill.gd")
+const Ice := preload("res://game/combat/targeted_ice_cast.gd")
 
 var _title: Control
 
@@ -19,11 +20,11 @@ func _run() -> void:
 	# Open an unsaved briefing so the test never writes a player profile.
 	_title._active_campaign = Campaigns.ALL[0]
 	_title._show_briefing()
-	var passed := _check_flow()
+	var passed := _check_flow() and await _check_ice_flow()
 	_title.queue_free()
 	await process_frame
 	if passed:
-		print("Verified Combat Drills navigation, team BP earnings, both cast checks, and fresh resets.")
+		print("Verified Combat Drills navigation, shared BP, Holy, Ice windup/lane and measured hit, input focus and resets.")
 	quit(0 if passed else 1)
 
 
@@ -91,6 +92,61 @@ func _check_flow() -> bool:
 		return _fail("Reentering the drill leaked the previous session's balance.")
 	if not _press("Back") or not _press("Back") or not _button("Combat Drills"):
 		return _fail("The standard Back path to the briefing broke.")
+	return true
+
+
+func _check_ice_flow() -> bool:
+	if not _press("Combat Drills") or not _press("Battle Points Drill"):
+		return false
+	var start := Points.STARTING_BALANCE
+	var cap := Points.BASE_CAPACITY
+	if not await _accept_with_input("PracticeSpell") or not "Ice rating too low" in _label("BenedictionStatus"):
+		return _fail("Actual Enter did not open the Ice practice with separate rating eligibility.")
+	var hp := _label("WoundedAllyHP")
+	if not await _accept_with_input("TrainedCaster") or not _press("SimulatedLane"):
+		return false
+	if not _press("CastBenediction") or not "lane is covered" in _label("DrillFeedback"):
+		return _fail("A covered practice lane did not deny cast admission.")
+	if _label("PoolBalance") != "%d / %d BP" % [start, cap] or _label("WoundedAllyHP") != hp:
+		return _fail("A denied Ice request changed health or the shared pool.")
+	if not _press("SimulatedLane") or not await _accept_with_input("CastBenediction"):
+		return false
+	if not "winding up" in _label("BenedictionStatus") or _label("PoolBalance") != "%d / %d BP" % [start - Ice.COST, cap]:
+		return _fail("A valid input did not begin the windup and debit the one shared pool.")
+	if not _press("SimulatedLane"):
+		return false
+	await process_frame
+	await process_frame
+	if not "interrupted" in _label("DrillFeedback") or _label("WoundedAllyHP") != hp:
+		return _fail("Cover during windup did not stop the actual Ice hit.")
+	if _label("PoolBalance") != "%d / %d BP" % [start - Ice.COST, cap]:
+		return _fail("An interrupted committed cast unexpectedly changed the shared points.")
+	if not _press("SimulatedLane") or not _press("CastBenediction"):
+		return false
+	for count in range(48):
+		await process_frame
+	if not "Ice hit" in _label("DrillFeedback") or _label("WoundedAllyHP") == hp \
+			or _label("PoolBalance") != "%d / %d BP" % [start - 2 * Ice.COST, cap]:
+		return _fail("An uninterrupted windup did not deal one visible hit for the agreed cost.")
+	if not _press("PracticeSpell") or not "Holy rating" in _label("HolyCheck"):
+		return _fail("Returning to Field Benediction lost the original UI.")
+	if _label("PoolBalance") != "%d / %d BP" % [start - 2 * Ice.COST, cap]:
+		return _fail("Changing spell accidentally switched or reset the team pool.")
+	return _press("ResetBattlePoints") and _label("PoolBalance") == "%d / %d BP" % [start, cap]
+
+
+func _accept_with_input(id: String) -> bool:
+	var button := _button(id)
+	if not button or not button.is_visible_in_tree():
+		return _fail("Missing control: %s" % id)
+	button.grab_focus()
+	for pressed in [true, false]:
+		var key := InputEventKey.new()
+		key.keycode = KEY_ENTER
+		key.physical_keycode = KEY_ENTER
+		key.pressed = pressed
+		root.push_input(key, true)
+		await process_frame
 	return true
 
 

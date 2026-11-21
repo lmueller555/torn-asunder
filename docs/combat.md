@@ -121,7 +121,7 @@ Run `godot --headless --script tests/human_archer_volley.gd` for timing, target,
 
 ## Targeted casting prototype
 
-The isolated Ice cast tests one provisional ranged spell: Ice rating 6, 120 shared Battle Points, 16 m range and a 0.7 s windup. The cast locks one living target and spends on acceptance. Defeat, interruption, lost sight or out-of-range movement before release prevents the hit without refunding the already committed points. A release uses the existing Ice attack/defense ratings and grants no Battle Points. This model adds no campaign availability or effects. Verify with `godot --headless --script tests/targeted_ice_cast.gd`.
+The isolated Ice cast tests one provisional ranged spell: Ice rating 6, 120 shared Battle Points, 16 m range and a 0.7 s windup. The cast locks one living target and spends on acceptance. Defeat, interruption, lost sight or out-of-range movement before release prevents the hit without refunding the already committed points. A release uses the existing Ice attack/defense ratings and grants no Battle Points. In **Combat Drills → Battle Points Drill**, choose **Try Ice Cast** to test the same pool, and toggle **Lane** to interrupt an accepted windup. This is drill-only, with no campaign availability or effects. Verify with `godot --headless --script tests/targeted_ice_cast.gd`.
 
 ## Siege crew prototype
 
