@@ -1,6 +1,7 @@
 extends RefCounted
 ## One road guard, sharing the same terrain and fixed step as the command scene.
 
+const EnemyAggro := preload("res://game/combat/enemy_aggro.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Points := preload("res://game/combat/battle_points.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
@@ -10,7 +11,7 @@ const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd"
 const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
 const Archer := preload("res://game/combat/human_archer_volley.gd")
 
-enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED, AT_RESERVE, INTERCEPTING }
+enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED, AT_RESERVE, INTERCEPTING, ALERT }
 enum Target { NONE, HERO, INFANTRY, ARCHERS, CIVILIAN }
 
 const HERO_TEAM := 0
@@ -21,7 +22,9 @@ const ENEMY_DAMAGE := 90.0
 const CONTACT_RANGE := 1.75
 const STOP_RANGE := 1.35
 const BODY_CLEARANCE := 0.83
-const AGGRO_RANGE := 8.0
+const AGGRO_RANGE := EnemyAggro.RADIUS_METRES
+# Story guards may watch a lane without leaving it for distant contacts.
+const STORY_PRESSURE_RANGE := 8.0
 const WINDUP_TIME := 0.66
 const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
@@ -32,6 +35,8 @@ var points: Points
 var infantry_attack: InfantryAttack
 var archer_attack: ArcherAttack
 var _feet: Callable
+var aggro_sight: Callable
+var hold_story_lane := false
 var enemy := Unit.new(ENEMY_HP)
 var defense: Defense
 var enemy_title := "Road guard"
@@ -43,6 +48,7 @@ var _civilian_index := -1
 var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
+var alert_target := Target.NONE
 var last_contact := ""
 var windup_target: Target:
 	get:
@@ -103,7 +109,9 @@ func order_archer_attack(battle: Battle, selected: int, point: Vector2, clear_co
 
 func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Callable) -> void:
 	_feedback_seconds -= delta
+	alert_target = Target.NONE
 	var sight := bool(clear_contact.call(battle.hero_position, enemy_position))
+	var see_target := aggro_sight if aggro_sight.is_valid() else clear_contact
 	var contact := defense.advance_attack(delta, true, battle.hero_position, battle.hero_heading,
 		enemy if sight else null, ENEMY_TEAM, enemy_position)
 	if contact:
@@ -140,13 +148,16 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 			pass
 		EnemyPhase.INTERCEPTING:
 			_advance_interception(delta, battle, can_move)
-		EnemyPhase.WATCHING:
-			if _nearest_visible_target(battle, sight, clear_contact) != Target.NONE:
+		EnemyPhase.WATCHING, EnemyPhase.ALERT:
+			var target := _pursuit_target(battle, see_target, clear_contact)
+			if target != Target.NONE:
 				enemy_phase = EnemyPhase.PURSUING
+			else:
+				_update_alert(battle, see_target)
 		EnemyPhase.PURSUING:
-			var target := _nearest_visible_target(battle, sight, clear_contact)
+			var target := _pursuit_target(battle, see_target, clear_contact)
 			if target == Target.NONE:
-				enemy_phase = EnemyPhase.WATCHING
+				_update_alert(battle, see_target)
 				return
 			var toward := _target_position(battle, target) - enemy_position
 			var distance := toward.length()
@@ -154,6 +165,8 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 			if not direction.is_zero_approx():
 				enemy_heading = direction
 			if distance <= STOP_RANGE + 0.02:
+				if not clear_contact.call(enemy_position, _target_position(battle, target)):
+					return
 				enemy_phase = EnemyPhase.WINDUP
 				_enemy_seconds = WINDUP_TIME
 				_windup_target = target
@@ -191,24 +204,24 @@ func _advance_interception(delta: float, battle: Battle, can_move: Callable) -> 
 			enemy_phase = EnemyPhase.WATCHING
 
 
-func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: Callable) -> Target:
-	var nearest := enemy_position.distance_to(battle.hero_position) if hero_visible and hero.is_alive() else INF
-	var target := Target.HERO if nearest <= AGGRO_RANGE else Target.NONE
-	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
-	var infantry_distance := enemy_position.distance_to(infantry.position)
-	# Ties preserve Mara's priority, then Shield Infantry. Ranged pressure
-	# attracts the guard only locally, when he can really reach the archers.
-	if infantry.order == Battle.Order.ATTACK and infantry_attack.attacker.is_alive() \
-		and infantry_distance <= AGGRO_RANGE and infantry_distance < nearest \
-		and clear_contact.call(enemy_position, infantry.position):
-		nearest = infantry_distance
-		target = Target.INFANTRY
-	var archers := battle.formations[ArcherAttack.ARCHER_INDEX]
-	var archer_distance := enemy_position.distance_to(archers.position)
-	if archers.order == Battle.Order.ATTACK and archer_attack.attacker.is_alive() \
-		and archer_distance <= AGGRO_RANGE and archer_distance < nearest \
-		and clear_contact.call(enemy_position, archers.position):
-		target = Target.ARCHERS
+func _update_alert(battle: Battle, see_target: Callable) -> void:
+	var target := _nearest_visible_combatant(battle, AGGRO_RANGE, see_target)
+	if target == Target.NONE:
+		enemy_phase = EnemyPhase.WATCHING
+		return
+	alert_target = target
+	var direction := (_target_position(battle, target) - enemy_position).normalized()
+	if not direction.is_zero_approx():
+		enemy_heading = direction
+	enemy_phase = EnemyPhase.ALERT
+
+
+func _pursuit_target(battle: Battle, see_target: Callable, clear_contact: Callable) -> Target:
+	# The reserve/raid steps remain authored orders; this is only ordinary
+	# pursuit once released. An alerted story guard still holds its lane,
+	# including protecting the rescue's original nearby civilian pressure.
+	var radius := STORY_PRESSURE_RANGE if hold_story_lane else AGGRO_RANGE
+	var target := _nearest_visible_combatant(battle, radius, clear_contact if hold_story_lane else see_target)
 	if target != Target.NONE or not civilian_positions.is_valid():
 		return target
 	var civilians: PackedVector2Array = civilian_positions.call()
@@ -223,6 +236,31 @@ func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: 
 			_civilian_index = index
 			nearest_civilian = distance
 	return Target.CIVILIAN if _civilian_index >= 0 else Target.NONE
+
+
+func _nearest_visible_combatant(battle: Battle, radius: float, see_target: Callable) -> Target:
+	var nearest := INF
+	var target := Target.NONE
+	var hero_distance := enemy_position.distance_to(battle.hero_position)
+	if hero.is_alive() and hero_distance <= radius and see_target.call(enemy_position, battle.hero_position):
+		nearest = hero_distance
+		target = Target.HERO
+	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
+	var infantry_distance := enemy_position.distance_to(infantry.position)
+	# Ties preserve Mara's priority, then Shield Infantry. An explicit
+	# formation attack remains the condition to retaliate or spot this target.
+	if infantry.order == Battle.Order.ATTACK and infantry_attack.attacker.is_alive() \
+		and infantry_distance <= radius and infantry_distance < nearest \
+		and see_target.call(enemy_position, infantry.position):
+		nearest = infantry_distance
+		target = Target.INFANTRY
+	var archers := battle.formations[ArcherAttack.ARCHER_INDEX]
+	var archer_distance := enemy_position.distance_to(archers.position)
+	if archers.order == Battle.Order.ATTACK and archer_attack.attacker.is_alive() \
+		and archer_distance <= radius and archer_distance < nearest \
+		and see_target.call(enemy_position, archers.position):
+		target = Target.ARCHERS
+	return target
 
 
 func _target_position(battle: Battle, target: Target) -> Vector2:

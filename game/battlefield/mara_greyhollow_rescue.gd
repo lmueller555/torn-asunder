@@ -80,6 +80,7 @@ func _reset_encounter() -> void:
 	super._reset_encounter()
 	if encounter:
 		encounter.enemy_phase = Encounter.EnemyPhase.AT_RESERVE
+		encounter.hold_story_lane = true
 		encounter.enemy_damage = DRYAD_DAMAGE
 		encounter.civilian_positions = _miner_targets
 		encounter.civilian_hit = _strike_miner

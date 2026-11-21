@@ -7,6 +7,7 @@ extends RefCounted
 
 const Unit := preload("res://game/combat/combat_unit.gd")
 const CombatPlatoon := preload("res://game/combat/platoon.gd")
+const Aggro := preload("res://game/combat/enemy_aggro.gd")
 const Units := preload("res://game/mission/mission_units.gd")
 
 enum State { IDLE, WALK, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER, DODGE, CAST }
@@ -340,7 +341,7 @@ func _create_squad(entry: Dictionary, levels: Dictionary) -> Squad:
 	squad.persist = entry.get("persist", "")
 	squad.level = maxi(int(entry.get("level", 1)), int(levels.get(squad.persist, 0)))
 	squad.commandable = entry.get("commandable", squad.team == PLAYER_TEAM)
-	squad.aggro = entry.get("aggro", 0.0)
+	squad.aggro = Aggro.configured(float(entry.get("aggro",0.0)))
 	squad.order = entry.get("order", {"kind": "hold"}).duplicate()
 	squad.anchor = _point(entry.pos)
 	squad.facing = entry.get("facing", Vector2.DOWN if squad.team == ENEMY_TEAM else Vector2.UP).normalized()
@@ -1147,8 +1148,8 @@ func _update_squads(delta: float) -> void:
 func _plan_squad(squad: Squad) -> void:
 	var kind: String = squad.order.get("kind", "hold")
 	if squad.aggro > 0.0 and kind in ["hold", "path", "move"] and squad.team == ENEMY_TEAM:
-		var near := _nearest_enemy(squad.team, squad.anchor, false)
-		if near >= 0 and fighters[near].position.distance_to(squad.anchor) <= squad.aggro:
+		var near := _nearest_visible_aggro_target(squad)
+		if near >= 0:
 			_apply_order(squad, {"kind": "hunt"})
 			kind = "hunt"
 	match kind:
@@ -1261,6 +1262,43 @@ func _entity_position(who: String) -> Vector2:
 	if other and other.spawned and other.alive_count(self) > 0:
 		return other.centroid(self)
 	return Vector2.INF
+
+
+func _nearest_visible_aggro_target(squad: Squad) -> int:
+	var target := -1
+	var best := squad.aggro*squad.aggro
+	for index in _foes(squad.team):
+		var opponent := fighters[index]
+		var distance := opponent.position.distance_squared_to(squad.anchor)
+		if opponent.kind==Kind.STRUCTURE or distance>best:
+			continue
+		if target>=0 and distance==best:
+			continue
+		if _clear_aggro_sight(squad.anchor,opponent.position):
+			target=index
+			best=distance
+	return target
+
+
+func _clear_aggro_sight(from: Vector2, to: Vector2) -> bool:
+	for cover: Dictionary in obstacles:
+		# A river can block a marching path without blocking the view.
+		if cover.get("kind","")=="water":
+			continue
+		if cover.has("rect"):
+			var box: Rect2 = cover.rect
+			if box.has_point(from) or box.has_point(to):
+				return false
+			var top_right := Vector2(box.end.x,box.position.y)
+			var bottom_left := Vector2(box.position.x,box.end.y)
+			if Geometry2D.segment_intersects_segment(from,to,box.position,top_right)!=null 				or Geometry2D.segment_intersects_segment(from,to,top_right,box.end)!=null 				or Geometry2D.segment_intersects_segment(from,to,box.end,bottom_left)!=null 				or Geometry2D.segment_intersects_segment(from,to,bottom_left,box.position)!=null:
+				return false
+		elif cover.has("circle"):
+			var circle: Vector3 = cover.circle
+			var center := Vector2(circle.x,circle.y)
+			if Geometry2D.get_closest_point_to_segment(center,from,to).distance_squared_to(center)<circle.z*circle.z:
+				return false
+	return true
 
 
 func _nearest_enemy(team: int, from: Vector2, include_structures: bool, limit: float = INF) -> int:

@@ -1,9 +1,10 @@
 extends "res://game/battlefield/command_harness.gd"
 
+const EnemyAggro := preload("res://game/combat/enemy_aggro.gd")
 const Writ := preload("res://game/battlefield/sereth_pass_writ.gd")
 const CONTACT := 1.8
 const RALLY_RADIUS := 2.9
-const DETECT_RANGE := 55.0
+const DETECT_RANGE := EnemyAggro.RADIUS_METRES
 const PATROL_RANGE := 33.0
 const WARNING_SECONDS := 1.15
 const PATROL_SPEED := 4.1
@@ -158,7 +159,8 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _seen_from_lookout(feet: Vector3, radius: float) -> bool:
-	return feet.distance_to(_lookout.global_position) <= radius and _clear_sight(_lookout.global_position, feet)
+	var offset := feet - _lookout.global_position
+	return Vector2(offset.x, offset.z).length_squared() <= radius * radius and _clear_sight(_lookout.global_position, feet)
 
 
 func _scout_has_sight(hero: Vector3) -> bool:
