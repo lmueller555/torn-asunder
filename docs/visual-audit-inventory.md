@@ -53,7 +53,7 @@ Reviewed from the live [Grain on Credit deployment](../game/battlefield/mara_gra
 
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
-| [North timber bridge and footings](../game/battlefields/marches_crossing.tscn) | Rework | The repeating square parts and uniform deck read as placeholders at hero height. Preserve the actual walked deck, solid rails and exposed sightline. |
+| [North timber bridge and footings](audits/mara-marches-north-bridge-v1.json) | Pass | Exact V1 deck, pegged rails, braced bents and footings in the registered Grain on Credit deployment only. Native hero and lighter command models keep the same shadows, original walkable deck and solid rails. The standalone graybox, water, hills, carts and ford are outside this pass. |
 | [South ford shallows and crossing stones](../game/battlefields/marches_crossing.tscn) | Rework | A flat pale band marks the walkable lane but reads as a glowing tile rather than a shallow river bed. Preserve the supported shelf, slower cart crossing, deep-channel barriers and screened approach. |
 | [Channel edges and adjacent valley landform](../game/battlefields/marches_crossing.tscn) | Rework | The angular blue strip, sharp bank seams, disconnected-looking roads and stacked perimeter walls read as a diagram at tactical distance. Keep the open bridge route distinct from the covered ford. |
 

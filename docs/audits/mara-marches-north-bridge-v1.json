@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "scope": "V1 fixed north timber bridge deck, pegged rails, bents and stone footings, with exact near/command switch and shared shadow geometry, only in Mara’s registered Grain on Credit mission. Not the ford, water, carts, surrounding landscape or standalone crossing.",
+  "author": "Torn Asunder Marches environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independently examined matched 1280×720 normal hero and actual tactical captures with both loading orders. Exact registered normal Godot imports match all four approved adaptive images pixel-for-pixel; at the same scene/pose after command release the hero image returns exactly.",
+    "close_up": "Supplementary legal flank, cap and bent close-ups inspect timber scarfs, rail pegs, stone seats and contacts. Static prop measured against the real cart and hero on the original supported crossing, not a studio-only render.",
+    "reproduction": "Godot 4.7.2 Compatibility / Mesa llvmpipe; launch registered Grain on Credit from Mara’s campaign. Drive both actual crossing orders, hold cover and use the independent turn-back. Use Shift or DualSense L2 to enter command, including overlapping Shift/L2 and the last release. tests/mara_grain_bridge_visual.gd checks the exact registered binding, original stock scope, unaffected colliders and single shared shadow.",
+    "measurements": "Exact 10,696 near and 876 sector visible triangles, three surfaces each, separate reused 384-triangle shadow-only mesh. At matched tactical camera both phases cost +288 visible primitives vs stock and −9,820 vs forced near, with 94 fewer visible draws. Software sector median paths 106.35→91.12 and 95.19→89.53 ms; one p90 worsened and hero timing varied. No console/hardware speed claim."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Grounded masonry seats, braced bents, timber joints and pegs, two open rails and genuinely staggered planks. Lower-geometry tactical silhouette still reads as the same crossing. Exact old support and rail collisions stay."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Restrained grain, distinct stone, steel and larch, no bright decking shimmer at tactical scale. Dedicated 384-triangle shadow proxy remains in both camera modes. The exact imported source materials and albedo/mips match the native reference."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Both normal hero approaches plus the playable deck, flank supplements and both cart phases identify the bridge versus the ford. Releasing command restores the exact hero render. Cue, contested staging and cart footprint are unchanged."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "The bridge is fixed. Camera handoff is tested under integration; existing cart motion, water, particles, and gameplay effects are outside this review."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "With the original deck, rails, side and archer sightlines intact, both cart orderings still physically cross or turn back. Native sector ceiling is at most 3,000 new submitted primitives; actual +288 with fewer draws. Single exact near object stays under 12,000 triangles and shadow proxy under 500. Software recapture is supplementary and one p90 worsened; no hardware claim."
+    }
+  },
+  "files": {
+    "assets/models/environment/marches_north_timber_bridge.glb": "267cef5a7748b2fcaaa58c6d47ebd70e92d086a02c824b110988d5b7097805db",
+    "assets/models/environment/marches_north_timber_bridge.glb.import": "feee3d5b9ed1bc5354ca1a5d6045575b5694c8198de573cbe53f59f1c4ad7612",
+    "assets/models/environment/marches_north_timber_bridge_sector.glb": "397ca722af31ce868c706c095d4bd44636508ef27ed2da2d360372d7c0b1a614",
+    "assets/models/environment/marches_north_timber_bridge_sector.glb.import": "9f3f1b1a43396d0894b38feff4dd2dc4ae039aec5c2e4621bbcf05289250150b",
+    "assets/source/marches_crossing/marches_north_timber_bridge.blend": "99dbcc9bc7de96b743feed1944d6528506ea3c302381a3c11b2b0b9151322a07",
+    "assets/source/marches_crossing/marches_north_timber_bridge_sector.blend": "208d1c3e9d83958b5e1eda71aa59ffac8c8cba55f65267f27e2a6db7ce458177",
+    "game/battlefield/mara_grain_bridge_visual.gd": "7ac2bf79cbe7c369eb51f1ebae22303d01904b310924556fd594d0416d7a1f31",
+    "game/battlefield/mara_grain_bridge_visual.gd.uid": "0ac5cfbc9e31ae014551fa5667a008c4bdabce620cff17ad6731c93e858d4aaa",
+    "game/battlefield/mara_grain_crossing_campaign.tscn": "13f4ffeda09aebd545262d663a338400a9b5e752a2c09f85feb3572a632c4e33",
+    "game/battlefields/marches_crossing.tscn": "1b0764e0449aa659072895b4621a6a34307e7253168c8773c61634442b8fda17"
+  },
+  "integration_scope": {
+    "deployment": "game/battlefield/mara_grain_crossing_campaign.tscn",
+    "shared_field": "game/battlefields/marches_crossing.tscn",
+    "reviewed_registry_sha256_at_delivery": "8f8892eb455a26200e15e4d62c53f0996bf853b342fd1e91d14ec03649e61cf1",
+    "standalone_sha256_at_delivery": "db27942fca847ace6dcb71c38537407837bd1cadb65733db8c77838186e457f8",
+    "context": "The unique registered wrapper alone selects the two exact GLBs. It inherits the original Grain gameplay and same explicit battlefield; scripted adapter shows one visible kit at a time and never hides its single shadow. Only the 49 original visual bodies are hidden in this instance."
+  },
+  "review_manifest_sha256": "50214bd869f8857b3876605f18abcdce862edaf652acb7cbe737fd3a312165ba",
+  "offline_evidence_sha256": {
+    "HANDOFF.md": "2dd66e38c0864ffc2c8c58d506ebe5a195828d08000dac9380d1216cdbaff582",
+    "native.log": "4798182a7df566062322ea07ad2e7d0febc30a7407811a94a99abc4728657aff",
+    "import-verification.log": "1f6afb48483d4997cd847c536fbb5ab3c08008392a93a71193c35c4da347bca3",
+    "headless.log": "619701a7b9b6e39b202ca4f51b157169122353f1cce4ee5887e987c356409fbd",
+    "pixel-parity.log": "81e7445154a55cfda53dceb314ac79d8a8fac32f2e06e4339216753ed251b614"
+  },
+  "measurements": {
+    "near_visible_triangles": 10696,
+    "sector_visible_triangles": 876,
+    "shadow_only_triangles": 384,
+    "tactical_visible_primitives_delta_both_phases": [
+      288,
+      288
+    ],
+    "tactical_draw_deltas_both_phases": [
+      -94,
+      -94
+    ],
+    "sector_software_medians_stock_ms": [
+      106.35,
+      95.19
+    ],
+    "sector_software_medians_adaptive_ms": [
+      91.12,
+      89.53
+    ],
+    "hardware_fps_claim": false
+  }
+}
