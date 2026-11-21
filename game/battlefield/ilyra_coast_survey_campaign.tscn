@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
 [ext_resource type="PackedScene" path="res://game/battlefields/moonwash_survey_shore.tscn" id="2_shore"]
 [ext_resource type="Script" path="res://game/battlefield/ilyra_coast_survey_campaign.gd" id="3_survey"]
+[ext_resource type="Script" path="res://game/battlefield/battlefield_minimap.gd" id="6_minimap"]
 
 [ext_resource type="Script" path="res://game/battlefield/props/ilyra_beach_signal_stand_binding.gd" id="4_stand_binding"]
 
@@ -61,6 +62,46 @@ theme_override_font_sizes/font_size = 16
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 text = "Restart  ·  Options / Backspace"
+
+
+[node name="TacticalMinimap" type="PanelContainer" parent="ObjectiveHUD"]
+visible = false
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -292.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 248.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/TacticalMinimap"]
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/TacticalMinimap/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/TacticalMinimap/Margin/Readout"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.88, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "SURVEY SHORE  /  TACTICAL MAP"
+
+[node name="Map" type="Control" parent="ObjectiveHUD/TacticalMinimap/Margin/Readout"]
+custom_minimum_size = Vector2(0, 176)
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("6_minimap")
+
+[node name="Key" type="Label" parent="ObjectiveHUD/TacticalMinimap/Margin/Readout"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 13
+text = "Diamond: reading  ·  Gate: relay"
 
 [node name="BeachSignalStandBinding" type="Node" parent="."]
 script = ExtResource("4_stand_binding")

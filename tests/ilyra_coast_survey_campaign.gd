@@ -2,6 +2,8 @@ extends SceneTree
 
 const Scene := preload("res://game/battlefield/ilyra_coast_survey_campaign.tscn")
 const Mission := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
+const Deployment := preload("res://game/campaign_deployments.gd")
+const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const DT := 1.0 / 60.0
@@ -19,7 +21,14 @@ const DETACHMENT_BEACH := ["Routes/InletFork", "Routes/InletBacktrack", "Routes/
 const DETACHMENT_HEADLAND := ["Routes/HeadlandRoadFork", "Routes/HeadlandLandwardTurn",
 	"Routes/HeadlandRampFoot", "Routes/HeadlandRampTop", "Routes/HeadlandApron", "Routes/HighGuard"]
 
+const CHART_PINS: Array[StringName] = [&"ancestral_stone", &"fishing_inlet", &"beach_relay", &"headland_relay"]
+const PIN_PATHS := {
+	&"ancestral_stone": "Objectives/AncestralStone", &"fishing_inlet": "Objectives/FishingInlet",
+	&"beach_relay": "Objectives/BeachSignal", &"headland_relay": "Objectives/HeadlandSignal",
+}
+
 var _mission: Mission
+var _capture_dir := ""
 var _results: Array[StringName] = []
 
 
@@ -28,13 +37,22 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_mission = Scene.instantiate()
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture="):
+			_capture_dir = arg.trim_prefix("--capture=")
+	var deployment := Deployment.for_mission(Survey.MISSION_ID)
+	if deployment.scene != Scene:
+		_fail("Test the actual registered Two Shorelines mission and both relay placements.")
+		quit(1)
+		return
+	_mission = deployment.scene.instantiate()
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
 	_mission.mission_cleared.connect(func(value: StringName) -> void: _results.append(value))
-	if not _check_beach_billboard_presentation() or not _visit_both() or not _reach_contested_beach():
+	if not await _check_minimap() or not _check_beach_billboard_presentation() or not _visit_both() \
+			or not await _reach_contested_beach():
 		quit(1)
 		return
 	var obstruction := _place_test_obstruction()
@@ -44,12 +62,93 @@ func _run() -> void:
 	obstruction.queue_free()
 	await physics_frame
 	await physics_frame
-	var passed := blocked and _finish_beach_and_retry() and _visit_both() and _take_headland() and _check_retry()
+	var passed := blocked and await _finish_beach_and_retry() and _visit_both() and _take_headland() and _check_retry()
 	_mission.queue_free()
 	await process_frame
 	if passed:
-		print("Two Shorelines: real hero/formation routes, manual readings, moving cutter and missed loop, solid LOS, pressure, interrupted signal, both relay clears and retry passed.")
+		print("Two Shorelines: registered passive tactical map, real hero/formation routes, manual readings, moving cutter and missed loop, solid LOS, pressure, interrupted signal, both relay clears and retry passed.")
 	quit(0 if passed else 1)
+
+
+func _check_minimap() -> bool:
+	var map := _mission._minimap
+	var panel := _mission._minimap_panel
+	if not map or not panel or not _map_hidden():
+		return _fail("The registered hero starts with the minimap absent from the HUD.")
+	var hero_before := await _capture_frame("hero-before-command")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	await process_frame
+	if not _map_context([]):
+		return _fail("Initial command map should contain only the two friendlies and a live camera footprint.")
+	if not root.get_visible_rect().encloses(panel.get_global_rect()) or not panel.get_global_rect().encloses(map.get_global_rect()):
+		return _fail("Command minimap no longer fits the resized game viewport.")
+	for path in ["HUD/Panel", "ObjectiveHUD/Panel"]:
+		if panel.get_global_rect().intersects(_mission.get_node(path).get_global_rect()):
+			return _fail("Command minimap covered " + path)
+	var motion := InputEventMouseMotion.new()
+	motion.position = map.get_global_rect().get_center()
+	root.push_input(motion, true)
+	if not _mission._mouse_cursor_active:
+		return _fail("The passive map captured mouse movement instead of passing it to the world.")
+	var sector := map.sector_pixels()
+	_axis(JOY_AXIS_RIGHT_X, 0.8)
+	_tick(15)
+	_axis(JOY_AXIS_RIGHT_X, 0.0)
+	if map.sector_pixels() == sector or map.sector_pixels().is_empty():
+		return _fail("The drawn sector did not follow the actual command camera orbit.")
+	await _capture_frame("command-before-readings")
+	_joy(JOY_BUTTON_RIGHT_STICK)
+	if not _mission._sector.overview or not _map_context([]):
+		return _fail("The ordinary field overview no longer retains its minimap or camera controls.")
+	await _capture_frame("command-overview")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_tick()
+	if not _map_hidden():
+		return _fail("Hero view must remove the map and its frame immediately.")
+	var hero_after := await _capture_frame("hero-after-command")
+	if hero_before and hero_after and hero_before.get_data() != hero_after.get_data():
+		return _fail("Command map left a pixel change in the unchanged hero view.")
+	_mission.restart_mission()
+	return true
+
+
+func _map_context(pins: Array[StringName]) -> bool:
+	var map := _mission._minimap
+	var side := _mission.battle.formations[0]
+	if not map.is_visible_in_tree() or map.mouse_filter != Control.MOUSE_FILTER_IGNORE \
+			or _mission._minimap_panel.mouse_filter != Control.MOUSE_FILTER_IGNORE \
+			or map.click_to_focus or map.right_click_to_move or map.sector_pixels().is_empty() \
+			or map._glyphs.size() != 2 + pins.size():
+		return false
+	var center := map.marker_pixel(&"ilyra") as Vector2
+	var detachment := map.marker_pixel(&"shore_detachment") as Vector2
+	if not center.is_equal_approx(map.project(_mission.battle.hero_position)) \
+			or not detachment.is_equal_approx(map.project(side.position)):
+		return false
+	for glyph in map._glyphs:
+		if glyph.icon == Minimap.Icon.ENEMY or (glyph.id == &"shore_detachment" and not glyph.selected):
+			return false
+	for pin in pins:
+		var marker: Variant = map.marker_pixel(pin)
+		if not marker is Vector2 or not marker.is_equal_approx(map.project(_xz(_point(PIN_PATHS[pin])))):
+			return false
+	return true
+
+
+func _map_hidden() -> bool:
+	return not _mission._minimap.is_visible_in_tree() and _mission._minimap._glyphs.is_empty() \
+		and _mission._minimap.sector_pixels().is_empty()
+
+
+func _capture_frame(name: String) -> Image:
+	if _capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return null
+	for _frame in 6:
+		await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image.save_png(_capture_dir.path_join(name + ".png")) != OK:
+		_fail("Cannot save minimap QA capture: " + name)
+	return image
 
 
 func _check_beach_billboard_presentation() -> bool:
@@ -119,14 +218,23 @@ func _visit_both() -> bool:
 	_tick(12)
 	if _mission._cutter.global_position.distance_to(cutter_start) < 1.0:
 		return _fail("The cutter was flagged without physically sailing.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	if not _map_context([&"ancestral_stone"]):
+		return _fail("One reading should reveal that pin only, not the inlet, cutter or either relay.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	if not _walk_routes(INLET_PATH):
 		return false
 	if _mission.objective.has_reading(INLET) or _mission._pressuring:
 		return _fail("Walking over the inlet silently recorded it or brought in pressure.")
 	_key(KEY_SPACE)
 	_tick()
-	return (_mission.objective.has_reading(INLET) and _mission._pressuring \
-		and _mission.objective.phase == Survey.Phase.WAITING_TO_SIGNAL) or _fail("Second reading did not start the relay phase.")
+	if not _mission.objective.has_reading(INLET) or not _mission._pressuring \
+			or _mission.objective.phase != Survey.Phase.WAITING_TO_SIGNAL:
+		return _fail("Second reading did not start the relay phase.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	var chart_visible := _map_context(CHART_PINS)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	return chart_visible or _fail("Both read sites and relay choices should appear only when the chart is ready.")
 
 
 func _reach_contested_beach() -> bool:
@@ -146,6 +254,12 @@ func _reach_contested_beach() -> bool:
 	if _mission.objective.interruption != Survey.Interruption.CONTESTED or _mission.objective.signal_progress != 0.0 \
 			or _mission._crews[0].global_position.distance_to(_point("Objectives/BeachSignal")) > Mission.CONTEST_RADIUS:
 		return _fail("A real landing crew did not deny the beach relay.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tick()
+	if not _map_context(CHART_PINS) or not _mission._crews[0].visible or not _mission._sea_guides.visible:
+		return _fail("The map showed a contested crew, cutter or route, or changed the existing 3D command guides.")
+	await _capture_frame("command-contested-beach")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	if not _move_detachment(DETACHMENT_ROAD + DETACHMENT_BEACH):
 		return false
 	if not _mission._screened(0) or _mission._contested(0):
@@ -197,10 +311,13 @@ func _finish_beach_and_retry() -> bool:
 	if not _mission.command_view or _mission.objective.phase != Survey.Phase.SIGNALING \
 			or _mission.objective.signal_progress <= before_command:
 		return _fail("An active, staffed relay paused or restarted in command view.")
+	if not _map_context(CHART_PINS):
+		return _fail("An active transmission changed the passive chart or added a cutter contact.")
+	await _capture_frame("command-transmitting-beach")
 	if not _wait(func() -> bool: return _mission.objective.phase == Survey.Phase.SUCCEEDED, "beach acknowledgment"):
 		return false
 	_tick(10)
-	if _results != [Mission.CHART_CIRCULATED] or not _mission._shore.text.contains("acknowledged"):
+	if _results != [Mission.CHART_CIRCULATED] or not _mission._shore.text.contains("acknowledged") or not _map_hidden():
 		return _fail("Beach clear did not acknowledge once.")
 	_joy(JOY_BUTTON_START)
 	return _fresh_state()
@@ -248,7 +365,7 @@ func _check_retry() -> bool:
 func _fresh_state() -> bool:
 	return (_mission.objective.phase == Survey.Phase.TAKING_READINGS and not _mission.objective.has_reading(ANCESTRAL) \
 		and not _mission.objective.has_reading(INLET) and not _mission._cutter_launched and not _mission.command_view \
-		and _mission.battle.formations.size() == 1 and not _mission._pressuring \
+		and _mission.battle.formations.size() == 1 and not _mission._pressuring and _map_hidden() \
 		and _mission._cutter.global_position == _point("BoatRoute/WestBlindPass") \
 		and _mission.hero_world_position().is_equal_approx(_point("Spawns/Ilyra")) \
 		and _mission.battle.formations[0].position == _xz(_point("Spawns/ShoreDetachment"))) \
