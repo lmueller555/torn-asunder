@@ -130,12 +130,114 @@ func _run() -> void:
 	_button(JOY_BUTTON_START)
 	_check(not _mission.command_view and not _map.is_visible_in_tree() and not _mission._raider.visible
 		and _mission.objective.outcome == Cut.Outcome.ACTIVE, "Options restarts cleanly in hero stance.")
+	await _controller_draft()
 	print("Cut minimap: viewport %s / panel %s / current camera %s / %d failures." %[
 		root.get_visible_rect().size, _mission._command_minimap.get_global_rect(), root.get_camera_3d().name, _failures])
 	_mission.queue_free()
 	await process_frame
 	await _campaign_pointer_return()
 	quit(0 if _failures == 0 else 1)
+
+
+func _controller_draft() -> void:
+	var hud := _mission._command_minimap
+	_orders.clear()
+	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
+	_tap(JOY_BUTTON_DPAD_UP)
+	_check(hud._draft_battle == null, "D-pad Up in hero never opens an aim.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_axis(JOY_AXIS_LEFT_X, 0.88)
+	var world_cursor := _mission.cursor
+	var sector := _mission._sector.focus
+	_tap(JOY_BUTTON_DPAD_UP)
+	_check(hud._draft_battle == _mission.battle and hud._aim.is_visible_in_tree()
+		and hud._draft_point.is_equal_approx(world_cursor), "L2 plus D-pad Up arms the separate cursor.")
+	_axis(JOY_AXIS_LEFT_X, 0.88)
+	_draft_tick(4)
+	_check(hud._draft_point.is_equal_approx(world_cursor) and _mission.cursor.is_equal_approx(world_cursor),
+		"Held aim input on opening does not take over either cursor until neutral.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_check(hud._draft_point.is_equal_approx(world_cursor + Vector2(3, 0)) and _mission.selected_index == 0,
+		"D-pad nudges the map instead of changing platoon selection.")
+	_axis(JOY_AXIS_LEFT_X, 0.65)
+	_draft_tick(20)
+	_check(hud._draft_point.x > world_cursor.x + 10.0 and _mission.cursor.is_equal_approx(world_cursor)
+		and _mission._sector.focus.is_equal_approx(sector) and _orders.is_empty(),
+		"Stick aims locally without changing the world cursor, sector, or orders.")
+	await _capture_image("controller-map-draft")
+	_axis(JOY_AXIS_LEFT_X, -1.0)
+	_draft_tick(200)
+	_check(hud._draft_point.x == _mission.battle.bounds.position.x
+		and _map.map_rect().grow(0.01).has_point(hud._aim.pixel), "Draft and reticle clamp to the real field.")
+	_tap(JOY_BUTTON_B)
+	_axis(JOY_AXIS_LEFT_X, -0.93)
+	_tick(10)
+	_check(hud._draft_battle == null and not hud._aim.visible and _mission.cursor.is_equal_approx(world_cursor)
+		and _orders.is_empty(), "Circle cancels and keeps held input from leaking to the command cursor.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+
+	var road := _point("Routes/ApproachRoadWest")
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(road))
+	_tap(JOY_BUTTON_DPAD_UP)
+	_tap(JOY_BUTTON_A)
+	var selected := _mission.battle.formations[0]
+	_check(_orders == [0] and selected.order == Battle.Order.MOVE and selected.destination.is_equal_approx(road)
+		and hud._draft_battle == null and not _mission._interact, "Cross submits one validated Move rather than Hold or hero action.")
+
+	var roof := _point("Routes/RecordRoomInside")
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(roof))
+	_tap(JOY_BUTTON_DPAD_UP)
+	_tap(JOY_BUTTON_A)
+	_tap(JOY_BUTTON_X)
+	_check(_orders == [0] and selected.destination.is_equal_approx(road) and hud._draft_blocked
+		and hud._draft_battle != null and hud._hint.text.contains("Blocked"), "Roof is rejected without fall-through or losing the draft.")
+	await _capture_image("controller-map-roof-blocked")
+	_axis(JOY_AXIS_LEFT_X, 0.91)
+	_draft_tick(5)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	var hero := _mission.battle.hero_position
+	_axis(JOY_AXIS_LEFT_X, 0.91)
+	_tick(10)
+	_check(hud._draft_battle == null and not _map.is_visible_in_tree() and _orders == [0]
+		and _mission.battle.hero_position.is_equal_approx(hero), "L2 release discards aim and cannot move the hero on a held stick.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_X, 0.65)
+	_tick(12)
+	_check(_mission.battle.hero_position.distance_to(hero) > 0.1, "Neutral followed by new input restores the existing hero stick.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tap(JOY_BUTTON_DPAD_UP)
+	_axis(JOY_AXIS_RIGHT_Y, 0.8)
+	_axis(JOY_AXIS_LEFT_X, 0.8)
+	_draft_tick(3)
+	root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	var at_unfocus := _mission.battle.hero_position
+	var angle := _mission._hero_pitch
+	_axis(JOY_AXIS_LEFT_X, 0.83)
+	_axis(JOY_AXIS_RIGHT_Y, 0.83)
+	_tick(8)
+	_check(_orders == [0] and hud._draft_battle == null and not _map.is_visible_in_tree()
+		and _mission.battle.hero_position.is_equal_approx(at_unfocus) and is_equal_approx(_mission._hero_pitch, angle),
+		"Focus loss clears draft and quarantines held movement and orbit axes.")
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_RIGHT_Y, 0.0)
+	_mission.restart_mission()
+
+
+func _draft_tick(count: int) -> void:
+	for _i in range(count):
+		_mission._command_minimap._physics_process(DT)
+		_tick()
+
+
+func _tap(index: JoyButton) -> void:
+	_button(index)
+	var event := InputEventJoypadButton.new()
+	event.button_index = index
+	event.pressed = false
+	root.push_input(event, true)
 
 
 func _campaign_pointer_return() -> void:
@@ -191,6 +293,9 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	var panel_rect := _mission._command_minimap.get_global_rect()
 	_check(not panel_rect.intersects(button_rect) and root.get_visible_rect().encloses(button_rect),
 		"The minimap must not cover the shell's Return to Campaign Map button.")
+	_tap(JOY_BUTTON_DPAD_UP)
+	_check(_mission._command_minimap._aim.is_visible_in_tree(),
+		"Return must also be available while an unsent controller draft is open.")
 	await _capture_image("campaign-command-return-visible")
 	_click(MOUSE_BUTTON_LEFT, button_rect.get_center())
 	await process_frame
