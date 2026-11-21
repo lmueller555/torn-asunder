@@ -1,0 +1,1549 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_basin"]
+albedo_color = Color(0.4, 0.36, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_340_2_240"]
+size = Vector3(340, 2, 240)
+
+[sub_resource type="BoxMesh" id="Mesh_340_2_240"]
+size = Vector3(340, 2, 240)
+
+[sub_resource type="StandardMaterial3D" id="Mat_salt"]
+albedo_color = Color(0.57, 0.55, 0.46, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_340_4p1_84"]
+size = Vector3(340, 4.1, 84)
+
+[sub_resource type="BoxMesh" id="Mesh_340_4p1_84"]
+size = Vector3(340, 4.1, 84)
+
+[sub_resource type="BoxShape3D" id="Shape_49_4p1_51"]
+size = Vector3(49, 4.1, 51)
+
+[sub_resource type="BoxMesh" id="Mesh_49_4p1_51"]
+size = Vector3(49, 4.1, 51)
+
+[sub_resource type="BoxShape3D" id="Shape_18_4p1_44"]
+size = Vector3(18, 4.1, 44)
+
+[sub_resource type="BoxMesh" id="Mesh_18_4p1_44"]
+size = Vector3(18, 4.1, 44)
+
+[sub_resource type="BoxShape3D" id="Shape_208_4p1_51"]
+size = Vector3(208, 4.1, 51)
+
+[sub_resource type="BoxMesh" id="Mesh_208_4p1_51"]
+size = Vector3(208, 4.1, 51)
+
+[sub_resource type="BoxShape3D" id="Shape_10_4p1_45"]
+size = Vector3(10, 4.1, 45)
+
+[sub_resource type="BoxMesh" id="Mesh_10_4p1_45"]
+size = Vector3(10, 4.1, 45)
+
+[sub_resource type="BoxShape3D" id="Shape_55_4p1_51"]
+size = Vector3(55, 4.1, 51)
+
+[sub_resource type="BoxMesh" id="Mesh_55_4p1_51"]
+size = Vector3(55, 4.1, 51)
+
+[sub_resource type="StandardMaterial3D" id="Mat_washbed"]
+albedo_color = Color(0.47, 0.43, 0.34, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_18_1p6_28p284271247461902"]
+size = Vector3(18, 1.6, 28.2843)
+
+[sub_resource type="BoxMesh" id="Mesh_18_1p6_28p284271247461902"]
+size = Vector3(18, 1.6, 28.2843)
+
+[sub_resource type="BoxShape3D" id="Shape_10_1p6_31p25699921617557"]
+size = Vector3(10, 1.6, 31.257)
+
+[sub_resource type="BoxMesh" id="Mesh_10_1p6_31p25699921617557"]
+size = Vector3(10, 1.6, 31.257)
+
+[sub_resource type="StandardMaterial3D" id="Mat_guard"]
+albedo_color = Color(0.44, 0.48, 0.43, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_16_1p6_15p402921800749363"]
+size = Vector3(16, 1.6, 15.4029)
+
+[sub_resource type="BoxMesh" id="Mesh_16_1p6_15p402921800749363"]
+size = Vector3(16, 1.6, 15.4029)
+
+[sub_resource type="BoxShape3D" id="Shape_27_7p52_12"]
+size = Vector3(27, 7.52, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_27_7p52_12"]
+size = Vector3(27, 7.52, 12)
+
+[sub_resource type="StandardMaterial3D" id="Mat_road"]
+albedo_color = Color(0.69, 0.64, 0.51, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_315_0p012_20"]
+size = Vector3(315, 0.012, 20)
+
+[sub_resource type="StandardMaterial3D" id="Mat_tilt"]
+albedo_color = Color(0.52, 0.48, 0.36, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_bank"]
+albedo_color = Color(0.47, 0.44, 0.38, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_slate"]
+albedo_color = Color(0.35, 0.4, 0.37, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_19_0p012_8p0"]
+size = Vector3(19, 0.012, 8)
+
+[sub_resource type="BoxShape3D" id="Shape_3p0_1p16_2p8"]
+size = Vector3(3, 1.16, 2.8)
+
+[sub_resource type="BoxMesh" id="Mesh_3p0_1p16_2p8"]
+size = Vector3(3, 1.16, 2.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stock"]
+albedo_color = Color(0.54, 0.39, 0.25, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_4p4_0p4_4p1"]
+size = Vector3(4.4, 0.4, 4.1)
+
+[sub_resource type="BoxMesh" id="Mesh_4p4_0p4_4p1"]
+size = Vector3(4.4, 0.4, 4.1)
+
+[sub_resource type="BoxShape3D" id="Shape_3p0_1p16_3p0"]
+size = Vector3(3, 1.16, 3)
+
+[sub_resource type="BoxMesh" id="Mesh_3p0_1p16_3p0"]
+size = Vector3(3, 1.16, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_4p3_0p42_4p0"]
+size = Vector3(4.3, 0.42, 4)
+
+[sub_resource type="BoxMesh" id="Mesh_4p3_0p42_4p0"]
+size = Vector3(4.3, 0.42, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.4, 0.28, 0.18, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_8p0_4p7_9p0"]
+size = Vector3(8, 4.7, 9)
+
+[sub_resource type="BoxMesh" id="Mesh_8p0_4p7_9p0"]
+size = Vector3(8, 4.7, 9)
+
+[sub_resource type="BoxShape3D" id="Shape_9p25_0p65_10p3"]
+size = Vector3(9.25, 0.65, 10.3)
+
+[sub_resource type="BoxMesh" id="Mesh_9p25_0p65_10p3"]
+size = Vector3(9.25, 0.65, 10.3)
+
+[sub_resource type="BoxShape3D" id="Shape_0p55_2p55_3p2"]
+size = Vector3(0.55, 2.55, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_0p55_2p55_3p2"]
+size = Vector3(0.55, 2.55, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_5_1p5_2"]
+size = Vector3(5, 1.5, 2)
+
+[sub_resource type="BoxMesh" id="Mesh_5_1p5_2"]
+size = Vector3(5, 1.5, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_7_2p64_3"]
+size = Vector3(7, 2.64, 3)
+
+[sub_resource type="BoxMesh" id="Mesh_7_2p64_3"]
+size = Vector3(7, 2.64, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_2p2_1p1_6p0"]
+size = Vector3(2.2, 1.1, 6)
+
+[sub_resource type="BoxMesh" id="Mesh_2p2_1p1_6p0"]
+size = Vector3(2.2, 1.1, 6)
+
+[sub_resource type="BoxShape3D" id="Shape_10_2p1_4"]
+size = Vector3(10, 2.1, 4)
+
+[sub_resource type="BoxMesh" id="Mesh_10_2p1_4"]
+size = Vector3(10, 2.1, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_signal"]
+albedo_color = Color(0.67, 0.52, 0.32, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_0p76_2p6_0p74"]
+size = Vector3(0.76, 2.6, 0.74)
+
+[sub_resource type="BoxMesh" id="Mesh_0p76_2p6_0p74"]
+size = Vector3(0.76, 2.6, 0.74)
+
+[sub_resource type="BoxShape3D" id="Shape_4_4p2_14"]
+size = Vector3(4, 4.2, 14)
+
+[sub_resource type="BoxMesh" id="Mesh_4_4p2_14"]
+size = Vector3(4, 4.2, 14)
+
+[sub_resource type="BoxShape3D" id="Shape_3p8_4p28_12"]
+size = Vector3(3.8, 4.28, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_3p8_4p28_12"]
+size = Vector3(3.8, 4.28, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_0p22_2p32_0p22"]
+size = Vector3(0.22, 2.32, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_0p22_2p32_0p22"]
+size = Vector3(0.22, 2.32, 0.22)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag10"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 10
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashWestBendScreen"]
+points = PackedVector3Array(0, -5, 14, 16.418, -5, 8.7289, 20.473, -5, -3.1153, 9.1116, -5, -12.614, -9.1116, -5, -12.614, -20.473, -5, -3.1153, -16.418, -5, 8.7289, 0, 5, 6.58, 7.7167, 5, 4.1026, 9.6225, 5, -1.4642, 4.2824, 5, -5.9284, -4.2824, 5, -5.9284, -9.6225, 5, -1.4642, -7.7167, 5, 4.1026)
+
+[sub_resource type="StandardMaterial3D" id="Mat_crag"]
+albedo_color = Color(0.41, 0.36, 0.32, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashMiddleBlind"]
+points = PackedVector3Array(0, -5, 11, 14.073, -5, 6.8584, 17.549, -5, -2.4477, 7.8099, -5, -9.9107, -7.8099, -5, -9.9107, -17.549, -5, -2.4477, -14.073, -5, 6.8584, 0, 5, 5.17, 6.6143, 5, 3.2234, 8.2479, 5, -1.1504, 3.6707, 5, -4.658, -3.6707, 5, -4.658, -8.2479, 5, -1.1504, -6.6143, 5, 3.2234)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag13"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 13
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashOutsideRib"]
+points = PackedVector3Array(0, -6.5, 15, 16.418, -6.5, 9.3523, 20.473, -6.5, -3.3378, 9.1116, -6.5, -13.515, -9.1116, -6.5, -13.515, -20.473, -6.5, -3.3378, -16.418, -6.5, 9.3523, 0, 6.5, 7.05, 7.7167, 6.5, 4.3956, 9.6225, 6.5, -1.5688, 4.2824, 6.5, -6.3518, -4.2824, 6.5, -6.3518, -9.6225, 6.5, -1.5688, -7.7167, 6.5, 4.3956)
+
+[sub_resource type="StandardMaterial3D" id="Mat_cliff"]
+albedo_color = Color(0.34, 0.31, 0.29, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag12"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 12
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashLongBendScreen"]
+points = PackedVector3Array(0, -6, 14, 16.418, -6, 8.7289, 20.473, -6, -3.1153, 9.1116, -6, -12.614, -9.1116, -6, -12.614, -20.473, -6, -3.1153, -16.418, -6, 8.7289, 0, 6, 6.58, 7.7167, 6, 4.1026, 9.6225, 6, -1.4642, 4.2824, 6, -5.9284, -4.2824, 6, -5.9284, -9.6225, 6, -1.4642, -7.7167, 6, 4.1026)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashFarWall"]
+points = PackedVector3Array(0, -6, 13, 15.637, -6, 8.1054, 19.499, -6, -2.8928, 8.6777, -6, -11.713, -8.6777, -6, -11.713, -19.499, -6, -2.8928, -15.637, -6, 8.1054, 0, 6, 6.11, 7.3492, 6, 3.8095, 9.1643, 6, -1.3596, 4.0785, 6, -5.5049, -4.0785, 6, -5.5049, -9.1643, 6, -1.3596, -7.3492, 6, 3.8095)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashEastBlind"]
+points = PackedVector3Array(0, -6.5, 13, 8.6001, -6.5, 8.1054, 10.724, -6.5, -2.8928, 4.7727, -6.5, -11.713, -4.7727, -6.5, -11.713, -10.724, -6.5, -2.8928, -8.6001, -6.5, 8.1054, 0, 6.5, 6.11, 4.0421, 6.5, 3.8095, 5.0404, 6.5, -1.3596, 2.2432, 6.5, -5.5049, -2.2432, 6.5, -5.5049, -5.0404, 6.5, -1.3596, -4.0421, 6.5, 3.8095)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag16"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 16
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WashEastBacking"]
+points = PackedVector3Array(0, -8, 19, 12.509, -8, 11.846, 15.599, -8, -4.2279, 6.9421, -8, -17.118, -6.9421, -8, -17.118, -15.599, -8, -4.2279, -12.509, -8, 11.846, 0, 8, 8.93, 5.8794, 8, 5.5678, 7.3315, 8, -1.9871, 3.2628, 8, -8.0457, -3.2628, 8, -8.0457, -7.3315, 8, -1.9871, -5.8794, 8, 5.5678)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_CavalryScreenWest"]
+points = PackedVector3Array(0, -6.5, 15, 13.291, -6.5, 9.3523, 16.574, -6.5, -3.3378, 7.376, -6.5, -13.515, -7.376, -6.5, -13.515, -16.574, -6.5, -3.3378, -13.291, -6.5, 9.3523, 0, 6.5, 7.05, 6.2468, 6.5, 4.3956, 7.7897, 6.5, -1.5688, 3.4667, 6.5, -6.3518, -3.4667, 6.5, -6.3518, -7.7897, 6.5, -1.5688, -6.2468, 6.5, 4.3956)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_CavalryScreenEast"]
+points = PackedVector3Array(0, -8, 15, 13.291, -8, 9.3523, 16.574, -8, -3.3378, 7.376, -8, -13.515, -7.376, -8, -13.515, -16.574, -8, -3.3378, -13.291, -8, 9.3523, 0, 8, 7.05, 6.2468, 8, 4.3956, 7.7897, 8, -1.5688, 3.4667, 8, -6.3518, -3.4667, 8, -6.3518, -7.7897, 8, -1.5688, -6.2468, 8, 4.3956)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag17"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 17
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_NorthReserveRidge"]
+points = PackedVector3Array(0, -8.5, 14, 18.764, -8.5, 8.7289, 23.398, -8.5, -3.1153, 10.413, -8.5, -12.614, -10.413, -8.5, -12.614, -23.398, -8.5, -3.1153, -18.764, -8.5, 8.7289, 0, 8.5, 6.58, 8.8191, 8.5, 4.1026, 10.997, 8.5, -1.4642, 4.8942, 8.5, -5.9284, -4.8942, 8.5, -5.9284, -10.997, 8.5, -1.4642, -8.8191, 8.5, 4.1026)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag7"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 7
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_ApproachSaltShoulder"]
+points = PackedVector3Array(0, -3.5, 9, 9.382, -3.5, 5.6114, 11.699, -3.5, -2.0027, 5.2066, -3.5, -8.1087, -5.2066, -3.5, -8.1087, -11.699, -3.5, -2.0027, -9.382, -3.5, 5.6114, 0, 3.5, 4.23, 4.4095, 3.5, 2.6374, 5.4986, 3.5, -0.94126, 2.4471, 3.5, -3.8111, -2.4471, 3.5, -3.8111, -5.4986, 3.5, -0.94126, -4.4095, 3.5, 2.6374)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag11"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 11
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_HighBankExitCrag"]
+points = PackedVector3Array(0, -5.5, 14, 13.291, -5.5, 8.7289, 16.574, -5.5, -3.1153, 7.376, -5.5, -12.614, -7.376, -5.5, -12.614, -16.574, -5.5, -3.1153, -13.291, -5.5, 8.7289, 0, 5.5, 6.58, 6.2468, 5.5, 4.1026, 7.7897, 5.5, -1.4642, 3.4667, 5.5, -5.9284, -3.4667, 5.5, -5.9284, -7.7897, 5.5, -1.4642, -6.2468, 5.5, 4.1026)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_LowerWellShield"]
+points = PackedVector3Array(0, -6.5, 17, 14.855, -6.5, 10.599, 18.524, -6.5, -3.7829, 8.2438, -6.5, -15.316, -8.2438, -6.5, -15.316, -18.524, -6.5, -3.7829, -14.855, -6.5, 10.599, 0, 6.5, 7.99, 6.9818, 6.5, 4.9817, 8.7061, 6.5, -1.7779, 3.8746, 6.5, -7.1987, -3.8746, 6.5, -7.1987, -8.7061, 6.5, -1.7779, -6.9818, 6.5, 4.9817)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_SouthernApproachCrag"]
+points = PackedVector3Array(0, -6, 14, 15.637, -6, 8.7289, 19.499, -6, -3.1153, 8.6777, -6, -12.614, -8.6777, -6, -12.614, -19.499, -6, -3.1153, -15.637, -6, 8.7289, 0, 6, 6.58, 7.3492, 6, 4.1026, 9.1643, 6, -1.4642, 4.0785, 6, -5.9284, -4.0785, 6, -5.9284, -9.1643, 6, -1.4642, -7.3492, 6, 4.1026)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag15"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 15
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall00"]
+points = PackedVector3Array(0, -7.5, 24, 18.764, -7.5, 14.964, 23.398, -7.5, -5.3405, 10.413, -7.5, -21.623, -10.413, -7.5, -21.623, -23.398, -7.5, -5.3405, -18.764, -7.5, 14.964, 0, 7.5, 11.28, 8.8191, 7.5, 7.033, 10.997, 7.5, -2.51, 4.8942, 7.5, -10.163, -4.8942, 7.5, -10.163, -10.997, 7.5, -2.51, -8.8191, 7.5, 7.033)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag21"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 21
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall01"]
+points = PackedVector3Array(0, -10.5, 21, 21.109, -10.5, 13.093, 26.323, -10.5, -4.6729, 11.715, -10.5, -18.92, -11.715, -10.5, -18.92, -26.323, -10.5, -4.6729, -21.109, -10.5, 13.093, 0, 10.5, 9.87, 9.9214, 10.5, 6.1538, 12.372, 10.5, -2.1963, 5.506, 10.5, -8.8926, -5.506, 10.5, -8.8926, -12.372, 10.5, -2.1963, -9.9214, 10.5, 6.1538)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall02"]
+points = PackedVector3Array(0, -8.5, 23, 20.328, -8.5, 14.34, 25.348, -8.5, -5.118, 11.281, -8.5, -20.722, -11.281, -8.5, -20.722, -25.348, -8.5, -5.118, -20.328, -8.5, 14.34, 0, 8.5, 10.81, 9.554, 8.5, 6.7399, 11.914, 8.5, -2.4055, 5.3021, 8.5, -9.7395, -5.3021, 8.5, -9.7395, -11.914, 8.5, -2.4055, -9.554, 8.5, 6.7399)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag20"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 20
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall03"]
+points = PackedVector3Array(0, -10, 23, 21.891, -10, 14.34, 27.298, -10, -5.118, 12.149, -10, -20.722, -12.149, -10, -20.722, -27.298, -10, -5.118, -21.891, -10, 14.34, 0, 10, 10.81, 10.289, 10, 6.7399, 12.83, 10, -2.4055, 5.7099, 10, -9.7395, -5.7099, 10, -9.7395, -12.83, 10, -2.4055, -10.289, 10, 6.7399)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall04"]
+points = PackedVector3Array(0, -7.5, 22, 22.673, -7.5, 13.717, 28.273, -7.5, -4.8955, 12.583, -7.5, -19.821, -12.583, -7.5, -19.821, -28.273, -7.5, -4.8955, -22.673, -7.5, 13.717, 0, 7.5, 10.34, 10.656, 7.5, 6.4469, 13.288, 7.5, -2.3009, 5.9138, 7.5, -9.316, -5.9138, 7.5, -9.316, -13.288, 7.5, -2.3009, -10.656, 7.5, 6.4469)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag23"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 23
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall05"]
+points = PackedVector3Array(0, -11.5, 24, 21.109, -11.5, 14.964, 26.323, -11.5, -5.3405, 11.715, -11.5, -21.623, -11.715, -11.5, -21.623, -26.323, -11.5, -5.3405, -21.109, -11.5, 14.964, 0, 11.5, 11.28, 9.9214, 11.5, 7.033, 12.372, 11.5, -2.51, 5.506, 11.5, -10.163, -5.506, 11.5, -10.163, -12.372, 11.5, -2.51, -9.9214, 11.5, 7.033)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall06"]
+points = PackedVector3Array(0, -10, 21, 21.891, -10, 13.093, 27.298, -10, -4.6729, 12.149, -10, -18.92, -12.149, -10, -18.92, -27.298, -10, -4.6729, -21.891, -10, 13.093, 0, 10, 9.87, 10.289, 10, 6.1538, 12.83, 10, -2.1963, 5.7099, 10, -8.8926, -5.7099, 10, -8.8926, -12.83, 10, -2.1963, -10.289, 10, 6.1538)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag18"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 18
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall07"]
+points = PackedVector3Array(0, -9, 22, 21.891, -9, 13.717, 27.298, -9, -4.8955, 12.149, -9, -19.821, -12.149, -9, -19.821, -27.298, -9, -4.8955, -21.891, -9, 13.717, 0, 9, 10.34, 10.289, 9, 6.4469, 12.83, 9, -2.3009, 5.7099, 9, -9.316, -5.7099, 9, -9.316, -12.83, 9, -2.3009, -10.289, 9, 6.4469)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall08"]
+points = PackedVector3Array(0, -11.5, 24, 21.109, -11.5, 14.964, 26.323, -11.5, -5.3405, 11.715, -11.5, -21.623, -11.715, -11.5, -21.623, -26.323, -11.5, -5.3405, -21.109, -11.5, 14.964, 0, 11.5, 11.28, 9.9214, 11.5, 7.033, 12.372, 11.5, -2.51, 5.506, 11.5, -10.163, -5.506, 11.5, -10.163, -12.372, 11.5, -2.51, -9.9214, 11.5, 7.033)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall09"]
+points = PackedVector3Array(0, -7.5, 24, 18.764, -7.5, 14.964, 23.398, -7.5, -5.3405, 10.413, -7.5, -21.623, -10.413, -7.5, -21.623, -23.398, -7.5, -5.3405, -18.764, -7.5, 14.964, 0, 7.5, 11.28, 8.8191, 7.5, 7.033, 10.997, 7.5, -2.51, 4.8942, 7.5, -10.163, -4.8942, 7.5, -10.163, -10.997, 7.5, -2.51, -8.8191, 7.5, 7.033)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall10"]
+points = PackedVector3Array(0, -9, 22, 16.418, -9, 13.717, 20.473, -9, -4.8955, 9.1116, -9, -19.821, -9.1116, -9, -19.821, -20.473, -9, -4.8955, -16.418, -9, 13.717, 0, 9, 10.34, 7.7167, 9, 6.4469, 9.6225, 9, -2.3009, 4.2824, 9, -9.316, -4.2824, 9, -9.316, -9.6225, 9, -2.3009, -7.7167, 9, 6.4469)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall11"]
+points = PackedVector3Array(0, -6.5, 25, 17.982, -6.5, 15.587, 22.423, -6.5, -5.563, 9.9793, -6.5, -22.524, -9.9793, -6.5, -22.524, -22.423, -6.5, -5.563, -17.982, -6.5, 15.587, 0, 6.5, 11.75, 8.4516, 6.5, 7.326, 10.539, 6.5, -2.6146, 4.6903, 6.5, -10.586, -4.6903, 6.5, -10.586, -10.539, 6.5, -2.6146, -8.4516, 6.5, 7.326)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall12"]
+points = PackedVector3Array(0, -8.5, 26, 17.2, -8.5, 16.211, 21.448, -8.5, -5.7855, 9.5454, -8.5, -23.425, -9.5454, -8.5, -23.425, -21.448, -8.5, -5.7855, -17.2, -8.5, 16.211, 0, 8.5, 12.22, 8.0841, 8.5, 7.619, 10.081, 8.5, -2.7192, 4.4864, 8.5, -11.01, -4.4864, 8.5, -11.01, -10.081, 8.5, -2.7192, -8.0841, 8.5, 7.619)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall13"]
+points = PackedVector3Array(0, -9, 27, 17.982, -9, 16.834, 22.423, -9, -6.0081, 9.9793, -9, -24.326, -9.9793, -9, -24.326, -22.423, -9, -6.0081, -17.982, -9, 16.834, 0, 9, 12.69, 8.4516, 9, 7.9121, 10.539, 9, -2.8238, 4.6903, 9, -11.433, -4.6903, 9, -11.433, -10.539, 9, -2.8238, -8.4516, 9, 7.9121)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall14"]
+points = PackedVector3Array(0, -7.5, 22, 21.891, -7.5, 13.717, 27.298, -7.5, -4.8955, 12.149, -7.5, -19.821, -12.149, -7.5, -19.821, -27.298, -7.5, -4.8955, -21.891, -7.5, 13.717, 0, 7.5, 10.34, 10.289, 7.5, 6.4469, 12.83, 7.5, -2.3009, 5.7099, 7.5, -9.316, -5.7099, 7.5, -9.316, -12.83, 7.5, -2.3009, -10.289, 7.5, 6.4469)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag22"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 22
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall15"]
+points = PackedVector3Array(0, -11, 22, 21.109, -11, 13.717, 26.323, -11, -4.8955, 11.715, -11, -19.821, -11.715, -11, -19.821, -26.323, -11, -4.8955, -21.109, -11, 13.717, 0, 11, 10.34, 9.9214, 11, 6.4469, 12.372, 11, -2.3009, 5.506, 11, -9.316, -5.506, 11, -9.316, -12.372, 11, -2.3009, -9.9214, 11, 6.4469)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall16"]
+points = PackedVector3Array(0, -8.5, 22, 23.455, -8.5, 13.717, 29.248, -8.5, -4.8955, 13.017, -8.5, -19.821, -13.017, -8.5, -19.821, -29.248, -8.5, -4.8955, -23.455, -8.5, 13.717, 0, 8.5, 10.34, 11.024, 8.5, 6.4469, 13.746, 8.5, -2.3009, 6.1178, 8.5, -9.316, -6.1178, 8.5, -9.316, -13.746, 8.5, -2.3009, -11.024, 8.5, 6.4469)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag19"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 19
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall17"]
+points = PackedVector3Array(0, -9.5, 23, 22.673, -9.5, 14.34, 28.273, -9.5, -5.118, 12.583, -9.5, -20.722, -12.583, -9.5, -20.722, -28.273, -9.5, -5.118, -22.673, -9.5, 14.34, 0, 9.5, 10.81, 10.656, 9.5, 6.7399, 13.288, 9.5, -2.4055, 5.9138, 9.5, -9.7395, -5.9138, 9.5, -9.7395, -13.288, 9.5, -2.4055, -10.656, 9.5, 6.7399)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall18"]
+points = PackedVector3Array(0, -8.5, 24, 23.455, -8.5, 14.964, 29.248, -8.5, -5.3405, 13.017, -8.5, -21.623, -13.017, -8.5, -21.623, -29.248, -8.5, -5.3405, -23.455, -8.5, 14.964, 0, 8.5, 11.28, 11.024, 8.5, 7.033, 13.746, 8.5, -2.51, 6.1178, 8.5, -10.163, -6.1178, 8.5, -10.163, -13.746, 8.5, -2.51, -11.024, 8.5, 7.033)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall19"]
+points = PackedVector3Array(0, -10, 22, 21.891, -10, 13.717, 27.298, -10, -4.8955, 12.149, -10, -19.821, -12.149, -10, -19.821, -27.298, -10, -4.8955, -21.891, -10, 13.717, 0, 10, 10.34, 10.289, 10, 6.4469, 12.83, 10, -2.3009, 5.7099, 10, -9.316, -5.7099, 10, -9.316, -12.83, 10, -2.3009, -10.289, 10, 6.4469)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall20"]
+points = PackedVector3Array(0, -8.5, 21, 24.237, -8.5, 13.093, 30.223, -8.5, -4.6729, 13.45, -8.5, -18.92, -13.45, -8.5, -18.92, -30.223, -8.5, -4.6729, -24.237, -8.5, 13.093, 0, 8.5, 9.87, 11.391, 8.5, 6.1538, 14.205, 8.5, -2.1963, 6.3217, 8.5, -8.8926, -6.3217, 8.5, -8.8926, -14.205, 8.5, -2.1963, -11.391, 8.5, 6.1538)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall21"]
+points = PackedVector3Array(0, -10.5, 25, 19.546, -10.5, 15.587, 24.373, -10.5, -5.563, 10.847, -10.5, -22.524, -10.847, -10.5, -22.524, -24.373, -10.5, -5.563, -19.546, -10.5, 15.587, 0, 10.5, 11.75, 9.1865, 10.5, 7.326, 11.455, 10.5, -2.6146, 5.0981, 10.5, -10.586, -5.0981, 10.5, -10.586, -11.455, 10.5, -2.6146, -9.1865, 10.5, 7.326)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall22"]
+points = PackedVector3Array(0, -10, 26, 18.764, -10, 16.211, 23.398, -10, -5.7855, 10.413, -10, -23.425, -10.413, -10, -23.425, -23.398, -10, -5.7855, -18.764, -10, 16.211, 0, 10, 12.22, 8.8191, 10, 7.619, 10.997, 10, -2.7192, 4.8942, 10, -11.01, -4.8942, 10, -11.01, -10.997, 10, -2.7192, -8.8191, 10, 7.619)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall23"]
+points = PackedVector3Array(0, -9, 24, 17.2, -9, 14.964, 21.448, -9, -5.3405, 9.5454, -9, -21.623, -9.5454, -9, -21.623, -21.448, -9, -5.3405, -17.2, -9, 14.964, 0, 9, 11.28, 8.0841, 9, 7.033, 10.081, 9, -2.51, 4.4864, 9, -10.163, -4.4864, 9, -10.163, -10.081, 9, -2.51, -8.0841, 9, 7.033)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_BasinWall24"]
+points = PackedVector3Array(0, -8, 27, 17.982, -8, 16.834, 22.423, -8, -6.0081, 9.9793, -8, -24.326, -9.9793, -8, -24.326, -22.423, -8, -6.0081, -17.982, -8, 16.834, 0, 8, 12.69, 8.4516, 8, 7.9121, 10.539, 8, -2.8238, 4.6903, 8, -11.433, -4.6903, 8, -11.433, -10.539, 8, -2.8238, -8.4516, 8, 7.9121)
+
+[node name="RedBasinWellRoad" type="Node3D"]
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Land" type="Node3D" parent="Geometry"]
+
+[node name="SaltRoad" type="Node3D" parent="Geometry"]
+
+[node name="Wash" type="Node3D" parent="Geometry"]
+
+[node name="Wells" type="Node3D" parent="Geometry"]
+
+[node name="Ridge" type="Node3D" parent="Geometry"]
+
+[node name="Reserve" type="Node3D" parent="Geometry"]
+
+[node name="Bounds" type="Node3D" parent="Geometry"]
+
+[node name="BasinWashFloor" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(0, -5, 0)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/BasinWashFloor"]
+mesh = SubResource("Mesh_340_2_240")
+material_override = SubResource("Mat_basin")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/BasinWashFloor"]
+shape = SubResource("Shape_340_2_240")
+
+[node name="HighNorthernBank" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(0, -2.05, -78)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/HighNorthernBank"]
+mesh = SubResource("Mesh_340_4p1_84")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/HighNorthernBank"]
+shape = SubResource("Shape_340_4p1_84")
+
+[node name="WestOpenShelf" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(-145.5, -2.05, -10.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/WestOpenShelf"]
+mesh = SubResource("Mesh_49_4p1_51")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/WestOpenShelf"]
+shape = SubResource("Shape_49_4p1_51")
+
+[node name="WashEntryNotchTop" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(-112, -2.05, -14)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/WashEntryNotchTop"]
+mesh = SubResource("Mesh_18_4p1_44")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/WashEntryNotchTop"]
+shape = SubResource("Shape_18_4p1_44")
+
+[node name="CentralSaltRoadShelf" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(1, -2.05, -10.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/CentralSaltRoadShelf"]
+mesh = SubResource("Mesh_208_4p1_51")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/CentralSaltRoadShelf"]
+shape = SubResource("Shape_208_4p1_51")
+
+[node name="EastClimbNotchTop" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(110, -2.05, -13.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/EastClimbNotchTop"]
+mesh = SubResource("Mesh_10_4p1_45")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/EastClimbNotchTop"]
+shape = SubResource("Shape_10_4p1_45")
+
+[node name="EastOpenShelf" type="StaticBody3D" parent="Geometry/Land"]
+position = Vector3(142.5, -2.05, -10.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Land/EastOpenShelf"]
+mesh = SubResource("Mesh_55_4p1_51")
+material_override = SubResource("Mat_salt")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Land/EastOpenShelf"]
+shape = SubResource("Shape_55_4p1_51")
+
+[node name="BroadWashEntryGrade" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(-112, -2.79196, 21.8869)
+rotation = Vector3(0.141897, 0, 0)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/BroadWashEntryGrade"]
+mesh = SubResource("Mesh_18_1p6_28p284271247461902")
+material_override = SubResource("Mat_washbed")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/BroadWashEntryGrade"]
+shape = SubResource("Shape_18_1p6_28p284271247461902")
+
+[node name="SingleEastWashRamp" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(110, -2.79342, 24.3976)
+rotation = Vector3(0.128323, 0, 0)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/SingleEastWashRamp"]
+mesh = SubResource("Mesh_10_1p6_31p25699921617557")
+material_override = SubResource("Mat_washbed")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/SingleEastWashRamp"]
+shape = SubResource("Shape_10_1p6_31p25699921617557")
+
+[node name="ArcherShoulderGrade" type="StaticBody3D" parent="Geometry/Ridge"]
+position = Vector3(81, 0.970927, 6.68178)
+rotation = Vector3(-0.229232, 0, 0)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ridge/ArcherShoulderGrade"]
+mesh = SubResource("Mesh_16_1p6_15p402921800749363")
+material_override = SubResource("Mat_guard")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ridge/ArcherShoulderGrade"]
+shape = SubResource("Shape_16_1p6_15p402921800749363")
+
+[node name="ArcherShoulderDeck" type="StaticBody3D" parent="Geometry/Ridge"]
+position = Vector3(85.5, -0.26, 20)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ridge/ArcherShoulderDeck"]
+mesh = SubResource("Mesh_27_7p52_12")
+material_override = SubResource("Mat_guard")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ridge/ArcherShoulderDeck"]
+shape = SubResource("Shape_27_7p52_12")
+
+[node name="SaltHaulRoad" type="MeshInstance3D" parent="Geometry/SaltRoad"]
+position = Vector3(4.5, 0.021, -13)
+mesh = SubResource("Mesh_315_0p012_20")
+material_override = SubResource("Mat_road")
+cast_shadow = 0
+
+[node name="UpperSourceTrack" type="CSGPolygon3D" parent="Geometry/Wells"]
+position = Vector3(0, 0.016, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-150.3, -43.43, -141.8, -28.34, -136.7, -13.65, -123.3, -20.35, -132.2, -33.66, -141.7, -48.57)
+depth = 0.015
+material = SubResource("Mat_tilt")
+cast_shadow = 0
+
+[node name="WestForkMarks" type="CSGPolygon3D" parent="Geometry/SaltRoad"]
+position = Vector3(0, 0.015, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-126.4, -8.8, -117.1, 0.08697, -120, 8, -104, 8, -106.9, -6.087, -121.6, -15.2)
+depth = 0.015
+material = SubResource("Mat_washbed")
+cast_shadow = 0
+
+[node name="CurvingWashTrack" type="CSGPolygon3D" parent="Geometry/Wash"]
+position = Vector3(0, -3.987, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-129.6, 47.49, -114.6, 47.57, -82.4, 65.11, -38, 72.5, 1.02, 64.71, 40.28, 94.99, 81.46, 60.5, 112.5, 49.43, 114.5, 40, 105.5, 40, 107.5, 38.57, 74.54, 49.5, 39.72, 81.01, 4.98, 51.29, -38, 57.5, -77.6, 50.89, -109.4, 32.43, -130.4, 34.51)
+depth = 0.015
+material = SubResource("Mat_washbed")
+cast_shadow = 0
+
+[node name="LowerStagingApron" type="CSGPolygon3D" parent="Geometry/Wells"]
+position = Vector3(0, -3.981, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-121, 37, -121.6, 41.02, -123.5, 44.64, -126.4, 47.52, -130, 49.36, -134, 50, -138, 49.36, -141.6, 47.52, -144.5, 44.64, -146.4, 41.02, -147, 37, -146.4, 32.98, -144.5, 29.36, -141.6, 26.48, -138, 24.64, -134, 24, -130, 24.64, -126.4, 26.48, -123.5, 29.36, -121.6, 32.98)
+depth = 0.015
+material = SubResource("Mat_tilt")
+cast_shadow = 0
+
+[node name="UpperWellPad" type="CSGPolygon3D" parent="Geometry/Wells"]
+position = Vector3(0, 0.019, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-137, -38, -137.4, -35.84, -138.5, -33.89, -140.3, -32.34, -142.5, -31.34, -145, -31, -147.5, -31.34, -149.7, -32.34, -151.5, -33.89, -152.6, -35.84, -153, -38, -152.6, -40.16, -151.5, -42.11, -149.7, -43.66, -147.5, -44.66, -145, -45, -142.5, -44.66, -140.3, -43.66, -138.5, -42.11, -137.4, -40.16)
+depth = 0.015
+material = SubResource("Mat_bank")
+cast_shadow = 0
+
+[node name="LowerWellPad" type="CSGPolygon3D" parent="Geometry/Wells"]
+position = Vector3(0, -3.98, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-132, 51, -132.4, 53.16, -133.5, 55.11, -135.3, 56.66, -137.5, 57.66, -140, 58, -142.5, 57.66, -144.7, 56.66, -146.5, 55.11, -147.6, 53.16, -148, 51, -147.6, 48.84, -146.5, 46.89, -144.7, 45.34, -142.5, 44.34, -140, 44, -137.5, 44.34, -135.3, 45.34, -133.5, 46.89, -132.4, 48.84)
+depth = 0.015
+material = SubResource("Mat_bank")
+cast_shadow = 0
+
+[node name="RiderTurningTrack" type="CSGPolygon3D" parent="Geometry/Reserve"]
+position = Vector3(0, 0.013, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(29.34, -72.54, 77.01, -66.8, 72.58, -53.34, 58.03, -40.12, 57.5, -23, 66.5, -23, 65.97, -35.88, 81.42, -48.66, 82.99, -77.2, 30.66, -83.46)
+depth = 0.015
+material = SubResource("Mat_tilt")
+cast_shadow = 0
+
+[node name="ArcherCrestWalk" type="MeshInstance3D" parent="Geometry/Ridge"]
+position = Vector3(85.5, 3.522, 21.5)
+mesh = SubResource("Mesh_19_0p012_8p0")
+material_override = SubResource("Mat_slate")
+cast_shadow = 0
+
+[node name="BasinExitApron" type="CSGPolygon3D" parent="Geometry/SaltRoad"]
+position = Vector3(0, 0.017, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(162, -13, 161.5, -9.292, 159.9, -5.947, 157.5, -3.292, 154.4, -1.587, 151, -1, 147.6, -1.587, 144.5, -3.292, 142.1, -5.947, 140.5, -9.292, 140, -13, 140.5, -16.71, 142.1, -20.05, 144.5, -22.71, 147.6, -24.41, 151, -25, 154.4, -24.41, 157.5, -22.71, 159.9, -20.05, 161.5, -16.71)
+depth = 0.015
+material = SubResource("Mat_tilt")
+cast_shadow = 0
+
+[node name="UpperWellHeadStone" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-145, 0.58, -39)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellHeadStone"]
+mesh = SubResource("Mesh_3p0_1p16_2p8")
+material_override = SubResource("Mat_slate")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellHeadStone"]
+shape = SubResource("Shape_3p0_1p16_2p8")
+
+[node name="UpperWellRoof" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-145, 2.33, -39)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellRoof"]
+mesh = SubResource("Mesh_4p4_0p4_4p1")
+material_override = SubResource("Mat_stock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellRoof"]
+shape = SubResource("Shape_4p4_0p4_4p1")
+
+[node name="LowerWellHeadStone" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-141, -3.42, 52)
+rotation = Vector3(0, 0.122173, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellHeadStone"]
+mesh = SubResource("Mesh_3p0_1p16_3p0")
+material_override = SubResource("Mat_slate")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellHeadStone"]
+shape = SubResource("Shape_3p0_1p16_3p0")
+
+[node name="LowerWellRoof" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-141, -1.7, 52)
+rotation = Vector3(0, 0.122173, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellRoof"]
+mesh = SubResource("Mesh_4p3_0p42_4p0")
+material_override = SubResource("Mat_stock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellRoof"]
+shape = SubResource("Shape_4p3_0p42_4p0")
+
+[node name="BoardingStorehouse" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-150, -1.65, 39)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/BoardingStorehouse"]
+mesh = SubResource("Mesh_8p0_4p7_9p0")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/BoardingStorehouse"]
+shape = SubResource("Shape_8p0_4p7_9p0")
+
+[node name="StorehouseRoof" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-150, 0.89, 39)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/StorehouseRoof"]
+mesh = SubResource("Mesh_9p25_0p65_10p3")
+material_override = SubResource("Mat_stock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/StorehouseRoof"]
+shape = SubResource("Shape_9p25_0p65_10p3")
+
+[node name="StorehouseLintel" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-145.8, -1.84, 39)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/StorehouseLintel"]
+mesh = SubResource("Mesh_0p55_2p55_3p2")
+material_override = SubResource("Mat_stock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/StorehouseLintel"]
+shape = SubResource("Shape_0p55_2p55_3p2")
+
+[node name="LowerBoardingBench" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-133, -3.25, 47.7)
+rotation = Vector3(0, 0.0872665, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerBoardingBench"]
+mesh = SubResource("Mesh_5_1p5_2")
+material_override = SubResource("Mat_stock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerBoardingBench"]
+shape = SubResource("Shape_5_1p5_2")
+
+[node name="WellYardScreen" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-128, 1.32, -36)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/WellYardScreen"]
+mesh = SubResource("Mesh_7_2p64_3")
+material_override = SubResource("Mat_guard")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/WellYardScreen"]
+shape = SubResource("Shape_7_2p64_3")
+
+[node name="ArcherWindbreak" type="StaticBody3D" parent="Geometry/Ridge"]
+position = Vector3(97.1, 4.05, 20)
+rotation = Vector3(0, -0.0872665, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ridge/ArcherWindbreak"]
+mesh = SubResource("Mesh_2p2_1p1_6p0")
+material_override = SubResource("Mat_slate")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ridge/ArcherWindbreak"]
+shape = SubResource("Shape_2p2_1p1_6p0")
+
+[node name="LevyRallyStone" type="StaticBody3D" parent="Geometry/SaltRoad"]
+position = Vector3(119, 1.05, -36)
+rotation = Vector3(0, -0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SaltRoad/LevyRallyStone"]
+mesh = SubResource("Mesh_10_2p1_4")
+material_override = SubResource("Mat_slate")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/SaltRoad/LevyRallyStone"]
+shape = SubResource("Shape_10_2p1_4")
+
+[node name="BasinExitNorthMarker" type="StaticBody3D" parent="Geometry/SaltRoad"]
+position = Vector3(156, 1.3, -24.3)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SaltRoad/BasinExitNorthMarker"]
+mesh = SubResource("Mesh_0p76_2p6_0p74")
+material_override = SubResource("Mat_signal")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/SaltRoad/BasinExitNorthMarker"]
+shape = SubResource("Shape_0p76_2p6_0p74")
+
+[node name="BasinExitSouthMarker" type="StaticBody3D" parent="Geometry/SaltRoad"]
+position = Vector3(156, 1.3, -1.7)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SaltRoad/BasinExitSouthMarker"]
+mesh = SubResource("Mesh_0p76_2p6_0p74")
+material_override = SubResource("Mat_signal")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/SaltRoad/BasinExitSouthMarker"]
+shape = SubResource("Shape_0p76_2p6_0p74")
+
+[node name="WashRampEastWing" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(117.7, -1.9, 24)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashRampEastWing"]
+mesh = SubResource("Mesh_4_4p2_14")
+material_override = SubResource("Mat_bank")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashRampEastWing"]
+shape = SubResource("Shape_4_4p2_14")
+
+[node name="WashRampWestWing" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(102.2, -1.86, 25)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashRampWestWing"]
+mesh = SubResource("Mesh_3p8_4p28_12")
+material_override = SubResource("Mat_slate")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashRampWestWing"]
+shape = SubResource("Shape_3p8_4p28_12")
+
+[node name="UpperWellPost143354045" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-143.35, 1.16, -40.45)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellPost143354045"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellPost143354045"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="UpperWellPost143353755" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-143.35, 1.16, -37.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellPost143353755"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellPost143353755"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="UpperWellPost146654045" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-146.65, 1.16, -40.45)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellPost146654045"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellPost146654045"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="UpperWellPost146653755" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-146.65, 1.16, -37.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/UpperWellPost146653755"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/UpperWellPost146653755"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="LowerWellPost139455055" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-139.45, -2.84, 50.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellPost139455055"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellPost139455055"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="LowerWellPost139455355" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-139.45, -2.84, 53.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellPost139455355"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellPost139455355"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="LowerWellPost142555055" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-142.55, -2.84, 50.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellPost142555055"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellPost142555055"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="LowerWellPost142555355" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-142.55, -2.84, 53.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellPost142555355"]
+mesh = SubResource("Mesh_0p22_2p32_0p22")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellPost142555355"]
+shape = SubResource("Shape_0p22_2p32_0p22")
+
+[node name="WashWestBendScreen" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(-70, 0.8, 34)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashWestBendScreen"]
+scale = Vector3(21, 1, 14)
+mesh = SubResource("Mesh_Crag10")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashWestBendScreen"]
+shape = SubResource("Shape_WashWestBendScreen")
+
+[node name="WashMiddleBlind" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(-20, 0.8, 46)
+rotation = Vector3(0, 0.10472, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashMiddleBlind"]
+scale = Vector3(18, 1, 11)
+mesh = SubResource("Mesh_Crag10")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashMiddleBlind"]
+shape = SubResource("Shape_WashMiddleBlind")
+
+[node name="WashOutsideRib" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(14, 2.3, 41)
+rotation = Vector3(0, -0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashOutsideRib"]
+scale = Vector3(21, 1, 15)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashOutsideRib"]
+shape = SubResource("Shape_WashOutsideRib")
+
+[node name="WashLongBendScreen" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(45, 1.8, 48)
+rotation = Vector3(0, 0.191986, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashLongBendScreen"]
+scale = Vector3(21, 1, 14)
+mesh = SubResource("Mesh_Crag12")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashLongBendScreen"]
+shape = SubResource("Shape_WashLongBendScreen")
+
+[node name="WashFarWall" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(55, 1.8, 104)
+rotation = Vector3(0, -0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashFarWall"]
+scale = Vector3(20, 1, 13)
+mesh = SubResource("Mesh_Crag12")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashFarWall"]
+shape = SubResource("Shape_WashFarWall")
+
+[node name="WashEastBlind" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(88, 2.3, 72)
+rotation = Vector3(0, 0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashEastBlind"]
+scale = Vector3(11, 1, 13)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashEastBlind"]
+shape = SubResource("Shape_WashEastBlind")
+
+[node name="WashEastBacking" type="StaticBody3D" parent="Geometry/Wash"]
+position = Vector3(131, 3.8, 45)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wash/WashEastBacking"]
+scale = Vector3(16, 1, 19)
+mesh = SubResource("Mesh_Crag16")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wash/WashEastBacking"]
+shape = SubResource("Shape_WashEastBacking")
+
+[node name="CavalryScreenWest" type="StaticBody3D" parent="Geometry/Reserve"]
+position = Vector3(33, 6.3, -57)
+rotation = Vector3(0, 0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Reserve/CavalryScreenWest"]
+scale = Vector3(17, 1, 15)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Reserve/CavalryScreenWest"]
+shape = SubResource("Shape_CavalryScreenWest")
+
+[node name="CavalryScreenEast" type="StaticBody3D" parent="Geometry/Reserve"]
+position = Vector3(49, 7.8, -59)
+rotation = Vector3(0, -0.174533, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Reserve/CavalryScreenEast"]
+scale = Vector3(17, 1, 15)
+mesh = SubResource("Mesh_Crag16")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Reserve/CavalryScreenEast"]
+shape = SubResource("Shape_CavalryScreenEast")
+
+[node name="NorthReserveRidge" type="StaticBody3D" parent="Geometry/Reserve"]
+position = Vector3(91, 8.3, -92)
+rotation = Vector3(0, 0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Reserve/NorthReserveRidge"]
+scale = Vector3(24, 1, 14)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Reserve/NorthReserveRidge"]
+shape = SubResource("Shape_NorthReserveRidge")
+
+[node name="ApproachSaltShoulder" type="StaticBody3D" parent="Geometry/SaltRoad"]
+position = Vector3(-74, 3.3, -38)
+rotation = Vector3(0, -0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SaltRoad/ApproachSaltShoulder"]
+scale = Vector3(12, 1, 9)
+mesh = SubResource("Mesh_Crag7")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/SaltRoad/ApproachSaltShoulder"]
+shape = SubResource("Shape_ApproachSaltShoulder")
+
+[node name="HighBankExitCrag" type="StaticBody3D" parent="Geometry/SaltRoad"]
+position = Vector3(147, 5.3, -41)
+rotation = Vector3(0, 0.174533, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SaltRoad/HighBankExitCrag"]
+scale = Vector3(17, 1, 14)
+mesh = SubResource("Mesh_Crag11")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/SaltRoad/HighBankExitCrag"]
+shape = SubResource("Shape_HighBankExitCrag")
+
+[node name="LowerWellShield" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-146, 2.3, 73)
+rotation = Vector3(0, -0.0698132, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/LowerWellShield"]
+scale = Vector3(19, 1, 17)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/LowerWellShield"]
+shape = SubResource("Shape_LowerWellShield")
+
+[node name="SouthernApproachCrag" type="StaticBody3D" parent="Geometry/Wells"]
+position = Vector3(-111, 1.8, 85)
+rotation = Vector3(0, 0.191986, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/SouthernApproachCrag"]
+scale = Vector3(20, 1, 14)
+mesh = SubResource("Mesh_Crag12")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Wells/SouthernApproachCrag"]
+shape = SubResource("Shape_SouthernApproachCrag")
+
+[node name="BasinWall00" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-158, 7.3, -105)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall00"]
+scale = Vector3(24, 1, 24)
+mesh = SubResource("Mesh_Crag15")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall00"]
+shape = SubResource("Shape_BasinWall00")
+
+[node name="BasinWall01" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-124, 10.3, -113)
+rotation = Vector3(0, -0.0349066, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall01"]
+scale = Vector3(27, 1, 21)
+mesh = SubResource("Mesh_Crag21")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall01"]
+shape = SubResource("Shape_BasinWall01")
+
+[node name="BasinWall02" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-86, 8.3, -113)
+rotation = Vector3(0, 0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall02"]
+scale = Vector3(26, 1, 23)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall02"]
+shape = SubResource("Shape_BasinWall02")
+
+[node name="BasinWall03" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-46, 9.8, -113)
+rotation = Vector3(0, -0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall03"]
+scale = Vector3(28, 1, 23)
+mesh = SubResource("Mesh_Crag20")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall03"]
+shape = SubResource("Shape_BasinWall03")
+
+[node name="BasinWall04" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-5, 7.3, -117)
+rotation = Vector3(0, 0.244346, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall04"]
+scale = Vector3(29, 1, 22)
+mesh = SubResource("Mesh_Crag15")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall04"]
+shape = SubResource("Shape_BasinWall04")
+
+[node name="BasinWall05" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(36, 11.3, -114)
+rotation = Vector3(0, -0.0872665, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall05"]
+scale = Vector3(27, 1, 24)
+mesh = SubResource("Mesh_Crag23")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall05"]
+shape = SubResource("Shape_BasinWall05")
+
+[node name="BasinWall06" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(76, 9.8, -114)
+rotation = Vector3(0, 0.191986, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall06"]
+scale = Vector3(28, 1, 21)
+mesh = SubResource("Mesh_Crag20")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall06"]
+shape = SubResource("Shape_BasinWall06")
+
+[node name="BasinWall07" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(116, 8.8, -110)
+rotation = Vector3(0, -0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall07"]
+scale = Vector3(28, 1, 22)
+mesh = SubResource("Mesh_Crag18")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall07"]
+shape = SubResource("Shape_BasinWall07")
+
+[node name="BasinWall08" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(154, 11.3, -103)
+rotation = Vector3(0, 0.244346, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall08"]
+scale = Vector3(27, 1, 24)
+mesh = SubResource("Mesh_Crag23")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall08"]
+shape = SubResource("Shape_BasinWall08")
+
+[node name="BasinWall09" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-166, 7.3, -66)
+rotation = Vector3(0, 0.174533, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall09"]
+scale = Vector3(24, 1, 24)
+mesh = SubResource("Mesh_Crag15")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall09"]
+shape = SubResource("Shape_BasinWall09")
+
+[node name="BasinWall10" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-172, 8.8, -36)
+rotation = Vector3(0, -0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall10"]
+scale = Vector3(21, 1, 22)
+mesh = SubResource("Mesh_Crag18")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall10"]
+shape = SubResource("Shape_BasinWall10")
+
+[node name="BasinWall11" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-175, 2.3, 21)
+rotation = Vector3(0, 0.10472, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall11"]
+scale = Vector3(23, 1, 25)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall11"]
+shape = SubResource("Shape_BasinWall11")
+
+[node name="BasinWall12" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-170, 4.3, 58)
+rotation = Vector3(0, 0.191986, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall12"]
+scale = Vector3(22, 1, 26)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall12"]
+shape = SubResource("Shape_BasinWall12")
+
+[node name="BasinWall13" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-166, 4.8, 94)
+rotation = Vector3(0, -0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall13"]
+scale = Vector3(23, 1, 27)
+mesh = SubResource("Mesh_Crag18")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall13"]
+shape = SubResource("Shape_BasinWall13")
+
+[node name="BasinWall14" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-135, 3.3, 117)
+rotation = Vector3(0, 0.10472, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall14"]
+scale = Vector3(28, 1, 22)
+mesh = SubResource("Mesh_Crag15")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall14"]
+shape = SubResource("Shape_BasinWall14")
+
+[node name="BasinWall15" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-96, 6.8, 119)
+rotation = Vector3(0, 0.191986, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall15"]
+scale = Vector3(27, 1, 22)
+mesh = SubResource("Mesh_Crag22")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall15"]
+shape = SubResource("Shape_BasinWall15")
+
+[node name="BasinWall16" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-54, 4.3, 116)
+rotation = Vector3(0, 0.0698132, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall16"]
+scale = Vector3(30, 1, 22)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall16"]
+shape = SubResource("Shape_BasinWall16")
+
+[node name="BasinWall17" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(-13, 5.3, 118)
+rotation = Vector3(0, 0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall17"]
+scale = Vector3(29, 1, 23)
+mesh = SubResource("Mesh_Crag19")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall17"]
+shape = SubResource("Shape_BasinWall17")
+
+[node name="BasinWall18" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(29, 4.3, 119)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall18"]
+scale = Vector3(30, 1, 24)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall18"]
+shape = SubResource("Shape_BasinWall18")
+
+[node name="BasinWall19" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(71, 5.8, 122)
+rotation = Vector3(0, -0.139626, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall19"]
+scale = Vector3(28, 1, 22)
+mesh = SubResource("Mesh_Crag20")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall19"]
+shape = SubResource("Shape_BasinWall19")
+
+[node name="BasinWall20" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(110, 4.3, 117)
+rotation = Vector3(0, 0.0698132, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall20"]
+scale = Vector3(31, 1, 21)
+mesh = SubResource("Mesh_Crag17")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall20"]
+shape = SubResource("Shape_BasinWall20")
+
+[node name="BasinWall21" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(148, 6.3, 111)
+rotation = Vector3(0, 0.122173, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall21"]
+scale = Vector3(25, 1, 25)
+mesh = SubResource("Mesh_Crag21")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall21"]
+shape = SubResource("Shape_BasinWall21")
+
+[node name="BasinWall22" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(168, 5.8, 78)
+rotation = Vector3(0, -0.174533, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall22"]
+scale = Vector3(24, 1, 26)
+mesh = SubResource("Mesh_Crag20")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall22"]
+shape = SubResource("Shape_BasinWall22")
+
+[node name="BasinWall23" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(173, 4.8, 36)
+rotation = Vector3(0, 0.244346, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall23"]
+scale = Vector3(22, 1, 24)
+mesh = SubResource("Mesh_Crag18")
+material_override = SubResource("Mat_cliff")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall23"]
+shape = SubResource("Shape_BasinWall23")
+
+[node name="BasinWall24" type="StaticBody3D" parent="Geometry/Bounds"]
+position = Vector3(171, 7.8, -53)
+rotation = Vector3(0, 0.0523599, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Bounds/BasinWall24"]
+scale = Vector3(23, 1, 27)
+mesh = SubResource("Mesh_Crag16")
+material_override = SubResource("Mat_crag")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall24"]
+shape = SubResource("Shape_BasinWall24")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Spawns" type="Node3D" parent="Markers"]
+
+[node name="RaskaHero" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-145, 0, -17)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="BraceInfantry" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-124, 0, -21)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="BasinArchers" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-117, 0, -34)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="UpperWellCart" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-137, 0, -30)
+rotation = Vector3(0, -1.65806, 0)
+gizmo_extents = 1.0
+
+[node name="LowerWellCart" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-134, -4, 31)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="LowerHouseholds" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-142, -4, 43.6)
+rotation = Vector3(0, -1.32645, 0)
+gizmo_extents = 1.0
+
+[node name="MountedReserve" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(30, 0, -78)
+rotation = Vector3(0, -1.65806, 0)
+gizmo_extents = 1.0
+
+[node name="RivalLevy" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(124, 0, -30)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="Routes" type="Node3D" parent="Markers"]
+
+[node name="UpperWellHead" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-145, 0, -35)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="UpperWellStaging" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-130, 0, -17)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="LowerWellHead" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-141, -4, 48)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="LowerWellStaging" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-129, -4, 39)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="WestApproachFork" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-112, 0, 5)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="SaltRoadWest" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-106, 0, -13)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="SaltChargeGate" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-20, 0, -13)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="SaltRoadEast" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(77, 0, -13)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="WashEntryTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-112, -4, 40)
+rotation = Vector3(0, -2.1293, 0)
+gizmo_extents = 1.0
+
+[node name="WashWestBend" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-80, -4, 58)
+rotation = Vector3(0, -1.74533, 0)
+gizmo_extents = 1.0
+
+[node name="WashReedBend" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-38, -4, 65)
+rotation = Vector3(0, -1.3439, 0)
+gizmo_extents = 1.0
+
+[node name="WashBlindBend" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(3, -4, 58)
+rotation = Vector3(0, -1.95477, 0)
+gizmo_extents = 1.0
+
+[node name="WashLongBend" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(40, -4, 88)
+rotation = Vector3(0, -1.0472, 0)
+gizmo_extents = 1.0
+
+[node name="WashEastBend" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(78, -4, 55)
+rotation = Vector3(0, -1.309, 0)
+gizmo_extents = 1.0
+
+[node name="WashRampTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(110, -4, 44)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="WashRampFoot" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(110, -4, 40)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="WashRampTop" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(110, 0, 7)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="ArcherShoulderStart" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(81, 0, -2)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="ArcherShoulder" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(84, 3.5, 23.9)
+rotation = Vector3(0, 2.61799, 0)
+gizmo_extents = 1.0
+
+[node name="MountedReserveTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(80, 0, -72)
+rotation = Vector3(0, 2.87979, 0)
+gizmo_extents = 1.0
+
+[node name="MountedScreenCorner" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(77, 0, -48)
+rotation = Vector3(0, 2.32129, 0)
+gizmo_extents = 1.0
+
+[node name="MountedWarning" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(62, 0, -38)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="MountedChargeStart" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(62, 0, -13)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="MountedRunout" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-74, 0, -13)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="HighBankRally" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(129, 0, -13)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="Objectives" type="Node3D" parent="Markers"]
+
+[node name="LowerStorehouse" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-143, -4, 39)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="LowerBoarding" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-134, -4, 41)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="BasinExit" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(157, 0, -13)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="PhaseZones" type="Node3D" parent="Markers"]
+
+[node name="LowerBoardingArea" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(-134, -2.5, 41)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(13, 3, 10)
+
+[node name="SaltChargeLane" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(-6, 1.5, -13)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(142, 3, 17)
+
+[node name="WashRampChoke" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(110, 0, 24.5)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(10, 9, 31)
+
+[node name="BasinExitZone" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(157, 1.5, -13)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(8, 3, 16)
