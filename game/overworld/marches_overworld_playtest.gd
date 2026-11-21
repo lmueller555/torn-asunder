@@ -1,9 +1,8 @@
 extends SceneTree
 ## Development entry point. Uses an isolated profile, never the game profile.
-const TitleScene := preload("res://game/title_screen.tscn")
+const TitleScene := preload("res://game/overworld/mara_sector_playtest_title.tscn")
+const Title := preload("res://game/overworld/mara_sector_title.gd")
 const Profile := preload("res://game/profile_store.gd")
-const Marches := preload("res://game/overworld/marches_overworld_view.gd")
-const World := preload("res://game/campaign_world.gd")
 
 
 func _initialize() -> void:
@@ -15,19 +14,8 @@ func _open_title() -> void:
 		push_error("The Marches overworld playtest requires a Godot debug build.")
 		quit(1)
 		return
-	var title := TitleScene.instantiate()
-	var profile := Profile.new("user://marches_overworld_playtest.cfg")
-	title._profile = profile
-	root.title = "Torn Asunder | Marches 3D Development Playtest"
-	title.set_development_overworld_factory(_make_marches_map)
+	var title := TitleScene.instantiate() as Title
+	title._profile = Profile.new("user://marches_overworld_playtest.cfg")
+	root.title = "Torn Asunder | Mara 3D Overworld Playtest"
+	title.install_overworld_playtest()
 	root.add_child(title)
-
-
-func _make_marches_map(world: World) -> Marches:
-	if world.campaign_id()!="mara":
-		return null
-	var map := Marches.new()
-	if map.build():
-		return map
-	map.free()
-	return null

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact Moonwash Coast terrain, harbor near and regional tiers, dry-stone shoulder returns, eight thickets and gated transition for the opt-in Mara overworld playtest. Restricted to reviewed native high gate and regional compositions. Not normal launch, optional XP, other campaigns, arbitrary camera or target hardware.",
+  "author": "Torn Asunder Moonwash environment, landmark, batching and title-integration authors",
+  "reviewer": "Independent Moonwash actual-title art gate reviewer",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility, 1280 by 720 exact high-gate and regional cameras and Marches lighting/fog. Approved exact shoulder art and coast thickets in title, followed by a normal source-import equality check; see evidence/moonwash-overworld-development.jpg.",
+    "close_up": "Two original tapered dry-stone returns fade into the headland; distinct existing slate-roof pilot tower, high gate, stone stairs, open pier and water gap by the vessel remain in their original positions.",
+    "motion": "Actual title 44/44, Water Request legacy paths 35/35. Exclusive narrow/wide Harbor tier, eight grounded thickets, approach rays, separate Harbor briefing and opt-in save/profile behavior. Mission result hook used to test the transition, not counted as a played Grain clear.",
+    "reproduction": "After Godot import, run tests/mara_sector_overworld_authored.gd and tests/mara_water_request_authored.gd. Use the existing opt-in playtest and switch to Moonwash only after the actual Grain clear and Water Request.",
+    "measurements": "334/334 native approach samples; 485.07614 m route, max source deviation 0.084 mm. Clean normal import produced no pixel changes in 921,600 samples in each of two matched poses. Strict Harbor batching alone: 409\u2192220 / 291 visible submissions in matched angles; no GPU timing. Shoulder returns: 4,346 triangles and two surfaces."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Original high gate, pier, stepped receiving quay and vessel read at close scale; both new limestone returns blend dry ground into the headland without intersecting usable routes or the wet edge."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Fixed scene camera/light and native author A/B show compatible stone, timber, coastal soil, vegetation and water. The canonical imports match the registered render in both audited poses."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Distinct shore silhouette and visible high-gate label, quiet thicket composition and existing return sign preserve player-facing route and briefing cues."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Real title follows the measured coast path. Transition is a prior-save-preserving zone handoff. All 334 checked ground samples match the intended route, without adding collision to the scenery returns."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Actual combined title and repeated legacy save paths passed with canonical resources; no raw runtime art loading. Near independently batched scope reduces submissions as shown in evidence, without a device performance claim."
+    }
+  },
+  "files": {
+    "assets/overworld/moonwash/moonwash-coast.glb": "cc7212478f47e6d0fcb9f539faea999585442cba8fa7e7c379925d8e37865fce",
+    "assets/overworld/moonwash/moonwash-coast.glb.import": "fb501e47c29768f5d1faad0a0e9819324dccc1b846c76e14c017170c3d184159",
+    "assets/overworld/moonwash/moonwash-harbor-near.scn": "4af7ed9deae3715d4c0cbe60ec4e94097c2b6293376303652885a043a9f8ab9c",
+    "assets/overworld/moonwash/moonwash-harbor-regional.glb": "8d9208d4f08d130d6ed639d3c99d631be763eb496e61e1745a3e27c0bdd795ff",
+    "assets/overworld/moonwash/moonwash-harbor-regional.glb.import": "e79b6c4a8f997e4526009d2df93c3c3ddc9ccdde5a7de6990c54a24dfd9b20cd",
+    "assets/overworld/moonwash/moonwash-sector-data.tres": "1a7697956c2c9f1b2a3c7a01935aa699f01b9e09f57fbec23e34b1aeb4a7d65b",
+    "assets/overworld/moonwash/moonwash-shoulder-returns.glb": "401be11325bb0c7ef82211b48c36f287cff2d267b1c435196d65e36671b572eb",
+    "assets/overworld/moonwash/moonwash-shoulder-returns.glb.import": "69c5a71ad093b6990d5c7d246992b11c3f79ca1c268a853117a158f2e2099d73",
+    "assets/source/overworld/moonwash/moonwash-shoulder-returns.blend": "de24731f629ce4ec5da2f855a94da93789bf8aae41eab36e4c2c85e3d12c88f1",
+    "assets/source/overworld/moonwash/moonwash_coast.blend": "678f96b85b5e1f464334f2ec5ecc674e5ea034457a598da5a5ddb0f2288c3e09",
+    "assets/source/overworld/moonwash/moonwash_harbor_post_rise.blend": "6c9db130ad53c8225dda05f00da54f4357076580e7f8c94c44f40ce91045d9ce",
+    "assets/source/overworld/moonwash/moonwash_harbor_regional.blend": "fc5849eca6ba8c08e354120e58eccdefeecf12b70dd812da4ca58db3ad069a1b",
+    "docs/audits/evidence/moonwash-overworld-development.jpg": "9efdbe7e907ee33ec29383806790594d0bf39de1ac9b3d492899a890ad91305d",
+    "game/campaign_world.gd": "6e96e18488e14cde2646510b044e68caed714c0d687be83ea1a8f619d431258e",
+    "game/overworld/mara_sector_playtest_title.tscn": "35c3b681f30d5b694a50293463af0803a148d124289eed02e6ed1e7f675d77fe",
+    "game/overworld/mara_sector_title.gd": "5c67905ce02bd9b478cb0c09759f525372cd9a732c4aa2a8308b5a64ed418043",
+    "game/overworld/mara_sector_transfer.gd": "856843c9201b5b26f3bd3b59f2ccce8936078347ca31f8904dea5c86e2892249",
+    "game/overworld/marches_overworld_playtest.gd": "2ed353741a48bab0bf9a7a239ece20e7417a53cf25408b8e30e78197cd46dc5e",
+    "game/overworld/marches_overworld_view.gd": "195de6aad9e41a4bbf6c3dabeb4e0b9b8eefddcaa0c12f931d6b637fda624507",
+    "game/overworld/moonwash/coast_map.gd": "148d1e0f2bfec4cabeb3b3d6813f8ba2251ab57252f453577a9de133536c040d",
+    "game/overworld/moonwash/coast_renderer.gd": "a1ac62d29ad8e87798d1ef766741be9b3ba8fa345ded5b6d42818e1fdd813207",
+    "game/overworld/moonwash/coast_renderer.tscn": "e6a9f9da3ea0cecb63299ba03ce1550675729d5df374bf28174d4c54b3c2359e",
+    "game/overworld/moonwash/coast_route.gd": "1c37b04bf14832862a5c3c8a1efb978ebf34dd8136bfd04c05b52e1301e212bd",
+    "game/profile_store.gd": "b7cd2c315ea6fa2f1687b4d80f4103efe2e1e547a0e5491695151858845970ae",
+    "game/title_screen.gd": "ca117fec5f6e6a47090bca0fdbd17c47bc4f8018c809d23723fc543e47df952e"
+  }
+}

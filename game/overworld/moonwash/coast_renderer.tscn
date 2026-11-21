@@ -1,0 +1,24 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/overworld/moonwash/coast_renderer.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/overworld/moonwash/moonwash-coast.glb" id="2"]
+[ext_resource type="PackedScene" path="res://assets/overworld/moonwash/moonwash-harbor-regional.glb" id="3"]
+[ext_resource type="PackedScene" path="res://assets/overworld/moonwash/moonwash-harbor-near.scn" id="4"]
+[ext_resource type="PackedScene" path="res://assets/overworld/moonwash/moonwash-shoulder-returns.glb" id="5"]
+[ext_resource type="Resource" path="res://assets/overworld/moonwash/moonwash-sector-data.tres" id="6"]
+
+[node name="MarchesRelief" type="Node3D"]
+script = ExtResource("1")
+coast_scene = ExtResource("2")
+harbor_regional_scene = ExtResource("3")
+harbor_near_scene = ExtResource("4")
+shoulder_returns_scene = ExtResource("5")
+data = ExtResource("6")
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 44.0
+near = 0.5
+far = 1700.0
+current = true
+
+[node name="Party" type="Node3D" parent="."]

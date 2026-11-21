@@ -48,10 +48,14 @@ enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
 	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
-	MARA_LEAD_MELEE,
+	MARA_LEAD_MELEE, MARA_WATER_REQUEST_RECOVERY,
 }
 
 const MARA_LEAD_MELEE_ENTRY := "Lead Melee Training"
+const MARA_COAST_ROAD := "moonwash_road"
+const MARA_COAST_HARBOR := "moonwash_harbor"
+const MARA_COAST_GRAIN := "mara_grain_crossing"
+const MARA_COAST_QUAY := "mara_moonwash_quay"
 const RATING_NAMES := {
 	Unit.Damage.MELEE: "Melee Power",
 	Unit.Damage.RANGED: "Ranged Power",
@@ -97,6 +101,9 @@ var _selection_summary: Label
 var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
 var _development_overworld_factory: Callable
+var _development_mara_water_gate := false
+var _water_request_stage: Control
+var _water_request_world: CampaignWorld
 var _forward_camp_return: ForwardCamp.Definition
 var _campaign_warning := ""
 var _campaign_battle: Node3D
@@ -319,12 +326,15 @@ func _open_campaign(campaign: Dictionary) -> void:
 
 
 ## An explicit development harness can supply a fresh map for supported campaign locations.
-func set_development_overworld_factory(factory: Callable) -> void:
+func set_development_overworld_factory(factory: Callable, require_mara_water_request := false) -> void:
 	if OS.is_debug_build():
 		_development_overworld_factory = factory
+		_development_mara_water_gate = factory.is_valid() and require_mara_water_request
 
 
 func _show_world_map() -> void:
+	if _maybe_show_required_water_request():
+		return
 	_replace_stage(Page.WORLD_MAP)
 	if _add_development_overworld():
 		_show_campaign_warning()
@@ -390,6 +400,14 @@ func _show_forward_camp_operations(camp: ForwardCamp.Definition) -> void:
 
 
 func _on_waypoint_arrived(_id: String) -> void:
+	# A valid old Harbor save is allowed to resume in place. A new arrival
+	# without the required beat must not make such a save in the first place.
+	if _requires_water_request() and _campaign_world.current_waypoint_id() == MARA_COAST_HARBOR:
+		var stored := _profile.load_campaign_world("mara")
+		if stored.current_waypoint_id() != MARA_COAST_HARBOR:
+			_campaign_world = stored
+			_show_world_map()
+			return
 	if _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The arrived waypoint could not be saved."
 	if not _show_waypoint_intermission(false) and _campaign_world.mission_at_current_waypoint().is_empty():
@@ -397,6 +415,8 @@ func _on_waypoint_arrived(_id: String) -> void:
 
 
 func _show_waypoint_intermission(include_victory_coda := true) -> bool:
+	if _maybe_show_required_water_request():
+		return true
 	var campaign_id := _campaign_world.campaign_id()
 	var beat := CampaignDeployments.intermission_at(campaign_id, _campaign_world.current_waypoint_id())
 	if beat == &"" and include_victory_coda:
@@ -415,7 +435,98 @@ func _finish_waypoint_intermission(campaign_id: String, beat: StringName) -> voi
 	_show_world_map()
 
 
+func _requires_water_request() -> bool:
+	return _development_mara_water_gate and _campaign_world != null 		and _campaign_world.campaign_id() == "mara" 		and _campaign_world.current_waypoint_id() in [MARA_COAST_ROAD, MARA_COAST_HARBOR] 		and _profile.completed_missions("mara").has(MARA_COAST_GRAIN) 		and not _profile.has_seen_intermission("mara", DialogueBeats.MARA_WATER_REQUEST)
+
+
+func _maybe_show_required_water_request() -> bool:
+	if not _requires_water_request():
+		return false
+	if not is_instance_valid(_water_request_stage) or _water_request_stage != _stage or _water_request_world != _campaign_world:
+		_present_required_water_request()
+	return true
+
+
+func _water_request_content() -> Dictionary:
+	return DialogueBeats.get_beat(DialogueBeats.MARA_WATER_REQUEST)
+
+
+func _present_required_water_request() -> void:
+	_replace_stage(Page.CAMPAIGN_DIALOGUE)
+	var world := _campaign_world
+	var waypoint := world.current_waypoint_id()
+	var page := _stage
+	_water_request_stage = page
+	_water_request_world = world
+	var dialogue: CampaignDialogue = CAMPAIGN_DIALOGUE_SCENE.instantiate()
+	dialogue.completed.connect(_on_required_water_dialogue.bind(page, world, waypoint, true))
+	dialogue.cancelled.connect(_on_required_water_dialogue.bind(page, world, waypoint, false))
+	_stage.add_child(dialogue)
+	if not dialogue.present(DialogueBeats.MARA_WATER_REQUEST, _water_request_content(), _profile.setting("reduced_motion")):
+		_water_request_recovery("The Water Request could not be opened.", false, false)
+
+
+func _owns_required_water_page(page: Control, world: CampaignWorld, waypoint: String) -> bool:
+	return is_instance_valid(page) and page == _stage and page == _water_request_stage 		and world == _campaign_world and world.current_waypoint_id() == waypoint and _requires_water_request()
+
+
+func _on_required_water_dialogue(beat: StringName, page: Control, world: CampaignWorld,
+		waypoint: String, completed: bool) -> void:
+	if beat != DialogueBeats.MARA_WATER_REQUEST or not _owns_required_water_page(page, world, waypoint):
+		return
+	if completed:
+		_save_required_water_request(page, world, waypoint)
+	else:
+		# The stock non-cinematic Back/Escape cancels dialogue. Require a
+		# distinct explicit Skip action for a mandatory campaign beat.
+		_water_request_recovery("Read the Water Request, or choose to skip it.", true, false)
+
+
+func _save_required_water_request(page: Control, world: CampaignWorld, waypoint: String) -> void:
+	if not _owns_required_water_page(page, world, waypoint):
+		return
+	if _profile.record_mara_water_request_seen_at(waypoint) != OK:
+		_water_request_recovery("The Water Request could not be saved. Harbor travel is still locked.", false, true)
+		return
+	_water_request_stage = null
+	_water_request_world = null
+	_show_world_map()
+
+
+func _water_request_recovery(message: String, may_skip: bool, retry_save: bool) -> void:
+	_open_page(Page.MARA_WATER_REQUEST_RECOVERY)
+	var page := _stage
+	var world := _campaign_world
+	var waypoint := world.current_waypoint_id()
+	_water_request_stage = page
+	_water_request_world = world
+	var back := _heading("Water Request", "Required before Moonwash Harbor")
+	back.text = "Return to Title"
+	_label(_stage, message, Rect2(76, 234, 1220, 42), 24, IVORY)
+	var retry := _button("Retry Save" if retry_save else "Retry Water Request", Rect2(76, 307, 330, 56),
+		func() -> void:
+			if not _owns_required_water_page(page, world, waypoint):
+				return
+			if retry_save:
+				_save_required_water_request(page, world, waypoint)
+			else:
+				_present_required_water_request()
+	)
+	if may_skip:
+		var skip := _button("Skip Water Request", Rect2(428, 307, 330, 56),
+			_save_required_water_request.bind(page, world, waypoint))
+		_link_focus(retry, SIDE_RIGHT, skip)
+		_link_focus(skip, SIDE_LEFT, retry)
+		_link_focus(skip, SIDE_TOP, back)
+	_link_focus(back, SIDE_BOTTOM, retry)
+	_link_focus(retry, SIDE_TOP, back)
+	retry.grab_focus()
+
+
 func _show_campaign_mission_briefing(mission_id: String) -> void:
+	if _development_mara_water_gate and mission_id == MARA_COAST_QUAY:
+		if _maybe_show_required_water_request() or not _campaign_world or _campaign_world.current_waypoint_id() != MARA_COAST_HARBOR:
+			return
 	var deployment := CampaignDeployments.for_mission(mission_id)
 	var mission := CampaignMissions.mission_for_campaign(_active_campaign.id, mission_id)
 	if deployment.is_empty() or mission.is_empty():
@@ -473,6 +584,8 @@ func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confi
 
 
 func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
+	if mission_id == MARA_COAST_QUAY and _maybe_show_required_water_request():
+		return
 	if _page != Page.MISSION_BRIEFING or not _campaign_world or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
 	var campaign_id: String = _active_campaign.id

@@ -184,6 +184,7 @@ const _MAPS := {
 var _campaign_id: String
 var _map: Dictionary
 var _current_id := ""
+var _travel_epoch := 0
 var _visited := PackedStringArray()
 
 
@@ -294,7 +295,22 @@ func travel_to(waypoint_id: String, completed_ids: PackedStringArray) -> TravelR
 			if not option.is_open:
 				return TravelResult.LOCKED
 			_current_id = waypoint_id
+			_travel_epoch += 1
 			if not _visited.has(waypoint_id):
 				_visited.append(waypoint_id)
 			return TravelResult.ARRIVED
 	return TravelResult.NOT_ADJACENT
+
+
+## Transient movement revision, not a persisted save format.
+func travel_epoch() -> int:
+	return _travel_epoch
+
+
+## A detached transaction candidate. Preserve session visits as well as position.
+func fork_for_travel() -> RefCounted:
+	var fork = new(_campaign_id)
+	fork._current_id = _current_id
+	fork._travel_epoch = _travel_epoch
+	fork._visited = _visited.duplicate()
+	return fork
