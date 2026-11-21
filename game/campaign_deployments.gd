@@ -11,6 +11,12 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.MARA_MINE_DEBRIEF,
 		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
 	},
+	"orc_mine_witness": {
+		"scene": preload("res://game/battlefield/raska_mine_witness_campaign.tscn"),
+		"dispatch": Beats.RASKA_MINE_DISPATCH,
+		"debrief": Beats.RASKA_MINE_DEBRIEF,
+		"orders": "Reach the tunnel outlet and stop the Human rear detachment from sealing it. Let the other workers reach safety, accept the willing witness's terms in person, and escort her to the Orc rally. Leave the Godbridle to Mara.",
+	},
 	"sova_mine_tunnels": {
 		"scene": preload("res://game/battlefield/sova_mine_evacuation_campaign.tscn"),
 		"dispatch": Beats.SOVA_MINE_DISPATCH,

@@ -17,7 +17,9 @@ New Game opens the Campaign Vault and its six leader portraits. Choose Mara to e
 
 Sova also starts on the campaign map, at Cairnspine Camp. Read his dispatch in **Camp Operations**, travel to the same **Mine**, then confirm deployment for the campaign-scale graybox evacuation. Once both work groups reach safety and the witness is waiting at the outlet, the debrief returns you to the map with the route to Cairnspine Assembly open. The Assembly is a waypoint, not a deployable mission.
 
-Continue and Load restore the last arrived waypoint for Mara and Sova independently. The other leaders still open their briefing and practice screens. Settings saves fullscreen and reduced-motion preferences.
+Raska starts at Basin Camp, with his own dispatch and Mine briefing. Prevent the detachment from sealing the outlet, secure the witness’s consent, and escort her to the Orc rally. Victory and debrief return you to the map with Basin Well Road open as a waypoint, not a second battle.
+
+Continue and Load restore the last arrived waypoint for Mara, Sova, and Raska independently. The other leaders still open their briefing and practice screens. Settings saves fullscreen and reduced-motion preferences.
 
 Open **Combat Drills** from Camp Operations or a leader's practice briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 

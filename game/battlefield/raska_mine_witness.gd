@@ -1,5 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
 
+## Emitted once when an attempt reaches a terminal result.
+signal mission_finished(won: bool)
+
 const Witness := preload("res://game/battlefield/orc_mine_witness.gd")
 const CREW_SPEED := 3.1
 const DETACHMENT_SPEED := 1.55
@@ -96,6 +99,8 @@ func _physics_process(delta: float) -> void:
 	_interact_requested = false
 	objective.advance(observation)
 	_refresh_objective()
+	if _finished():
+		mission_finished.emit(objective.phase == Witness.Phase.SUCCEEDED)
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -29,6 +29,27 @@ const _MAPS := {
 			{"from_id": "year_one_mine", "to_id": "marches_road", "required_clear_id": "mara_mine_escort"},
 		],
 	},
+	"raska": {
+		"start": "basin_camp",
+		"waypoints": {
+			"basin_camp": {
+				"id": "basin_camp", "label": "Basin Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.78, 0.41),
+			},
+			"year_one_mine": {
+				"id": "year_one_mine", "label": "The Mine", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.49, 0.34), "mission_id": "orc_mine_witness",
+			},
+			"basin_well_road": {
+				"id": "basin_well_road", "label": "Basin Well Road", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.83, 0.65),
+			},
+		},
+		"routes": [
+			{"from_id": "basin_camp", "to_id": "year_one_mine"},
+			{"from_id": "year_one_mine", "to_id": "basin_well_road", "required_clear_id": "orc_mine_witness"},
+		],
+	},
 	"sova": {
 		"start": "cairnspine_camp",
 		"waypoints": {
