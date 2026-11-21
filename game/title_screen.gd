@@ -617,17 +617,18 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 	_training_level = _label(_stage, "", Rect2(76, 228, 445, 58), 40, IVORY, DISPLAY_FACE)
 	_training_stats = _label(_stage, "", Rect2(76, 294, 445, 164), 24, IVORY)
 	_training_stats.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_training_award = _button("Award 100 XP", Rect2(76, 550 if has_promotion else 573, 345, 45), _award_training_experience)
+	_training_award = _button("Award 100 XP", Rect2(76, 566 if has_promotion else 573, 345, 45), _award_training_experience)
 	_training_inspect = null
 	_training_planner = null
 	_training_promotion = null
 	_training_promotion_status = null
 	if has_promotion:
-		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
+		_training_promotion_status = _label(_stage, "", Rect2(76, 477, 435, 72), 18, GOLD)
+		_training_promotion_status.add_theme_constant_override("line_spacing", -4)
 		_training_promotion_status.name = "Promotion Status"
-		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
+		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 612, 345, 45), _promote_training_unit)
 	if definition.has("model"):
-		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
+		_training_inspect = _button("Inspect 3D Model", Rect2(76, 658 if has_promotion else 650, 345, 45), _show_unit_model.bind(definition))
 	elif PRACTICE_ROSTERS.has(_active_campaign.id):
 		_training_planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
 
