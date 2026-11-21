@@ -66,6 +66,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "CAIRNSPINE ASSEMBLY · PUBLIC HEARING",
 		"orders": "Choose one lectern and read all three passages with the public scribe. Hold armed formations outside the hearing ring and leave its public exit clear. Keepers who walk out are not targets.",
 	},
+	"sova_vault_return": {
+		"scene": preload("res://game/battlefield/sova_vault_return_playtest.tscn"),
+		"dispatch": Beats.SOVA_VAULT_RETURN_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SOVA_VAULT_RETURN_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE VAULT · SHELF AND SIDE PATH",
+		"orders": "The valleys have pledged guards under public custody terms. Take either path with Sova carrying the Godbridle. Hold a guard at the marked approach to clear the closure zone, then finish the vault return. Leave the witness terrace open.",
+	},
 	"ilyra_moonwash_rescue": {
 		"scene": preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.tscn"),
 		"dispatch": Beats.ILYRA_MOONWASH_DISPATCH,
@@ -73,6 +81,14 @@ const _DEPLOYMENTS := {
 		"result_debrief": true,
 		"battlefield_label": "MOONWASH HARBOR · RESCUE DECKS",
 		"orders": "Reach the stranded deck and rig both lines in either order. Get both crews onto the receiving deck. Hold the Marines at the mooring if salvagers block the forward line. Shore cargo is optional: carry it aboard and load it before the last crew arrives.",
+	},
+	"ilyra_coast_survey": {
+		"scene": preload("res://game/battlefield/ilyra_coast_survey_campaign.tscn"),
+		"dispatch": Beats.ILYRA_COAST_SURVEY_DISPATCH,
+		"briefing_dispatch": true,
+		"result_debrief": true,
+		"battlefield_label": "MOONWASH SURVEY SHORE · BEACH AND HEADLAND",
+		"orders": "Record both readings as Ilyra. Hold the Shore Detachment at a marked guard ring. Transmit from either staffed, secure relay while the cutter is at its stop and in sight. Missed passes return.",
 	},
 	"neris_failing_grove": {
 		"scene": preload("res://game/battlefield/neris_failing_grove_playtest.tscn"),
@@ -82,24 +98,32 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "ISOLATED GROVE · RAISED NURSERY ROAD",
 		"orders": "Speak to the grove envoy, then call the volunteers. Hold the low-track approach to keep the loading yard clear. Follow the sled along the raised road and help plant the tree at the nursery. Leave the town well alone.",
 	},
+	"neris_spanwater_feeder": {
+		"scene": preload("res://game/battlefield/neris_spanwater_playtest.tscn"),
+		"dispatch": Beats.NERIS_SPANWATER_FEEDER_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.NERIS_SPANWATER_FEEDER_DEBRIEF,
+		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
+		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
+	},
 }
 
 
 const _INTERMISSIONS := {
 	"mara": {"moonwash_road": Beats.MARA_WATER_REQUEST},
-	"ilyra": {"pilot_villages": &"ilyra_record_interlude"},
+	"sova": {"cairnspine_vault_road": Beats.SOVA_GODBRIDLE_HANDOVER},
 	"sereth": {"court_chambers": &"sereth_writ_interlude"},
 }
-
-
-static func intermission_at(campaign_id: String, waypoint_id: String) -> StringName:
-	return _INTERMISSIONS.get(campaign_id, {}).get(waypoint_id, &"")
 
 
 ## Conversations already written for missions that run on the generic mission view.
 const _AUTHORED_BEATS := {
 	"sereth_voices_at_the_cut": {"dispatch": Beats.SERETH_CUT_DISPATCH, "debrief": Beats.SERETH_CUT_DEBRIEF},
 }
+
+
+static func intermission_at(campaign_id: String, waypoint_id: String) -> StringName:
+	return _INTERMISSIONS.get(campaign_id, {}).get(waypoint_id, &"")
 
 
 ## Missions with a dedicated battlefield script use it. Every other catalog mission runs

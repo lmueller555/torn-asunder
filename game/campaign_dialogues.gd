@@ -3,6 +3,7 @@ extends RefCounted
 
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
+const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
 
 const MARA_MINE_DISPATCH := &"mara_mine_dispatch"
 const MARA_MINE_DEBRIEF := &"mara_mine_debrief"
@@ -30,8 +31,13 @@ const MARA_HIGH_QUAY_DEBRIEF := &"mara_high_quay_debrief"
 const ILYRA_MOONWASH_DISPATCH := &"ilyra_moonwash_dispatch"
 const ILYRA_MOONWASH_CARGO_DEBRIEF := &"ilyra_moonwash_debrief_cargo_recovered"
 const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
+const ILYRA_COAST_SURVEY_DISPATCH := &"ilyra_coast_survey_dispatch"
+const ILYRA_COAST_SURVEY_BEACH_DEBRIEF := &"ilyra_coast_survey_debrief_beach"
+const ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF := &"ilyra_coast_survey_debrief_headland"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
+const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
+const NERIS_SPANWATER_FEEDER_DEBRIEF := &"neris_spanwater_feeder_debrief"
 const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
@@ -61,6 +67,7 @@ const ILYRA := "Tide Speaker Ilyra Venn"
 const PILOT := "Moonwash Pilot"
 const SIGNALLER := "Fleet Signaller"
 const PORT_CLERK := "Harbor Clerk"
+const INLET_PILOT := "Fishing Inlet Pilot"
 
 const NERIS := "Rootspeaker Neris Alder"
 const GROVE_ENVOY := "Grove Envoy"
@@ -346,6 +353,38 @@ const BEATS := {
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Bring it when the pilots come in. I know where my street was. I want the chart to show where their villages fish and land now."},
 		],
 	},
+	ILYRA_COAST_SURVEY_DISPATCH: {
+		"title": "Two Shorelines",
+		"location": "Moonwash Survey Shore · Before the soundings",
+		"lines": [
+			{"speaker": PORT_CLERK, "text": "The ports want a chart of the old coast for their claim. One sent armed crews ashore to take the chart straight to its own delegation."},
+			{"speaker": INLET_PILOT, "text": "Raise those streets and my skiff may sit on stone. We'll show you our inlet if our soundings go on the same chart as yours."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "They will. I'll take a reading at the ancestral stone and one at the fishing inlet. Neither goes to the cutter without the other."},
+			{"speaker": SIGNALLER, "text": "The cutter skirts the shoal and stops twice. The beach stop comes first, but the landing crews can reach it. The headland relay takes the inland ramp and gives us better cover."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Hold whichever relay gives us a clear view of the cutter at its stop. Keep the signal up until they acknowledge both readings. If the cutter goes out of sight, keep the readings and try its next pass."},
+		],
+	},
+	ILYRA_COAST_SURVEY_BEACH_DEBRIEF: {
+		"title": "The Chart from the Beach",
+		"location": "Moonwash survey cutter · After the beach signal",
+		"lines": [
+			{"speaker": SIGNALLER, "text": "The cutter acknowledged both readings from the beach. We held the signal long enough to send the stone and the inlet together."},
+			{"speaker": PORT_CLERK, "text": "Which marks go in the copy for the ports? They only asked for the drowned coast."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Both shorelines. Put the fishing harbor beside my old street. Give the villages the same chart. No one gets a copy with their neighbors rubbed out."},
+			{"speaker": INLET_PILOT, "text": "I'll bring it back to the people who lent us their soundings. If you need boats in the shallows again, send for us."},
+		],
+	},
+	ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF: {
+		"title": "The Chart from the Headland",
+		"location": "Moonwash survey cutter · After the headland signal",
+		"lines": [
+			{"speaker": SIGNALLER, "text": "The cutter came clear of the headland and acknowledged both readings from the high relay. We sent the stone and the inlet together."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "At the stone I could put my finger on my old street. From up there I could see where the fishing boats come home now. Draw both shorelines."},
+			{"speaker": PORT_CLERK, "text": "One copy for the ports and one for the villages?"},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "The same chart for all of them. Let the ports argue their claim with the inlet still on the page."},
+			{"speaker": INLET_PILOT, "text": "I'll carry ours home. If you need boats in the shallows again, send for us."},
+		],
+	},
 	NERIS_FAILING_GROVE_DISPATCH: {
 		"title": "What We Planted Here",
 		"location": "Isolated grove · Before the transplant",
@@ -366,6 +405,26 @@ const BEATS := {
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
 			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
+		],
+	},
+	NERIS_SPANWATER_FEEDER_DISPATCH: {
+		"title": "Water at the Town Gauge",
+		"location": "Spanwater feeder path · Before the release",
+		"lines": [
+			{"speaker": FEEDER_KEEPER, "text": "The first tree is still on well water. Raska's opening the spillway, not the sea gate. A full river won't help that tree if the feeder fills with silt."},
+			{"speaker": GROVE_ENVOY, "text": "The crew has the guide boards. The inlet rack is already clogged, and March troops have been seen on the maintenance path."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll clear the rack. Hold a platoon at the work screen so the crew can fit the boards. If the first rush brings more debris, call me back to the rack."},
+			{"speaker": FEEDER_KEEPER, "text": "Follow the raised path when the ford goes under. The gauge at the town end tells us whether water actually made it through."},
+		],
+	},
+	NERIS_SPANWATER_FEEDER_DEBRIEF: {
+		"title": "Take the Gauge",
+		"location": "Town feeder gauge · After the crest",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "The water's at the town mark and holding. The boards stayed in place through the crest. Here's your gauge book."},
+			{"speaker": FEEDER_KEEPER, "text": "I'll take the morning reading. The wells stay in town hands. The nursery plot stays yours, as agreed."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "Have someone show our volunteers how to read the mark. Put us on the rack patrol after storms. That tree will need water long after our platoons leave."},
+			{"speaker": GROVE_ENVOY, "text": "I'll take the first turn. It used to take me all morning to carry enough water for one tree."},
 		],
 	},
 	SERETH_CUT_DISPATCH: {
@@ -412,6 +471,18 @@ static func moonwash_debrief_id(result: StringName) -> StringName:
 			return ILYRA_MOONWASH_CARGO_DEBRIEF
 		Moonwash.CREWS_ONLY:
 			return ILYRA_MOONWASH_CREWS_DEBRIEF
+	return &""
+
+
+## Relay choice changes the report, not the chart or the next mission.
+static func survey_debrief_id(phase: Survey.Phase, signal_site: Survey.SignalSite) -> StringName:
+	if phase != Survey.Phase.SUCCEEDED:
+		return &""
+	match signal_site:
+		Survey.SignalSite.BEACH:
+			return ILYRA_COAST_SURVEY_BEACH_DEBRIEF
+		Survey.SignalSite.HEADLAND:
+			return ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF
 	return &""
 
 

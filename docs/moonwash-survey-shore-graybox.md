@@ -1,6 +1,6 @@
 # Moonwash Survey Shore: campaign terrain graybox
 
-`game/battlefields/moonwash_survey_shore.tscn` is new terrain for Ilyra's [Two Shorelines](campaigns/elves.md#2-two-shorelines), not the post-rise harbor from Hulls on Stone. It is a static 360 × 244 m envelope with two elevations (+1.2 m coast and +7.2 m apron, relative to water). No chart, boat behavior, signal progression, armed crews, water simulation, UI or campaign launch is added here. The [pure objective controller](../game/battlefield/ilyra_coast_survey.gd) stays the authority for read/secure/LOS/hold/complete outcomes.
+`game/battlefields/moonwash_survey_shore.tscn` is new terrain for Ilyra's [Two Shorelines](campaigns/elves.md#2-two-shorelines), not the post-rise harbor from Hulls on Stone. It is a static 360 × 244 m envelope with two elevations (+1.2 m coast and +7.2 m apron, relative to water). The map is static; the standalone Two Shorelines prototype below supplies the moving cutter, shore crews and signal play. The [pure objective controller](../game/battlefield/ilyra_coast_survey.gd) stays the authority for read/secure/LOS/hold/complete outcomes.
 
 ## Land contracts
 
@@ -20,7 +20,7 @@ The landward slope is ~6 m in 35 m, with 10 m of physical width. Beach approach 
 
 ## Cutter route and sightlines
 
-Read the ordered children of `Markers/BoatRoute` or use their names below. All markers are the waterline (Y=0); future code supplies receiver height and ship art. The loop is about **661 m**, measured segment-by-segment including the return to the first point.
+Read the ordered children of `Markers/BoatRoute` or use their names below. All markers are the waterline (Y=0); the prototype uses a 2.5 m receiver and a graybox hull. The loop is about **661 m**, measured segment-by-segment including the return to the first point.
 
 ```text
 WestBlindPass → WestRound → BeachApproach → BeachHold
@@ -28,10 +28,10 @@ WestBlindPass → WestRound → BeachApproach → BeachHold
 → EastOuterTurn → OuterEast → OuterWest → WestBlindPass …
 ```
 
-- `BeachApproach` and `HeadlandApproach` are visible advance-warning points from their matching signal sites, **not stops**. `BeachHold` and `HeadlandHold` expose each corresponding acknowledgment opportunity. A future controller chooses cutter cadence and dwell long enough for signaling and allows the loop to return after a miss. This does not imply that the cutter should cruise at infantry speed or that these are the only points visible.
+- `BeachApproach` and `HeadlandApproach` are visible advance-warning points from their matching signal sites, **not stops**. `BeachHold` and `HeadlandHold` expose each corresponding acknowledgment opportunity. The cutter holds for 12 seconds at each stop and returns after a miss. This does not imply that the cutter should cruise at infantry speed or that these are the only points visible.
 - From the beach, `WestHeadland` hides the cutter at `WestBlindPass`. From the high site, a different landmass, `EastHeadland`, hides it at `EastBlindPass`. Tests check the first actual solid collider, not a nominal phase flag. Tested at a 2.6 m land signal origin and 2.5 m receiver above water.
 - The pale shoal has colliding submerged bars, not just painted shallows. A 5 × 12 m nominal hull with 1.25 m draft clears the marked polyline and rotating corners; the straight cut hits the bars. This is sampled static clearance, not a sailing model, and should be repeated if the cutter footprint or draft changes.
-- Solid geometry uses collision layer 1. Only dry ground, the jetty and the ramp/apron are also tagged walkable (layer 2). The visual water has no collision or buoyancy. The later adapter must keep land and water actors in their own domains; the current dry-ground probe assumes valid land spawns.
+- Solid geometry uses collision layer 1. Only dry ground, the jetty and the ramp/apron are also tagged walkable (layer 2). The visual water has no collision or buoyancy. The prototype keeps land movement and the cutter route in their own domains. The dry-ground probe assumes valid land spawns.
 
 ## Scale and inspection
 
@@ -44,3 +44,18 @@ godot tests/moonwash_survey_shore_preview.tscn
 ```
 
 Preview keys: **1** overall coast, **2** local command view, **3** beach hero view, **4** headland hero view. The dotted line, hold rings, figures and docked cutter proxies are static inspection aids, not mission actors or UI. Ocean and formations are graybox shapes, not final art.
+
+## Standalone Two Shorelines prototype
+
+```sh
+godot game/battlefield/ilyra_coast_survey_campaign.tscn
+godot --headless --script tests/ilyra_coast_survey_campaign.gd
+```
+
+In the Elven campaign, clear Hulls on Stone, travel from Moonwash Harbor to Survey Shore, and confirm deployment. Completing either relay opens travel to Spanwater Lock but not a third battle. To jump straight to the prototype for testing, use the scene launch above.
+
+Follow the amber trails to the stone and working inlet and use **Cross / Space** to record each reading. The first reading gets the survey cutter under way on its full shoal-safe loop; the second draws the two port crews toward their respective relays. Their routes continue while you command. The cutter’s labeled cyan route and both marked holds appear in command view (**L2 / Shift**). The HUD distinguishes an obstructed signal, a visible approach, and a cutter actually stopped at the matching relay.
+
+Send the Shore Detachment along the inland lane to the blue guard ring at either relay. **Square / right-click** issues Move; **Cross / H** holds in command view. Ilyra can request transmission only in hero view at the selected relay; a clear terrain ray, physical cutter stop, and three uninterrupted seconds at a staffed and uncontested relay are required. If interrupted, only the signal resets. Use **Options / Backspace** or the HUD button to retry. Either relay acknowledges the same complete chart, and neither requires defeating a crew.
+
+This prototype covers route choice and local pressure, not hero injuries, cutter combat, tides, or port fleet support. Its completion signal emits `chart_circulated` once after the cutter acknowledges both readings.

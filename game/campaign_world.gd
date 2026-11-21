@@ -86,14 +86,19 @@ const _MAPS := {
 				"map_position": Vector2(0.78, 0.55), "mission_id": "sova_public_record",
 			},
 			"cairnspine_vault_road": {
-				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.86, 0.76), "mission_id": "sova_vault_return",
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.86, 0.76),
+			},
+			"cairnspine_vault": {
+				"id": "cairnspine_vault", "label": "Cairnspine Vault", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.63, 0.67), "mission_id": "sova_vault_return",
 			},
 		},
 		"routes": [
 			{"from_id": "cairnspine_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "cairnspine_assembly", "required_clear_id": "sova_mine_tunnels"},
 			{"from_id": "cairnspine_assembly", "to_id": "cairnspine_vault_road", "required_clear_id": "sova_public_record"},
+			{"from_id": "cairnspine_vault_road", "to_id": "cairnspine_vault"},
 		],
 	},
 	"ilyra": {
@@ -111,10 +116,6 @@ const _MAPS := {
 				"id": "moonwash_survey_shore", "label": "Survey Shore", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.52, 0.82), "mission_id": "ilyra_coast_survey",
 			},
-			"pilot_villages": {
-				"id": "pilot_villages", "label": "Pilot Villages", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.13, 0.70),
-			},
 			"spanwater_lock": {
 				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.69, 0.87), "mission_id": "ilyra_spanwater_evacuation",
@@ -123,8 +124,7 @@ const _MAPS := {
 		"routes": [
 			{"from_id": "moonwash_camp", "to_id": "moonwash_harbor"},
 			{"from_id": "moonwash_harbor", "to_id": "moonwash_survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
-			{"from_id": "moonwash_survey_shore", "to_id": "pilot_villages", "required_clear_id": "ilyra_coast_survey"},
-			{"from_id": "pilot_villages", "to_id": "spanwater_lock", "required_clear_id": "ilyra_coast_survey"},
+			{"from_id": "moonwash_survey_shore", "to_id": "spanwater_lock", "required_clear_id": "ilyra_coast_survey"},
 		],
 	},
 	"neris": {
@@ -143,8 +143,8 @@ const _MAPS := {
 				"map_position": Vector2(0.69, 0.87), "mission_id": "neris_spanwater_feeder",
 			},
 			"cairnspine_vault_road": {
-				"id": "cairnspine_vault_road", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.52, 0.13), "mission_id": "neris_cairnspine_passage",
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.86, 0.76), "mission_id": "neris_cairnspine_passage",
 			},
 		},
 		"routes": [

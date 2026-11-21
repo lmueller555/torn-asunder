@@ -4,6 +4,7 @@ const PanelScene := preload("res://game/campaign_dialogue.tscn")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
+const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
 
 var _panel: Control
 var _underlay: Button
@@ -31,17 +32,18 @@ func _run() -> void:
 	passed = _check_grain_beats() and passed
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
+	passed = _check_ilyra_coast_survey_beats() and passed
 	passed = _check_raska_well_road_beats() and passed
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
 	passed = _check_sova_vault_return_beats() and passed
-	passed = _check_neris_failing_grove_beats() and passed
+	passed = _check_neris_beats() and passed
 	passed = _check_sereth_cut_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including Sereth’s opening), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad feeder), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -312,6 +314,86 @@ func _simulate_moonwash_result(cargo: bool, hero_falls := false) -> StringName:
 	return rescue.clear_result
 
 
+func _check_ilyra_coast_survey_beats() -> bool:
+	var start := _completions.size()
+	var cases := [
+		[Beats.ILYRA_COAST_SURVEY_DISPATCH, ["ancestral stone", "fishing inlet", "armed crews", "skirts the shoal", "inland ramp", "next pass"]],
+		[Beats.ILYRA_COAST_SURVEY_BEACH_DEBRIEF, ["acknowledged both readings from the beach", "the stone and the inlet together", "Give the villages the same chart", "need boats in the shallows"]],
+		[Beats.ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF, ["acknowledged both readings from the high relay", "the stone and the inlet together", "The same chart for all of them", "need boats in the shallows"]],
+	]
+	var expected_ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		expected_ids.append(id)
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A Two Shorelines beat was missing or invalid: %s" % id)
+		var account := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			account += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.ILYRA:
+				if not _portrait().visible or _portrait().texture != Beats.ILYRA_PORTRAIT:
+					return _fail("Ilyra's existing portrait did not show in her survey beat.")
+				portrait_seen = true
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[1]:
+			if not phrase in account:
+				return _fail("A survey beat lost its orders, relay, chart terms, or pilot offer: %s" % id)
+		if not portrait_seen or _button("AdvanceButton").text != "Finish" \
+				or _completions.size() != start + expected_ids.size() - 1:
+			return _fail("Survey dialogue completed before the last line's Finish: %s" % id)
+		_send_key(KEY_ENTER)
+		if _panel.visible or _completions.back() != id:
+			return _fail("Survey dialogue did not finish under its own stable ID: %s" % id)
+	if _completions.slice(start) != expected_ids:
+		return _fail("Survey dialogue emitted duplicate or out-of-order completions.")
+
+	for fixture: Array in [
+		[Survey.SignalSite.BEACH, Beats.ILYRA_COAST_SURVEY_BEACH_DEBRIEF],
+		[Survey.SignalSite.HEADLAND, Beats.ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF],
+	]:
+		if not _check_survey_debrief_selection(fixture[0], fixture[1]):
+			return false
+	return Beats.survey_debrief_id(Survey.Phase.SUCCEEDED, Survey.SignalSite.NONE) == &"" \
+		or _fail("A successful phase without a retained relay selected a debrief.")
+
+
+func _check_survey_debrief_selection(site: Survey.SignalSite, expected: StringName) -> bool:
+	var survey := Survey.new()
+	var report := Survey.Observation.new()
+	report.hero_inspected_marker = true
+	for reading in [Survey.Reading.FISHING_INLET, Survey.Reading.ANCESTRAL_STONE]:
+		report.hero_at_reading = reading
+		survey.advance(report)
+	if Beats.survey_debrief_id(survey.phase, survey.signal_site) != &"":
+		return _fail("Recorded readings alone picked a success debrief.")
+	var relay := report.beach if site == Survey.SignalSite.BEACH else report.headland
+	report.requested_signal = site
+	relay.staffed = true
+	relay.cutter_at_stop = true
+	relay.line_of_sight_clear = true
+	relay.signal_credit = 1.0
+	survey.advance(report)
+	if Beats.survey_debrief_id(survey.phase, survey.signal_site) != &"":
+		return _fail("An unacknowledged signal at a valid relay picked a debrief.")
+	relay.line_of_sight_clear = false
+	survey.advance(report)
+	if Beats.survey_debrief_id(survey.phase, survey.signal_site) != &"":
+		return _fail("An interrupted relay picked a success debrief.")
+	relay.line_of_sight_clear = true
+	survey.advance(report)
+	survey.advance(report)
+	if Beats.survey_debrief_id(survey.phase, survey.signal_site) != expected:
+		return _fail("A successful replacement signal did not select the debrief for its actual relay.")
+	survey.restart()
+	report.cutter_disabled = true
+	survey.advance(report)
+	return Beats.survey_debrief_id(survey.phase, survey.signal_site) == &"" \
+		or _fail("Cutter defeat incorrectly selected a debrief.")
+
+
 func _check_raska_well_road_beats() -> bool:
 	var cases := [
 		[Beats.RASKA_WELL_ROAD_DISPATCH, ["Open the storehouse", "Give them water and seats", "The lower cart waits", "both carts through the Basin exit"]],
@@ -451,7 +533,7 @@ func _check_sova_vault_return_beats() -> bool:
 	return _completions.slice(start) == ids or _fail("Vault dialogue emitted duplicate or out-of-order completions.")
 
 
-func _check_neris_failing_grove_beats() -> bool:
+func _check_neris_beats() -> bool:
 	var cases := [
 		[Beats.NERIS_FAILING_GROVE_DISPATCH, "What We Planted Here",
 			["The grove said no", "keep the old feeder open", "The well is still the town's",
@@ -460,6 +542,13 @@ func _check_neris_failing_grove_beats() -> bool:
 			["The first tree is upright", "soil is wet", "can't fit the whole grove here today",
 				"send a crew to the feeder", "Their ground is still dry", "still ask to hold it",
 				"your answer about the crossing stands"]],
+		[Beats.NERIS_SPANWATER_FEEDER_DISPATCH, "Water at the Town Gauge",
+			["first tree is still on well water", "opening the spillway, not the sea gate",
+				"full river won't help", "clear the rack", "work screen", "raised path",
+				"The gauge at the town end"]],
+		[Beats.NERIS_SPANWATER_FEEDER_DEBRIEF, "Take the Gauge",
+			["water's at the town mark and holding", "stayed in place through the crest", "your gauge book",
+				"wells stay in town hands", "nursery plot stays yours", "rack patrol after storms"]],
 	]
 	var start := _completions.size()
 	var ids: Array[StringName] = []
@@ -480,16 +569,18 @@ func _check_neris_failing_grove_beats() -> bool:
 				_send_pad(JOY_BUTTON_A)
 		for phrase: String in fixture[2]:
 			if not phrase in spoken:
-				return _fail("A grove beat lost a local choice or objective: %s" % phrase)
+				return _fail("A Dryad beat lost a local choice or objective: %s" % phrase)
 		if not speakers.has(Beats.NERIS) or not speakers.has(Beats.GROVE_ENVOY) or not speakers.has(Beats.FEEDER_KEEPER):
 			return _fail("Neris, the grove, and the town did not all speak for themselves.")
+		if id == Beats.NERIS_SPANWATER_FEEDER_DEBRIEF and ("jam" in spoken or "Godbridle" in spoken or "boats" in spoken):
+			return _fail("The feeder report assumed optional debris or a different campaign's outcome.")
 		if "Orrun," in spoken or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
-			return _fail("A grove beat issued a new command or skipped explicit Finish: %s" % id)
+			return _fail("A Dryad beat issued a new command or skipped explicit Finish: %s" % id)
 		_send_key(KEY_SPACE)
 		if _panel.visible or _completions.back() != id:
-			return _fail("A grove beat did not finish under its own ID: %s" % id)
+			return _fail("A Dryad beat did not finish under its own ID: %s" % id)
 		ids.append(id)
-	return _completions.slice(start) == ids or _fail("Grove dialogue emitted duplicate or out-of-order completions.")
+	return _completions.slice(start) == ids or _fail("Dryad dialogue emitted duplicate or out-of-order completions.")
 
 
 func _check_sereth_cut_beats() -> bool:
