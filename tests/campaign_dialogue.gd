@@ -3,6 +3,7 @@ extends SceneTree
 const PanelScene := preload("res://game/campaign_dialogue.tscn")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
 var _panel: Control
 var _underlay: Button
@@ -29,11 +30,12 @@ func _run() -> void:
 	passed = _check_other_mine_beats() and passed
 	passed = _check_grain_beats() and passed
 	passed = _check_high_quay_beats() and passed
+	passed = _check_ilyra_moonwash_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, Grain branches, High Quay continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, Grain and Moonwash branches, High Quay continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -253,6 +255,55 @@ func _check_high_quay_beats() -> bool:
 	if "Orrun," in seen[1] or "Orrun," in seen[2]:
 		return _fail("Another order was given after the shared intermission.")
 	return true
+
+
+func _check_ilyra_moonwash_beats() -> bool:
+	var cases := [
+		[Beats.ILYRA_MOONWASH_DISPATCH, ["Stone's rising under the moorings", "Godbridle", "we're staying"]],
+		[Beats.moonwash_debrief_id(_simulate_moonwash_result(true)), ["Both crews are aboard", "provision a few survey boats ourselves", "Sova's public account"]],
+		[Beats.moonwash_debrief_id(_simulate_moonwash_result(false)), ["Both crews are aboard", "fishing villages lend us stores", "Sova read the sealed record in public"]],
+	]
+	var start := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if id == &"" or not _panel.present(id, beat):
+			return _fail("An Ilyra rescue beat was missing or invalid: %s" % id)
+		var spoken := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			spoken += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.ILYRA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.ILYRA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Ilyra's existing portrait did not show in her rescue beat.")
+			_panel.advance()
+		for detail: String in fixture[1]:
+			if not detail in spoken:
+				return _fail("Moonwash dialogue lost a rescue or survey consequence: %s" % id)
+		if not portrait_seen or _completions.back() != id or _panel.visible:
+			return _fail("Ilyra's beat did not complete under its own ID: %s" % id)
+	if _completions.size() != start + cases.size() or cases[1][0] == cases[2][0]:
+		return _fail("Rescue result beats duplicated or collapsed into the same branch.")
+	for invalid: StringName in [_simulate_moonwash_result(true, true), &"failed", &"both", &"unknown"]:
+		if Beats.moonwash_debrief_id(invalid) != &"":
+			return _fail("An invalid rescue outcome selected a successful debrief.")
+	return true
+
+
+func _simulate_moonwash_result(cargo: bool, hero_falls := false) -> StringName:
+	var rescue := Moonwash.new()
+	for transfer in [Moonwash.Transfer.FORWARD, Moonwash.Transfer.AFT]:
+		var rig := Moonwash.Observation.new()
+		rig.hero_rigged_transfer = transfer
+		rescue.advance(rig)
+	var arrival := Moonwash.Observation.new()
+	arrival.forward.crew_at_receiving_deck = true
+	arrival.aft.crew_at_receiving_deck = true
+	arrival.cargo_at_receiving_deck = cargo
+	arrival.hero_fell = hero_falls
+	rescue.advance(arrival)
+	return rescue.clear_result
 
 
 func _send_key(key_code: Key, echo := false) -> void:
