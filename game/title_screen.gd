@@ -58,6 +58,7 @@ const RATING_NAMES := {
 }
 
 const PRACTICE_ROSTERS := {
+	"mara": [FactionRoster.HUMANS, UnitCatalog.HUMAN_ARCHER],
 	"raska": [FactionRoster.ORCS, UnitCatalog.ORC_BASIN_REGULARS],
 	"ilyra": [FactionRoster.ELVES, UnitCatalog.ELF_SHORE_DETACHMENT],
 	"sova": [FactionRoster.DRUIDS, UnitCatalog.DRUID_TUNNEL_GUARD],
@@ -111,6 +112,7 @@ var _training_level: Label
 var _training_stats: Label
 var _training_award: Button
 var _training_inspect: Button
+var _training_planner: Button
 var _training_promotion: Button
 var _training_promotion_status: Label
 var _training_buttons: Dictionary[Unit.Damage, Button] = {}
@@ -190,7 +192,7 @@ func _go_back() -> void:
 				drill.grab_focus()
 		Page.ROSTER_REQUIREMENTS:
 			_show_unit_progression(true)
-			_stage.get_node("Preview Advancement").grab_focus()
+			_training_planner.grab_focus()
 		Page.BATTLE_POINTS_DRILL:
 			_show_drills()
 			_stage.get_node("Battle Points Drill").grab_focus()
@@ -617,17 +619,17 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 	_training_stats.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_training_award = _button("Award 100 XP", Rect2(76, 550 if has_promotion else 573, 345, 45), _award_training_experience)
 	_training_inspect = null
+	_training_planner = null
 	_training_promotion = null
 	_training_promotion_status = null
 	if has_promotion:
 		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
 		_training_promotion_status.name = "Promotion Status"
 		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
-	var planner: Button
 	if definition.has("model"):
 		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
 	elif PRACTICE_ROSTERS.has(_active_campaign.id):
-		planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
+		_training_planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
 
 	_rule(Rect2(523, 229, 841, 1), HAIRLINE)
 	_label(_stage, "Combat ratings", Rect2(523, 245, 820, 42), 29, GOLD, DISPLAY_FACE)
@@ -646,6 +648,11 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		var buttons := left if column == 0 else right
 		buttons.append(button)
 
+	if has_promotion and PRACTICE_ROSTERS.has(_active_campaign.id):
+		_training_planner = _button("Preview Longbows", Rect2(810, 91, 365, 48), _show_roster_requirements)
+		_link_focus(back, SIDE_LEFT, _training_planner)
+		_link_focus(_training_planner, SIDE_RIGHT, back)
+		_link_focus(_training_planner, SIDE_BOTTOM, _training_award)
 	_link_cycle(left, SIDE_TOP, SIDE_BOTTOM)
 	_link_cycle(right, SIDE_TOP, SIDE_BOTTOM)
 	_link_focus(_training_award, SIDE_TOP, back)
@@ -655,10 +662,10 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		_link_focus(_training_promotion, SIDE_RIGHT, left[2])
 	if _training_inspect:
 		_link_focus(_training_inspect, SIDE_RIGHT, left[3])
-	if planner:
-		_link_focus(_training_award, SIDE_BOTTOM, planner)
-		_link_focus(planner, SIDE_TOP, _training_award)
-		_link_focus(planner, SIDE_RIGHT, left[3])
+	if _training_planner and not has_promotion:
+		_link_focus(_training_award, SIDE_BOTTOM, _training_planner)
+		_link_focus(_training_planner, SIDE_TOP, _training_award)
+		_link_focus(_training_planner, SIDE_RIGHT, left[3])
 	for row in range(left.size()):
 		_link_focus(left[row], SIDE_LEFT, _training_award)
 		_link_focus(left[row], SIDE_RIGHT, right[row])
@@ -673,17 +680,22 @@ func _show_roster_requirements() -> void:
 		return
 	var faction: StringName = source[0]
 	var unit_id: StringName = source[1]
+	var archer_preview := unit_id == UnitCatalog.HUMAN_ARCHER
 	var roster := UnitCatalog.faction_roster()
 	var unit_name: String = roster.unit(unit_id).display_name
 	_open_page(Page.ROSTER_REQUIREMENTS)
 	var back := _heading("Advancement Requirements", "%s  /  %s  /  Provisional, not playable" % [_active_campaign.faction, unit_name])
-	_label(_stage, "Uses your practice ratings. Sample rank applies to every platoon skill for this preview only.",
-		Rect2(76, 221, 1235, 42), 23, IVORY)
+	var explanation := "Uses your practice ratings. Sample rank applies to every platoon skill for this preview only."
+	if archer_preview:
+		explanation = "Uses your practice Ranged Power. Formation Drill is a sample for this preview only."
+	_label(_stage, explanation, Rect2(76, 221, 1235, 42), 23, IVORY)
 	var rank_value := _label(_stage, "", Rect2(76, 282, 344, 48), 25, GOLD)
 	rank_value.name = "Sample Training Rank"
 	var report_labels: Array[Label] = []
 	var sample := [0]
-	var read_training := func(_skill: int) -> int: return sample[0]
+	var read_training := func(skill: int) -> Variant:
+		return null if archer_preview and skill != Platoon.Skill.FORMATION_DRILL else sample[0]
+	var rank_name := "Sample Formation Drill" if archer_preview else "Sample training rank"
 	for index in range(roster.inspect_advances(unit_id, faction).size()):
 		var x := 76.0 + 655.0 * index
 		_rule(Rect2(x, 373, 615, 1), HAIRLINE)
@@ -692,7 +704,7 @@ func _show_roster_requirements() -> void:
 		report.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 		report_labels.append(report)
 	var redraw := func() -> void:
-		rank_value.text = "Sample training rank: %d / %d" % [sample[0], Platoon.MAX_RANK]
+		rank_value.text = "%s: %d / %d" % [rank_name, sample[0], Platoon.MAX_RANK]
 		var rows := roster.inspect_advances(unit_id, faction, _training_unit.rating, read_training)
 		for index in range(rows.size()):
 			var branch: Dictionary = rows[index]
