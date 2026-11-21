@@ -43,7 +43,8 @@ Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview]
 | [Other Cut village shells](../game/battlefields/still_kingdom_cut.tscn) | Rework | Repeated box silhouettes and blank roof decks remain unapproved around the audited Record Room. |
 | [Cut interior record-room and small cemetery props](../game/battlefields/still_kingdom_cut.tscn) | Blocked | No representative hero close-ups for benches, shelving, graves, or document props in this audit. |
 | [Boundary Post road, trench and banks](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Unbroken flat road strips, vertical plane cuts and repeated faceted banks look like route diagrams, not worn terrain and retaining structures. |
-| [Boundary Post shelter, low walls and posts](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | The plain roof slab, bare wall volumes and posts give the handover place no identity without its debug label and ring. |
+| [Boundary Post open-front Keeper shelter](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Checked in the [live writ deployment](../game/battlefield/sereth_pass_writ_playtest.tscn). The roof slab, walls and post read as a block shelter; without labels the separate bench can be mistaken for a doorway. Preserve the open front, real handover outside, Keeper’s approach and withdrawal lanes, stock roof targeting and the sheep-track cover. This does not audit the bench, Keeper or carried writ. |
+| [Boundary Post low walls and other posts](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Plain blocks in the reviewed tactical and hero frames lack finished construction and distinct silhouettes. Keep the existing sight breaks. |
 | [Boundary Post small lookout/rally props](../game/battlefields/cairnspine_boundary_post.tscn) | Blocked | Separate hero-scale checks are needed for the lookout sign and rally marker. |
 
 ## Inspected: Marches Crossing
