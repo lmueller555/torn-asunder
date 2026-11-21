@@ -181,7 +181,7 @@ func _measure_edge_march() -> bool:
 			return _fail("The measured formation left supported terrain at %s." % platoon.position)
 	var seconds := ticks * MARCH_DT
 	if not platoon.position.is_equal_approx(destination) or platoon.order != Battle.Order.HOLD \
-			or not MarchScale.within_target_band(seconds) or MarchScale.classify(seconds) != MarchScale.Tier.COMPACT:
+			or not MarchScale.within_baseline_band(seconds) or MarchScale.classify_baseline(seconds) != MarchScale.Tier.COMPACT:
 		return _fail("Expected an unopposed Compact edge march; reached %s in %.2f s." % [platoon.position, seconds])
 	print("Marches Crossing: infantry marched %.1f m edge to edge in %.2f s (Compact)." % [
 		start.distance_to(destination), seconds,
