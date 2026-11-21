@@ -19,6 +19,31 @@ At the mine, hold **L2**, select the archers with the **D-pad**, move the cursor
 
 The first playtest should check whether the player can redirect a unit mid-fight and return to the hero in time to read the next incoming attack.
 
+## PlayStation 3 controller (DualShock 3) on macOS
+
+A DualShock 3 works with the same layout. The face buttons, shoulders, sticks and D-pad match the DualSense table above. Two buttons have different names:
+
+| DualSense | DualShock 3 | What it does |
+|---|---|---|
+| Options | **START** | Restart the current battle or drill (every prompt that says "Options") |
+| Create | **SELECT** | Leave a campaign battle and return to the overworld |
+| Cross / Circle | Cross / Circle | Confirm / back in menus, the overworld and dialogue scenes |
+| D-pad | D-pad | Move between menu items and overworld waypoints |
+| L2 / R2 | L2 / R2 | Analog triggers: hold L2 for command view; R2 is Mara's Sundering Strike where it's enabled |
+| PS button | PS button | Not used by the game |
+
+**Connecting it on a Mac:**
+1. Plug the controller in with a USB cable and press the **PS button**. The player-1 light should stop flashing. Newer macOS versions don't pair a DualShock 3 over Bluetooth, so keep it on the cable.
+2. Start the game. Godot prints `Controller 0 connected: <name> [<GUID>]` in the output log. If the name has no `(unrecognised layout)` note, the buttons match the prompts.
+3. If you run the game from the Godot editor and the controller does nothing, run it in a separate window rather than the embedded game view (Game tab → turn off **Embed Game on Next Play**). Some Godot 4.5+ builds on macOS don't pass controller input to the embedded view.
+
+**What the game does for it** (in `game/controller.gd`, loaded as the `Controller` autoload):
+- Godot reads controllers through SDL, which handles a DualShock 3 on macOS natively and maps it to the standard layout above.
+- If Godot doesn't recognise the pad (some clones report odd names or IDs) and its name looks like a PS3 pad, the game applies a DS3 layout mapping on macOS so the buttons aren't scrambled.
+- Battles and the mission view follow whichever controller last pressed a button, so another USB or Bluetooth device that registers as a gamepad first can't take over the controls.
+
+Run `godot --headless --script tests/controller_support.gd` to check the PS3 recognition, the fallback layout, and the pad switching.
+
 ## The leader's platoon
 
 The leader is part of their own **Lead Platoon**, a full platoon that travels with them. Every battlefield built on the command harness uses it.

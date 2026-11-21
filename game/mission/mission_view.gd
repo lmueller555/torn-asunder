@@ -10,6 +10,7 @@ signal mission_finished(won: bool)
 const Battle := preload("res://game/mission/mission_battle.gd")
 const Missions := preload("res://game/mission/missions.gd")
 const Units := preload("res://game/mission/mission_units.gd")
+const ControllerSupport := preload("res://game/controller.gd")
 const World := preload("res://game/mission/mission_world.gd")
 const Hud := preload("res://game/mission/mission_hud.gd")
 const MODEL := preload("res://assets/models/human_infantry.glb")
@@ -503,8 +504,7 @@ func _held(name: String, pressed: bool) -> bool:
 func _handle_input(delta: float) -> void:
 	if outcome_shown:
 		return
-	var pad := Input.get_connected_joypads()
-	var device: int = pad[0] if not pad.is_empty() else -1
+	var device: int = ControllerSupport.device()
 	var stick := Vector2.ZERO
 	var look := Vector2.ZERO
 	var trigger := 0.0

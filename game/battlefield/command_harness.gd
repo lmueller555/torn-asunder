@@ -3,6 +3,7 @@ extends Node3D
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const MarchRoutes := preload("res://game/battlefield/command_platoon_routes.gd")
 const MarchQueue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
+const ControllerSupport := preload("res://game/controller.gd")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const SectorCamera := preload("res://game/battlefield/sector_camera.gd")
 
@@ -102,9 +103,9 @@ var _destination_marker: MeshInstance3D
 
 func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-	var devices := Input.get_connected_joypads()
-	if not devices.is_empty():
-		_input_device = devices[0]
+	var device := ControllerSupport.device()
+	if device >= 0:
+		_input_device = device
 		for axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_TRIGGER_LEFT]:
 			_axes[axis] = Input.get_joy_axis(_input_device, axis)
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
@@ -406,7 +407,12 @@ func _notification(what: int) -> void:
 
 
 func _uses_joypad(device: int) -> bool:
-	if _input_device < 0:
+	# Follow the pad the player actually picks up: a stray HID device that connected
+	# first (common on macOS) must not keep the controls.
+	if _input_device < 0 or (device != _input_device and ControllerSupport.active_device == device):
+		if _input_device >= 0:
+			_axes.clear()
+			_l2_down = false
 		_input_device = device
 	return _input_device == device
 
