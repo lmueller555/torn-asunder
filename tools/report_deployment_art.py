@@ -61,6 +61,10 @@ BEACH_BATTLEFIELD = "game/battlefields/moonwash_survey_shore.tscn"
 BEACH_BINDING = "game/battlefield/props/ilyra_beach_signal_stand_binding.gd"
 BEACH_ASSET = "assets/models/environment/ilyra_beach_signal/beach_signal_stand.tscn"
 BEACH_RECEIPT = "docs/audits/ilyra-beach-signal-stand-v1.json"
+HEADLAND_BINDING = "game/battlefield/props/ilyra_headland_relay_binding.gd"
+HEADLAND_ASSET = "assets/models/environment/ilyra_headland_relay/headland_relay.glb"
+HEADLAND_SOURCE = "assets/source/moonwash_survey_shore/headland_relay.blend"
+HEADLAND_RECEIPT = "docs/audits/ilyra-headland-relay-v1.json"
 QUAY_MISSION = "mara_moonwash_quay"
 QUAY_DEPLOYMENT = "game/battlefield/mara_moonwash_playtest.tscn"
 QUAY_WRAPPER = "game/battlefields/moonwash_harbor_campaign_mara_exit.tscn"
@@ -245,6 +249,16 @@ def _verify_ilyra_beach_stand(root: Path, deployments: dict[str, str], battlefie
                            {BEACH_ASSET, BEACH_BINDING}, "mission_deployment", BEACH_DEPLOYMENT)
 
 
+def _verify_ilyra_headland_relay(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    if [mission for mission, scene in deployments.items() if scene == BEACH_DEPLOYMENT] != [BEACH_MISSION] \
+            or battlefields.get(BEACH_MISSION) != BEACH_BATTLEFIELD:
+        raise ValueError("Ilyra Headland Relay: reviewed placement is not registered")
+    _verify_adapter(root, BEACH_DEPLOYMENT, HEADLAND_BINDING, "HeadlandRelayBinding", "Ilyra Headland Relay")
+    return _receipt_record(root, "Ilyra’s fixed Headland Relay (V1)", HEADLAND_RECEIPT, 12,
+                           {HEADLAND_ASSET, HEADLAND_BINDING, HEADLAND_SOURCE, BEACH_BATTLEFIELD},
+                           "mission_deployment", BEACH_DEPLOYMENT)
+
+
 def _verify_mara_quay_threshold(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
     if deployments.get(QUAY_MISSION) != QUAY_DEPLOYMENT or [
         mission for mission, field in battlefields.items() if field == QUAY_WRAPPER
@@ -327,6 +341,7 @@ def build_report(root: Path) -> dict:
     custody_case = _verify_custody_case(root, deployments)
     spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
     beach_stand = _verify_ilyra_beach_stand(root, deployments, battlefields)
+    headland_relay = _verify_ilyra_headland_relay(root, deployments, battlefields)
     quay_threshold = _verify_mara_quay_threshold(root, deployments, battlefields)
     north_bridge = _verify_mara_north_bridge(root, deployments, battlefields)
     vault_jambs = _verify_sova_vault_jambs(root, deployments, battlefields)
@@ -343,7 +358,7 @@ def build_report(root: Path) -> dict:
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
                 + ([custody_case, mine_storehouse] if mission == CASE_MISSION else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
-                + ([beach_stand] if mission == BEACH_MISSION else [])
+                + ([beach_stand, headland_relay] if mission == BEACH_MISSION else [])
                 + ([quay_threshold] if mission == QUAY_MISSION else [])
                 + ([north_bridge] if mission == BRIDGE_MISSION else [])
                 + ([vault_jambs] if mission == VAULT_MISSION else []),

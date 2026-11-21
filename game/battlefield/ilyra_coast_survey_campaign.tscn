@@ -6,6 +6,8 @@
 
 [ext_resource type="Script" path="res://game/battlefield/props/ilyra_beach_signal_stand_binding.gd" id="4_stand_binding"]
 
+[ext_resource type="Script" path="res://game/battlefield/props/ilyra_headland_relay_binding.gd" id="5_headland_binding"]
+
 [node name="IlyraCoastSurveyCampaign" instance=ExtResource("1_harness")]
 script = ExtResource("3_survey")
 battlefield_scene = ExtResource("2_shore")
@@ -62,3 +64,6 @@ text = "Restart  ·  Options / Backspace"
 
 [node name="BeachSignalStandBinding" type="Node" parent="."]
 script = ExtResource("4_stand_binding")
+
+[node name="HeadlandRelayBinding" type="Node" parent="."]
+script = ExtResource("5_headland_binding")
