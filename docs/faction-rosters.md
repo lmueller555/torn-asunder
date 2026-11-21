@@ -19,7 +19,7 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc, Elf, and Druid starter trees below add metadata only. The Dryad and Undead trees are not authored here.
+`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc, Elf, Druid, and Dryad starter trees below add metadata only. The Undead tree is not authored here.
 
 ### Orc starter tree: Red Basin companies
 
@@ -56,5 +56,17 @@ The [Druid campaign](campaigns/druids.md) names the **Tunnel Guard** and **Outle
 | `druid_shelf_guard` | **Shelf Guard**, Melee | Melee **6** and Formation Drill **3** | Hold a narrow shelf or screen the carrier at the forecourt. Pressure after a breach is hard to recover from in the cramped shelf lane; the side path still needs a separate screen. |
 
 These are **provisional roster gates only**. They do not change detection ranges, combat, the fixed campaign rosters, or how consent and custody work. The Outlet Screen's gate is training-only; neither melee investment alone nor rank alone qualifies for Shelf Guard.
+
+### Dryad starter tree: grove work-site and route escorts
+
+The [Dryad campaign](campaigns/dryads.md) fields the **Loading Guard** for the grove transplant, the **Feeder Reserve** at Spanwater, and **Shelf Volunteers** on the Cairnspine passage. The Track Screen and Side Volunteers are assignments to particular lanes, not a second set of promotions. Unlike Sova's vault detail, the Dryad volunteers move with people and hand off to a safe terrace; they are not protecting a bridle bearer or holding the vault itself.
+
+| Unit key | Form and role | Advance from Loading Guard | Tradeoff to test later |
+|---|---|---|---|
+| `dryad_loading_guard` | **Loading Guard**, Melee | Starting unit | Keep the yard open while the crew ties down the root sled, then shift the screen to the raised road. Covering one lane leaves less help in the other. |
+| `dryad_feeder_reserve` | **Feeder Reserve**, Melee | Charge & Brace **1** and Formation Drill **2** | Relieve the maintenance-path screen so town workers can keep fitting boards; chasing off-lane leaves the workers exposed. The reserve protects the work, not the wheel or gate. |
+| `dryad_shelf_volunteers` | **Shelf Volunteers**, Melee | Melee **3** and Scouting **2** | Scout ahead of the next escorted group and screen its route to the terrace. A blocked path still needs a fresh route or escort; the volunteers cannot protect both groups in separate places. |
+
+These **provisional gates** do not change the fixed mission roster or unlock spellcasting, river engineering, or root crossings. The field troops protect the workers maintaining the feeder and the guides moving people along the pass. Neither branch grants authority to speak for another grove.
 
 Run `godot --headless --script tests/faction_roster.gd`.
