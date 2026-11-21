@@ -97,6 +97,7 @@ func _draw_terrain() -> void:
 			"raska": area = "RED BASIN APPROACH"
 			"ilyra": area = "THE MOONWASH COAST"
 			"neris": area = "ISOLATED GROVES"
+			"sereth": area = "STILL KINGDOM BORDER"
 	draw_string(TYPE, Vector2(26, 30), "VARETH  /  " + area, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 15, QUIET)
 	var compass := Vector2(size.x - 45.0, 44.0)
 	draw_line(compass - Vector2(0, 17), compass + Vector2(0, 15), QUIET, 1.0, true)
