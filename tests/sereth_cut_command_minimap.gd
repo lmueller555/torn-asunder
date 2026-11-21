@@ -6,6 +6,7 @@ const CampaignMap := preload("res://game/campaign_map.gd")
 const Profile := preload("res://game/profile_store.gd")
 const Registry := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/sereth_cut_playtest.gd")
+const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
@@ -40,9 +41,11 @@ func _run() -> void:
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
 	_check(_mission._field.name == &"StillKingdomCut"
 		and _mission.battle.bounds.size == Vector2(390, 200), "Test the registered full Cut deployment.")
+	# The hero waypoint beam is activated by physics independently of the map.
+	_tick()
 	var before := await _capture_image("hero-without-map")
 	_mission.enable_command_minimap = true
-	_tick()
+	_mission._sync_view() # Refresh the map without stepping the eased hero camera.
 	var after := await _capture_image("hero-with-map-enabled")
 	if before and after:
 		_check(before.get_data() == after.get_data(), "Opt-in must be pixel-neutral outside command stance.")
@@ -132,6 +135,7 @@ func _run() -> void:
 	_check(not _mission.command_view and not _map.is_visible_in_tree() and not _mission._raider.visible
 		and _mission.objective.outcome == Cut.Outcome.ACTIVE, "Options restarts cleanly in hero stance.")
 	await _controller_draft()
+	await _hero_waypoints()
 	await _waypoint_queue()
 	await _blocked_queue()
 	print("Cut minimap: viewport %s / panel %s / current camera %s / %d failures." %[
@@ -232,6 +236,111 @@ func _controller_draft() -> void:
 	_mission.restart_mission()
 
 
+func _hero_waypoints() -> void:
+	var hud := _mission._command_minimap
+	var lead := _mission.battle.lead
+	var lead_index := Battle.LEAD_INDEX
+	_orders.clear()
+	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
+	_tick() # Let the lead model settle at the authored spawn after restart.
+	_key(KEY_Z)
+	_tick()
+	_check(_mission.selected_index == lead_index and _mission.march_mode() and _mission._march_beam.is_visible_in_tree()
+		and not _map.is_visible_in_tree(), "Keyboard selects Sereth's lead and the hero-view marker, not the command map.")
+	var first := _point("Routes/ApproachRoadWest")
+	_key_event(KEY_D, true)
+	_tick(15)
+	_key_event(KEY_D, false)
+	_check(_mission.march_marker.distance_to(first) < 0.03, "Keyboard steers the marker to the authored west approach.")
+	first = _mission.march_marker
+	_key(KEY_G)
+	_check(_route_is(lead_index, [first]) and _orders == [lead_index] and lead.order == Battle.Order.MOVE
+		and lead.destination == first, "Hero G sends the lead platoon to the first plotted waypoint.")
+
+	var second := _aim_hero_marker(first + Vector2(16.0, 0.0))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(_route_is(lead_index, [first, second]) and _orders == [lead_index] and lead.destination == first
+		and _mission._route_pins[1].visible and not hud._route_overlay.visible,
+		"Hero R1 appends without interrupting the first leg or drawing an interactive minimap.")
+	await _capture_image("hero-marker-queued-route")
+	_mouse_map(MOUSE_BUTTON_RIGHT, _map.get_global_rect().size / 2.0)
+	_check(_route_is(lead_index, [first, second]) and _orders == [lead_index], "The hidden map cannot replace a marker route.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_check(_map.is_visible_in_tree() and _route_drawn(lead, first) and _orders == [lead_index],
+		"Opening command view shows the same two plotted legs without issuing either again.")
+	await _capture_image("hero-marker-route-in-command-view")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_tick()
+	_check(not _map.is_visible_in_tree() and hud._route_overlay.waypoint_pixels().is_empty()
+		and _route_is(lead_index, [first, second]), "Returning to the marker hides the map, not the accepted route.")
+
+	_wait_at_waypoint(lead, first)
+	_check(lead.destination == second and _orders == [lead_index, lead_index],
+		"Only actual arrival promotes the controller's second leg.")
+	var third := _aim_hero_marker(_point("Routes/WestLaneRoadJunction"))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(_route_is(lead_index, [second, third]) and lead.destination == second,
+		"The marker can extend an already marching route to the authored West Lane junction.")
+	_wait_at_waypoint(lead, second)
+	_wait_at_waypoint(lead, third, 640)
+	_check(_orders == [lead_index, lead_index, lead_index] and _route_is(lead_index, [])
+		and lead.order == Battle.Order.HOLD and _mission.battle.hero_position == third,
+		"Sereth physically traverses all three legs and holds at the junction with no queued points.")
+	_mission.restart_mission()
+
+	# Isolate the late-lane terrain from the long approach and keep the actual
+	# selected Household Guard, marker input, and physical Cut collision.
+	var guard := _mission.battle.formations[0]
+	guard.position = _point("Routes/LaneClerkTurn")
+	guard.hold()
+	_orders.clear()
+	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
+	_tick()
+	var narrow := _aim_hero_marker(Vector2(-30.5, 7.0))
+	_key(KEY_G)
+	_check(hud._walkable_hit(narrow) != null and not _mission._terrain.formation_fits_at(narrow)
+		and _route_is(0, []) and _orders.is_empty() and _mission._march_note == "Can't march there",
+		"Walkable ground beside the East Inner Baffle still rejects a full formation footprint.")
+	var yard := _aim_hero_marker(_point("Routes/ClerkYard"))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(_route_is(0, [yard]) and _orders == [0] and guard.destination == yard,
+		"Hero R1 also starts a valid move for the selected Household Guard.")
+	var roof := _aim_hero_marker(_point("Routes/RecordRoomInside"))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(hud._walkable_hit(roof) == null and _route_is(0, [yard]) and _orders == [0]
+		and guard.destination == yard and _mission._march_note == "Can't march there",
+		"The hero marker cannot plot through the record room roof or replace the valid march.")
+	_tap(JOY_BUTTON_DPAD_UP)
+	_check(_route_is(0, []) and _orders == [0, 0] and guard.order == Battle.Order.HOLD
+		and hud._draft_battle == null and not _map.is_visible_in_tree(),
+		"Outside command view D-pad Up clears the accepted route and holds; it never opens minimap aim.")
+	_mission.restart_mission()
+
+
+func _aim_hero_marker(target: Vector2) -> Vector2:
+	for _frame in 300:
+		var aim := (target - _mission.march_marker).rotated(_mission._hero_yaw)
+		if aim.length() < 0.01:
+			break
+		var strength := clampf(aim.length() / (Harness.MARKER_SPEED * DT), 0.0, 1.0)
+		var stick := aim.normalized() * lerpf(Harness.STICK_DEADZONE, 1.0, strength)
+		_axis(JOY_AXIS_LEFT_X, stick.x)
+		_axis(JOY_AXIS_LEFT_Y, stick.y)
+		_tick()
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	_check(_mission.march_marker.distance_to(target) < 0.03, "Controller must reach marker target %s." % target)
+	return _mission.march_marker
+
+
+func _wait_at_waypoint(platoon: Battle.Formation, point: Vector2, limit := 360) -> void:
+	for _frame in limit:
+		if platoon.position == point or platoon.order == Battle.Order.BLOCKED:
+			break
+		_tick()
+	_check(platoon.position == point, "The platoon physically reaches hero-marker waypoint %s." % point)
+
+
 func _waypoint_queue() -> void:
 	var hud := _mission._command_minimap
 	var guard := _mission.battle.formations[0]
@@ -240,9 +349,6 @@ func _waypoint_queue() -> void:
 	var roof := _point("Routes/RecordRoomInside")
 	_orders.clear()
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
-	_tap(JOY_BUTTON_RIGHT_SHOULDER)
-	_key(KEY_G)
-	_check(_route_is(0, []) and _orders.is_empty(), "Hero R1/G cannot queue a command.")
 	_key_event(KEY_SHIFT, true)
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
 	_key(KEY_G)
