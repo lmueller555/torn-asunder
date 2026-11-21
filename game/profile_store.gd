@@ -2,6 +2,8 @@ extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
+const LeadAllocation := preload("res://game/combat/campaign_stat_allocation.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
@@ -12,7 +14,10 @@ const MISSION_RESULTS := "mission_results"
 const CAMPAIGN_INTERMISSIONS := "campaign_intermissions"
 const SUBORDINATE_TRAINING := "subordinate_training"
 const MARA_SHIELD_DRILL := "mara_shield_infantry_formation_drill"
+const LEAD_TRAINING := "lead_training"
+const MARA_LEAD_MELEE := "mara_mine_melee_point"
 const MARA := "mara"
+const MARA_MINE := "mara_mine_escort"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 const ILYRA := "ilyra"
@@ -105,6 +110,40 @@ func _mara_training_plan(config: ConfigFile) -> Training:
 	if purchased is bool and purchased:
 		plan.train_formation_drill(Training.SHIELD_INFANTRY_SLOT)
 	return plan
+
+
+## Read the current saved choice without granting it or trusting a cached clear.
+func mara_lead_melee_invested() -> bool:
+	var latest := ConfigFile.new()
+	if latest.load(_path) != OK:
+		return false
+	var invested: Variant = latest.get_value(LEAD_TRAINING, MARA_LEAD_MELEE, false)
+	return invested is bool and invested and _mara_has_lead_melee_point(latest)
+
+
+## Optional one-point spend from confirmed Human clears, not the Shield Infantry drill credit.
+## The caller cannot supply an amount, clear, rating or troop slot.
+func invest_mara_lead_melee_point() -> Error:
+	var latest := ConfigFile.new()
+	var result := latest.load(_path)
+	if result != OK:
+		return ERR_UNAUTHORIZED if result == ERR_FILE_NOT_FOUND else result
+	if not _mara_has_lead_melee_point(latest):
+		return ERR_UNAUTHORIZED
+	var invested: Variant = latest.get_value(LEAD_TRAINING, MARA_LEAD_MELEE, false)
+	if not invested is bool:
+		return ERR_INVALID_DATA
+	if invested:
+		return ERR_ALREADY_IN_USE
+	return _set_values({LEAD_TRAINING: {MARA_LEAD_MELEE: true}}, latest)
+
+
+func _mara_has_lead_melee_point(config: ConfigFile) -> bool:
+	var clears := _confirmed_missions(config, MARA)
+	if not clears.has(MARA_MINE):
+		return false
+	var allocation := LeadAllocation.new(MARA, clears)
+	return allocation.can_invest(Unit.Damage.MELEE)
 
 
 ## The saved council outcome, not the latest attempt. Legacy clears may have no result.
