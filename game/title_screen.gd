@@ -337,11 +337,23 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label(_stage, CAMPAIGN_PLAYTEST_NOTICE + " Fixed test roster.", Rect2(76, 475, 1080, 32), 21, MUTED)
-	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
+	var deploy_y := 555.0
+	if _active_campaign.id == "mara" and mission_id == "mara_mine_escort":
+		# The full orders initially expand the label before wrapping is enabled.
+		orders.set_deferred("size", Vector2(1000, 120))
+		deploy_y = 578.0
+		var lead := LeadProgress.inspect("mara", _profile.completed_missions("mara"))
+		var budget := _label(_stage,
+			"Mine deployment: %d starting BP · Lead platoon Lv %d · %d BP cap.\n"
+			% [lead.next_mission_bp, lead.lead_level, lead.next_mission_capacity]
+			+ "Each Mine attempt starts fresh. Confirmed Human chapter clears set the lead level and cap.",
+			Rect2(76, 506, 1080, 46), 19, IVORY)
+		budget.name = "MineDeploymentBudget"
+	var deploy := _button("Confirm Deployment", Rect2(76, deploy_y, 372, 58), _deploy_campaign_mission.bind(mission_id))
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
 	if deployment.get("briefing_dispatch", false):
-		var dispatch := _button("Read Dispatch", Rect2(468, 555, 268, 58),
+		var dispatch := _button("Read Dispatch", Rect2(468, deploy_y, 268, 58),
 			_present_campaign_dialogue.bind(deployment.dispatch, _show_campaign_mission_briefing.bind(mission_id)))
 		_link_focus(deploy, SIDE_RIGHT, dispatch)
 		_link_focus(dispatch, SIDE_LEFT, deploy)
