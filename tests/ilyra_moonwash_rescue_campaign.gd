@@ -3,6 +3,8 @@ extends SceneTree
 const Scene := preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.tscn")
 const Mission := preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.gd")
 const Rescue := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
+const StockHarbor := preload("res://game/battlefields/moonwash_harbor_campaign.tscn")
+const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const DT := 1.0 / 60.0
 const FORE := Rescue.Transfer.FORWARD
@@ -14,6 +16,8 @@ const AFT_RIG := "Objectives/AftTransfer"
 
 var _mission: Mission
 var _results: Array[StringName] = []
+var _signal_envelopes: Array[AABB] = []
+var _signal_overlap_ticks := 0
 
 
 func _initialize() -> void:
@@ -27,12 +31,52 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	_mission.mission_cleared.connect(func(result: StringName) -> void: _results.append(result))
-	var passed := _aft_first() and _fore_first_with_cargo()
+	var passed := _check_endpoint_clearance() and _aft_first() and _fore_first_with_cargo() \
+		and _check_endpoint_clearance()
+	if _signal_overlap_ticks != 0:
+		passed = _fail("Rendered rescuers overlapped a solid endpoint in %d drive ticks." % _signal_overlap_ticks)
 	_mission.queue_free()
 	await process_frame
 	if passed:
 		print("Campaign Ilyra: physical approach, both rig orders, local Marine screen, actual deck arrivals, optional cargo, retry and independent output passed.")
 	quit(0 if passed else 1)
+
+
+func _check_endpoint_clearance() -> bool:
+	_signal_envelopes.clear()
+	var stock := StockHarbor.instantiate()
+	var ship_path := ^"Geometry/Ships"
+	var ships := _mission._field.get_node(ship_path)
+	var stock_ships := stock.get_node(ship_path)
+	var terrain := _mission._terrain as Terrain
+	var space := _mission.get_world_3d().direct_space_state
+	var legal := true
+	var signals := [[^"ForwardSignal", ^"ForwardReceiverSignal"], [^"AftSignal", ^"AftReceiverSignal"]]
+	for transfer in signals.size():
+		var offset := Vector3(-1.1 if transfer == FORE else 1.1, 0, 0)
+		for path: NodePath in signals[transfer]:
+			var body := ships.get_node(path) as StaticBody3D
+			var original := stock_ships.get_node(path) as StaticBody3D
+			var shape := body.get_node(^"Collision") as CollisionShape3D
+			var original_shape := original.get_node(^"Collision") as CollisionShape3D
+			var dims: Vector3 = shape.shape.size
+			_signal_envelopes.append(shape.global_transform * AABB(-dims*.5, dims))
+			if not body.position.is_equal_approx(original.position + offset) or shape.shape != original_shape.shape 					or shape.transform != original_shape.transform or body.basis != original.basis 					or body.get_node(^"Mesh").mesh != original.get_node(^"Mesh").mesh 					or body.get_node(^"Mesh").transform != original.get_node(^"Mesh").transform:
+				legal = _fail("Ilyra should translate exactly one existing assembly at %s." % path)
+			var center := Vector2(original.position.x, original.position.z)
+			var height := terrain.ground_height(center)
+			var deck_center := Vector3(center.x, height, center.y)
+			var pick: Variant = terrain.destination_from_ray(deck_center + Vector3.UP * 8, deck_center - Vector3.UP)
+			var post := body.global_position
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(
+				post + Vector3.UP * 8, post - Vector3.UP, Terrain.SOLID_MASK))
+			if not (pick is Vector2 and pick.is_equal_approx(center)) or not terrain.can_move(center + Vector2(0,.08), center, false) 					or terrain.can_move(Vector2(post.x,post.z-.08), Vector2(post.x,post.z), false) 					or hit.is_empty() or hit.collider != body:
+				legal = _fail("Clear deck center, walkable-pick and still-solid side post disagree at %s." % path)
+		var mid := _mission._routes[transfer][1].lerp(_mission._routes[transfer][2],.5) as Vector3
+		if terrain.destination_from_ray(mid + Vector3.UP * 10, mid - Vector3.UP * 6) != null 				or terrain.can_move(Vector2(mid.x,68.78),Vector2(mid.x,69.02),false) 				or terrain.can_move(Vector2(mid.x,82.25),Vector2(mid.x,82.01),false):
+			legal = _fail("No endpoint clearance may turn the gap into a hero or command route.")
+	stock.free()
+	return legal
 
 
 func _aft_first() -> bool:
@@ -208,6 +252,25 @@ func _point(path: String) -> Vector3:
 func _tick(count := 1) -> void:
 	for _step in range(count):
 		_mission._physics_process(DT)
+		_detect_signal_overlap()
+
+
+func _detect_signal_overlap() -> void:
+	if _signal_envelopes.size() != 4:
+		return
+	for transfer in [FORE,AFT]:
+		if not _mission.objective.line_is_rigged(transfer):
+			continue
+		var party := _mission._crews[transfer]
+		var z := party.global_position.z
+		if z < 65.5 or z > 84.7:
+			continue
+		for child in party.get_children():
+			if child is MeshInstance3D:
+				var envelope: AABB = child.global_transform * child.mesh.get_aabb()
+				if envelope.intersects(_signal_envelopes[transfer*2]) or envelope.intersects(_signal_envelopes[transfer*2+1]):
+					_signal_overlap_ticks += 1
+					break
 
 
 func _key(code: Key) -> void:
