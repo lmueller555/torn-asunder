@@ -123,8 +123,12 @@ func _check_defeat_and_retry() -> bool:
 	var infantry := _mission.battle.formations[0]
 	var rig: Node3D = _mission._formation_members[0][0].get_node("HumanInfantryModel")
 	var fight := _mission.encounter
-	# Arrange the existing guard in reach for a short presentation test. The
-	# unchanged enemy AI, attack orders and combat damage decide formation loss.
+	# Once wounded, the unit can actually lose to the live Dryad instead of
+	# depending on a full-health duel's balance. It must still take real damage.
+	var troops := fight.infantry_attack.attacker
+	troops.receive_damage(maxf(0.0, troops.hp - 40.0))
+	if not troops.is_alive() or not rig.is_visible_in_tree():
+		return _fail("The wounded infantry already disappeared before the enemy took a swing.")
 	fight.enemy_position = infantry.position + Vector2(1.3, 0.0)
 	fight.enemy_phase = Encounter.EnemyPhase.WATCHING
 	_mission.cursor = fight.enemy_position
