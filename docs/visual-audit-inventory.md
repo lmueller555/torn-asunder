@@ -71,6 +71,14 @@ These rework decisions cover the families visible in the linked Godot previews a
 | [Moonwash Survey Shore beach, shoal and signal structure](../tests/moonwash_survey_shore_preview.tscn) | Rework | Hard-edged bands and angular surf stripes read as depth markers. The plain post and ramp do not distinguish a working signal station at hero height. Keep the two headland occlusions and beach/high route distinction in later art. |
 | [Spanwater main channel, spillway and wheel stand](../tests/spanwater_lock_campaign_preview.tscn) | Rework | The channel and spilling water are solid color planes and square masses. The wheel is recognizable but its block stand, gates and banks lack construction or believable joins. Moving water cues and the two layouts still need separate in-game checks. |
 
+## Inspected: Red Basin lower storehouse
+
+| Existing asset or family | Status | What blocks a pass |
+|---|---|---|
+| [Lower storehouse exterior](../game/battlefields/red_basin_well_road.tscn) | Rework | At the actual exterior interaction ring in [The Second Bucket](../game/battlefield/raska_well_road_playtest.tscn), a plain wall box, untrimmed roof and blank slab cannot identify a working storehouse without the floating label. The roof also reads as a generic rectangle in command view. |
+
+The hero starts boarding at the exterior storehouse ring, not at either well. Keep the building solid and closed, its roof blocked to command targeting, and the cart’s separate approach to the yard clear. After the cart arrives, the three households must physically reach it before the cart is ready. The building review does not cover the wells, bench, wagons, households or cliffs.
+
 ## Inspected: Ilyra’s live Moonwash rescue
 
 Reviewed in hero, local tactical and overview views of [Hulls on Stone](../game/battlefield/ilyra_moonwash_rescue_campaign.tscn), not just the [shared harbor preview](../tests/moonwash_harbor_campaign_preview.tscn). The two transfer decks share the battlefield scene with Mara’s High Quay; this does not audit her view of the quay or every surrounding hull.
