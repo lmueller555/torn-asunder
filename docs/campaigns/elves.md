@@ -32,6 +32,8 @@ These IDs belong to campaign `ilyra`, not particular scene files. Defeat retries
 
 **Result and transition.** Ilyra circulates the complete chart instead of submitting a map that leaves out the working villages. At the Year Four briefing the ports still expect her to use the fleet to claim the Godbridle when a chance arises. The pilots have seen that Ilyra will put their testimony on the record, and volunteer to guide the shallow-draft boats up the new channel to Spanwater.
 
+**Dialogue data.** `ilyra_coast_survey_dispatch` briefs the two readings and relay choice. A successful acknowledgment selects `ilyra_coast_survey_debrief_beach` or `ilyra_coast_survey_debrief_headland` by the final relay, not by the prior rescue's cargo. Both reports circulate the whole chart and earn the pilots' offer of help. An interrupted signal or defeat has no success debrief. Campaign deployment and result persistence are not wired here.
+
 ## 3. Last Boat at Spanwater
 
 **Briefing.** Households caught on the low bank can reach the river landing but cannot cross the fighting on the raised service causeway. Raska moves to open the spillway into the Basin's old riverbed; no one has ordered the sea gate opened. While the launches approach, several ports signal their pledged ships to break off and pursue the Godbridle convoy. Ilyra orders their launches to stay until the households are clear.
