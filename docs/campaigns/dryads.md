@@ -2,11 +2,13 @@
 
 **Rootspeaker Neris Alder · Years Three–Five · Three missions**
 
-Campaign design, not playable content. See [the Dryad groves and their authority](../leaders.md#dryads--rootspeaker-neris-alder), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
+Campaign design with a standalone Year Three playtest; campaign routing and later missions are planned. See [the Dryad groves and their authority](../leaders.md#dryads--rootspeaker-neris-alder), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
 
 Neris comes to the oldest isolated grove thinking the Deepwood could save it. The people there say no: her shortest route runs under the wells of the town that gave them land. She can lead a common defense, but she cannot grant assent for them. Each mission gives her a job the people on that ground asked her to do.
 
 ## 1. What We Planted Here — Year Three (`neris_failing_grove`)
+
+**Playtest:** Open `game/battlefield/neris_failing_grove_playtest.tscn` directly. The dialogue catalog has `neris_failing_grove_dispatch` (“What We Planted Here”) for before deployment and `neris_failing_grove_debrief` (“Room for the First Tree”) for after a successful transplant. The beats can play in the shared dialogue panel, but are not yet connected to the playtest, overworld, or campaign progress.
 
 **Briefing:** The river’s new cut has left the grove dry. The town offers a watered nursery plot if the grove helps keep the old feeder open. The grove withholds assent for the root crossing and asks Neris to help with its first transplant.
 
