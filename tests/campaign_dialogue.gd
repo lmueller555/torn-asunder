@@ -34,11 +34,12 @@ func _run() -> void:
 	passed = _check_raska_well_road_beats() and passed
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
+	passed = _check_neris_failing_grove_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road, Spanwater, and Sova hearing continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad grove), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -399,6 +400,47 @@ func _check_sova_public_record_beats() -> bool:
 	if not speakers.has(Beats.ORC_WITNESS) or not speakers.has(Beats.ELVEN_WITNESS):
 		return _fail("The Year Four custody transfer lacked both witnesses.")
 	return _completions.size() == initial_count + cases.size() or _fail("Sova's beats emitted duplicate completions.")
+
+
+func _check_neris_failing_grove_beats() -> bool:
+	var cases := [
+		[Beats.NERIS_FAILING_GROVE_DISPATCH, "What We Planted Here",
+			["The grove said no", "keep the old feeder open", "The well is still the town's",
+				"No crossing", "call the volunteers", "sunken track", "raised road"]],
+		[Beats.NERIS_FAILING_GROVE_DEBRIEF, "Room for the First Tree",
+			["The first tree is upright", "soil is wet", "can't fit the whole grove here today",
+				"send a crew to the feeder", "Their ground is still dry", "still ask to hold it",
+				"your answer about the crossing stands"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title", "") != fixture[1] or not _panel.present(id, beat):
+			return _fail("Neris's dialogue was missing or invalid: %s" % id)
+		var spoken := ""
+		var speakers := {}
+		for index in range(beat.lines.size()):
+			var speaker := _label("SpeakerName").text
+			spoken += _label("DialogueLine").text + "\n"
+			speakers[speaker] = true
+			if speaker == Beats.NERIS and (not _portrait().visible or _portrait().texture != Beats.NERIS_PORTRAIT):
+				return _fail("Neris's existing portrait did not render: %s" % id)
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[2]:
+			if not phrase in spoken:
+				return _fail("A grove beat lost a local choice or objective: %s" % phrase)
+		if not speakers.has(Beats.NERIS) or not speakers.has(Beats.GROVE_ENVOY) or not speakers.has(Beats.FEEDER_KEEPER):
+			return _fail("Neris, the grove, and the town did not all speak for themselves.")
+		if "Orrun," in spoken or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
+			return _fail("A grove beat issued a new command or skipped explicit Finish: %s" % id)
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("A grove beat did not finish under its own ID: %s" % id)
+		ids.append(id)
+	return _completions.slice(start) == ids or _fail("Grove dialogue emitted duplicate or out-of-order completions.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:

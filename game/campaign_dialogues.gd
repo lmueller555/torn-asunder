@@ -28,10 +28,13 @@ const MARA_HIGH_QUAY_DEBRIEF := &"mara_high_quay_debrief"
 const ILYRA_MOONWASH_DISPATCH := &"ilyra_moonwash_dispatch"
 const ILYRA_MOONWASH_CARGO_DEBRIEF := &"ilyra_moonwash_debrief_cargo_recovered"
 const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
+const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
+const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
 const ILYRA_PORTRAIT := preload("res://assets/art/ilyra.webp")
+const NERIS_PORTRAIT := preload("res://assets/art/neris.webp")
 const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
 const RASKA := "War Marshal Raska Vennor"
@@ -52,6 +55,10 @@ const ILYRA := "Tide Speaker Ilyra Venn"
 const PILOT := "Moonwash Pilot"
 const SIGNALLER := "Fleet Signaller"
 const PORT_CLERK := "Harbor Clerk"
+
+const NERIS := "Rootspeaker Neris Alder"
+const GROVE_ENVOY := "Grove Envoy"
+const FEEDER_KEEPER := "Town Feeder Keeper"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -304,6 +311,28 @@ const BEATS := {
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Ask them what they can spare. Put every sack we borrow in the log, and ask their pilots to take us along the shore."},
 			{"speaker": PORT_CLERK, "text": "Sova read the sealed record in public. This is a copy. It names the old Druid command that drowned the coast."},
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Bring it when the pilots come in. I know where my street was. I want the chart to show where their villages fish and land now."},
+		],
+	},
+	NERIS_FAILING_GROVE_DISPATCH: {
+		"title": "What We Planted Here",
+		"location": "Isolated grove · Before the transplant",
+		"lines": [
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I thought I could bring the Deepwood to your roots. The river's new cut has left you dry."},
+			{"speaker": GROVE_ENVOY, "text": "Your crossing would run under the wells of the town that gave us this ground. The grove said no. We asked you here to help move a tree."},
+			{"speaker": FEEDER_KEEPER, "text": "The nursery has watered ground for the first one. Help us keep the old feeder open, and we'll keep that plot for you. The well is still the town's."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "No crossing. Show me the loading yard. I'll call the volunteers once we're there."},
+			{"speaker": GROVE_ENVOY, "text": "Keep watch on the sunken track while we load. Take the raised road with the sled. It's the only way wide enough."},
+		],
+	},
+	NERIS_FAILING_GROVE_DEBRIEF: {
+		"title": "Room for the First Tree",
+		"location": "Town nursery · After the transplant",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "The first tree is upright. Reach down past the cloth. The soil is wet all the way to the root ball."},
+			{"speaker": FEEDER_KEEPER, "text": "I can water this plot. I can't fit the whole grove here today. The feeder needs hands before I can spare any more ground."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
+			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
 		],
 	},
 }
