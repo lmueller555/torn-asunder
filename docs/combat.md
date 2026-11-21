@@ -100,3 +100,11 @@ The opening battle of the [five-year war](lore.md#the-five-year-war) uses the sa
 - **Humans.** Order shield infantry to hold the road and archers to cover the ridge while the hero escorts the Godbridle down the pass. When an Orc company intercepts the escort, fight at ground level while the infantry and archers continue their orders.
 - **Orcs.** Tie down the escort with one company while another reaches the miners who can explain what happened to the river.
 - **Druids.** Use the clash at the pass to buy time to evacuate the miners through the tunnels.
+
+## Human Infantry promotion
+
+Human Infantry qualifies for Heavy Infantry at **Melee Power 10**. With the standard ratings this means spending nine earned stat points on Melee Power, so level 10 is the earliest possible unlock. Unspent points, other ratings, and Battle Points do not count. The eligibility check does not change the roster or spend points.
+
+Provisional profile for testing: Heavy Infantry would retain its ratings and trade sword damage and mobility for staying power. It has 1,320 starting HP instead of 1,200 and deals 32 base damage with a basic sword hit instead of 37. Its planned movement speed is 85% of regular Infantry’s; that value is catalog data only. Unit Progression and AI Skirmish still use regular Infantry, and Heavy Infantry is still a model preview in Unit Test. Run `godot --headless --script tests/infantry_promotion.gd` after importing the project to test the gate and damage tradeoff.
+
+References for the design pattern only: [*Kingdom Under Fire: Heroes* manual, pp. 20–25](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) for skill-gated jobs and [official Human unit guide](https://www.kufheroes.com/eng/characters/unit_human.asp) for the slower heavy armor role. Torn Asunder uses its own combat profile and has no additional Lightning modifier for this promotion.
