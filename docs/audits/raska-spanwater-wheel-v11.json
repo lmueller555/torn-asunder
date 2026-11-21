@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "scope": "Exact static V1.1 spillway wheel, axle, supporting frame, and pedestal in Raska's existing River, Not Sea deployment only. No gate/river/water animation, shared field, actor or other mission approval.",
+  "author": "Torn Asunder environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Exact production-packed Godot terrain and actual hero use, before, contested/authorized, release, native command river-front and overview. All 15 native PNGs match the audited V1.1 candidate pixel for pixel.",
+    "close_up": "Supplementary matched front/back shows the stone cap's planar mapping, independent mortar courses, real bearing and supported shaft, and simplified shadow without changing foreground. Neither inspection camera is used as a substitute for the live hero/command capture.",
+    "reproduction": "Godot 4.7.2 GL Compatibility. Deploy Raska’s River, Not Sea. Hold Basin Regulars to secure the spillway; in hero view use actual SpillwayWheel ring, then observe release, the native tactical sector/overview and local ford closure. The south sea gate is not actionable. Compare both versions at matched 1280×720 camera/light.",
+    "measurements": "Near 3,044 and far 932 submitted base mesh triangles; one shared atlas with mips 884,727 bytes, estimated unique decoded geometry+atlas 1,190,615 bytes. Actual whole renderer deltas +3,580/+356/+356 primitives, −5/−8/−8 calls. Native CPU medians overlap in matched blocks; no GPU/console timing claim."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Separate cast-metal rim, six supported spokes, frame and bearing, layered anchored axle and a grounded stone pedestal. V1.1 replaces the misleading wood-like stone striation and cap fan while retaining silhouette and actual stand footprint."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Distinct worked oak, aged metal and cut limestone under actual scene lighting. Simplified generated shadow is the exact existing reviewed far mesh, while near physical silhouette and texture stay. Reviewed shadow differences separately in two same-pose native views."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Controls retain real marker and cues; the wheel is a fixed stationary mechanism, no false claim of sea-gate interaction. Actual hero, tactical, overview and 38.6 to 40 m threshold samples show no hole or collapse. Shared other campaign scenes keep old props."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Clean native import and production meshes/bytes verified; no added collision, visibility-rule, water, or objective edit. The prop-only measured limit is ≤4,000/500/500 added primitives, no new draw calls, and ≤1.25 MB estimated decoded mesh+atlas. Uses actual recorded render counters rather than hardware FPS."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Fixed wheel, axle and pedestal. Existing water/formation movement and release signal are separate gameplay behavior and are not approved here."
+    }
+  },
+  "files": {
+    "assets/models/environment/raska_spillway_wheel/bake_atlas.py": "eba8ec747c0bdf41969b485c1e127e88b6219f4fe41501aebe3b9e61d1de1427",
+    "assets/models/environment/raska_spillway_wheel/spanwater_wheel_atlas.png": "fd5fa4de9b9777f193d4a59d4aa5cb7b9f06f07119aab6d33b3b721b6c01dfcd",
+    "assets/models/environment/raska_spillway_wheel/spanwater_wheel_atlas.png.import": "8bcea8381aadb88b4451536bc532eeeeb9cb7414a0227750998a6557b3d99c36",
+    "assets/models/environment/raska_spillway_wheel/spillway_wheel.gd": "2d5ba23f69824a90859a4cabf981f7faf4447a57683c31d7aae69cd702a7885c",
+    "assets/models/environment/raska_spillway_wheel/spillway_wheel.gd.uid": "bb40d586a1027f9427a26f2c3408d13cffd0b3d79065a14014ec15b3cc840a46",
+    "assets/models/environment/raska_spillway_wheel/spillway_wheel.tscn": "b26b8ece49e6b37ee8bab1012ad73d942ed142c5474c0a20e13c946ac1da6aa1",
+    "game/battlefield/props/raska_spillway_wheel_binding.gd": "4ee6123a6737c88bfaf6009be4702510f4f153bfafdd5a8ae83053cb0703b735",
+    "game/battlefield/props/raska_spillway_wheel_binding.gd.uid": "ad685f59629eb20a1f1f5e97fff8dd84c9bf4d0ea5f70d9e2736eddcefaa4004"
+  },
+  "integration_scope": {
+    "reviewed_deployment_path": "game/battlefield/raska_spanwater.tscn",
+    "reviewed_battlefield_path": "game/battlefields/spanwater_lock_campaign.tscn",
+    "reviewed_binding_sha256_at_delivery": {
+      "game/battlefield/raska_spanwater.tscn": "74475986db5a69467200611b0d53258b738612b8b03491200769203d8b0b771d",
+      "game/battlefields/spanwater_lock_campaign.tscn": "e17a924e2469ec7eeedc9340f44d4ef43136613f2ddb6d744956b4fa93979778"
+    },
+    "context": "Only the original Raska scene receives its exact opt-in child, and the adapter refuses mounting elsewhere. The same unmodified Spanwater battlefield is also used by Ilyra and Neris with their old placements."
+  },
+  "review_manifest_sha256": "23b3fb9eb2f43149cba9ffb32c34fed6f150cb286292a8eafc0ed0cee0e3c573",
+  "offline_evidence_sha256": {
+    "production/04c-detail-front-hud-off.png": "23b2a35bab3ccb7dcf922118566ad2b9fa82fd6c142c501e4eefe0f3538501cd",
+    "production/04d-detail-back-hud-off.png": "a1893cd6ebc921d4e2d88454cc5f3e263fd7e9db4d26557104f731abee577d46",
+    "production/04-hero-authorized-at-wheel.png": "8b38c181192c936efd560aaabc3547bfe340ef1e6d9df354a125e69348085c71",
+    "production/05-hero-initial-release.png": "4ed6556b07428534cb19dcb6085ca17aed4b2eda2b1234e562a2a74bdff39345",
+    "production/06-command-sector-river-front.png": "4577c7463ed3acff96676999e44b1d2f8a6ad5a0a19942d35911b09a622b1966",
+    "production/06b-command-overview-river-front.png": "78d9c165a8913259215cfa53d6a3f18d95ce29d8bae7b1a4906ab28c52bf1881",
+    "production-budget-summary.txt": "88d1d54333815db02054d3e6619740541dd1f2ad0bfc4f81507febb223f433db",
+    "production-pixel-match.txt": "d93ae1000e58617222d9b586dc235457d2226e65da3262137db3b351ef23fb1e",
+    "production-main-delta.txt": "94e43296c7a7b8d7a83d9aa0d3335e9e6d2ba1fddf03ec717a67436ffea8410a",
+    "production-raska-full.log": "135cc81790cfa5b2b0f8dcc6480568258a72a67b0ceeb009ef9f50d62754ca0e"
+  },
+  "measurements": {
+    "hero_far_triangles": [
+      3044,
+      932
+    ],
+    "estimated_unique_decoded_geometry_and_atlas_bytes": 1190615,
+    "additional_primitives_hero_sector_overview": [
+      3580,
+      356,
+      356
+    ],
+    "draw_call_deltas": [
+      -5,
+      -8,
+      -8
+    ],
+    "hero_stock_software_medians_ms": [
+      48.06,
+      51.57
+    ],
+    "hero_candidate_software_medians_ms": [
+      53.31,
+      47.94
+    ],
+    "hardware_fps_claim": false
+  },
+  "tests": [
+    "Clean Godot import",
+    "Raska's full Spanwater mission, wrong sea gate/contest/ford/extraction/retry",
+    "Same scene/source mesh and atlas exact; 15 native frames match",
+    "Neris and Ilyra original wheel/stand and collision unchanged"
+  ]
+}
