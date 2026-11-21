@@ -7,6 +7,7 @@ const Roster := preload("res://game/combat/faction_roster.gd")
 const HUMAN_INFANTRY := &"human_infantry"
 const HUMAN_HEAVY_INFANTRY := &"human_heavy_infantry"
 const HUMAN_ARCHER := &"human_archer"
+const HUMAN_MARCHES_LONGBOWS := &"human_marches_longbows"
 const ORC_BASIN_REGULARS := &"orc_basin_regulars"
 const ORC_BRACE_INFANTRY := &"orc_brace_infantry"
 const ORC_BASIN_ARCHERS := &"orc_basin_archers"
@@ -101,7 +102,11 @@ static func faction_roster() -> Roster:
 	roster.add_unit(HUMAN_INFANTRY, Roster.HUMANS, Roster.MELEE)
 	roster.add_unit(HUMAN_HEAVY_INFANTRY, Roster.HUMANS, Roster.MELEE)
 	roster.add_unit(HUMAN_ARCHER, Roster.HUMANS, Roster.RANGED)
+	roster.add_unit(HUMAN_MARCHES_LONGBOWS, Roster.HUMANS, Roster.RANGED, [], false, "Marches Longbows")
 	roster.add_advance(HUMAN_INFANTRY, HUMAN_HEAVY_INFANTRY, TYPES[HUMAN_HEAVY_INFANTRY].promotion_minimum_ratings)
+	# Provisional Archer path, not a live promotion or a new volley profile.
+	roster.add_advance(HUMAN_ARCHER, HUMAN_MARCHES_LONGBOWS,
+		{Unit.Damage.RANGED: 8}, {Platoon.Skill.FORMATION_DRILL: 2})
 	roster.add_unit(ORC_BASIN_REGULARS, Roster.ORCS, Roster.MELEE, [], false, "Basin Regulars")
 	roster.add_unit(ORC_BRACE_INFANTRY, Roster.ORCS, Roster.ANTI_RIDING, [Roster.MELEE], false, "Brace Infantry")
 	roster.add_unit(ORC_BASIN_ARCHERS, Roster.ORCS, Roster.RANGED, [], false, "Basin Archers")
