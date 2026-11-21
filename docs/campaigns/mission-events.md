@@ -4,6 +4,23 @@ A battle should change because something happened on the field: a carrier reache
 
 The [original Xbox manual, pp. 12–15](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf#page=8) shows mission-specific information, troop ranges, and explored terrain in tactics view. An [Ellen playthrough, §4.17, Glaucus](https://www.supercheats.com/xbox/walkthroughs/kingdomunderfireheroes-walkthrough01.txt) records a battle that moves from an initial fight to a marked location, then an engineering objective with trap clearance and a floodgate. The useful precedent is the change in orders caused by events, not the exact encounters.
 
+
+## Scale and interception
+
+Use one of five battlefield sizes. Size means a normal infantry platoon's unopposed march between playable terrain edges, along a real route on the field. These are planning targets, not mission timers or limits on roads, detours or mounts.
+
+| Size | Target march time | Planning distance at 3 m/s |
+|---|---:|---:|
+| Compact | 90 s | 270 m |
+| Small | 110 s | 330 m |
+| Standard | 130 s | 390 m |
+| Large | 155 s | 465 m |
+| Expansive | 180 s | 540 m |
+
+Pick a plausible through-route using edge markers. March with the real formation and terrain adapters, with no combat or waiting, and record both measured time and route length. A rectangle, an objective-only route, or the length along a blocked straight line is not a scale measurement. The [tier helper](../../game/battlefield/battlefield_march_scale.gd) reports the nearest target while flagging marches outside the 90–180 s band separately. This sets all five targets; it does not claim an authored map exists for each class.
+
+Use two different pressure modes: a **patrol** follows its lane and pursues only on confirmed sight within its local range, so screened routes stay meaningful; an **intercept** receives a specific route/order from a mission event and can put a formation in the player's path even before it sees them. Telegraph the latter and give the player room to respond. Never enlarge all global sight ranges simply to make larger maps feel occupied. Check both modes with actual cover, the [detection rules](../patrol-detection.md), and distinct player choices to engage, screen, or detour.
+
 ## Current contracts
 
 ### Mara — The Pass Below the Mine
