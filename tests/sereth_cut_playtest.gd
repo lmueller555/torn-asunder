@@ -30,11 +30,11 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	_mission.mission_finished.connect(func(won: bool) -> void: _results.append(won))
-	var passed := _check_extraction() and _check_recovery_clear() and _check_room_contest_and_hero_loss()
+	var passed := _check_extraction() and await _check_recovery_clear() and _check_room_contest_and_hero_loss()
 	_mission.queue_free()
 	await process_frame
 	if passed:
-		print("Sereth Cut playtest: physical extraction, guard-screened drop and recovery, both real objectives, contested clerk, hero loss and retry passed.")
+		print("Sereth Cut playtest: physical extraction, guard-screened drop, empty retreat and recovery, both real objectives, contested clerk, hero loss and retry passed.")
 	quit(0 if passed else 1)
 
 
@@ -105,16 +105,27 @@ func _check_recovery_clear() -> bool:
 		return false
 	if not _mission._pressure.text.contains("stalled") or _mission._raider.global_position != stopped_at:
 		return _fail("The physical Hold did not stall the carrier in place.")
+	await _checkpoint("01-carrier-screened")
 	_joy(JOY_BUTTON_A)
 	_tick()
-	if _mission.objective.bundle_status != Bundle.DROPPED or _mission._raider.visible \
-			or _mission._bundle.global_position != stopped_at or _results != [false]:
-		return _fail("Contact with the screened carrier did not visibly drop the real records.")
+	if _mission.objective.bundle_status != Bundle.DROPPED or not _mission._raider.visible \
+			or _mission._raid != Mission.Raid.RETREATING_EMPTY or _mission._room_contested() \
+			or _mission._bundle.global_position != stopped_at or _mission._raider.global_position != stopped_at \
+			or _mission._exit_beacon.visible or _mission._raider_label.text != "Retreating" or _results != [false]:
+		return _fail("Disarm must leave the real bundle at contact and the living party visible and noncontesting.")
+	await _checkpoint("02-disarmed-bundle")
 	_key(KEY_SPACE)
 	_tick()
 	if _mission.objective.bundle_status != Bundle.WITH_SERETH \
 			or _mission._bundle.global_position.distance_to(_mission.hero_world_position()) >= 1.2:
-		return _fail("A separate local action did not pick up the dropped bundle.")
+		return _fail("The very next local action must pick up the dropped bundle.")
+	_tick(29)
+	var actual_step := _mission._raider.global_position.distance_to(stopped_at)
+	if actual_step <= 1.0 or actual_step > Mission.CARRIER_SPEED * DT * 30 + 0.05 \
+			or _mission._bundle.global_position.distance_to(_mission.hero_world_position()) >= 1.2 \
+			or not _mission._pressure.text.contains("withdrawing"):
+		return _fail("The empty party did not travel continuously while Sereth kept the recovered bundle.")
+	await _checkpoint("03-living-retreat")
 	if not _walk_markers(["Routes/CemeteryStairTop", "Routes/CemeteryHold"] + HOLD_TO_ROOM):
 		return false
 	_key(KEY_SPACE)
@@ -129,8 +140,14 @@ func _check_recovery_clear() -> bool:
 	_joy(JOY_BUTTON_A)
 	_tick(5)
 	if _mission.objective.outcome != Cut.Outcome.SUCCEEDED or _mission._bundle.global_position != _point("Objectives/BundleSecure") \
+			or _mission._raid != Mission.Raid.RETREATING_EMPTY or not _mission._raider.visible \
 			or _results != [false, true]:
-		return _fail("Only the actual bundle at its secure point should win after filing; signal must emit once.")
+		return _fail("Filing and securing the real bundle must clear and emit once without waiting for the retreat.")
+	if not _wait(func() -> bool: return not _mission._raider.visible, 7500):
+		return false
+	if _mission._raider.global_position != _point("Objectives/EnemyRetreatExit") or _results != [false, true] \
+			or _mission.objective.bundle_status != Bundle.SECURED or _mission.objective.outcome != Cut.Outcome.SUCCEEDED:
+		return _fail("The empty party should disappear only at the real exit, without reporting a new result or extraction.")
 	_key(KEY_BACKSPACE)
 	return _mission.objective.outcome == Cut.Outcome.ACTIVE or _fail("Backspace did not restart after success.")
 
@@ -165,6 +182,11 @@ func _check_room_contest_and_hero_loss() -> bool:
 		return false
 	return (_mission.objective.failure == Cut.Failure.SERETH_FELL and _results == [false, true, false]) \
 		or _fail("Sustained visible unscreened contact did not produce Sereth's separate defeat.")
+
+
+func _checkpoint(_label: String) -> void:
+	# Local render diagnostics can capture the same live-input checkpoints.
+	pass
 
 
 func _walk_markers(ids: Array) -> bool:
