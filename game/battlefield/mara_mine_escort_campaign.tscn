@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://game/battlefield/battlefield_minimap.gd" id="4_widget"]
 [ext_resource type="PackedScene" path="res://assets/models/environment/godbridle_custody_case.glb" id="5_case"]
 
+[ext_resource type="Script" path="res://game/battlefield/mara_mine_storehouse_art.gd" id="6_storehouse"]
+
 [node name="MaraMineEscortCampaign" instance=ExtResource("1_mara")]
 battlefield_scene = ExtResource("2_valley")
 field_bounds = Rect2(-160, -108, 320, 224)
@@ -71,3 +73,6 @@ mouse_filter = 2
 text = "▲ Mara    ■ Formation    ◆ Pickup    ⊓ Exit"
 theme_override_colors/font_color = Color(0.76, 0.84, 0.85, 1)
 theme_override_font_sizes/font_size = 13
+
+[node name="StorehouseArt" type="Node" parent="."]
+script = ExtResource("6_storehouse")

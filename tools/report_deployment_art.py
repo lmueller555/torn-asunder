@@ -81,6 +81,11 @@ VAULT_BASE = "game/battlefields/cairnspine_vault_road.tscn"
 VAULT_ASSET = "assets/models/environment/vault_jamb.glb"
 VAULT_RECEIPT = "docs/audits/sova-vault-jambs-v1.json"
 VAULT_STOCK_DEPLOYMENTS = ("sova_public_record", "neris_cairnspine_passage", "sereth_no_proxy")
+STOREHOUSE_FIELD = "game/battlefields/year_one_mine_campaign.tscn"
+STOREHOUSE_BINDING = "game/battlefield/mara_mine_storehouse_art.gd"
+STOREHOUSE_SOURCE = "assets/models/environment/mara_mine_storehouse/works_shell.gd"
+STOREHOUSE_FAR = "assets/models/environment/mara_mine_storehouse/works_shell_far.gd"
+STOREHOUSE_RECEIPT = "docs/audits/mara-mine-storehouse-v1.json"
 DEVELOPMENT = "still uses development art"
 ID = r"[a-z][a-z0-9_]*"
 PACKED_RESOURCE = re.compile(
@@ -271,6 +276,18 @@ def _verify_sova_vault_jambs(root: Path, deployments: dict[str, str], battlefiel
                            {VAULT_ASSET, VAULT_WRAPPER, VAULT_BASE}, "mission_deployment", VAULT_DEPLOYMENT)
 
 
+def _verify_mara_storehouse(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    if deployments.get(CASE_MISSION) != CASE_DEPLOYMENT or battlefields.get(CASE_MISSION) != STOREHOUSE_FIELD:
+        raise ValueError("Mara Mine Storehouse: reviewed registered placement and original Mine field are required")
+    _verify_adapter(root, CASE_DEPLOYMENT, STOREHOUSE_BINDING, "StorehouseArt", "Mara Mine Storehouse")
+    if any(STOREHOUSE_BINDING in (root / scene).read_text(encoding="utf-8")
+           for mission, scene in deployments.items() if mission != CASE_MISSION):
+        raise ValueError("Mara Mine Storehouse: the adapter is scoped to Mara’s Mine only")
+    return _receipt_record(root, "Mara’s closed Mine Storehouse and roof (V1 near and far)", STOREHOUSE_RECEIPT, 11,
+                           {STOREHOUSE_FIELD, STOREHOUSE_BINDING, STOREHOUSE_SOURCE, STOREHOUSE_FAR},
+                           "mission_deployment", CASE_DEPLOYMENT)
+
+
 def _verify_adapter(root: Path, deployment: str, script: str, node: str, context: str) -> None:
     scene = (root / deployment).read_text(encoding="utf-8")
     ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(script)}" id="([^"]+)"\]$',
@@ -313,6 +330,7 @@ def build_report(root: Path) -> dict:
     quay_threshold = _verify_mara_quay_threshold(root, deployments, battlefields)
     north_bridge = _verify_mara_north_bridge(root, deployments, battlefields)
     vault_jambs = _verify_sova_vault_jambs(root, deployments, battlefields)
+    mine_storehouse = _verify_mara_storehouse(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -323,7 +341,7 @@ def build_report(root: Path) -> dict:
                 "battlefield_scene": battlefields[mission],
                 "art_status": DEVELOPMENT,
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
-                + ([custody_case] if mission == CASE_MISSION else [])
+                + ([custody_case, mine_storehouse] if mission == CASE_MISSION else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
                 + ([beach_stand] if mission == BEACH_MISSION else [])
                 + ([quay_threshold] if mission == QUAY_MISSION else [])

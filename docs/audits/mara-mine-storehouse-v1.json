@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "Exact V1 closed Mine works Storehouse: braced shell, barred shutter, stone sill, low slate roof, near/far pair and exact Mara-only attachment. Not stock Sova/Raska buildings, standalone Mine, portal, case, racks, ground or actors.",
+  "author": "Torn Asunder Mine environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independently examined matched ordinary native Mara 1280×720 hero at yard arrival, live case/closed wall and actual 116 m command/414 m overview; same-frame projected-size threshold near/far. The normal production import and rendered kit match reviewed images. Only known small distant formation animation pixels were excluded in the parity check; those areas are outside the candidate.",
+    "close_up": "Normal hero and supplementary world construction view show fitted braces, a real closed high shutter, masonry footing and roof drip edge; no misleading door or traversable roof. Compared in live light and exact observed wall contact.",
+    "reproduction": "Godot 4.7.2 Compatibility/Mesa llvmpipe. Launch Mara’s Year One Mine, head from west toward the pickup yard, use Cross to collect the existing case and approach the original west wall and roof. Hold Shift/L2 for 116 m, R3/M for overview, release for hero. Adjacent Yard accepts formation Move, storehouse roof rejects. Heavy Infantry authorized Replay and normal shield deployment continue selecting the exact shared field.",
+    "measurements": "1,270 near and 218 far fixed triangles, one opaque material shared with a 512×256 RGB8 atlas and one shadow caster. Decoded atlas 524,289 bytes including mips; far mesh adds 26,424 CPU bytes. Hero prep +1,246 submitted primitives, −2 draws; normal 116 m far +194 / −3 versus stock (84.4% less added geometry than the full kit). Software tactical interleaved +0.49% and −7.07% across repeats; close +4.99% and +8.51%, not equivalent hardware FPS."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Braced timber, fit bolts and stone sills have intentional joins. Closed shutter and continuous siding live inside the two exact solid envelopes. Far model retains the detailed roof and same silhouette/shadow without a visible split."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Restrained light values keep timber, roof slate, dark straps and stone distinct in the existing Mine lighting. Reviewed lossless decoded texture/mips are byte-identical in the normal production importer."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Closed storage reads as fenced cover, not the mine tunnel or a new interaction. Exact case and tactical road cue untouched, local distance switch maintains silhouette and color at actual 116 m."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "The structure is static. No shutter, case, actor, or other motion is approved by this review; visual camera transitions are checked in integration."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact existing wall and roof resources, real prop roof deny, formation yard, Heavy exact resource path and route preserved; regular, Heavy, and other campaigns validated. Prop-only budget adds at most 1,500 hero/300 sector primitives, no new draw calls and <0.55 MiB decoded atlas. These deterministic limits and the tested software variability do not predict hardware performance."
+    }
+  },
+  "files": {
+    "assets/models/environment/mara_mine_storehouse/miner_storehouse_atlas.png": "095c13b3767a1b5e96619ede94418f726d535b2357e9d5e6b7cfb4beeedfd962",
+    "assets/models/environment/mara_mine_storehouse/miner_storehouse_atlas.png.import": "5eb38bf2c280926f16a2777a3ac3a52c61e46f95bec60126535dfa2074a233d9",
+    "assets/models/environment/mara_mine_storehouse/works_distance.gd": "f26f419981bc71741ef6f7a866840075ae0d668b1ca861e9199967cade23ba74",
+    "assets/models/environment/mara_mine_storehouse/works_distance.gd.uid": "17251e5ddab7610137d94f89d22ac7f1e9ff7a80c6bde8a01d7ae1bf6c0cbbce",
+    "assets/models/environment/mara_mine_storehouse/works_shell.gd": "ccb97cbef792e095a2e3566e16954ed1b1d4b0d7a9c78b435cc465ab9d917401",
+    "assets/models/environment/mara_mine_storehouse/works_shell.gd.uid": "be3516609d34fccc45cf0e9d198d71f6ce8aa81580e36a47444cf6880bd84c82",
+    "assets/models/environment/mara_mine_storehouse/works_shell_far.gd": "bee8680bb988fb72b4c99dfdff4457c12b359dbdaaaf7f43e8d9346268c11643",
+    "assets/models/environment/mara_mine_storehouse/works_shell_far.gd.uid": "147997afd145ef2bd962e3f56f411cb8d9ec4df12e187f6180a8600a25e5bd4a",
+    "game/battlefield/mara_mine_storehouse_art.gd": "5f76a1c731ab608f558559ace34a3e07a3da2e0f7c825499cb7ef8cac04c086f",
+    "game/battlefield/mara_mine_storehouse_art.gd.uid": "9ad55f52f2d0bf6d806e41a0a3d583e7ec8fbfffe92eef86e3b69e013b27804d",
+    "game/battlefields/year_one_mine_campaign.tscn": "c354397f9ec1732f4fa139236d095e7c07b7a1181329f722ffd03fe11765793b"
+  },
+  "integration_scope": {
+    "registered_deployment": "game/battlefield/mara_mine_escort_campaign.tscn",
+    "shared_field": "game/battlefields/year_one_mine_campaign.tscn",
+    "reviewed_deployment_sha256_at_delivery": "abf5031cf3b1dc521335ab3260425f8cc8ce1fe4f93349e197bdf9cd7eb931eb",
+    "context": "Exact child adapter only in Mara, with the underlying active Mine resource unchanged. Sova, Raska and standalone remain original; portal and case receipts remain independent."
+  },
+  "offline_evidence_manifest_sha256": "51b809d89740507c3b5b0ead9ed3582e2277f225b26d29d8451b736a7c3da4fd",
+  "reviewed_lod_pack_sha256": "f82c3cc1d6bbb1b65e6437a07b6c4c328ee4de2d103ff828d86e92fee8e52a80",
+  "measurements": {
+    "near_triangles": 1270,
+    "far_triangles": 218,
+    "decoded_atlas_mip_bytes": 524289,
+    "submitted_hero_sector_deltas": [
+      1246,
+      194
+    ],
+    "draw_hero_sector_deltas": [
+      -2,
+      -3
+    ],
+    "hardware_fps_claim": false
+  }
+}
