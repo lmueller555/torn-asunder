@@ -86,6 +86,27 @@ const _MAPS := {
 			{"from_id": "year_one_mine", "to_id": "cairnspine_assembly", "required_clear_id": "sova_mine_tunnels"},
 		],
 	},
+	"ilyra": {
+		"start": "moonwash_camp",
+		"waypoints": {
+			"moonwash_camp": {
+				"id": "moonwash_camp", "label": "Moonwash Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.13, 0.73),
+			},
+			"moonwash_harbor": {
+				"id": "moonwash_harbor", "label": "Moonwash Harbor", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.27, 0.90), "mission_id": "ilyra_moonwash_rescue",
+			},
+			"moonwash_survey_shore": {
+				"id": "moonwash_survey_shore", "label": "Survey Shore", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.52, 0.82),
+			},
+		},
+		"routes": [
+			{"from_id": "moonwash_camp", "to_id": "moonwash_harbor"},
+			{"from_id": "moonwash_harbor", "to_id": "moonwash_survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
+		],
+	},
 }
 
 var _campaign_id: String
