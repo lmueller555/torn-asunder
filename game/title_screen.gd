@@ -295,6 +295,9 @@ func _open_campaign(campaign: Dictionary) -> void:
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
 	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
+		if campaign.id == "mara" and _profile.greyhollow_reveal_pending():
+			_present_campaign_dialogue(DialogueBeats.MARA_MINE_DEBRIEF, _finish_greyhollow_reveal)
+			return
 		if not _show_waypoint_intermission():
 			_show_world_map()
 	else:
@@ -467,6 +470,8 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 	_victory_pending = true
 	var saved: Error
 	match mission_id:
+		"mara_mine_escort":
+			saved = _profile.record_greyhollow_rescue_clear()
 		"mara_grain_crossing":
 			saved = _profile.record_grain_clear(result)
 		"ilyra_moonwash_rescue":
@@ -482,7 +487,14 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 
 func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
 	if mission == _campaign_battle:
-		_present_campaign_dialogue(debrief, _return_from_campaign_debrief)
+		var follow_up := _finish_greyhollow_reveal if debrief == DialogueBeats.MARA_MINE_DEBRIEF else _return_from_campaign_debrief
+		_present_campaign_dialogue(debrief, follow_up)
+
+
+func _finish_greyhollow_reveal() -> void:
+	if _profile.finish_greyhollow_reveal() != OK:
+		_campaign_warning = "The Greyhollow cutscene could not be marked as seen."
+	_return_from_campaign_debrief()
 
 
 func _return_from_campaign_debrief() -> void:
