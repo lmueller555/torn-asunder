@@ -10,6 +10,9 @@ const RASKA_MINE_DISPATCH := &"raska_mine_dispatch"
 const RASKA_MINE_DEBRIEF := &"raska_mine_debrief"
 const RASKA_WELL_ROAD_DISPATCH := &"raska_well_road_dispatch"
 const RASKA_WELL_ROAD_DEBRIEF := &"raska_well_road_debrief"
+const RASKA_SPANWATER_DISPATCH := &"raska_spanwater_dispatch"
+const RASKA_SPANWATER_DEBRIEF := &"raska_spanwater_debrief"
+const RASKA_SPANWATER_CODA := &"raska_spanwater_coda"
 const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
 const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
 const SOVA_PUBLIC_RECORD_DISPATCH := &"sova_public_record_dispatch"
@@ -113,6 +116,39 @@ const BEATS := {
 			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "It'll put water back in the river towns. It won't reach every place that needs it."},
 			{"speaker": LOWER_CAPTAIN, "text": "Our pastures were on the old shore. So were the boats that brought our grain. A river won't bring those boats back."},
 			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The assembly sent me for its river. I can promise you that much. Not the sea."},
+		],
+	},
+	RASKA_SPANWATER_DISPATCH: {
+		"title": "River, Not Sea",
+		"location": "Spanwater causeway · Before the release",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "Two controls. The spillway sends water down the old riverbed. Open the sea gate and the old shore fills. The assembly town stands below that waterline."},
+			{"speaker": LOWER_CAPTAIN, "text": "I counted the last barrels onto your cart. We can get you to the wheel today. But my towns sent me to bring back the shore, not just fill your river."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "I remember what I promised. The assembly sent me for the river. The sea gate stays shut."},
+			{"speaker": LOWER_CAPTAIN, "text": "Then we'll see you to the wheel, as agreed. If you open the spillway alone, our companies go home."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Take the raised causeway and clear the wheel. I'll open the spillway. Hold it until the river reaches its mark, then get to the high bank. The low crossing won't stay open."},
+		],
+	},
+	RASKA_SPANWATER_DEBRIEF: {
+		"title": "Below the Mark",
+		"location": "Spanwater high bank · After the release",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "The spillway held. Water reached the mark in the old riverbed. The sea gate stayed shut; the assembly town is safe from the flood."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Boats at the low landing. People on the feeder path, too. Keep our regulars on the high bank. Leave those lanes to them."},
+			{"speaker": LIEUTENANT, "text": "The captain's companies raised their standards and left by the causeway when we opened the spillway. I asked her if we should expect them back. She said no."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Put that in the report. Don't fill their places on the roster until someone actually comes to stand in them."},
+			{"speaker": LIEUTENANT, "text": "What do I tell the lower towns when they ask where the water stops?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Tell them where it stops. They shouldn't have to come all this way to find out."},
+		],
+	},
+	RASKA_SPANWATER_CODA: {
+		"title": "What I Saw",
+		"location": "Spanwater · Later that year",
+		"lines": [
+			{"speaker": SCRIBE, "text": "The case is closed. For the assembly's copy: what did you see change hands?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "I saw Mara hand the Godbridle to Sova. The Elven witness saw it too. Write that Sova took custody. That's what we came to witness."},
+			{"speaker": SCRIBE, "text": "Shall I put it with the report on the water?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Separate page. One says who carries the bridle. The other says who got water. Don't let anyone read one as an answer to the other."},
 		],
 	},
 	SOVA_MINE_DISPATCH: {
