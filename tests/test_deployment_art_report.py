@@ -13,11 +13,11 @@ from unittest.mock import patch
 from tools.report_deployment_art import (
     BEACH_BATTLEFIELD, BEACH_DEPLOYMENT, BEACH_MISSION, BEACH_RECEIPT, BRIDGE_BATTLEFIELD,
     BRIDGE_DEPLOYMENT, BRIDGE_MISSION, BRIDGE_RECEIPT, CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
-    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
+    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, HEADLAND_RECEIPT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
     QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, STOREHOUSE_FIELD, STOREHOUSE_RECEIPT, VAULT_BASE, VAULT_DEPLOYMENT, VAULT_MISSION, VAULT_RECEIPT,
     VAULT_STOCK_DEPLOYMENTS, VAULT_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
     WHEEL_MISSION, WHEEL_RECEIPT,
-    _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_kit,
+    _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_ilyra_headland_relay, _verify_kit,
     _verify_mara_north_bridge, _verify_mara_quay_threshold, _verify_mara_storehouse, _verify_raska_spillway_wheel,
     _verify_sova_vault_jambs, build_report, main,
 )
@@ -177,6 +177,33 @@ class DeploymentArtReportTest(unittest.TestCase):
                 _verify_ilyra_beach_stand(root, {BEACH_MISSION: BEACH_DEPLOYMENT}, {BEACH_MISSION: BEACH_BATTLEFIELD})
             with self.assertRaisesRegex(ValueError, "reviewed placement is not registered"):
                 _verify_ilyra_beach_stand(root, {BEACH_MISSION: BEACH_DEPLOYMENT}, {})
+
+    def test_headland_receipt_requires_its_separate_ilyra_binding(self):
+        report = build_report(ROOT)
+        matches = [(row, receipt) for row in report["deployments"] for receipt in row["verified_kit_receipts"]
+                   if receipt["receipt"] == HEADLAND_RECEIPT]
+        self.assertEqual(len(matches), 1)
+        row, receipt = matches[0]
+        self.assertEqual(row["mission_id"], BEACH_MISSION)
+        self.assertEqual(row["battlefield_scene"], BEACH_BATTLEFIELD)
+        self.assertEqual(row["art_status"], DEVELOPMENT)
+        self.assertEqual(receipt["placement_scope"], "mission_deployment")
+        self.assertEqual(receipt["placement_scene"], BEACH_DEPLOYMENT)
+        self.assertEqual(receipt["verified_files"], 12)
+        self.assertIn(BEACH_RECEIPT, [kit["receipt"] for kit in row["verified_kit_receipts"]])
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / BEACH_DEPLOYMENT
+            target.parent.mkdir(parents=True)
+            target.write_text((ROOT / BEACH_DEPLOYMENT).read_text(encoding="utf-8")
+                              .replace('script = ExtResource("5_headland_binding")', ''), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact adapter is not attached"):
+                _verify_ilyra_headland_relay(root, {BEACH_MISSION: BEACH_DEPLOYMENT},
+                                            {BEACH_MISSION: BEACH_BATTLEFIELD})
+            with self.assertRaisesRegex(ValueError, "reviewed placement is not registered"):
+                _verify_ilyra_headland_relay(root, {BEACH_MISSION: BEACH_DEPLOYMENT, "other": BEACH_DEPLOYMENT},
+                                            {BEACH_MISSION: BEACH_BATTLEFIELD})
 
     def test_wheel_requires_its_reviewed_deployment_binding(self):
         with tempfile.TemporaryDirectory() as temp:

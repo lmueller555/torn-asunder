@@ -33,7 +33,7 @@ func _run() -> void:
 	mission.queue_free()
 	await process_frame
 	if passed:
-		print("Beach signal skin: Ilyra-only live mounting, exact stock boxes and both actual ground pick and signal ray, unchanged high stand and zero new collision/animation passed.")
+		print("Beach signal skin: Ilyra-only live mounting, exact stock boxes and both actual ground pick and signal ray, unchanged shared high stand and zero new collision/animation passed.")
 	quit(0 if passed else 1)
 
 
@@ -42,7 +42,7 @@ func _check_skin(stock: Node, field: Node3D, pole: StaticBody3D, art: Node) -> b
 	var mesh := art.get_node_or_null(^"StandVisual") as MeshInstance3D
 	if not mesh or mesh.mesh.get_surface_count() != 1 or not mesh.is_visible_in_tree() 			or not art.find_children("*","CollisionObject3D",true,false).is_empty() 			or not art.find_children("*","AnimationPlayer",true,false).is_empty() 			or stock.get_node(POLE).has_node(^"BeachSignalStandArt"):
 		return false
-	if not field.get_node(HIGH).visible or pole.get_node(^"Mesh").visible 			or flag.get_node(^"Mesh").visible:
+	if not stock.get_node(HIGH).visible or pole.get_node(^"Mesh").visible 			or flag.get_node(^"Mesh").visible:
 		return false
 	var terrain := Terrain.new(field)
 	var extent: Array[AABB] = []
