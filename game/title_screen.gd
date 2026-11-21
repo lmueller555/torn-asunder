@@ -10,6 +10,7 @@ const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
+const CAMPAIGN_PLAYTEST_NOTICE := "Development playtest: includes placeholder art."
 const WAR_YEARS := ["", "Year One", "Year Two", "Year Three", "Year Four", "Year Five"]
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
@@ -202,7 +203,7 @@ func _show_title() -> void:
 
 func _show_vault(initial_index: int) -> void:
 	_open_page(Page.VAULT)
-	var back := _heading("Campaign Vault", "Choose a leader to begin their campaign.")
+	var back := _heading("Campaign Vault", CAMPAIGN_PLAYTEST_NOTICE + " Choose a leader to begin.")
 	_portraits.clear()
 	for index in range(Campaigns.ALL.size()):
 		var campaign := Campaigns.ALL[index]
@@ -311,7 +312,7 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		Rect2(76, 248, 1120, 44), 25, GOLD)
 	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(_stage, "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 475, 1080, 32), 21, MUTED)
+	_label(_stage, CAMPAIGN_PLAYTEST_NOTICE + " Fixed test roster.", Rect2(76, 475, 1080, 32), 21, MUTED)
 	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
