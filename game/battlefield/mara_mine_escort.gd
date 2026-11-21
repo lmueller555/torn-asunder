@@ -5,6 +5,8 @@ signal mission_finished(won: bool)
 
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
+const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
+const Archer := preload("res://game/combat/human_archer_volley.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
@@ -41,6 +43,7 @@ var _hero_guard: MeshInstance3D
 @onready var _combat_panel: PanelContainer = $CombatHUD/Panel
 @onready var _combat_hp: Label = $CombatHUD/Panel/Margin/Readout/Health
 @onready var _infantry_hp: Label = $CombatHUD/Panel/Margin/Readout/Infantry
+@onready var _archer_status: Label = $CombatHUD/Panel/Margin/Readout/Archers
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
@@ -159,8 +162,10 @@ func _handle_combat_input(event: InputEvent) -> bool:
 	if command_view:
 		if key != KEY_K:
 			return false
-		if encounter.order_infantry_attack(battle, selected_index, cursor):
+		if encounter.order_infantry_attack(battle, selected_index, cursor) \
+			or encounter.order_archer_attack(battle, selected_index, cursor, _terrain.clear_melee_contact):
 			_sync_view()
+		_refresh_combat_view()
 		return true
 	if _hero_incapacitated:
 		return false
@@ -289,7 +294,8 @@ func _reset_encounter() -> void:
 	var guard_marker := battlefield_marker(road_guard_spawn)
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
-	encounter = Encounter.new(_marker_position(guard_marker)) if opposition_enabled and guard_marker else null
+	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane) \
+		if opposition_enabled and guard_marker else null
 	_refresh_combat_view()
 
 
@@ -325,12 +331,16 @@ func _refresh_combat_view() -> void:
 	_enemy_visual.rotation.y = atan2(-encounter.enemy_heading.x, -encounter.enemy_heading.y)
 	_enemy_warning.visible = encounter.enemy_phase == Encounter.EnemyPhase.WINDUP
 	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
-	var target_selected := command_view and selected_index == InfantryAttack.INFANTRY_INDEX \
-		and infantry.order != Battle.Order.DEFEATED and encounter.target_at(cursor)
-	_enemy_target_ring.visible = command_view and (target_selected or infantry.order == Battle.Order.ATTACK)
+	var archers := battle.formations[ArcherAttack.ARCHER_INDEX]
+	var selected := battle.formations[selected_index]
+	var target_selected := command_view and selected.order != Battle.Order.DEFEATED and encounter.target_at(cursor)
+	_enemy_target_ring.visible = command_view and (target_selected or infantry.order == Battle.Order.ATTACK \
+		or archers.order == Battle.Order.ATTACK)
 	_enemy_weapon.rotation.x = -1.15 if _enemy_warning.visible else 0.3
 	var targets_infantry := encounter.windup_target == Encounter.Target.INFANTRY
-	_enemy_status.text = ("WINDUP → INFANTRY" if targets_infantry else "WINDUP") if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
+	var targets_archers := encounter.windup_target == Encounter.Target.ARCHERS
+	var target_callout := " → INFANTRY" if targets_infantry else (" → ARCHERS" if targets_archers else "")
+	_enemy_status.text = "WINDUP" + target_callout if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
 		"TARGET: " if target_selected else "", ceili(encounter.enemy.hp),
 	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
@@ -343,19 +353,41 @@ func _refresh_combat_view() -> void:
 	_infantry_hp.text = "Shield Infantry · %d / %d prototype HP%s" % [
 		ceili(troops.hp), roundi(troops.max_hp), " · Defeated" if not troops.is_alive() else "",
 	]
+	_refresh_archer_readout()
 	if not encounter.hero.is_alive():
 		_combat_tell.text = "Mara is incapacitated"
 	elif not encounter.enemy.is_alive():
 		_combat_tell.text = "Road guard defeated"
 	elif _enemy_warning.visible:
-		_combat_tell.text = "Road guard winding up at Shield Infantry!" if targets_infantry else "Road guard winding up!  Face it and guard, or dodge."
+		if targets_infantry:
+			_combat_tell.text = "Road guard winding up at Shield Infantry!"
+		elif targets_archers:
+			_combat_tell.text = "Road guard winding up at Archers! Pull back."
+		else:
+			_combat_tell.text = "Road guard winding up!  Face it and guard, or dodge."
 	elif not encounter.active_feedback().is_empty():
 		_combat_tell.text = encounter.active_feedback()
 	elif attack_phase == Attack.Phase.WINDUP:
 		_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
 	elif target_selected:
-		_combat_tell.text = "Triangle / K: order Shield Infantry to attack"
+		_combat_tell.text = "Triangle / K: order %s to attack" % selected.title
+	elif archers.order == Battle.Order.ATTACK and encounter.archer_attack.volley.phase == Archer.Phase.IDLE:
+		_combat_tell.text = "Archers need distance. Move them away from the guard."
 	elif infantry.order == Battle.Order.ATTACK:
 		_combat_tell.text = "Shield Infantry attacking the road guard"
 	else:
 		_combat_tell.text = "Road guard %d / %d HP" % [ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
+
+
+
+func _refresh_archer_readout() -> void:
+	var archers := encounter.archer_attack.attacker
+	var volley := encounter.archer_attack.volley
+	var action := ""
+	if not archers.is_alive():
+		action = " · Defeated"
+	elif volley.phase == Archer.Phase.WINDUP:
+		action = " · Drawing %d%%" % floori(volley.phase_progress() * 100.0)
+	elif volley.phase == Archer.Phase.RELOAD:
+		action = " · Reloading"
+	_archer_status.text = "Archers · %d / %d prototype HP%s" % [ceili(archers.hp), roundi(archers.max_hp), action]
