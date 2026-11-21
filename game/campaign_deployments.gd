@@ -3,6 +3,8 @@ extends RefCounted
 
 const Missions := preload("res://game/campaign_missions.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
+const MissionData := preload("res://game/mission/missions.gd")
+const GENERIC_SCENE := preload("res://game/mission/mission_view.tscn")
 
 const _DEPLOYMENTS := {
 	"mara_mine_escort": {
@@ -26,9 +28,24 @@ const _DEPLOYMENTS := {
 }
 
 
+## Missions with a dedicated battlefield script use it. Every other catalog mission runs
+## on the generic mission view with its data from game/mission/missions.gd.
 static func for_mission(mission_id: String) -> Dictionary:
 	var entry: Dictionary = _DEPLOYMENTS.get(mission_id, {})
-	return entry.duplicate()
+	if not entry.is_empty():
+		return entry.duplicate()
+	var data := MissionData.find(mission_id)
+	if data.is_empty():
+		return {}
+	return {
+		"scene": GENERIC_SCENE,
+		"mission_id": mission_id,
+		"dispatch": StringName(mission_id + "_dispatch"),
+		"debrief": StringName(mission_id + "_debrief"),
+		"orders": data.briefing,
+		"location": data.map.get("name", ""),
+		"year": data.year,
+	}
 
 
 static func opening_for_campaign(campaign_id: String) -> Dictionary:

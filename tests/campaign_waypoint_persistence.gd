@@ -102,7 +102,7 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 	if fixture.load(path) != OK:
 		return _fail("Couldn't reopen the profile for malformed saved values.")
 	fixture.erase_section(Profile.MISSION_PROGRESS)
-	fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "ilyra", MINE)
+	fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "unknown_campaign", MINE)
 	for value in [ROAD, "foreign_waypoint", 17, ""]:
 		fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "mara", value)
 		if fixture.save(path) != OK:
@@ -112,7 +112,7 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 		var world := profile.load_campaign_world("mara")
 		if world.current_waypoint_id() != CAMP or world.visited_waypoint_ids() != PackedStringArray([CAMP]):
 			return _fail("A locked, unknown, malformed or blank save fabricated an arrival.")
-		var foreign_world := profile.load_campaign_world("ilyra")
+		var foreign_world := profile.load_campaign_world("unknown_campaign")
 		if not foreign_world.current_waypoint_id().is_empty() or profile.record_world_waypoint(foreign_world) != ERR_INVALID_PARAMETER:
 			return _fail("A campaign without a map inherited another campaign's waypoint.")
 		if profile.record_world_waypoint(null) != ERR_INVALID_PARAMETER or FileAccess.get_file_as_string(path) != before:
@@ -122,9 +122,9 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 	mara.travel_to(MINE, PackedStringArray())
 	if profile.record_world_waypoint(mara) != OK or fixture.load(path) != OK:
 		return _fail("Saving a new legal waypoint after fallback failed.")
-	if fixture.get_value(Profile.CAMPAIGN_WAYPOINTS, "ilyra", "") != MINE:
+	if fixture.get_value(Profile.CAMPAIGN_WAYPOINTS, "unknown_campaign", "") != MINE:
 		return _fail("Mara's save overwrote another campaign key.")
-	if not profile.completed_missions("ilyra").is_empty() or not profile.completed_missions("mara").is_empty():
+	if not profile.completed_missions("unknown_campaign").is_empty() or not profile.completed_missions("mara").is_empty():
 		return _fail("A position fallback or save fabricated a campaign clear.")
 	return true
 

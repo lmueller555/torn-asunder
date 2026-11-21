@@ -110,8 +110,10 @@ func _flow() -> bool:
 	if not _on_map(MINE):
 		return _fail("Raska's debrief did not leave the party at the same Mine waypoint.")
 	_map().select_waypoint(WELL_ROAD)
-	if not _press("ConfirmTravel") or not _on_map(WELL_ROAD) or _button("Confirm Deployment"):
-		return _fail("Raska's clear did not open the onward route, or connected an unbuilt battle.")
+	if not _press("ConfirmTravel") or _title._campaign_world.current_waypoint_id() != WELL_ROAD:
+		return _fail("Raska's clear did not open the onward route to the well road battle.")
+	if _title._page == Title.Page.MISSION_BRIEFING:
+		_joy(JOY_BUTTON_B)
 	_joy(JOY_BUTTON_B)
 	if not _press("Continue") or not _on_map(WELL_ROAD):
 		return _fail("Continue did not reload Raska's arriving Well Road waypoint.")

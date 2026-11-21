@@ -38,6 +38,9 @@ const CLIPS := {
 }
 const CORPSE_SECONDS := 14.0
 
+## Flags from the most recent finished mission, read by its debrief.
+static var last_flags: Dictionary = {}
+
 @export var mission_id := ""
 @export var campaign_id := ""
 
@@ -239,6 +242,7 @@ func _physics_process(delta: float) -> void:
 
 
 func finish(won: bool) -> void:
+	last_flags = battle.flags.duplicate()
 	mission_finished.emit(won)
 
 

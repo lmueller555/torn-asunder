@@ -47,8 +47,8 @@ func _run() -> void:
 func _flow() -> bool:
 	if not _press("New Game") or not _press("ilyra"):
 		return false
-	if _title._page != Title.Page.BRIEFING or _map() or _button("Confirm Deployment"):
-		return _fail("A non-Mara campaign opened a deployable mission.")
+	if _title._page != Title.Page.WORLD_MAP or _button("Confirm Deployment"):
+		return _fail("The Elven campaign did not open on its overworld without a briefing.")
 	_joy(JOY_BUTTON_B)
 	if not _press("New Game") or not _press("mara"):
 		return false

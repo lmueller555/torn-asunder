@@ -271,7 +271,10 @@ func _show_world_map() -> void:
 	_show_campaign_warning()
 
 
-func _on_waypoint_arrived(_id: String) -> void:
+func _on_waypoint_arrived(id: String) -> void:
+	var beat: String = _campaign_world.waypoint(id).get("beat", "")
+	if not beat.is_empty():
+		_present_campaign_dialogue.call_deferred(StringName(beat), _show_world_map)
 	if _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The arrived waypoint could not be saved."
 		# A battlefield arrival immediately switches to a briefing; display the warning there.
@@ -285,12 +288,20 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	if deployment.is_empty() or mission.is_empty():
 		return
 	_open_page(Page.MISSION_BRIEFING)
-	var back := _heading("Battlefield Briefing", "%s  /  Year One" % mission.title)
-	_label(_stage, "THE MINE · MARCHES BORDER", Rect2(76, 248, 1120, 44), 25, GOLD)
-	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
+	var generic := deployment.has("mission_id")
+	var back := _heading("Battlefield Briefing", "%s  /  %s" % [mission.title, deployment.get("year", "Year One")])
+	_label(_stage, String(deployment.get("location", "The Mine · Marches border")).to_upper(), Rect2(76, 248, 1120, 44), 25, GOLD)
+	var orders := _label(_stage, deployment.orders, Rect2(76, 304, 1180, 190), 25 if generic else 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(_stage, "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 475, 1080, 32), 21, MUTED)
+	orders.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_label(_stage, "Hold L2 or Tab to command · Square/J attack · Cross/E interact · R1/Q officer ability" if generic else "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 500, 1180, 32), 21, MUTED)
 	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
+	if generic:
+		var dispatch := _button("Read Dispatch", Rect2(468, 555, 300, 58),
+			_present_campaign_dialogue.bind(deployment.dispatch, _show_campaign_mission_briefing.bind(mission_id)))
+		_link_focus(deploy, SIDE_RIGHT, dispatch)
+		_link_focus(dispatch, SIDE_LEFT, deploy)
+		_link_focus(dispatch, SIDE_TOP, back)
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
 	back.grab_focus()
@@ -310,6 +321,9 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
 	var mission: Node3D = scene.instantiate()
+	if deployment.has("mission_id"):
+		mission.set("mission_id", deployment.mission_id)
+		mission.set("campaign_id", campaign_id)
 	_campaign_battle = mission
 	mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)

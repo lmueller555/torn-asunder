@@ -117,8 +117,10 @@ func _flow() -> bool:
 	if not _on_map(MINE):
 		return _fail("Druid debrief did not return to the same Mine position.")
 	_map().select_waypoint(ASSEMBLY)
-	if not _press("ConfirmTravel") or not _on_map(ASSEMBLY) or _button("Confirm Deployment"):
-		return _fail("Sova's clear did not open the Assembly, or unbuilt gameplay was exposed there.")
+	if not _press("ConfirmTravel") or _title._campaign_world.current_waypoint_id() != ASSEMBLY:
+		return _fail("Sova's clear did not open the route to the Assembly hearing.")
+	if _title._page == Title.Page.MISSION_BRIEFING:
+		_joy(JOY_BUTTON_B)
 	_joy(JOY_BUTTON_B)
 	if not _press("Continue") or not _on_map(ASSEMBLY):
 		return _fail("Continue did not restore Sova's arrived Assembly waypoint.")

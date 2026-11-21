@@ -150,4 +150,9 @@ static func grain_debrief_id(result: StringName) -> StringName:
 
 static func get_beat(id: StringName) -> Dictionary:
 	var beat: Dictionary = BEATS.get(id, {})
+	if beat.is_empty():
+		# Missions on the generic mission view author their beats with their data.
+		var generic: GDScript = load("res://game/mission/mission_dialogues.gd")
+		var view: GDScript = load("res://game/mission/mission_view.gd")
+		return generic.get_beat(id, view.last_flags)
 	return beat.duplicate(true)
