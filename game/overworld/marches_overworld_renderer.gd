@@ -6,7 +6,9 @@ const World := preload("res://game/campaign_world.gd")
 const ASSETS := "res://assets/overworld/marches/"
 const ROUTE := Color("#e2c58d")
 const CampSite := preload("res://game/overworld/marches_camp_site.gd")
-const SITES := ["marches_camp", "year_one_mine", "marches_road", CampSite.CAMP_ID]
+const CrossingSite := preload("res://game/overworld/marches_crossing_site.gd")
+const CROSSING := "marches_crossing"
+const SITES := ["marches_camp", "year_one_mine", "marches_road", CampSite.CAMP_ID, CROSSING]
 const GROVE_PLACES := [
 	Vector3(-286,170,3), Vector3(-261,148,3), Vector3(-208,153,5), Vector3(-176,146,9),
 	Vector3(-160,49,2), Vector3(5,-34,4), Vector3(26,-22,2), Vector3(69,-21,7),
@@ -29,6 +31,9 @@ var _tree_materials: Dictionary = {}
 var _ground: MeshInstance3D
 var _groves: Array[Array] = []
 var _camp_views: Node3D
+var _crossing: Node3D
+var _focus_site := ""
+const EAST_FOCUS := [CROSSING, "marches_road", CampSite.CAMP_ID]
 var camera: Camera3D
 var _party: Node3D
 var _look := Vector3(-20,13,42)
@@ -42,7 +47,18 @@ func _ready() -> void:
 	_party = $Party
 	_read_contract()
 	_build_lighting()
-	_mount("marches-corridor.glb", Vector3.ZERO)
+	var west := _mount("marches-corridor.glb", Vector3.ZERO)
+	var crossing := CrossingSite.route()
+	if west and crossing and crossing.point_count==265:
+		_crossing=CrossingSite.mount(self,west)
+		if _crossing:
+			var line := PackedVector3Array()
+			for i in crossing.point_count:
+				line.append(crossing.get_point_position(i))
+			anchors[CROSSING]=line[-1]
+			route_points.append(line)
+			route_keys.append(Vector2i(SITES.find(CrossingSite.ROAD),SITES.find(CROSSING)))
+			_insert_curve(CrossingSite.ROAD,CROSSING,line)
 	_mount("marches-camp.glb", anchors["marches_camp"])
 	_mount("greyhollow-mine.glb", anchors["year_one_mine"])
 	_add_forward_camp_art()
@@ -61,7 +77,9 @@ func show_party_state(travelling: bool, selected: String) -> void:
 	if not is_node_ready():
 		return
 	if not travelling:
-		if _view_follow or not _active:
+		if _view_follow or not _active or (_focus_site != selected and (_focus_site in EAST_FOCUS or selected in EAST_FOCUS)):
+			_focus_site = selected
+			_zoomed = false
 			_set_regional()
 		_view_follow=false
 	else:
@@ -72,7 +90,14 @@ func show_party_state(travelling: bool, selected: String) -> void:
 
 func _set_regional() -> void:
 	_look=Vector3(-20,13,42)
-	camera.position=_look+Vector3(-116,370,430)
+	var offset := Vector3(-116,370,430)
+	if _focus_site==CROSSING and _crossing:
+		_look=Vector3(682,11,-19)
+		offset=Vector3(-111,390,382)
+	elif _focus_site in EAST_FOCUS and _crossing:
+		_look=Vector3(455,13,46)
+		offset=Vector3(-116,465,530)
+	camera.position=_look+offset
 	camera.look_at(_look)
 	_update_grove_tiers()
 	presentation_camera_changed.emit()
@@ -181,15 +206,15 @@ func _insert_curve(start_id: String, end_id: String, points: PackedVector3Array)
 		curve.add_point(p)
 	_curves[start_id+"/"+end_id] = curve
 
-func _mount(file: String, point: Vector3) -> void:
+func _mount(file: String, point: Vector3) -> Node3D:
 	var path := ASSETS+file
 	if not ResourceLoader.exists(path, "PackedScene"):
 		_missing.append(file)
-		return
+		return null
 	var packed := load(path) as PackedScene
 	if packed == null:
 		_missing.append(file)
-		return
+		return null
 	var view := packed.instantiate() as Node3D
 	view.position = point
 	add_child(view)
@@ -216,6 +241,7 @@ func _mount(file: String, point: Vector3) -> void:
 				material.set_shader_parameter("silt_pixel_depth",0.058)
 				material.set_shader_parameter("rock_pixel_depth",0.19)
 				_ground.set_surface_override_material(0,material)
+	return view
 
 func _place_groves() -> void:
 	var near_stem := ASSETS+"marches-copse-near.glb"
@@ -266,8 +292,38 @@ func _place_groves() -> void:
 		_enable_vegetation_pigment(wide)
 		_enable_vegetation_pigment(close)
 		_groves.append([grove,close,wide])
+	_place_crossing_groves(near,far)
 	_update_grove_tiers()
 	print("OVERWORLD GROVES rendered groups=",_groves.size())
+
+func _place_crossing_groves(near: PackedScene,far: PackedScene) -> void:
+	if not _crossing:
+		return
+	var sites: Array[Array] = []
+	for row: Array in CrossingSite.GROVES:
+		var origin: Vector3 = row[0]
+		var ray := PhysicsRayQueryParameters3D.create(origin+Vector3.UP*15.0,origin-Vector3.UP*15.0)
+		var sample := get_world_3d().direct_space_state.intersect_ray(ray)
+		if sample.is_empty() or absf(sample.position.y-origin.y)>.004:
+			push_warning("Refusing misgrounded crossing copse: "+str(origin))
+			return
+		sites.append([sample,row])
+	for pair: Array in sites:
+		var sample: Dictionary = pair[0]
+		var row: Array = pair[1]
+		var grove := Node3D.new()
+		add_child(grove)
+		grove.position = sample.position + Vector3.DOWN*float(row[3])
+		var soft_up := Vector3.UP.slerp(sample.normal,0.56)
+		grove.basis = Basis(Quaternion(Vector3.UP,soft_up))*Basis(Vector3.UP,deg_to_rad(float(row[1])))
+		grove.scale = Vector3.ONE*float(row[2])
+		var wide := far.instantiate() as Node3D
+		var close := near.instantiate() as Node3D
+		grove.add_child(wide)
+		grove.add_child(close)
+		_enable_vegetation_pigment(wide)
+		_enable_vegetation_pigment(close)
+		_groves.append([grove,close,wide])
 
 func _enable_vegetation_pigment(model: Node3D) -> void:
 	for mesh: MeshInstance3D in model.find_children("*","MeshInstance3D",true,false):
@@ -425,3 +481,4 @@ func _build_party() -> void:
 	cloth.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	var banner := _mesh_under(_party,cloth,Vector3.ZERO,Color("#9f4a38"))
 	(banner.material_override as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
+

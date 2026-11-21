@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Marches Crossing, North Bridge, seed mill and its route in the opt-in Mara 3D development playtest only. Independent actual-title approval covers the rendered regional, arrival, approach, bridge and close landmark views; not default launch, other campaigns or missions, wider/free cameras, the Moonwash sector, the optional XP battles or target hardware.",
+  "author": "Torn Asunder Crossing terrain, landmark and title-integration authors",
+  "reviewer": "Independent Crossing native art gate review",
+  "evidence": {
+    "godot_context": "Native Godot 4.7.2 GL Compatibility, 1280 by 720, with original host lighting and fog. See evidence/marches-crossing-development.jpg for the regional, close, in-flight and arrival views. Original West terrain and march/camp coordinates are unchanged.",
+    "close_up": "Timber pigment, raised deck and its walk proxy, seated stone mill and crops, six scoped woodland groups, matte bank strata on the existing upstream silhouette, distinct north bridge and south ford.",
+    "motion": "Actual title travel sampled through the original West road seam and the bridge. Headless checks verify native deck hit, save only on arrival, arrow selection, reverse/cancel, briefing and existing Grain deployment, and retreat without campaign advancement. Native return plaque responds to pointer separately from confirm.",
+    "reproduction": "Import in Godot and run tests/marches_crossing_authored.gd for the title route. In the separate Mara playtest, complete the Greyhollow rescue and reveal, march through Road into the Marches, select Marches Crossing, then open its briefing after actual travel.",
+    "measurements": "265 surveyed samples; baked route 627.16895 scene meters, maximum sampled segment grade 18.01%. At one arrival Mesa software reported 38 visible submissions and 288,316 visible primitives. No device frame-time claim. The seven actual map captures before and after canonical resource imports decoded pixel-identically at matching poses."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Grounded and legible mill, rails and road sit in a continuous relief landscape with no observed exposed terrain join in the approved cameras."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Bridge uses its original vertex pigments. Local muddy gravel and earthy upstream bank break the dark silhouette impression without altering shore or collision; original weather and camera are preserved."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Actual HUD separates Road Camp, Crossing and return routes, keeps the mill unobscured and makes travel, arrival and briefing distinct actions."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "In-flight movement follows the authored road and actual walk proxy with no stock story state or automatic deployment change."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact GLBs and packaged backdrop as normal imported resources; no runtime raw asset construction. Existing author-title and camp tests passed, and matched map captures were pixel-identical. Software counts above are limited to the measured view, not target hardware QA."
+    }
+  },
+  "files": {
+    "assets/overworld/marches/anchors.json": "ac2dcdbd77b7017ba401afd12ca8301c01446bc6663916b4e815e2cf9eb13c21",
+    "assets/overworld/marches/crossing/bank-masks.jpg": "0dac10835c693530b76cd12dbbc5d2f5ea1174a970b1e0c3a0f93612f2002d43",
+    "assets/overworld/marches/crossing/bank-masks.jpg.import": "f6d615aca39373ea6528ba7ab9e98777c3816cdd641e27904d6879080edb325f",
+    "assets/overworld/marches/crossing/crossing-bank.gdshader": "3544ddfdb35e9065314242844956ae1f08494b864e986ed3936461b1162205da",
+    "assets/overworld/marches/crossing/crossing-bank.gdshader.uid": "e7e90724ed820aadc158cc4351365f1489384988e9ee8896ac0ec7281fcda8b7",
+    "assets/overworld/marches/crossing/crossing-ground.gdshader": "0340aa74d04f681d2e7d2e6e19f05f5d05ff227e1cbddce8aa27852b18517111",
+    "assets/overworld/marches/crossing/crossing-ground.gdshader.uid": "b3c1270e9a208271aae46dcd336547cf5593db77536c05f84c420cb22423de30",
+    "assets/overworld/marches/crossing/crossing-scenic-rims.scn": "81e8f87fb909253fe6c014892cb338c4e39a7f2ab3dd3d8b729f6b9822c2147e",
+    "assets/overworld/marches/crossing/crossing.glb": "e5d7cc32e23ddec38ac75b57215654dd25d5c382cef18838b569962b22990765",
+    "assets/overworld/marches/crossing/crossing.glb.import": "654987e13c675b0059d563f35353b3b991de0318c9122c96c85cd535ffd2151c",
+    "assets/overworld/marches/crossing/crossing_crossing_albedo.jpg": "217f48459aa5d1fd6cb86e415784e9b065a0f016595d3e1e17261c611d28407e",
+    "assets/overworld/marches/crossing/crossing_crossing_albedo.jpg.import": "0f0da9b79d810f779b169ffe50522050ffdd7936a872896fab089840e8ca01c7",
+    "assets/overworld/marches/crossing/crossing_crossing_water.jpg": "e1550707ecab8dec40212920305f99e745070686c8cbafff6548e845413518b6",
+    "assets/overworld/marches/crossing/crossing_crossing_water.jpg.import": "6f2b1a1d2375940bb4bba924dfe161d4f00db236347352712541d2457078f424",
+    "assets/overworld/marches/crossing/horizon-pigment.jpg": "d3b0e3b14a6c1a195278fa05d072f008c73f93427dc5bca990b45b8f2caf8912",
+    "assets/overworld/marches/crossing/horizon-pigment.jpg.import": "00e79e1dc072ca6cc4262994bd0b394f17f8029973d707ea538b7d4e95cf9215",
+    "assets/overworld/marches/crossing/marches-road-to-crossing.tres": "f8f90bcc065847826f94e95eb7f4582a62c6ccb3cabbae44a925c01224c917a7",
+    "assets/overworld/marches/crossing/north-water-pigment.jpg": "bb2b81a295d05543041df73981d729aa95c2eb615854071431ae87485761eba3",
+    "assets/overworld/marches/crossing/north-water-pigment.jpg.import": "47a0dbba73d1b60451d77c3a1cfde1ffe0f1500505be4a9c24ebe1ac2cca4af5",
+    "assets/overworld/marches/crossing/seed-mill.glb": "1ba444567fd2d8928c0363cd078053e7907b504afe44276cb59bd7af1e68a71e",
+    "assets/overworld/marches/crossing/seed-mill.glb.import": "fcd73cb091237fcd6f6bd08bdeea0e88520cb17db8ac78b3ad14d0b1bebf6206",
+    "assets/overworld/marches/crossing/seed-mill_north_bridge_seed_mill_palette.png": "30e7294ba3c84afa651959f14a8ccd2bbdc45fef2e94b7fd017c980f9b7edd5b",
+    "assets/overworld/marches/crossing/seed-mill_north_bridge_seed_mill_palette.png.import": "e4a3f25cca8da9a298a968c7a1471595b5c591884e5ebeb3470665b620107874",
+    "assets/overworld/marches/crossing/softened-vista.gdshader": "2586e90ce41d28bea1100e2ea6fa9a89e5f6e169db65c06820b6cb5b290c2a05",
+    "assets/overworld/marches/crossing/softened-vista.gdshader.uid": "1b346423dcd397ac071b8daada7c4ee9f47bee0b6089c1e9dd609519782e91bb",
+    "assets/overworld/marches/crossing/south-softened-vista.res": "3c447090d1c5c425b4f3d21e3ce222d634c4530a9a7167390261b501b3357517",
+    "assets/overworld/marches/crossing/south-water-pigment.jpg": "c7e47b22ff1ea40947c962ec2b226354f78983485252346e4d49df37171321db",
+    "assets/overworld/marches/crossing/south-water-pigment.jpg.import": "3ced7ec0bf4fe627c102c7b36cb18a1a99cefb346896ed07fd11d00074a0ad39",
+    "assets/overworld/marches/crossing/tributary-water-no-ford.jpg": "fbd50c4e72c0a611abcc8135ab32fdab9281020782110174fcc378c9a986b8fb",
+    "assets/overworld/marches/crossing/tributary-water-no-ford.jpg.import": "3d3c0b1cfcecfcfb94da7db09c0771e0d7e40d9451886f9f6a6640f6a5e6aea7",
+    "assets/overworld/marches/crossing/tributary.gdshader": "2c5958fdb74f07c94017810f62508b9d3eeed26ce39c5fa7cecf2c7fd00ff4bf",
+    "assets/overworld/marches/crossing/tributary.gdshader.uid": "786015dc7fe3e50d13382e925167ecd11c129c61eccf29b729cae9a9527d0e33",
+    "assets/overworld/marches/marches-corridor.glb": "12bf57ce790f488b0314a0220073a958aadd90fb1e836f3fd77fa4f790609110",
+    "assets/source/overworld/marches/crossing/marches-crossing.blend": "b7cf62dfd2c8d37125bcea08029e10dca50aff0b39e59cd22d7acf1155a5f160",
+    "assets/source/overworld/marches/crossing/north_bridge_seed_mill.blend": "7801d1fbd8607d05ac446af4cbb5e0633cca6e513d2371a3411bcb257ae90913",
+    "docs/audits/evidence/marches-crossing-development.jpg": "a7f3bea696bc6451907d21c475daa6494837575782083f1e2a065ec10d5ec27c",
+    "game/campaign_overworld_3d.gd": "2597f2ce45fa49a79b648041b9d6f149944d8c6afca8e6a2c7381cbe91348453",
+    "game/overworld/marches_crossing_bridge.gd": "6bb7bb13386b14f13729a16d008acf6a3749f5d7fb3cd0f8e00da304957d1d1f",
+    "game/overworld/marches_crossing_materials.gd": "0686958f1ba5b9a79e95458bc01463f4b91474ec01ade8cf94b411547cd0d380",
+    "game/overworld/marches_crossing_site.gd": "59505e373fc28af74012d39a89643695fa87845448d78ad4ecf78f5f18fb3320",
+    "game/overworld/marches_overworld_renderer.gd": "97ca3c5e38f7b2e0e9da9a4785baa2d42465cb4a3b7771a8df68854770ded31d",
+    "game/overworld/marches_overworld_renderer.tscn": "cf2dc3d9a5320416671f9a3c2b7b8e33a8047dc18a477a6ac82aa29fbf082088",
+    "game/overworld/marches_overworld_view.gd": "ed8c88067d25cc34cdaa9aba0fca997feb678ab80b223fc9818ccb1df77bb935",
+    "game/profile_store.gd": "ddd94f25a2a9b9be0ee2743fc796045e3dd94baad6adb1310ba6c32f7e531b15",
+    "game/title_screen.gd": "128f05d41b7bf34fbbe51379c87353f197cd0103cc22284dbd235e0ff74ae0b7"
+  }
+}

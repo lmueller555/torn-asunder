@@ -2,6 +2,7 @@ extends "res://game/campaign_overworld_3d.gd"
 ## Concrete composition for the authored three-waypoint Marches review slice.
 ## The title screen's private factory controls whether this scene is mounted.
 
+const Crossing := preload("res://game/overworld/marches_crossing_site.gd")
 const CampSite := preload("res://game/overworld/marches_camp_site.gd")
 const RendererScene := preload("res://game/overworld/marches_overworld_renderer.tscn")
 const DisplayFont := preload("res://assets/fonts/Cinzel.ttf")
@@ -11,7 +12,7 @@ const PANEL := Color(0.067,0.092,0.078,0.91)
 const ACCENT := Color("#bb925e")
 const DATA := "res://assets/overworld/marches/anchors.json"
 const MARKERS := {
-	"marches_camp": "FIELD CAMP", "year_one_mine": "STORY MISSION", "marches_road": "ROAD LINK", "marches_road_camp": "FORWARD CAMP",
+	"marches_camp": "FIELD CAMP", "year_one_mine": "STORY MISSION", "marches_road": "ROAD LINK", "marches_road_camp": "FORWARD CAMP", "marches_crossing": "STORY MISSION",
 }
 
 var _pins: Pins
@@ -19,6 +20,8 @@ var _header: Control
 
 
 func build() -> bool:
+	if not Crossing.available():
+		return false
 	var route_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA))
 	if not route_data is Dictionary:
 		return false
@@ -33,6 +36,11 @@ func build() -> bool:
 		for data: Array in row.points:
 			curve.add_point(Vector3(data[0],data[1],data[2]))
 		curves[route_key(row.start,row.end)]=curve
+	var crossing_curve := Crossing.route()
+	if not crossing_curve or crossing_curve.point_count!=265 or not points.has(Crossing.ROAD) 			or not crossing_curve.get_point_position(0).is_equal_approx(points[Crossing.ROAD]):
+		return false
+	points[Crossing.ID]=crossing_curve.get_point_position(crossing_curve.point_count-1)
+	curves[route_key(Crossing.ROAD,Crossing.ID)]=crossing_curve
 	var spur := CampSite.route()
 	if spur.size()>1 and points.has(CampSite.ROAD_ID) and spur[0].is_equal_approx(points[CampSite.ROAD_ID]) \
 			and ResourceLoader.exists(CampSite.ASSETS+"marches-road-camp-fit.glb","PackedScene") \
@@ -171,11 +179,20 @@ func _build_controls() -> void:
 	controls.add_child(back_button)
 
 
+func _select_at(point: Vector2) -> bool:
+	for id: String in _pins.label_regions:
+		if _pins.label_regions[id].has_point(point):
+			return select_waypoint(id)
+	return super._select_at(point)
+
+
 class Pins extends Control:
 	var map: Control
 	var _face := ThemeDB.fallback_font
+	var label_regions: Dictionary[String, Rect2] = {}
 
 	func _draw() -> void:
+		label_regions.clear()
 		if not is_instance_valid(map) or map._world==null or not is_instance_valid(map._camera):
 			return
 		var projected: Dictionary = map._projections()
@@ -184,6 +201,7 @@ class Pins extends Control:
 			var point: Vector2 = projected[id]
 			if point.y<120 or point.y>size.y-110 or point.x<45 or point.x>size.x-200: continue
 			var site: Dictionary = map._world.waypoint(id)
+			if site.is_empty(): continue
 			var kind: String = map.MARKERS[id]
 			var locked: bool = id=="marches_road" and map._renderer._link_locked("year_one_mine",id)
 			var color:=Color("#c5b8a9") if locked else Color("#e3c77f")
@@ -196,14 +214,18 @@ class Pins extends Control:
 				draw_arc(point,9 if map._navigation.selected_waypoint_id()==id else 7,0,TAU,20,color,2,true)
 				draw_circle(point,2,color)
 			var width:=_face.get_string_size(site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16).x
-			var y_offset := 17.0 if id==CampSite.CAMP_ID else -27.0
+			var y_offset := 17.0 if id in [CampSite.CAMP_ID,"marches_crossing"] else -27.0
 			var x_offset := -width-28.0 if id==CampSite.ROAD_ID and projected.has(CampSite.CAMP_ID) else 13.0
 			var pos:=Vector2(clampf(point.x+x_offset,12.0,size.x-width-29.0),point.y+y_offset)
-			if id==CampSite.CAMP_ID:
+			if id in [CampSite.CAMP_ID,"marches_crossing"]:
 				draw_line(point+Vector2(4,6),Vector2(pos.x+5,pos.y),color,1.3,true)
-			draw_rect(Rect2(pos,Vector2(width+16,40)),map.PANEL)
+			var bounds := Rect2(pos,Vector2(width+16,40))
+			label_regions[id] = bounds
+			draw_rect(bounds,map.PANEL)
 			draw_string(_face,pos+Vector2(8,15),kind,HORIZONTAL_ALIGNMENT_LEFT,-1,11,color)
 			draw_string(_face,pos+Vector2(8,32),site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16,map.BODY)
+		if not map._navigation.is_travelling():
+			_draw_offscreen_connections(projected)
 		if map._navigation.is_travelling():
 			var vp := Vector2(map.render_viewport.size)
 			var party_world: Vector3 = map._party.global_position+Vector3.UP*5.0
@@ -211,3 +233,24 @@ class Pins extends Control:
 				var point: Vector2 = map._camera.unproject_position(party_world)*size/vp
 				draw_colored_polygon(PackedVector2Array([point+Vector2(0,4),point+Vector2(-8,-13),point+Vector2(8,-13)]),map.PANEL)
 				draw_colored_polygon(PackedVector2Array([point,point+Vector2(-5,-10),point+Vector2(5,-10)]),Color("#e8c780"))
+
+	func _draw_offscreen_connections(projected: Dictionary) -> void:
+		var here: String = map._world.current_waypoint_id()
+		if here != "marches_crossing":
+			return
+		for row: Dictionary in map._world.route_options(map._confirmed):
+			var id: String = row.waypoint_id
+			if not row.is_open or not map._curve_for(here,id) or not projected.has(id) or label_regions.has(id):
+				continue
+			var dest: Dictionary = map._world.waypoint(id)
+			var to: Vector2 = projected[id]
+			var left := to.x <= size.x*0.50
+			var width := _face.get_string_size(dest.label,HORIZONTAL_ALIGNMENT_LEFT,-1,15).x+34.0
+			var pos := Vector2(28.0 if left else size.x-width-28.0,clampf(to.y,154.0,size.y-147.0))
+			var edge := Rect2(pos,Vector2(width,40.0))
+			label_regions[id] = edge
+			draw_rect(edge,map.PANEL)
+			var color := Color("#e3c77f")
+			draw_line(pos+Vector2(0.0,0.0),pos+Vector2(width,0.0),color,1.0,true)
+			draw_string(_face,pos+Vector2(11,16),"‹   RETURN ROUTE" if left else "RETURN ROUTE   ›",HORIZONTAL_ALIGNMENT_LEFT,-1,11,color)
+			draw_string(_face,pos+Vector2(11,33),dest.label,HORIZONTAL_ALIGNMENT_LEFT,-1,15,map.BODY)
