@@ -4,6 +4,10 @@ This is an opt-in HUD widget for local battles, separate from the campaign overw
 
 The tactical orientation, troop selection and visibility cues take inspiration from the [Kingdom Under Fire: Heroes manual, pp. 12–17](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf). This widget does not implement scouting, fog simulation, or troop ordering.
 
+## Mara's campaign mine
+
+The campaign-size escort uses the minimap as a passive lower-right HUD. The pickup changes to the east exit once Mara has the Godbridle; holding L2 shows the active command camera's footprint. When interception is reported, the warning marks the pass, not the Orc's position. The Orc only appears as a live contact when Mara or a living allied formation is within 48 m with an unobstructed view. The contact disappears when sight is lost or the Orc is defeated. The small mine prototype is unchanged.
+
 ## Preview
 
 ```sh
