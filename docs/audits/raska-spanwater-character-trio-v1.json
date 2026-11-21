@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "author": "Torn Asunder Orc campaign character art authors",
+  "reviewer": "Independent Spanwater character render and actor integration review",
+  "scope": "Exact Spanwater-only Raska lead, one Basin Regulars member visual (Durga art), and one Lower-town Companies member visual (Vasha art). No rank, alternate chapter, combat, cross-faction, terrain or hardware approval.",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 normal editor imports and 1280x720 Compatibility render on actual registered Spanwater. Native selected-formation near cameras plus exact panned 116 m with all three; measured raw and matched visible equivalents. Separately labeled close inspection of actual unchanged withdrawal route and poses.",
+    "close_up": "Exact R3 seated sash compared front and rear, and actual retreat poses; unobscured stock selected-company shot also shows Raska’s face. Durga’s boot/club unobstructed in supplemental same-lens moving study. Narrow shape, scale and actual foot anchors compare to approved Human Infantry; no status granted for occluded close-ups.",
+    "motion": "Actual input sequence and phase evidence in all three roles, including non-commandable withdrawal, disappearance, and original render-node reuse on retry. Run pose time is retimed from actual measured displacement only. Measured in native role target, not whole-game exhaustive.",
+    "reproduction": "After Godot 4.7.2 normal import, run godot --headless --script res://tests/raska_spanwater.gd and res://tests/raska_spanwater_release.gd. On registered River, Not Sea, select the existing Lead, Basin Regulars, and Lower-town Companies and move them before opening the wheel. Observe native 116m and Lower-town withdrawal, then Retry. Gameplay state, actor ownership and camera logic remain stock. Same observer inputs in excluded Mine Witness and Well Road retain stock presentation.",
+    "measurements": "104/104 normal-imported native motion/paired render checks, plus 99/99 native and 93/93 headless on final actual _ready presenter. Same three actor keys, shared rigs, exact 53,380/7,392 Raska, 24,062/7,731 Durga, 33,150/7,703 Vasha. Matched repeat deltas in Integration + Cost; Mesa llvmpipe data only.",
+    "base_check": "Approved 8ac6e57 actor/control context; no files in the tested Orc host, scene or controller changed when rebasing onto Human-art-only main 17a1023392cfbc2e97edc69e506871c458c75280."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Exact scoped authoring and native 8–11 m review: the armored broad-jawed marshal, squared Saltwell well-worker silhouette, and compact pale-sash escort read distinctly from each other. Vasha’s fitted sash curls into the yoke and belt; Durga’s split apron and stowed tool remain attached in the sampled strides."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "In existing Spanwater sun/shadow, the red scarf and tempered steel separate at hero range, with different waxed hide, weathered fabric and linen. Color and role were jointly reviewed in normally imported native captures; dark steel is intentional."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Actual selected native near views show all three distinct actor locations. At real panned 116 m all three track their stock formation markers; fine officer texture and face reading at sector scale are not claimed. Raska’s existing waypoint remains visible and unchanged."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Real 5.5 m/s Raska Run, 3 m/s formation pace for Durga and commandable Vasha, and 275 full 4 m/s existing Vasha withdrawal motion ticks. Render-only speed ratios 1, 3/4.15, 3/4 and 1 respectively avoid the observed default-Walk sliding. Three mounted moving views per role, including labeled supplemental close shots at the stock lens, showed no obvious cloth, sword or club detachment. Not an approval of combat, rough ground, or unused motion."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Normal-import art replaces only the original Spanwater hero and two existing member-9 visual anchors. No new combatants or commands. Director removes command eligibility and hides Lower-town visuals at the same stock points; retry restores the very same visual node. Before/after are matched native stock/camera/pose. Max actual sampled repeat near +110,496 visible/+110,496 submitted shadow triangles/+2 draws; panned 116 m +22,730/+45,460/+3. Accepted for exactly these three actors, roughly three approved Infantry near loads, not hardware frame-rate or broader scope."
+    }
+  },
+  "files": {
+    "assets/models/campaign/orcs/durga_ashtusk.glb": "acb68ff21b3a903f3e43e240b03b75c5aae191485e135a9a95108f7efd2a9dcd",
+    "assets/models/campaign/orcs/durga_ashtusk.glb.import": "30d05be24912128b04f97fc38cb00801eb7ead8cee07091f5e6c51aa947acfa2",
+    "assets/models/campaign/orcs/raska_vennor.glb": "df8361242468533117f83fbb6544a94ddc2d8a5cd4d0692ed9bb1adf450f6ec9",
+    "assets/models/campaign/orcs/raska_vennor.glb.import": "78924dd55883794d6ce2db3069eed71516e6ed53a9ab4fbd22fbbe93adc80d2a",
+    "assets/models/campaign/orcs/vasha_grem.glb": "8a2058314cc8538155fef08f41dd7d1d2af6ab383fb0c0ff65d48c4ed067fe85",
+    "assets/models/campaign/orcs/vasha_grem.glb.import": "0399b8f48c7be8c571dbcdfa47f5ee99f9077244cec5d47466d2ce0b6ab6a160",
+    "assets/source/campaign/orcs/durga_ashtusk.blend": "f0adb6b68be8db295353a9015702fc54669cd16f2ef26414453d8d340bc6e851",
+    "assets/source/campaign/orcs/raska_vennor.blend": "0961b9407e99b1be188d6225253cf69b7009c25138d0c96e64b7efa03f5e769b",
+    "assets/source/campaign/orcs/vasha_grem.blend": "718958d3bc4b1be240909d301b11599fa7a64ecce4057ce38ced6894b3ceeda7",
+    "game/battlefield/raska_campaign_character_art.gd": "23de88c6a271ff729beb16f9cda9276aa9135a4873bda2a43edb965f7ef256df",
+    "game/battlefield/raska_spanwater.gd": "ca65b827ad6a027f09ad4842a17b4ce500dd1408aba972fa83e1a1f2f5a8d044",
+    "game/battlefield/raska_campaign_character_art.gd.uid": "e1ecfc3c1f6681db32f8d0700c5b60d98fead0e5d439288e9eac5fb12ebc0c1a"
+  }
+}

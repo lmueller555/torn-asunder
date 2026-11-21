@@ -1,4 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
+
+const CharacterArt := preload("res://game/battlefield/raska_campaign_character_art.gd")
 ## Campaign-scale graybox for Raska's Spanwater release. Motion and control are
 ## observable world conditions; neither the water ribbon nor troops model fluid or damage.
 
@@ -80,6 +82,7 @@ func _ready() -> void:
 	objective.high_bank_unlocked.connect(_close_crossing)
 	_restart.pressed.connect(restart_mission)
 	_reset_attempt()
+	CharacterArt.attach(self)
 
 
 func _build_placeholders() -> void:
