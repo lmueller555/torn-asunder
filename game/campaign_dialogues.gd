@@ -3,9 +3,20 @@ extends RefCounted
 
 const MARA_MINE_DISPATCH := &"mara_mine_dispatch"
 const MARA_MINE_DEBRIEF := &"mara_mine_debrief"
+const RASKA_MINE_DISPATCH := &"raska_mine_dispatch"
+const RASKA_MINE_DEBRIEF := &"raska_mine_debrief"
+const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
+const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
+const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
+const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
 const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
+const RASKA := "War Marshal Raska Vennor"
+const LIEUTENANT := "Basin Lieutenant"
+const MINER := "Mine Witness"
+const SOVA := "First Listener Sova Cairn"
+const GUARD := "Cairnspine Guard"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -26,6 +37,48 @@ const BEATS := {
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Did anyone write down what she saw?"},
 			{"speaker": CAPTAIN, "text": "We have a copy of her account. She says the new spring opened the same night the river went dry."},
 			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Put her dates in our report. And ask the granaries how long their stores will last if the river stays dry."},
+		],
+	},
+	RASKA_MINE_DISPATCH: {
+		"title": "Someone Who Saw It",
+		"location": "Basin camp · Before the mine escort",
+		"lines": [
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The assembly sent us after a river. The miners were here when it stopped. Get me to the outlet so I can ask them what they saw."},
+			{"speaker": LIEUTENANT, "text": "If we hold the narrow part of the road, the second platoon can cross the ridge and come down under cover."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Hold the road only as long as you need to. Keep clear of the Druids and let the workers through."},
+			{"speaker": LIEUTENANT, "text": "And if Mara gets the Godbridle past us?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Let his carrier go. We came for someone willing to speak at the assembly."},
+		],
+	},
+	RASKA_MINE_DEBRIEF: {
+		"title": "Her Own Account",
+		"location": "Basin rally point · After the witness escort",
+		"lines": [
+			{"speaker": MINER, "text": "I saw the others reach the Druids. You let them go, like you said you would."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "And if you've changed your mind, the path back to them is clear."},
+			{"speaker": MINER, "text": "I haven't. I'll tell the assembly myself. I saw the spring come up. Sova's survey dates it to the night your river stopped."},
+			{"speaker": LIEUTENANT, "text": "Mara's carrier cleared the pass with the Godbridle. Do you want us to follow?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "No. Get us two copies of the survey. And tell the assembly she'll speak first."},
+		],
+	},
+	SOVA_MINE_DISPATCH: {
+		"title": "The Workers First",
+		"location": "Old mine tunnels · Before the evacuation",
+		"lines": [
+			{"speaker": GUARD, "text": "One group is waiting by the tunnel mouth. The second is at the bend. Do I send them both?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Let me check the outlet first. When I signal, send the first group. Keep the second at the bend until the path is clear again."},
+			{"speaker": GUARD, "text": "Mara's escort is moving on the pass. Are we leaving the Godbridle to them?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Yes. My survey dates the spring to the night the river vanished. It can't tell us what the miners asked Orrun. First, let's get them somewhere safe."},
+		],
+	},
+	SOVA_MINE_DEBRIEF: {
+		"title": "Keep the Copy",
+		"location": "Cairnspine refuge · After the evacuation",
+		"lines": [
+			{"speaker": GUARD, "text": "Both groups are through the tunnels. One miner waited at the outlet until the rest were safe. Then she went with Raska."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "That was her choice?"},
+			{"speaker": GUARD, "text": "She said so herself. Mara's carrier cleared the pass with the Godbridle. We have a copy of the account she gave Raska."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Fold it into the survey. When we get home, ask the Keepers to bring out the old sealed record. I'm going to read it to the valleys."},
 		],
 	},
 }
