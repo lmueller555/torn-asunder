@@ -80,6 +80,8 @@ func _run() -> void:
 	_walk_to_guard()
 	var hp_before := fight.hero.hp
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	# Contact selected Mara's platoon; D-pad over to the infantry to order them.
+	_button(JOY_BUTTON_DPAD_RIGHT, true)
 	_button(JOY_BUTTON_X, true)
 	_tick(43)
 	_check(fight.hero.hp < hp_before and fight.enemy.hp == fight.enemy.max_hp and _mission.battle.formations[0].order != Battle.Order.HOLD,

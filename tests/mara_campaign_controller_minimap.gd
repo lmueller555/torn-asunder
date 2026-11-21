@@ -141,17 +141,18 @@ func _release_without_combat_leaks() -> bool:
 	_axis(JOY_AXIS_LEFT_X, 1.0)
 	_tick(4)
 	_axis(JOY_AXIS_LEFT_X, 0.0)
-	_mission.battle.lead_platoon_enabled = true
 	if _mission.battle.hero_position == start:
 		return _fail("Neutral plus a fresh stick input did not recover ordinary hero movement.")
+	# Guard and attacks belong to combat too; check them on the same free leader.
 	_joy(JOY_BUTTON_LEFT_SHOULDER, true)
 	_tick()
 	if _mission.encounter.defense.phase != Defense.Phase.GUARD:
 		return _fail("Fresh guard input did not recover after leaving the minimap.")
 	_joy(JOY_BUTTON_LEFT_SHOULDER, false)
 	_button(JOY_BUTTON_X)
-	return _mission.encounter.defense.attack_phase == Attack.Phase.WINDUP \
-		or _fail("Fresh hero attack input did not recover after leaving the minimap.")
+	var attacked := _mission.encounter.defense.attack_phase == Attack.Phase.WINDUP
+	_mission.battle.lead_platoon_enabled = true
+	return attacked or _fail("Fresh hero attack input did not recover after leaving the minimap.")
 
 
 func _aim(point: Vector2) -> bool:

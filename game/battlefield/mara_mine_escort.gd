@@ -81,6 +81,7 @@ var _infantry_animators: Array[AnimationPlayer] = []
 @onready var _archer_status: Label = $CombatHUD/Panel/Margin/Readout/Archers
 @onready var _special_status: Label = $CombatHUD/Panel/Margin/Readout/Sundering
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
+@onready var _combat_controls: Label = $CombatHUD/Panel/Margin/Readout/Controls
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
 
@@ -144,7 +145,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _hero_incapacitated:
 		if encounter:
-			encounter.defense.set_guard(not command_view and (_guard_key or _guard_pad), true)
+			encounter.defense.set_guard(hero_combat_active() and (_guard_key or _guard_pad), true)
 			var dodge := encounter.defense.advance_defense(delta, true)
 			battle.move_hero(dodge, _movement_check())
 		super._physics_process(delta)
@@ -317,6 +318,12 @@ func _body_can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 
 
 func _handle_combat_input(event: InputEvent) -> bool:
+	# Attacks, guard, dodge and the Sundering Strike exist only while Mara fights.
+	# Marching (or commanding another platoon mid-fight) leaves these buttons to the
+	# waypoint controls.
+	if not command_view and not hero_combat_active():
+		_release_guard()
+		return false
 	var key := 0
 	if event is InputEventKey and not event.echo:
 		key = event.physical_keycode
@@ -360,8 +367,16 @@ func _handle_combat_input(event: InputEvent) -> bool:
 	return true
 
 
+func _release_guard() -> void:
+	if _guard_key or _guard_pad:
+		_guard_key = false
+		_guard_pad = false
+		if encounter:
+			encounter.defense.set_guard(false, true)
+
+
 func _try_sundering_strike() -> void:
-	if not encounter or command_view or _finished() or _hero_incapacitated:
+	if not encounter or not hero_combat_active() or _finished() or _hero_incapacitated:
 		return
 	encounter.defense.set_guard(_guard_key or _guard_pad, true)
 	# HeroDefense admits the action; HeroAttackSequence alone charges the pool.
@@ -559,6 +574,8 @@ func _refresh_combat_view() -> void:
 	_enemy_visual.visible = encounter != null and encounter.enemy.is_alive()
 	_hero_weapon.visible = encounter != null
 	_hero_guard.visible = encounter != null and encounter.defense.phase == Defense.Phase.GUARD
+	# Attack prompts only while Mara fights (or in command view, for formation attacks).
+	_combat_controls.visible = (command_view or hero_combat_active()) and not _combat_controls.has_meta(&"tutorial_hidden")
 	if not encounter:
 		return
 	_enemy_visual.position = _ground(encounter.enemy_position)

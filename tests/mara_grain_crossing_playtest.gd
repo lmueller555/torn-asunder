@@ -138,8 +138,8 @@ func _check_hero_waypoints() -> void:
 	var staged := [_mission._carts[SEED].global_position, _mission._carts[BREAD].global_position]
 	var controls := _mission._controls_label.text
 	_check(_mission.march_mode() and _mission.selected_index == Battle.LEAD_INDEX
-		and "D-pad Down / V: add waypoint" in controls and "D-pad Up / B: clear route" in controls
-		and "R1 / G: add waypoint" not in controls and "D-pad Up / T: clear route" not in controls
+		and "D-pad Down / V: set waypoint (replaces route)" in controls and "Square / J: add to route" in controls
+		and "D-pad Up / B: clear route" in controls and "R1 / G" not in controls and "D-pad Up / T" not in controls
 		and "G / R1" in _mission._dispatch_button.text and "T / Triangle" in _mission._withdraw_button.text,
 		"The hero HUD needs only the Grain-specific waypoints and the cart HUD needs its original shortcuts.")
 	_nudge_marker(JOY_AXIS_LEFT_Y, -1.0, 8)
@@ -150,9 +150,9 @@ func _check_hero_waypoints() -> void:
 		"V did not order a real lead waypoint from the steered hero marker.")
 	_nudge_marker(JOY_AXIS_LEFT_X, 1.0, 7)
 	var second := _mission.march_marker
-	_button(JOY_BUTTON_DPAD_DOWN)
+	_button(JOY_BUTTON_X)
 	_check(_waypoints() == PackedVector2Array([first, second]) and leader.destination == first,
-		"D-pad Down did not append behind the current waypoint.")
+		"Square did not append behind the current waypoint.")
 	_key(KEY_SHIFT)
 	_key(KEY_V)
 	_key(KEY_B)
@@ -216,7 +216,7 @@ func _check_default_shortcuts() -> void:
 	plain.set_physics_process(false)
 	await physics_frame
 	plain._physics_process(0.07)
-	_check("R1 / G: add waypoint" in plain._controls_label.text and "D-pad Up / T: clear route" in plain._controls_label.text,
+	_check("R1 / G: set waypoint (replaces route)" in plain._controls_label.text and "D-pad Up / T: clear route" in plain._controls_label.text,
 		"The generic hero controls changed outside Grain.")
 	var selected: int = plain.selected_index
 	_key(KEY_V)

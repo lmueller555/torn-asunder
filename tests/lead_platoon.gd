@@ -162,9 +162,9 @@ func _check_waypoint_marker() -> void:
 	_axis(JOY_AXIS_LEFT_X, 1.0)
 	await _frames(15)
 	_axis(JOY_AXIS_LEFT_X, 0.0)
-	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	_button(JOY_BUTTON_X)
 	var second: Vector2 = harness.march_marker
-	_check(harness.march_waypoints(Battle.LEAD_INDEX).size() == 2, "A second R1 queues another waypoint.")
+	_check(harness.march_waypoints(Battle.LEAD_INDEX).size() == 2, "Square adds the marker to the end of the route.")
 	await _frames(240)
 	_check(battle.hero_position.distance_to(second) < 0.2 and harness.march_waypoints(Battle.LEAD_INDEX).is_empty(), "The leader marches through both waypoints and halts at the last.")
 	_axis(JOY_AXIS_LEFT_Y, -1.0)
@@ -177,11 +177,54 @@ func _check_waypoint_marker() -> void:
 	_check(harness.selected_index == 0 and harness.march_marker.distance_to(infantry.position) <= harness.MARKER_START + 0.01, "Changing platoon moves the marker out from the newly selected platoon.")
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
 	_check(infantry.order == Battle.Order.MOVE, "Other platoons take marker waypoints the same way.")
+	# Queue two more, then R1 again: the default waypoint replaces the whole route.
+	for side in [1.0, -1.0]:
+		_axis(JOY_AXIS_LEFT_X, side)
+		await _frames(10)
+		_axis(JOY_AXIS_LEFT_X, 0.0)
+		_button(JOY_BUTTON_X)
+	_check(harness.march_waypoints(0).size() == 3, "Square builds a route of several waypoints.")
+	_axis(JOY_AXIS_LEFT_Y, -1.0)
+	await _frames(10)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	var replaced: Vector2 = harness.march_marker
+	_check(harness.march_waypoints(0).size() == 1 and harness.march_waypoints(0)[0].is_equal_approx(replaced)
+		and infantry.order == Battle.Order.MOVE and infantry.destination.is_equal_approx(replaced),
+		"R1 replaces the platoon's whole route and sends it straight to the marker.")
+	_button(JOY_BUTTON_B)
+	_check(infantry.order == Battle.Order.HOLD and harness.march_waypoints(0).is_empty(), "Circle clears the route and holds.")
+	harness.add_march_waypoint()
 	_button(JOY_BUTTON_DPAD_UP)
-	_check(infantry.order == Battle.Order.HOLD and harness.march_waypoints(0).is_empty(), "D-pad Up clears the route and holds.")
+	_check(infantry.order == Battle.Order.HOLD and harness.march_waypoints(0).is_empty(), "D-pad Up clears the route and holds too.")
+	_check(harness.roster_text().contains("[Shield Infantry]") and harness.roster_text().contains("Lead"), "The roster shows every platoon and brackets the selected one.")
 	battle.lead_engaged = true
 	await _frames(2)
-	_check(not harness.march_mode() and not harness._march_beam.visible, "Combat hides the marker and returns the stick to the leader.")
+	_check(harness.selected_index == Battle.LEAD_INDEX and not harness.march_mode() and not harness._march_beam.visible,
+		"Combat selects the leader, hides the marker and returns the stick to the leader.")
+	# Mid-fight, switch to another platoon: its marker comes back and the leader holds.
+	var hero_in_fight := battle.hero_position
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	await _frames(2)
+	_check(harness.selected_index == 0 and harness.march_mode() and harness._march_beam.visible and not harness.hero_combat_active(),
+		"D-pad switches platoons during combat and the stick drives that platoon's marker.")
+	_axis(JOY_AXIS_LEFT_X, 1.0)
+	await _frames(10)
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_button(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(battle.hero_position == hero_in_fight and infantry.order == Battle.Order.MOVE, "Commanding another platoon mid-fight leaves the leader standing.")
+	_button(JOY_BUTTON_DPAD_LEFT)
+	await _frames(2)
+	_check(harness.hero_combat_active() and not harness.march_mode(), "Switching back to the Lead Platoon resumes fighting as the leader.")
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	battle.lead_engaged = false
+	await _frames(2)
+	_check(harness.selected_index == 0, "When combat ends, a platoon chosen during the fight stays selected.")
+	battle.lead_engaged = true
+	await _frames(2)
+	battle.lead_engaged = false
+	await _frames(2)
+	_check(harness.selected_index == 0, "Otherwise the platoon selected before combat comes back afterwards.")
 	harness.queue_free()
 	await process_frame
 

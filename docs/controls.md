@@ -2,18 +2,25 @@
 
 The PlayStation 5 DualSense is the primary controller for *Torn Asunder*. Hold **L2** to enter the command view and release it to return to the hero. The battle continues in both views. See the [combat system](combat.md) for how the two views work together.
 
-| Input | Hero combat | Command view while holding L2 |
-|---|---|---|
-| Left stick | Marching: move the waypoint marker out from the selected platoon. In combat: move the hero | Move the battlefield cursor |
-| Right stick | Marching: swing the marker round its platoon. In combat: control the camera | Rotate and tilt the command camera |
-| D-pad left / right | Select the platoon the waypoint marker extends from, starting with the leader's own **Lead Platoon** | Select the previous or next allied unit |
-| D-pad up | Marching: clear the selected platoon's route and hold | Aim on the minimap (where available) |
-| R1 | Marching: add the marker as a waypoint. In combat: officer ability | Append the cursor as a waypoint (where available) |
-| Square | Light attack | Order the selected unit to move to the cursor |
-| Triangle | Heavy attack | Order the selected unit to attack the highlighted enemy |
-| Circle | Dodge | Clear the current target |
-| Cross | Interact with an objective | Order the selected unit to hold its current position |
-| L1 | Guard | — |
+The hero view has two modes. **Marching** is whenever the leader isn't fighting: you steer a waypoint marker and move platoons. **Combat** starts when an enemy comes within 8 m of the leader's platoon: you fight as the leader. Attack buttons do nothing while marching, and their prompts appear only in combat.
+
+| Input | Marching (hero view) | Combat (hero view, Lead Platoon selected) | Command view while holding L2 |
+|---|---|---|---|
+| Left stick | Move the waypoint marker out from the selected platoon | Move the hero | Move the battlefield cursor |
+| Right stick | Swing the marker round its platoon (up/down tilts) | Control the camera | Rotate and tilt the command camera |
+| D-pad left / right | Switch platoon: Lead Platoon, then each of your platoons | Switch platoon. Picking another platoon mid-fight hands the stick to its marker while the leader holds; switch back to fight | Select the previous or next allied unit |
+| R1 | **Set waypoint**: replaces the platoon's route and sends it straight to the marker | Officer ability | Append the cursor as a waypoint (where available) |
+| Square | **Add to route**: appends the marker, so the platoon walks the waypoints in order | Light attack | Order the selected unit to move to the cursor |
+| Circle | Clear the route and hold | Dodge | Clear the current target |
+| D-pad up | Clear the route and hold | — | Aim on the minimap (where available) |
+| Triangle | — | Heavy attack | Order the selected unit to attack the highlighted enemy |
+| L1 | — | Guard | — |
+| R2 | — | Sundering Strike (Mara, where unlocked) | — |
+| Cross | Interact with an objective | Interact with an objective | Order the selected unit to hold its current position |
+
+Keyboard: WASD marker or hero · **G** set waypoint · **J** add to route · **T** clear · **Z / X** switch platoon. In combat **J / K / L / U / V** attack, heavy, dodge, guard and Sundering Strike.
+
+The **roster line** under the selected platoon lists every platoon you can switch to, brackets the selected one, and marks who is fighting. When combat starts, the Lead Platoon is selected for you. When it ends, the platoon you had selected before comes back, unless you switched platoons during the fight.
 
 At the mine, hold **L2**, select the archers with the **D-pad**, move the cursor over the Orc company approaching the escort, and press **Triangle**. Release **L2** to return to the hero while the archers carry out the order.
 
@@ -65,7 +72,7 @@ The sticks, stick clicks and D-pad are the same. The Guide button isn't used.
 
 The leader is part of their own **Lead Platoon**, a full platoon that travels with them. Every battlefield built on the command harness uses it.
 
-- **Marching (no enemy in contact).** You steer a tall **waypoint marker** rather than the leader. It extends out from the selected platoon, and a tether on the ground links the two. The camera hovers over and behind the selected platoon and always points toward the marker. Up on the left stick (or W) pushes the marker away from the platoon and down pulls it back (it stops 2 m short, so it never crosses the platoon). Left and right swing it round the platoon, and the camera turns with it. The right stick or Q E also swings the marker round the platoon; R F tilt the camera. Press **R1 / G** to add the marker's spot as the selected platoon's next waypoint, up to eight. With no route pending, the platoon sets off at once. Numbered pins show the pending route. **D-pad Up / T** clears the route and holds. **D-pad left / right** or **Z / X** changes which platoon the marker extends from. Battles start with the first platoon selected; the leader's own **Lead Platoon** is one D-pad left away, and the leader walks at its head. The marker stays within 60 m of its platoon. The hero view shows **MARCHING**. Command view (**L2 / Shift**) still works as before for cursor orders and the minimap, and the marker and minimap share one route per platoon.
+- **Marching (no enemy in contact).** You steer a tall **waypoint marker** rather than the leader. It extends out from the selected platoon, and a tether on the ground links the two. The camera hovers over and behind the selected platoon and always points toward the marker. Up on the left stick (or W) pushes the marker away from the platoon and down pulls it back (it stops 2 m short, so it never crosses the platoon). Left and right swing it round the platoon, and the camera turns with it. The right stick or Q E also swings the marker round the platoon; R F tilt the camera. Press **R1 / G** to send the selected platoon to the marker; this replaces any route it had. Press **Square / J** instead to add the marker to the end of the route, up to eight waypoints, which the platoon walks in order. Numbered pins show the pending route. **Circle**, **D-pad Up** or **T** clears the route and holds. **D-pad left / right** or **Z / X** changes which platoon the marker extends from. Battles start with the first platoon selected; the leader's own **Lead Platoon** is one D-pad left away, and the leader walks at its head. The marker stays within 60 m of its platoon. The hero view shows **MARCHING**. Command view (**L2 / Shift**) still works as before for cursor orders and the minimap, and the marker and minimap share one route per platoon.
 - **Combat.** When a hostile comes within **8 m** of the leader or their platoon, the marker disappears, the camera swings behind the leader facing the nearest hostile, and the hero view shows **COMBAT**. The left stick or WASD steers the leader directly. Attacks, guard, dodge and officer abilities work as before. The platoon fights around the leader instead of holding a separate post. Combat cancels the Lead Platoon's pending waypoints.
 - **After combat.** Once every hostile has been beyond **12 m** for **1.5 seconds**, the platoon re-forms where the leader finished and holds. Plot the next move or route from there.
 

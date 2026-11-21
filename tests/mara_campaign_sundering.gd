@@ -27,6 +27,9 @@ func _run() -> void:
 	await physics_frame
 
 	var fight := _mission.encounter
+	# The special is a combat move: hold Mara in combat for the whole check.
+	_mission.battle.lead_engaged = true
+	_mission._calm_seconds = -1.0e6
 	var original_frame := _mission.team_battle_points_frame()
 	_check(original_frame.balance == 400 and original_frame.capacity == 700 and original_frame.lead_level == fight.hero.level
 		and _mission._combat_hp.text.contains("Team 400 / 700 BP (lead Lv 1)"),

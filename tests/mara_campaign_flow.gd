@@ -135,6 +135,7 @@ func _flow() -> bool:
 		return _fail("Deployment fell back to the toy map or disabled live combat.")
 	if not _mine_budget(mission, 1, 700) or mission.encounter.hero.rating(Unit.Damage.MELEE) != 1:
 		return _fail("A fresh Mine deployment did not show 400 / 700 BP and untrained Mara.")
+	mission.battle.lead_engaged = true # The special is a combat move.
 	_key(KEY_V)
 	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
 		return _fail("The fresh attempt did not spend on the existing special.")
@@ -181,6 +182,7 @@ func _flow() -> bool:
 	await physics_frame
 	if not _mine_budget(mission, 2, 720) or mission.encounter.hero.rating(Unit.Damage.MELEE) != 1:
 		return _fail("The first saved clear raises the BP cap but must not spend the earned Melee point.")
+	mission.battle.lead_engaged = true # The special is a combat move.
 	_key(KEY_V)
 	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
 		return _fail("The existing special did not spend from the higher-cap launch pool.")
@@ -285,6 +287,7 @@ func _mine_melee_contact(mission: Mission, melee: int) -> bool:
 	mission.battle.hero_heading = toward
 	fight.enemy_position = enemy
 	fight.enemy_phase = Encounter.EnemyPhase.WATCHING
+	mission.battle.lead_engaged = true # The teleported guard is in contact before any frame runs.
 	_key(KEY_J)
 	_tick(16)
 	var outgoing := Encounter.ENEMY_HP - fight.enemy.hp

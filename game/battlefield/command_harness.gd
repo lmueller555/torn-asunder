@@ -100,6 +100,9 @@ var _destination_marker: MeshInstance3D
 @onready var _command_camera: Camera3D = $CommandCamera
 @onready var _mode_label: Label = $HUD/Panel/Margin/Readout/Mode
 @onready var _formation_label: Label = $HUD/Panel/Margin/Readout/Formation
+var _roster_label: Label
+var _lead_was_engaged := false
+var _pre_combat_index := Battle.LEAD_INDEX
 @onready var _controls_label: Label = $HUD/Panel/Margin/Readout/Controls
 
 
@@ -123,6 +126,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_follow_lead_into_combat()
 	var movement := _movement_input()
 	var repoint := false
 	var look := _motion(_stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y), _digital(KEY_Q, KEY_E, KEY_R, KEY_F))
@@ -141,7 +145,7 @@ func _physics_process(delta: float) -> void:
 	_update_lead_engagement(delta)
 	# Stick and D-pad steer the leader only in combat; otherwise the lead platoon
 	# follows its Move order or waypoints. Formations always advance.
-	var steering := not command_view and battle.direct_hero_control()
+	var steering := hero_combat_active() and battle.direct_hero_control()
 	battle.step(delta, movement.rotated(-_hero_yaw) * _hero_move_factor() if steering else Vector2.ZERO, _movement_check())
 	if march_route_provider == null:
 		routes.advance(battle)
@@ -157,7 +161,20 @@ func _after_battle_step(_delta: float) -> void:
 
 ## True outside combat in hero view: the stick steers the waypoint marker.
 func march_mode() -> bool:
-	return battle.lead_platoon_enabled and not command_view and not battle.direct_hero_control()
+	return battle.lead_platoon_enabled and not command_view and not hero_combat_active()
+
+
+## True when the stick and the attack buttons fight as the leader: the leader's
+## platoon is in combat and selected, in hero view. Selecting another platoon during
+## combat hands the stick to that platoon's waypoint marker instead; the leader
+## stands their ground until you select the Lead Platoon again.
+func hero_combat_active() -> bool:
+	if command_view:
+		return false
+	if not battle.lead_platoon_enabled:
+		return true # Scenes that opt out keep the free-walking, always-armed leader.
+	_follow_lead_into_combat()
+	return battle.lead_engaged and selected_index == Battle.LEAD_INDEX
 
 
 func _step_march_marker(movement: Vector2, delta: float, orbit := 0.0) -> void:
@@ -201,14 +218,17 @@ func _reset_march_marker() -> void:
 
 ## R1 / G: add the marker as the selected platoon's next waypoint. With no route
 ## pending, the platoon sets off for it at once.
-func add_march_waypoint() -> int:
+## R1 / G: send the selected platoon to the marker. By default this replaces the
+## platoon's whole route; pass append (Square / J) to add the marker to the end of
+## the route instead, so the platoon walks the waypoints in order.
+func add_march_waypoint(append := false) -> int:
 	if not march_mode() or not battle.is_valid_command_index(selected_index):
 		return MarchQueue.Result.INVALID_FOR_BATTLEFIELD
 	var result: int
 	if march_route_provider and march_route_provider.has_method("march_issue"):
-		result = march_route_provider.march_issue(selected_index, march_marker, true)
+		result = march_route_provider.march_issue(selected_index, march_marker, append)
 	else:
-		result = routes.issue(battle, selected_index, march_marker, true, _march_point_fits)
+		result = routes.issue(battle, selected_index, march_marker, append, _march_point_fits)
 	match result:
 		MarchQueue.Result.ACCEPTED: _march_note = ""
 		MarchQueue.Result.DUPLICATE: _march_note = "Already a waypoint"
@@ -216,6 +236,11 @@ func add_march_waypoint() -> int:
 		_: _march_note = "Can't march there"
 	_sync_view()
 	return result
+
+
+## Square / J: add the marker to the end of the selected platoon's route.
+func queue_march_waypoint() -> int:
+	return add_march_waypoint(true)
 
 
 ## D-pad Up / T: drop the selected platoon's route and hold where it stands.
@@ -273,6 +298,7 @@ func _update_lead_engagement(delta: float) -> void:
 		if nearest <= LEAD_ENGAGE_RADIUS:
 			battle.lead_engaged = true
 			_calm_seconds = 0.0
+			_follow_lead_into_combat()
 			_on_lead_engagement_changed(true)
 		return
 	if nearest <= LEAD_RELEASE_RADIUS:
@@ -282,6 +308,20 @@ func _update_lead_engagement(delta: float) -> void:
 	if _calm_seconds >= LEAD_RELEASE_SECONDS:
 		battle.lead_engaged = false
 		_on_lead_engagement_changed(false)
+
+
+## However combat starts, it hands the stick to the leader: the Lead Platoon is
+## selected once, on the frame combat begins. D-pad away to command another platoon.
+## When combat ends, the platoon you had selected before comes back, unless you
+## switched platoons during the fight.
+func _follow_lead_into_combat() -> void:
+	if battle.lead_platoon_enabled and battle.lead_engaged != _lead_was_engaged:
+		if battle.lead_engaged:
+			_pre_combat_index = selected_index
+			selected_index = Battle.LEAD_INDEX
+		elif selected_index == Battle.LEAD_INDEX and battle.is_valid_command_index(_pre_combat_index):
+			selected_index = _pre_combat_index
+	_lead_was_engaged = battle.lead_engaged
 
 
 ## Scenes can react when the leader's platoon enters or leaves combat.
@@ -372,6 +412,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_M: _toggle_overview()
 				KEY_HOME: _center_on_hero()
 				KEY_G: if march_mode(): add_march_waypoint()
+				KEY_J: if march_mode(): queue_march_waypoint()
 				KEY_T: if march_mode(): clear_march_route()
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
@@ -383,7 +424,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.button_index:
 			JOY_BUTTON_DPAD_LEFT: _select_relative(-1)
 			JOY_BUTTON_DPAD_RIGHT: _select_relative(1)
-			JOY_BUTTON_X: _move_selected()
+			JOY_BUTTON_X:
+				# Square: Move in command view; while marching, add to the route.
+				if command_view:
+					_move_selected()
+				elif march_mode():
+					queue_march_waypoint()
+			JOY_BUTTON_B: if march_mode(): clear_march_route()
 			JOY_BUTTON_A: _hold_selected()
 			JOY_BUTTON_RIGHT_STICK: _toggle_overview()
 			JOY_BUTTON_LEFT_STICK: _center_on_hero()
@@ -541,6 +588,7 @@ func _update_cameras() -> void:
 
 
 func _sync_view() -> void:
+	_follow_lead_into_combat()
 	if not battle.is_valid_command_index(selected_index):
 		selected_index = 0 if not battle.formations.is_empty() else Battle.LEAD_INDEX
 	var selected := battle.formation_at(selected_index)
@@ -573,6 +621,7 @@ func _sync_view() -> void:
 		status = "In combat · direct control"
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else ("HERO VIEW  /  COMBAT" if battle.lead_engaged else "HERO VIEW  /  MARCHING")
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
+	_sync_roster()
 	if command_view:
 		if _sector:
 			_mode_label.text = "%s  /  LIVE" % ("FIELD OVERVIEW" if _sector.overview else "TACTICAL SECTOR")
@@ -582,16 +631,51 @@ func _sync_view() -> void:
 			if not _sector.overview:
 				_controls_label.text += "\nPan with the cursor or move the mouse to a screen edge"
 	else:
-		if battle.direct_hero_control():
-			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nHold L2 / Shift to command other platoons"
+		if hero_combat_active():
+			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nD-pad Left/Right / Z X: switch to another platoon   ·   Hold L2 / Shift: command view"
 		else:
+			if battle.lead_engaged:
+				_mode_label.text = "HERO VIEW  /  COMBAT · COMMANDING %s" % selected.title.to_upper()
 			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   %s   ·   Right stick / Q E: swing the waypoint" % [selected.title, _march_route_controls()]
 			if not _march_note.is_empty():
 				_controls_label.text += "\n" + _march_note
 
 
 func _march_route_controls() -> String:
-	return "R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon"
+	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon"
+
+
+## The platoon roster under the selected platoon: every platoon you can switch to
+## with D-pad Left/Right, the selected one in brackets, and who is fighting.
+func roster_text() -> String:
+	if not battle.lead_platoon_enabled and battle.formations.size() < 2:
+		return ""
+	var names: PackedStringArray = []
+	var indices: Array[int] = []
+	if battle.lead_platoon_enabled:
+		indices.append(Battle.LEAD_INDEX)
+	for index in range(battle.formations.size()):
+		indices.append(index)
+	for index in indices:
+		var formation := battle.formation_at(index)
+		if formation == null or not formation.can_receive_orders():
+			continue
+		var title := "Lead" if index == Battle.LEAD_INDEX else formation.title
+		var fighting := battle.lead_engaged if index == Battle.LEAD_INDEX else formation.order == Battle.Order.ATTACK
+		if fighting:
+			title += " (fighting)"
+		names.append("[%s]" % title if index == selected_index else title)
+	return "◀ D-pad ▶   " + "  ·  ".join(names)
+
+
+func _sync_roster() -> void:
+	if _roster_label == null:
+		_roster_label = Label.new()
+		_roster_label.name = "Roster"
+		_roster_label.add_theme_font_size_override("font_size", 14)
+		_formation_label.add_sibling(_roster_label)
+	_roster_label.text = roster_text()
+	_roster_label.visible = not _roster_label.text.is_empty()
 
 
 func _configure_field() -> void:
@@ -621,6 +705,7 @@ func restart_battle() -> void:
 	battle.lead_platoon_enabled = lead_platoon_enabled
 	routes.reset(battle)
 	_marker_active = false
+	_lead_was_engaged = false
 	_camera_pivot = Vector3.INF
 	_calm_seconds = 0.0
 	selected_index = 0

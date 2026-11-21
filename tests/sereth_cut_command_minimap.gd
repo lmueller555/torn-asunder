@@ -262,10 +262,10 @@ func _hero_waypoints() -> void:
 		and lead.destination == first, "Hero G sends the lead platoon to the first plotted waypoint.")
 
 	var second := _aim_hero_marker(first + Vector2(16.0, 0.0))
-	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_tap(JOY_BUTTON_X)
 	_check(_route_is(lead_index, [first, second]) and _orders == [lead_index] and lead.destination == first
 		and _mission._route_pins[1].visible and not hud._route_overlay.visible,
-		"Hero R1 appends without interrupting the first leg or drawing an interactive minimap.")
+		"Hero Square appends without interrupting the first leg or drawing an interactive minimap.")
 	await _capture_image("hero-marker-queued-route")
 	_mouse_map(MOUSE_BUTTON_RIGHT, _map.get_global_rect().size / 2.0)
 	_check(_route_is(lead_index, [first, second]) and _orders == [lead_index], "The hidden map cannot replace a marker route.")
@@ -282,7 +282,7 @@ func _hero_waypoints() -> void:
 	_check(lead.destination == second and _orders == [lead_index, lead_index],
 		"Only actual arrival promotes the controller's second leg.")
 	var third := _aim_hero_marker(_point("Routes/WestLaneRoadJunction"))
-	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_tap(JOY_BUTTON_X)
 	_check(_route_is(lead_index, [second, third]) and lead.destination == second,
 		"The marker can extend an already marching route to the authored West Lane junction.")
 	_wait_at_waypoint(lead, second)

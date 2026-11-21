@@ -147,6 +147,13 @@ func _check_lens() -> bool:
 	await _checkpoint("hero-return")
 	if _mission.command_view or _hud._shield_follow.active or root.get_camera_3d() != _mission._hero_camera:
 		return _fail("L2 release did not immediately restore Mara's direct lens.")
+	# Dodge is a combat move for Mara's own platoon: be in combat with her selected.
+	_mission.battle.lead_engaged = true
+	_mission._calm_seconds = -1.0e6
+	for _step in 3:
+		if _mission.selected_index == Battle.LEAD_INDEX:
+			break
+		_button(JOY_BUTTON_DPAD_LEFT)
 	_button(JOY_BUTTON_B)
 	_tick()
 	if fight.defense.phase not in [Defense.Phase.DODGE_STARTUP, Defense.Phase.DODGE_ACTIVE]:

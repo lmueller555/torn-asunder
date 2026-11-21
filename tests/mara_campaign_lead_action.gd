@@ -120,7 +120,13 @@ func _check_contact() -> bool:
 	_tick()
 	if _hud._reticle.visible or not _mission._sector.overview:
 		return _fail("Cancelling the draft or opening native overview no longer works.")
-	# Actually issue a waypoint from the existing battlefield cursor.
+	# Actually issue a waypoint from the existing battlefield cursor. Contact selected
+	# Mara's own platoon; pick the infantry directly, since cycling with the D-pad in
+	# command view deliberately clears Mara's focus.
+	if selected == Battle.LEAD_INDEX:
+		_mission.selected_index = 0
+		_mission._sync_view()
+		selected = 0
 	var foot := _mission.battle.formations[selected]
 	var before := foot.position
 	var move := InputEventMouseMotion.new()
@@ -154,6 +160,12 @@ func _check_contact() -> bool:
 	_button(JOY_BUTTON_DPAD_DOWN)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0)
 	_tick()
+	# Attacks belong to Mara's own platoon: D-pad back to her before swinging.
+	for _step in 3:
+		if _mission.selected_index == Battle.LEAD_INDEX:
+			break
+		_button(JOY_BUTTON_DPAD_LEFT)
+		_tick()
 	var guard_hp := fight.enemy.hp
 	_button(JOY_BUTTON_X)
 	_tick()

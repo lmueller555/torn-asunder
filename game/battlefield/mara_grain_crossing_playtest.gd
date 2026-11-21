@@ -155,7 +155,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _march_route_controls() -> String:
-	return "D-pad Down / V: add waypoint\nD-pad Up / B: clear route   ·   D-pad Left/Right / Z X: change platoon"
+	return "D-pad Down / V: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / B: clear route   ·   D-pad Left/Right / Z X: change platoon"
 
 
 func _build_placeholders() -> void:

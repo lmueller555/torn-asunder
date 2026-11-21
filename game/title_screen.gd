@@ -450,6 +450,7 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	pause.focus_mode = Control.FOCUS_NONE
 	for hint in mission.find_children("*", "Label", true, false):
 		if hint.is_in_group("gameplay_tutorial"):
+			hint.set_meta(&"tutorial_hidden", true)
 			hint.hide()
 
 
