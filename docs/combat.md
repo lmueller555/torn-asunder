@@ -126,3 +126,9 @@ The isolated Ice cast tests one provisional ranged spell: Ice rating 6, 120 shar
 ## Siege crew prototype
 
 A siege crew must hold one ground position to prepare a shot. Moving or being caught in melee stows it. Prepared shots have a provisional 12–54 m window and require a playable arc from the scene. Siegecraft controls setup, accuracy and reload; misses still reload. The rules return the locked target point and whether the shot is on target. They do not yet create a projectile, damage a wall, or unlock a unit. Verify with `godot --headless --script tests/siege_preparation.gd`.
+
+## Elite support pulse prototype
+
+A rare beast support concept can mark a ground point within **8 m**, provided it has Beast Handling **2**, enough cohesion to follow orders, a valid site, and **140 shared Battle Points**. A fixed ground tell lasts **1.1 s**. Enemies can move outside the **4 m** radius, get behind cover, or disrupt the beast before release. Exposed opposing platoons still inside take up to **24 cohesion pressure** once, reduced by normal Formation Drill; no HP or wall damage and no BP earned. Moving the beast or losing the placement/lane during the tell interrupts the spent order without refund.
+
+Unlike an ordinary stationary Siege shot, this is short-range cover for a nearby advance or retreat, not a projectile, wall attack, or long-range battery. The [official *Kingdom Under Fire: Heroes* Orc unit guide](https://www.kufheroes.com/eng/characters/unit_orc.asp) uses rare beasts for different battlefield jobs, including area disruption. This prototype uses original rules and does not name, unlock, model, or place any beast in a faction or a campaign. All numbers are provisional. Verify with `godot --headless --script tests/elite_support_pulse.gd`.
