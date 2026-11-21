@@ -25,11 +25,15 @@ const _MAPS := {
 			},
 			"marches_crossing": {
 				"id": "marches_crossing", "label": "Marches Crossing", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.31, 0.71), "mission_id": "mara_grain_crossing",
+				"map_position": Vector2(0.76, 0.77), "mission_id": "mara_grain_crossing",
+			},
+			"moonwash_road": {
+				"id": "moonwash_road", "label": "Road to Moonwash", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.46, 0.82),
 			},
 			"headwater_council": {
 				"id": "headwater_council", "label": "Headwater Council", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.18, 0.80), "beat": "mara_command_interlude",
+				"map_position": Vector2(0.27, 0.86), "beat": "mara_water_request",
 			},
 			"moonwash_harbor": {
 				"id": "moonwash_harbor", "label": "Moonwash Harbor", "kind": WaypointKind.BATTLEFIELD,
@@ -39,8 +43,9 @@ const _MAPS := {
 		"routes": [
 			{"from_id": "marches_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "marches_road", "required_clear_id": "mara_mine_escort"},
-			{"from_id": "marches_road", "to_id": "marches_crossing", "required_clear_id": "mara_mine_escort"},
-			{"from_id": "marches_crossing", "to_id": "headwater_council", "required_clear_id": "mara_grain_crossing"},
+			{"from_id": "marches_road", "to_id": "marches_crossing"},
+			{"from_id": "marches_crossing", "to_id": "moonwash_road", "required_clear_id": "mara_grain_crossing"},
+			{"from_id": "moonwash_road", "to_id": "headwater_council", "required_clear_id": "mara_grain_crossing"},
 			{"from_id": "headwater_council", "to_id": "moonwash_harbor", "required_clear_id": "mara_grain_crossing"},
 		],
 	},
@@ -92,7 +97,7 @@ const _MAPS := {
 			},
 			"spanwater_bank": {
 				"id": "spanwater_bank", "label": "Spanwater High Bank", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.62, 0.63), "beat": "sova_handover_interlude",
+				"map_position": Vector2(0.62, 0.63), "beat": "sova_godbridle_handover",
 			},
 			"cairnspine_pass": {
 				"id": "cairnspine_pass", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,

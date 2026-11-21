@@ -1,0 +1,300 @@
+extends "res://game/battlefield/command_harness.gd"
+## Standalone Human withdrawal using the shared, fixed post-rise harbor.
+
+signal mission_finished(won: bool)
+
+const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
+const EXIT_RADIUS := 3.8
+const CUE_RADIUS := 12.0
+const LANDING_RADIUS := 8.0
+const SAFE_COLOR := Color("#a3ebda")
+const HAZARD_COLOR := Color("#ffb179")
+const SAFE_ROUTE := ["QuaySafeTurn", "InlandBypass", "InlandApproach", "InlandStairTop", "UpperQuay", "UpperQuayExit"]
+
+var objective := Quay.new()
+var _exit: Marker3D
+var _landing: Marker3D
+var _foot: Marker3D
+var _fracture: Marker3D
+var _gate: Marker3D
+var _gate_box: AABB
+var _blocker: StaticBody3D
+var _rubble: Node3D
+var _cracks: Node3D
+var _checked_bypass := false
+var _bypass_open := false
+var _landing_reached := false
+var _warned_in_prior_step := false
+var _hero_down := false
+
+@onready var _goal: Label = $WithdrawalHUD/Panel/Margin/Readout/Goal
+@onready var _roster: Label = $WithdrawalHUD/Panel/Margin/Readout/Roster
+@onready var _route: Label = $WithdrawalHUD/Panel/Margin/Readout/Route
+@onready var _restart: Button = $WithdrawalHUD/Panel/Margin/Readout/Restart
+
+
+func _ready() -> void:
+	super._ready()
+	_exit = battlefield_marker(^"Markers/Objectives/UpperQuayExit")
+	_landing = _route_marker("UpperStairLanding")
+	_foot = _route_marker("UpperStairFoot")
+	_fracture = battlefield_marker(^"Markers/PhaseZones/FracturedSlab")
+	_gate = battlefield_marker(^"Markers/PhaseZones/LowerStairClosure")
+	_build_hazard()
+	_signpost(_exit, "UPPER QUAY EXIT", SAFE_COLOR, EXIT_RADIUS)
+	_signpost(_landing, "STAIR LANDING", SAFE_COLOR)
+	_signpost(_route_marker("QuaySafeTurn"), "INLAND BYPASS", SAFE_COLOR)
+	_signpost(_route_marker("InlandApproach"), "INLAND STAIRS", SAFE_COLOR)
+	objective.platoon_extracted.connect(_lock_platoon)
+	objective.lower_quay_warned.connect(func() -> void: _cracks.show())
+	objective.lower_quay_closed.connect(func() -> void: _set_gate_closed(true))
+	_restart.pressed.connect(restart_mission)
+	_refresh_withdrawal()
+
+
+func _physics_process(delta: float) -> void:
+	if objective.phase != Quay.Phase.WITHDRAWING:
+		return
+	super._physics_process(delta)
+	var observation := Quay.Observation.new()
+	observation.hero_defeated = _hero_down
+	observation.hero_crossed_upper_exit = not _hero_down and _in_exit(hero_world_position())
+	observation.first = _platoon_observation(Quay.Platoon.FIRST)
+	observation.second = _platoon_observation(Quay.Platoon.SECOND)
+	observation.lower_quay_cracking = _any_active_near(_fracture.global_position, CUE_RADIUS) \
+		or _any_active_near(_foot.global_position, CUE_RADIUS)
+	_landing_reached = _landing_reached or _any_active_near(_landing.global_position, LANDING_RADIUS)
+	observation.lower_quay_closure_requested = _warned_in_prior_step and _landing_reached and _gate_unoccupied()
+	if objective.lower_quay == Quay.LowerQuay.WARNED and observation.lower_quay_closure_requested:
+		if not _checked_bypass:
+			_bypass_open = _inland_route_is_open()
+			_checked_bypass = true
+		observation.inland_route_open = _bypass_open
+	objective.advance(observation)
+	# A warning and a physical closure must not happen in the same update.
+	_warned_in_prior_step = objective.lower_quay == Quay.LowerQuay.WARNED
+	_refresh_withdrawal()
+	if objective.phase != Quay.Phase.WITHDRAWING:
+		mission_finished.emit(objective.phase == Quay.Phase.SUCCEEDED)
+
+
+func _platoon_observation(slot: Quay.Platoon) -> Quay.PlatoonObservation:
+	if objective.is_platoon_extracted(slot):
+		return null
+	var state := Quay.PlatoonObservation.new()
+	if battle.formations[slot].order == Battle.Order.DEFEATED:
+		return state
+	for index in range(_formation_members[slot].size()):
+		var member: Node3D = _formation_members[slot][index]
+		var id := str(index)
+		# The placeholders are all alive unless the living group has been wiped.
+		# Keeping past crossers in the live roster supports a staggered exit.
+		state.living_members.append(id)
+		if member.visible and _in_exit(member.global_position):
+			state.crossed_upper_exit.append(id)
+			member.hide()
+	return state
+
+
+func _in_exit(feet: Vector3) -> bool:
+	var offset := feet - _exit.global_position
+	return absf(offset.y) <= 1.0 and Vector2(offset.x, offset.z).length_squared() <= EXIT_RADIUS * EXIT_RADIUS
+
+
+func _lock_platoon(slot: Quay.Platoon) -> void:
+	battle.formations[slot].extract()
+	_sync_view()
+
+
+func _hero_move_factor() -> float:
+	return 0.0 if objective.hero_extracted or _hero_down else 1.0
+
+
+func _build_placeholders() -> void:
+	_name_platoons()
+	super._build_placeholders()
+
+
+func _name_platoons() -> void:
+	battle.formations[0].title = "Royal Vanguard"
+	battle.formations[1].title = "Royal Rear Guard"
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_BACKSPACE:
+		restart_mission()
+		return
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START and _uses_joypad(event.device):
+		restart_mission()
+		return
+	if objective.phase == Quay.Phase.WITHDRAWING:
+		super._unhandled_input(event)
+
+
+func report_hero_defeated() -> void:
+	if not objective.hero_extracted:
+		_hero_down = true
+
+
+func report_platoon_wiped(slot: Quay.Platoon) -> void:
+	if objective.can_order_platoon(slot):
+		battle.formations[slot].defeat()
+
+
+func restart_mission() -> void:
+	objective.restart()
+	_hero_down = false
+	_checked_bypass = false
+	_bypass_open = false
+	_landing_reached = false
+	_warned_in_prior_step = false
+	_set_gate_closed(false)
+	_cracks.hide()
+	_restart.release_focus()
+	restart_battle()
+	_name_platoons()
+	for group in _formation_members:
+		for member: Node3D in group:
+			member.show()
+	_sync_view()
+	_refresh_withdrawal()
+
+
+func _route_marker(id: String) -> Marker3D:
+	return battlefield_marker(NodePath("Markers/Routes/" + id))
+
+
+func _any_active_near(world: Vector3, radius: float) -> bool:
+	if not objective.hero_extracted and not _hero_down and hero_world_position().distance_to(world) <= radius:
+		return true
+	for group in battle.formations:
+		if group.can_receive_orders() and to_global(_ground(group.position)).distance_to(world) <= radius:
+			return true
+	return false
+
+
+func _gate_unoccupied() -> bool:
+	var margin := 1.75
+	var space := _gate_box.grow(margin)
+	if not objective.hero_extracted and not _hero_down and space.has_point(to_local(hero_world_position())):
+		return false
+	for group in battle.formations:
+		if group.can_receive_orders() and space.has_point(_ground(group.position)):
+			return false
+	return true
+
+
+func _inland_route_is_open() -> bool:
+	var gate_margin := _gate_box.grow(1.75)
+	for index in range(1, SAFE_ROUTE.size()):
+		var first := _safe_marker(SAFE_ROUTE[index - 1])
+		var second := _safe_marker(SAFE_ROUTE[index])
+		if not first or not second:
+			return false
+		var start := _marker_position(first)
+		var finish := _marker_position(second)
+		var steps := maxi(1, ceili(start.distance_to(finish) / 0.25))
+		var previous := start
+		for step in range(steps + 1):
+			var point := start.lerp(finish, float(step) / steps)
+			if gate_margin.has_point(_ground(point)) or (step > 0 and not _terrain.can_move(previous, point, true)):
+				return false
+			previous = point
+	return true
+
+
+func _safe_marker(id: String) -> Marker3D:
+	return _exit if id == "UpperQuayExit" else _route_marker(id)
+
+
+func _build_hazard() -> void:
+	var dimensions: Vector3 = _gate.get_meta("box_size")
+	var center := to_local(_gate.global_position)
+	_gate_box = AABB(center - dimensions * 0.5, dimensions)
+	_blocker = StaticBody3D.new()
+	_blocker.name = "ScenarioLowerStairClosure"
+	_blocker.position = center
+	_blocker.collision_mask = 0
+	add_child(_blocker)
+	var collision := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = dimensions
+	collision.shape = box
+	_blocker.add_child(collision)
+	_rubble = Node3D.new()
+	_blocker.add_child(_rubble)
+	var stone := _material(Color("#85605a"))
+	_mesh(_rubble, _box(dimensions), stone)
+	_signpost(_gate, "LOWER STAIR CLOSED", HAZARD_COLOR).reparent(_rubble, true)
+
+	_cracks = Node3D.new()
+	add_child(_cracks)
+	_cracks.position = to_local(_fracture.global_position) - Vector3.UP * (float(_fracture.get_meta("box_size").y) * 0.5 - 0.065)
+	var bright := _material(HAZARD_COLOR, true)
+	for index in range(5):
+		var mark := _mesh(_cracks, _box(Vector3(4.5, 0.025, 0.10)), bright, Vector3((index - 2) * 3.4, 0, 0))
+		mark.rotation.y = 0.36 if index % 2 == 0 else -0.38
+	var warning := _signpost(_gate, "CRACKING LOWER STAIR", HAZARD_COLOR)
+	warning.reparent(_cracks, true)
+	_cracks.hide()
+	_set_gate_closed(false)
+
+
+func _set_gate_closed(closed: bool) -> void:
+	_blocker.collision_layer = 1 if closed else 0
+	_rubble.visible = closed
+	if closed:
+		_cracks.hide()
+
+
+func _signpost(anchor: Marker3D, text: String, color: Color, radius := 0.0) -> Node3D:
+	var sign := Node3D.new()
+	add_child(sign)
+	sign.global_position = anchor.global_position
+	var material := _material(color, true)
+	if radius > 0.0:
+		_mesh(sign, _ring(radius - 0.13, radius), material, Vector3.UP * 0.08)
+	_mesh(sign, _box(Vector3(0.075, 2.4, 0.075)), material, Vector3.UP * 1.20)
+	var label := Label3D.new()
+	label.text = text
+	label.position.y = 3.0
+	label.pixel_size = 0.025
+	label.font_size = 44
+	label.outline_size = 11
+	label.modulate = color
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sign.add_child(label)
+	return sign
+
+
+func _refresh_withdrawal() -> void:
+	var status := PackedStringArray()
+	var hero_state := "Safe" if objective.hero_extracted else ("Lost" if _hero_down else "Withdrawing")
+	status.append("Hero: " + hero_state)
+	for index in range(battle.formations.size()):
+		var group := battle.formations[index]
+		var state := "Withdrawing"
+		if group.order == Battle.Order.EXTRACTED:
+			state = "Extracted"
+		elif group.order == Battle.Order.DEFEATED:
+			state = "Lost"
+		status.append("%s: %s" % [group.title, state])
+	_roster.text = "  ·  ".join(status)
+	match objective.phase:
+		Quay.Phase.SUCCEEDED:
+			_goal.text = "Withdrawal complete"
+			_route.text = "The hero and surviving members of both platoons reached the upper exit."
+		Quay.Phase.FAILED:
+			_goal.text = "Withdrawal failed"
+			match objective.failure:
+				Quay.Failure.HERO_DEFEATED: _route.text = "The hero was defeated. Restart to try again."
+				Quay.Failure.FIRST_PLATOON_LOST: _route.text = "The Royal Vanguard was lost before extraction."
+				Quay.Failure.SECOND_PLATOON_LOST: _route.text = "The Royal Rear Guard was lost before extraction."
+		Quay.Phase.WITHDRAWING:
+			_goal.text = "Withdraw the hero and both royal platoons"
+			if objective.lower_quay == Quay.LowerQuay.CLOSED:
+				_route.text = "Lower stair closed. Units still below can take the marked inland bypass."
+			elif objective.lower_quay == Quay.LowerQuay.WARNED:
+				_route.text = "The lower stair is cracking. Use the inland bypass if still below."
+			else:
+				_route.text = "Take the flagged stair or inland bypass. Hold the landing to cover the retreat."

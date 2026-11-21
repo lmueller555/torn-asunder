@@ -1,0 +1,60 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_command"]
+[ext_resource type="PackedScene" path="res://game/battlefields/moonwash_harbor_campaign.tscn" id="2_harbor"]
+[ext_resource type="Script" path="res://game/battlefield/mara_moonwash_playtest.gd" id="3_quay"]
+
+[node name="MaraMoonwashPlaytest" instance=ExtResource("1_command")]
+script = ExtResource("3_quay")
+battlefield_scene = ExtResource("2_harbor")
+field_bounds = Rect2(-144, -118, 288, 242)
+enable_sector_camera = true
+local_sector_size = 110.0
+hero_spawn = NodePath("Markers/Spawns/HumanHero")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/RoyalVanguard"), NodePath("Markers/Spawns/RoyalRearGuard")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 410.0
+
+[node name="WithdrawalHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="WithdrawalHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -160.0
+offset_right = 780.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="WithdrawalHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="WithdrawalHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="WithdrawalHUD/Panel/Margin/Readout"]
+text = "MARA  /  THE HIGH QUAY · PROTOTYPE"
+theme_override_colors/font_color = Color(1, 0.82, 0.54, 1)
+theme_override_font_sizes/font_size = 19
+
+[node name="Goal" type="Label" parent="WithdrawalHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 21
+
+[node name="Roster" type="Label" parent="WithdrawalHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.65, 0.91, 0.84, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Route" type="Label" parent="WithdrawalHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.83, 0.88, 0.90, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Restart" type="Button" parent="WithdrawalHUD/Panel/Margin/Readout"]
+size_flags_horizontal = 0
+text = "Restart  ·  Options / Backspace"

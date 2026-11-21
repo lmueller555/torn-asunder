@@ -5,6 +5,8 @@ const Missions := preload("res://game/campaign_missions.gd")
 const CAMP := "marches_camp"
 const MINE := "year_one_mine"
 const ROAD := "marches_road"
+const CROSSING := "marches_crossing"
+const MOONWASH := "moonwash_road"
 const ESCORT := "mara_mine_escort"
 
 
@@ -18,8 +20,8 @@ func _initialize() -> void:
 func _check_topology() -> bool:
 	var map := World.new("mara")
 	var nodes := map.waypoints()
-	if nodes.size() < 3 or map.routes().size() < 2:
-		return _fail("The first Human segment should contain three waypoints and two edges.")
+	if nodes.size() < 5 or map.routes().size() < 4:
+		return _fail("The first two Human chapters should have five waypoints and four edges.")
 	var drawn_positions := {}
 	for node in nodes:
 		var point: Vector2 = node.map_position
@@ -72,9 +74,24 @@ func _check_travel() -> bool:
 			or map.current_waypoint_id() != ROAD or not map.mission_at_current_waypoint().is_empty() \
 			or map.visited_waypoint_ids() != PackedStringArray([CAMP, MINE, ROAD]):
 		return _fail("The real mission clear did not open the route to a non-battle waypoint.")
-	if not map.route_options(real_clear).has({"waypoint_id": MINE, "required_clear_id": ESCORT, "is_open": true}) \
-			or map.travel_to(MINE, real_clear) != World.TravelResult.ARRIVED:
-		return _fail("The unlocked edge did not permit returning to the mine.")
+	var road_options := [
+		{"waypoint_id": MINE, "required_clear_id": ESCORT, "is_open": true},
+		{"waypoint_id": CROSSING, "required_clear_id": "", "is_open": true},
+	]
+	if map.route_options(real_clear) != road_options or map.travel_to(MINE, real_clear) != World.TravelResult.ARRIVED:
+		return _fail("The road did not link to the Mine and Marches Crossing.")
+	if (
+		map.travel_to(CROSSING, real_clear) != World.TravelResult.NOT_ADJACENT
+		or map.travel_to(ROAD, real_clear) != World.TravelResult.ARRIVED
+		or map.travel_to(CROSSING, real_clear) != World.TravelResult.ARRIVED
+		or map.mission_at_current_waypoint() != "mara_grain_crossing"
+	):
+		return _fail("The Grain briefing skipped the Marches Road or did not match the actual mission.")
+	if map.travel_to(MOONWASH, real_clear) != World.TravelResult.LOCKED:
+		return _fail("The Mine clear alone opened the route beyond Grain.")
+	real_clear.append("mara_grain_crossing")
+	if map.travel_to(MOONWASH, real_clear) != World.TravelResult.ARRIVED or not map.mission_at_current_waypoint().is_empty():
+		return _fail("The Grain clear did not open the non-battle road to Moonwash.")
 	return true
 
 

@@ -97,17 +97,6 @@ const DISPATCHES := {
 
 ## Overworld scenes between missions, keyed by the waypoint's "beat".
 const INTERLUDES := {
-	"mara_command_interlude": {
-		"title": "Precise Wording",
-		"location": "Headwater Council · Year Two",
-		"lines": [
-			["ally", "A second failed harvest, Majesty. Ashmarch cannot stay pledged to a crown that cannot water it."],
-			["mara", "Then I will speak to Orrun. Water back into the dry headwater channels of the Marches. Only ours."],
-			["judge", "And whose water could fill them, Majesty?"],
-			["mara", "I have chosen the words carefully. The neighbors will be spared."],
-			["narrator", "Orrun heard him. No one yet knew what it would move."],
-		],
-	},
 	"raska_assembly_interlude": {
 		"title": "A River, Not a Sea",
 		"location": "Assembly Town · Year Four",
@@ -116,18 +105,6 @@ const INTERLUDES := {
 			["raska", "The sea would come in over this town. Over the assembly that elected me."],
 			["vasha", "They'll recall their companies if you refuse."],
 			["raska", "Then they'll recall them. I was sent for a river."],
-		],
-	},
-	"sova_handover_interlude": {
-		"title": "Custody, Not Ownership",
-		"location": "Spanwater high bank · Year Four",
-		"lines": [
-			["narrator", "After the breach at Spanwater, King Mara refused to ask Orrun to close it."],
-			["mara", "I will not give a second order to fix the first. Take it, Listener, before a rival crown does."],
-			["sova", "I'll open the seal only to see what changes hands. Into my keeping, not my ownership."],
-			["raska", "The Basin witnesses it."],
-			["ilyra", "So does the coast."],
-			["narrator", "In Year Five, enough Keepers pledged guards for the vault road once Sova read the full account into the terms of custody."],
 		],
 	},
 	"ilyra_record_interlude": {

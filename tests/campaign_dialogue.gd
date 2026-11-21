@@ -3,6 +3,7 @@ extends SceneTree
 const PanelScene := preload("res://game/campaign_dialogue.tscn")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
+const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
 var _panel: Control
 var _underlay: Button
@@ -28,11 +29,15 @@ func _run() -> void:
 	passed = _check_cancellation_and_replay() and passed
 	passed = _check_other_mine_beats() and passed
 	passed = _check_grain_beats() and passed
+	passed = _check_high_quay_beats() and passed
+	passed = _check_ilyra_moonwash_beats() and passed
+	passed = _check_raska_well_road_beats() and passed
+	passed = _check_sova_public_record_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, Grain branches, mixed-device input, completion, cancel, and replay.")
+		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road and Sova hearing continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -167,7 +172,7 @@ func _check_grain_beats() -> bool:
 	var dispatch := Beats.get_beat(Beats.MARA_GRAIN_DISPATCH)
 	if not _panel.present(Beats.MARA_GRAIN_DISPATCH, dispatch):
 		return _fail("Grain dispatch was missing or invalid.")
-	var dispatch_text := _read_grain_beat(dispatch)
+	var dispatch_text := _finish_visible_beat(dispatch)
 	if not "mill yard" in dispatch_text or not "lower ford" in dispatch_text or not "town store" in dispatch_text:
 		return _fail("The dispatch lost a delivery destination.")
 	var cases := [
@@ -183,7 +188,7 @@ func _check_grain_beats() -> bool:
 		if id != fixture[2] or seen.has(id) or not _panel.present(id, beat):
 			return _fail("A real delivery result did not select its own council beat: %s" % result)
 		seen[id] = true
-		var account := _read_grain_beat(beat)
+		var account := _finish_visible_beat(beat)
 		for detail: String in fixture[3]:
 			if not detail in account:
 				return _fail("Council testimony lost a delivered or missing load: %s" % result)
@@ -213,7 +218,7 @@ func _simulate_grain_result(seed_delivers: bool, bread_delivers: bool) -> String
 	return grain.clear_result
 
 
-func _read_grain_beat(beat: Dictionary) -> String:
+func _finish_visible_beat(beat: Dictionary) -> String:
 	var text := ""
 	for index in range(beat.lines.size()):
 		text += _label("DialogueLine").text + "\n"
@@ -224,6 +229,138 @@ func _read_grain_beat(beat: Dictionary) -> String:
 func _has_grain_source(id: StringName) -> bool:
 	var source := Beats.get_beat(id)
 	return not source.lines[0].text.is_empty()
+
+
+func _check_high_quay_beats() -> bool:
+	var ids: Array[StringName] = [
+		Beats.MARA_WATER_REQUEST,
+		Beats.MARA_HIGH_QUAY_DISPATCH,
+		Beats.MARA_HIGH_QUAY_DEBRIEF,
+	]
+	var seen: Array[String] = []
+	var start := _completions.size()
+	for id in ids:
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A High Quay campaign beat was missing or invalid: %s" % id)
+		seen.append(_finish_visible_beat(beat))
+		if _panel.visible or _completions.back() != id:
+			return _fail("The High Quay beat did not complete under its own stable ID: %s" % id)
+	if _completions.size() != start + ids.size() or _completions.slice(start) != ids:
+		return _fail("High Quay dialogue emitted duplicate or out-of-order completions.")
+	if not "Whose water will fill them?" in seen[0] or not "return water to the dry headwater channels" in seen[0]:
+		return _fail("The intermission lost the cautious command or its unanswered cost.")
+	if not "current running inland" in seen[1] or not "upper stairs" in seen[1] or not "Leave the boats to Ilyra" in seen[1]:
+		return _fail("The briefing lost the inquiry, retreat route, or independent Elven duty.")
+	if not "stranded on stone" in seen[2] or not "farms on your list" in seen[2] or not "There won't be a second order" in seen[2]:
+		return _fail("The final report changed the campaign's incomplete water result or Mara's refusal.")
+	if "Orrun," in seen[1] or "Orrun," in seen[2]:
+		return _fail("Another order was given after the shared intermission.")
+	return true
+
+
+func _check_ilyra_moonwash_beats() -> bool:
+	var cases := [
+		[Beats.ILYRA_MOONWASH_DISPATCH, ["Stone's rising under the moorings", "Godbridle", "we're staying"]],
+		[Beats.moonwash_debrief_id(_simulate_moonwash_result(true)), ["Both crews are aboard", "provision a few survey boats ourselves", "Sova's public account"]],
+		[Beats.moonwash_debrief_id(_simulate_moonwash_result(false)), ["Both crews are aboard", "fishing villages lend us stores", "Sova read the sealed record in public"]],
+	]
+	var start := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if id == &"" or not _panel.present(id, beat):
+			return _fail("An Ilyra rescue beat was missing or invalid: %s" % id)
+		var spoken := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			spoken += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.ILYRA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.ILYRA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Ilyra's existing portrait did not show in her rescue beat.")
+			_panel.advance()
+		for detail: String in fixture[1]:
+			if not detail in spoken:
+				return _fail("Moonwash dialogue lost a rescue or survey consequence: %s" % id)
+		if not portrait_seen or _completions.back() != id or _panel.visible:
+			return _fail("Ilyra's beat did not complete under its own ID: %s" % id)
+	if _completions.size() != start + cases.size() or cases[1][0] == cases[2][0]:
+		return _fail("Rescue result beats duplicated or collapsed into the same branch.")
+	for invalid: StringName in [_simulate_moonwash_result(true, true), &"failed", &"both", &"unknown"]:
+		if Beats.moonwash_debrief_id(invalid) != &"":
+			return _fail("An invalid rescue outcome selected a successful debrief.")
+	return true
+
+
+func _simulate_moonwash_result(cargo: bool, hero_falls := false) -> StringName:
+	var rescue := Moonwash.new()
+	for transfer in [Moonwash.Transfer.FORWARD, Moonwash.Transfer.AFT]:
+		var rig := Moonwash.Observation.new()
+		rig.hero_rigged_transfer = transfer
+		rescue.advance(rig)
+	var arrival := Moonwash.Observation.new()
+	arrival.forward.crew_at_receiving_deck = true
+	arrival.aft.crew_at_receiving_deck = true
+	arrival.cargo_at_receiving_deck = cargo
+	arrival.hero_fell = hero_falls
+	rescue.advance(arrival)
+	return rescue.clear_result
+
+
+func _check_raska_well_road_beats() -> bool:
+	var cases := [
+		[Beats.RASKA_WELL_ROAD_DISPATCH, ["Open the storehouse", "Give them water and seats", "The lower cart waits", "both carts through the Basin exit"]],
+		[Beats.RASKA_WELL_ROAD_DEBRIEF, ["Both carts reached the Basin", "counted the last barrels", "Our pastures were on the old shore", "Not the sea"]],
+	]
+	var initial_count := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A Well Road beat was missing or invalid: %s" % id)
+		var words := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			words += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.RASKA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.RASKA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Raska's existing portrait did not render in a Well Road beat.")
+			_panel.advance()
+		for phrase: String in fixture[1]:
+			if not phrase in words:
+				return _fail("Well Road dialogue lost an escort requirement or consequence: %s" % id)
+		if not portrait_seen or _panel.visible or _completions.back() != id:
+			return _fail("Well Road dialogue did not finish under its own ID: %s" % id)
+	return _completions.size() == initial_count + cases.size() or _fail("Well Road emitted duplicate completions.")
+
+
+func _check_sova_public_record_beats() -> bool:
+	var cases := [
+		[Beats.SOVA_PUBLIC_RECORD_DISPATCH, ["recessed lectern", "public scribe", "keep the exit clear", "Let them go", "all three passages"]],
+		[Beats.SOVA_PUBLIC_RECORD_DEBRIEF, ["command to raise the Cairnspine", "Elven coast drowned", "Red Basin lost its sea", "I made a copy for Ilyra", "they need to be able to say no"]],
+		[Beats.SOVA_GODBRIDLE_HANDOVER, ["take custody of it", "Break the seal so the witnesses can see", "not to sign away anyone's claim", "Close the case"]],
+	]
+	var initial_count := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("Sova's hearing or custody beat was missing: %s" % id)
+		var account := _finish_visible_beat(beat)
+		for detail: String in fixture[1]:
+			if not detail in account:
+				return _fail("Sova's dialogue lost a hearing rule or historical fact: %s" % id)
+		if "Orrun," in account or _completions.back() != id or _panel.visible:
+			return _fail("A new command or incorrect completion entered Sova's hearing/custody beat.")
+	var handover := Beats.get_beat(Beats.SOVA_GODBRIDLE_HANDOVER)
+	var speakers: Array[String] = []
+	for line: Dictionary in handover.lines:
+		speakers.append(line.speaker)
+	if not speakers.has(Beats.ORC_WITNESS) or not speakers.has(Beats.ELVEN_WITNESS):
+		return _fail("The Year Four custody transfer lacked both witnesses.")
+	return _completions.size() == initial_count + cases.size() or _fail("Sova's beats emitted duplicate completions.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:

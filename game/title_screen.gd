@@ -9,6 +9,7 @@ const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
+const WAR_YEARS := ["", "Year One", "Year Two", "Year Three", "Year Four", "Year Five"]
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
 const Drills := preload("res://game/combat/drills.gd")
@@ -289,21 +290,22 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		return
 	_open_page(Page.MISSION_BRIEFING)
 	var generic := deployment.has("mission_id")
-	var back := _heading("Battlefield Briefing", "%s  /  %s" % [mission.title, deployment.get("year", "Year One")])
-	_label(_stage, String(deployment.get("location", "The Mine · Marches border")).to_upper(), Rect2(76, 248, 1120, 44), 25, GOLD)
+	var back := _heading("Battlefield Briefing", "%s  /  %s" % [mission.title, WAR_YEARS[mission.year]])
+	_label(_stage, deployment.get("battlefield_label", "THE MINE · MARCHES BORDER"),
+		Rect2(76, 248, 1120, 44), 25, GOLD)
 	var orders := _label(_stage, deployment.orders, Rect2(76, 304, 1180, 190), 25 if generic else 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	orders.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_label(_stage, "Hold L2 or Tab to command · Square/J attack · Cross/E interact · R1/Q officer ability" if generic else "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 500, 1180, 32), 21, MUTED)
 	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
-	if generic:
-		var dispatch := _button("Read Dispatch", Rect2(468, 555, 300, 58),
+	_link_focus(back, SIDE_BOTTOM, deploy)
+	_link_focus(deploy, SIDE_TOP, back)
+	if deployment.get("briefing_dispatch", false):
+		var dispatch := _button("Read Dispatch", Rect2(468, 555, 268, 58),
 			_present_campaign_dialogue.bind(deployment.dispatch, _show_campaign_mission_briefing.bind(mission_id)))
 		_link_focus(deploy, SIDE_RIGHT, dispatch)
 		_link_focus(dispatch, SIDE_LEFT, deploy)
 		_link_focus(dispatch, SIDE_TOP, back)
-	_link_focus(back, SIDE_BOTTOM, deploy)
-	_link_focus(deploy, SIDE_TOP, back)
 	back.grab_focus()
 	_show_campaign_warning()
 
@@ -325,7 +327,10 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 		mission.set("mission_id", deployment.mission_id)
 		mission.set("campaign_id", campaign_id)
 	_campaign_battle = mission
-	mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
+	if deployment.get("result_debrief", false):
+		mission.connect(&"mission_cleared", _on_grain_cleared.bind(mission, campaign_id, mission_id))
+	else:
+		mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
 	var back := _button("Return to Campaign Map", Rect2(1079, 735, 330, 48), _return_from_campaign_battle)
 	back.name = "ReturnToMap"
@@ -334,15 +339,31 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 
 
 func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: String, mission_id: String) -> void:
-	if not won or mission != _campaign_battle:
+	if won:
+		var deployment := CampaignDeployments.for_mission(mission_id)
+		_record_campaign_victory(mission, campaign_id, mission_id, deployment.debrief)
+
+
+func _on_grain_cleared(result: StringName, mission: Node3D, campaign_id: String, mission_id: String) -> void:
+	var debrief := DialogueBeats.grain_debrief_id(result)
+	if debrief != &"":
+		_record_campaign_victory(mission, campaign_id, mission_id, debrief, result)
+
+
+func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: String, debrief: StringName, grain_result := &"") -> void:
+	if mission != _campaign_battle or _victory_pending:
 		return
 	_victory_pending = true
-	if _profile.record_mission_clear(campaign_id, mission_id) != OK:
+	var saved: Error
+	if grain_result == &"":
+		saved = _profile.record_mission_clear(campaign_id, mission_id)
+	else:
+		saved = _profile.record_grain_clear(grain_result)
+	if saved != OK:
 		_campaign_warning = "The mission was completed, but its clear could not be saved."
 	elif _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The mission cleared, but the current waypoint could not be saved."
-	var deployment := CampaignDeployments.for_mission(mission_id)
-	_finish_campaign_battle.call_deferred(mission, deployment.debrief)
+	_finish_campaign_battle.call_deferred(mission, debrief)
 
 
 func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
