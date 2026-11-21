@@ -1,0 +1,3214 @@
+[gd_scene load_steps=290 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_water"]
+albedo_color = Color(0.21, 0.42, 0.54, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_110_0p02_40p05"]
+size = Vector3(110, 0.02, 40.05)
+
+[sub_resource type="StandardMaterial3D" id="Mat_earth"]
+albedo_color = Color(0.39, 0.41, 0.33, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_106_2_45"]
+size = Vector3(280.9, 4, 119.25)
+
+[sub_resource type="BoxMesh" id="Mesh_106_2_45"]
+size = Vector3(106, 2, 45)
+
+[sub_resource type="StandardMaterial3D" id="Mat_quay"]
+albedo_color = Color(0.46, 0.48, 0.47, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_26_2p7_21"]
+size = Vector3(68.9, 5.4, 55.65)
+
+[sub_resource type="BoxMesh" id="Mesh_26_2p7_21"]
+size = Vector3(26, 2.7, 21)
+
+[sub_resource type="BoxShape3D" id="Shape_59_2p7_15"]
+size = Vector3(156.35, 5.4, 39.75)
+
+[sub_resource type="BoxMesh" id="Mesh_59_2p7_15"]
+size = Vector3(59, 2.7, 15)
+
+[sub_resource type="BoxShape3D" id="Shape_18_2p7_21"]
+size = Vector3(47.7, 5.4, 55.65)
+
+[sub_resource type="BoxMesh" id="Mesh_18_2p7_21"]
+size = Vector3(18, 2.7, 21)
+
+[sub_resource type="BoxShape3D" id="Shape_95_6p7_19"]
+size = Vector3(251.75, 13.4, 50.35)
+
+[sub_resource type="BoxMesh" id="Mesh_95_6p7_19"]
+size = Vector3(95, 6.7, 19)
+
+[sub_resource type="StandardMaterial3D" id="Mat_upper"]
+albedo_color = Color(0.6, 0.59, 0.49, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_7_5p5_4"]
+size = Vector3(18.55, 11, 10.6)
+
+[sub_resource type="BoxMesh" id="Mesh_7_5p5_4"]
+size = Vector3(7, 5.5, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stairs"]
+albedo_color = Color(0.69, 0.66, 0.5, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_6p3_1p6_10p358088626768938"]
+size = Vector3(16.695, 3.2, 27.448965)
+
+[sub_resource type="BoxMesh" id="Mesh_6p3_1p6_10p358088626768938"]
+size = Vector3(6.3, 1.6, 10.3581)
+
+[sub_resource type="BoxShape3D" id="Shape_6p3_1p6_7p119691004531026"]
+size = Vector3(16.695, 3.2, 18.8671785)
+
+[sub_resource type="BoxMesh" id="Mesh_6p3_1p6_7p119691004531026"]
+size = Vector3(6.3, 1.6, 7.11969)
+
+[sub_resource type="BoxShape3D" id="Shape_38_6p7_19"]
+size = Vector3(100.7, 13.4, 50.35)
+
+[sub_resource type="BoxMesh" id="Mesh_38_6p7_19"]
+size = Vector3(38, 6.7, 19)
+
+[sub_resource type="BoxShape3D" id="Shape_50_6p7_19"]
+size = Vector3(132.5, 13.4, 50.35)
+
+[sub_resource type="BoxMesh" id="Mesh_50_6p7_19"]
+size = Vector3(50, 6.7, 19)
+
+[sub_resource type="BoxShape3D" id="Shape_7_6p7_12"]
+size = Vector3(18.55, 13.4, 31.8)
+
+[sub_resource type="BoxMesh" id="Mesh_7_6p7_12"]
+size = Vector3(7, 6.7, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_14_6p7_19"]
+size = Vector3(37.1, 13.4, 50.35)
+
+[sub_resource type="BoxMesh" id="Mesh_14_6p7_19"]
+size = Vector3(14, 6.7, 19)
+
+[sub_resource type="BoxShape3D" id="Shape_16_6p7_19"]
+size = Vector3(42.4, 13.4, 50.35)
+
+[sub_resource type="BoxMesh" id="Mesh_16_6p7_19"]
+size = Vector3(16, 6.7, 19)
+
+[sub_resource type="BoxShape3D" id="Shape_8_6p7_14"]
+size = Vector3(21.2, 13.4, 37.1)
+
+[sub_resource type="BoxMesh" id="Mesh_8_6p7_14"]
+size = Vector3(8, 6.7, 14)
+
+[sub_resource type="BoxShape3D" id="Shape_7p85_1p6_16p492422502470642"]
+size = Vector3(20.8025, 3.2, 43.70486)
+
+[sub_resource type="BoxMesh" id="Mesh_7p85_1p6_16p492422502470642"]
+size = Vector3(7.85, 1.6, 16.4924)
+
+[sub_resource type="BoxShape3D" id="Shape_19_2p7_21"]
+size = Vector3(50.35, 5.4, 55.65)
+
+[sub_resource type="BoxMesh" id="Mesh_19_2p7_21"]
+size = Vector3(19, 2.7, 21)
+
+[sub_resource type="BoxShape3D" id="Shape_7_2p7_15"]
+size = Vector3(18.55, 5.4, 39.75)
+
+[sub_resource type="BoxMesh" id="Mesh_7_2p7_15"]
+size = Vector3(7, 2.7, 15)
+
+[sub_resource type="BoxMesh" id="Mesh_89_0p012_7"]
+size = Vector3(89, 0.012, 7)
+
+[sub_resource type="StandardMaterial3D" id="Mat_marsh"]
+albedo_color = Color(0.28, 0.39, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_24_0p012_6"]
+size = Vector3(24, 0.012, 6)
+
+[sub_resource type="BoxMesh" id="Mesh_31_0p012_4"]
+size = Vector3(31, 0.012, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wall"]
+albedo_color = Color(0.3, 0.34, 0.37, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_6p1_0p025_0p15"]
+size = Vector3(6.1, 0.025, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="Mat_hazard"]
+albedo_color = Color(0.51, 0.31, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_2p1_0p02_0p13"]
+size = Vector3(2.1, 0.02, 0.13)
+
+[sub_resource type="StandardMaterial3D" id="Mat_rubble"]
+albedo_color = Color(0.38, 0.41, 0.39, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_4_1_2"]
+size = Vector3(10.6, 2, 5.3)
+
+[sub_resource type="BoxMesh" id="Mesh_4_1_2"]
+size = Vector3(4, 1, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_7_2p6_4"]
+size = Vector3(18.55, 5.2, 10.6)
+
+[sub_resource type="BoxMesh" id="Mesh_7_2p6_4"]
+size = Vector3(7, 2.6, 4)
+
+[sub_resource type="BoxShape3D" id="Shape_3p2_0p6_1p7"]
+size = Vector3(8.48, 1.2, 4.505)
+
+[sub_resource type="BoxMesh" id="Mesh_3p2_0p6_1p7"]
+size = Vector3(3.2, 0.6, 1.7)
+
+[sub_resource type="BoxShape3D" id="Shape_3_1p3_3"]
+size = Vector3(7.95, 2.6, 7.95)
+
+[sub_resource type="BoxMesh" id="Mesh_3_1p3_3"]
+size = Vector3(3, 1.3, 3)
+
+[sub_resource type="StandardMaterial3D" id="Mat_walltop"]
+albedo_color = Color(0.39, 0.42, 0.45, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_2_1p1_3"]
+size = Vector3(5.3, 2.2, 7.95)
+
+[sub_resource type="BoxMesh" id="Mesh_2_1p1_3"]
+size = Vector3(2, 1.1, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_8_2p7_4"]
+size = Vector3(21.2, 5.4, 10.6)
+
+[sub_resource type="BoxMesh" id="Mesh_8_2p7_4"]
+size = Vector3(8, 2.7, 4)
+
+[sub_resource type="BoxShape3D" id="Shape_3_0p3_2p5"]
+size = Vector3(7.95, 0.6, 6.625)
+
+[sub_resource type="BoxMesh" id="Mesh_3_0p3_2p5"]
+size = Vector3(3, 0.3, 2.5)
+
+[sub_resource type="BoxShape3D" id="Shape_4_0p24_1p4"]
+size = Vector3(10.6, 0.48, 3.71)
+
+[sub_resource type="BoxMesh" id="Mesh_4_0p24_1p4"]
+size = Vector3(4, 0.24, 1.4)
+
+[sub_resource type="BoxShape3D" id="Shape_21_6p4_3p4000000000000004"]
+size = Vector3(55.65, 12.8, 9.01)
+
+[sub_resource type="BoxMesh" id="Mesh_21_6p4_3p4000000000000004"]
+size = Vector3(21, 6.4, 3.4)
+
+[sub_resource type="BoxShape3D" id="Shape_26_7p35_4p65"]
+size = Vector3(68.9, 14.7, 12.3225)
+
+[sub_resource type="BoxMesh" id="Mesh_26_7p35_4p65"]
+size = Vector3(26, 7.35, 4.65)
+
+[sub_resource type="BoxShape3D" id="Shape_30_6_2p6500000000000004"]
+size = Vector3(79.5, 12, 7.0225)
+
+[sub_resource type="BoxMesh" id="Mesh_30_6_2p6500000000000004"]
+size = Vector3(30, 6, 2.65)
+
+[sub_resource type="BoxShape3D" id="Shape_23_5p6_1p8000000000000007"]
+size = Vector3(60.95, 11.2, 4.77)
+
+[sub_resource type="BoxMesh" id="Mesh_23_5p6_1p8000000000000007"]
+size = Vector3(23, 5.6, 1.8)
+
+[sub_resource type="BoxShape3D" id="Shape_56_3p3_12"]
+size = Vector3(148.4, 6.6, 31.8)
+
+[sub_resource type="BoxMesh" id="Mesh_56_3p3_12"]
+size = Vector3(56, 3.3, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_8_3p5_6"]
+size = Vector3(21.2, 7, 15.9)
+
+[sub_resource type="BoxMesh" id="Mesh_8_3p5_6"]
+size = Vector3(8, 3.5, 6)
+
+[sub_resource type="BoxShape3D" id="Shape_10_3p1_3"]
+size = Vector3(26.5, 6.2, 7.95)
+
+[sub_resource type="BoxMesh" id="Mesh_10_3p1_3"]
+size = Vector3(10, 3.1, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_1p3599999999999994_0p55_2p75"]
+size = Vector3(3.604, 1.1, 7.2875)
+
+[sub_resource type="BoxMesh" id="Mesh_1p3599999999999994_0p55_2p75"]
+size = Vector3(1.36, 0.55, 2.75)
+
+[sub_resource type="StandardMaterial3D" id="Mat_jetty"]
+albedo_color = Color(0.39, 0.35, 0.26, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_78_2p65_3p25"]
+size = Vector3(206.7, 5.3, 8.6125)
+
+[sub_resource type="BoxMesh" id="Mesh_78_2p65_3p25"]
+size = Vector3(78, 2.65, 3.25)
+
+[sub_resource type="BoxShape3D" id="Shape_18_2p65_7p6"]
+size = Vector3(47.7, 5.3, 20.14)
+
+[sub_resource type="BoxMesh" id="Mesh_18_2p65_7p6"]
+size = Vector3(18, 2.65, 7.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_rescue"]
+albedo_color = Color(0.38, 0.5, 0.46, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_7_2p65_4p5"]
+size = Vector3(18.55, 5.3, 11.925)
+
+[sub_resource type="BoxMesh" id="Mesh_7_2p65_4p5"]
+size = Vector3(7, 2.65, 4.5)
+
+[sub_resource type="BoxShape3D" id="Shape_6_2p65_17"]
+size = Vector3(15.9, 5.3, 45.05)
+
+[sub_resource type="BoxMesh" id="Mesh_6_2p65_17"]
+size = Vector3(6, 2.65, 17)
+
+[sub_resource type="StandardMaterial3D" id="Mat_receivingwood"]
+albedo_color = Color(0.54, 0.54, 0.34, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_4_1p8_4p5"]
+size = Vector3(10.6, 3.6, 11.925)
+
+[sub_resource type="BoxMesh" id="Mesh_4_1p8_4p5"]
+size = Vector3(4, 1.8, 4.5)
+
+[sub_resource type="BoxShape3D" id="Shape_3p026549190084311_0p5_2p6"]
+size = Vector3(8.0203575, 1, 6.89)
+
+[sub_resource type="BoxMesh" id="Mesh_3p026549190084311_0p5_2p6"]
+size = Vector3(3.02655, 0.5, 2.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.55, 0.39, 0.25, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_3p5_0p4_3p7336309405188937"]
+size = Vector3(9.275, 0.8, 9.8941195)
+
+[sub_resource type="BoxMesh" id="Mesh_3p5_0p4_3p7336309405188937"]
+size = Vector3(3.5, 0.4, 3.73363)
+
+[sub_resource type="BoxShape3D" id="Shape_3p5_0p4_2p6999999999999993"]
+size = Vector3(9.275, 0.8, 7.155)
+
+[sub_resource type="BoxMesh" id="Mesh_3p5_0p4_2p6999999999999993"]
+size = Vector3(3.5, 0.4, 2.7)
+
+[sub_resource type="StandardMaterial3D" id="Mat_mast"]
+albedo_color = Color(0.3, 0.23, 0.15, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_0p55_0p62_0p55"]
+size = Vector3(1.4575, 1.24, 1.4575)
+
+[sub_resource type="BoxMesh" id="Mesh_0p55_0p62_0p55"]
+size = Vector3(0.55, 0.62, 0.55)
+
+[sub_resource type="BoxShape3D" id="Shape_0p38_0p64_0p38"]
+size = Vector3(1.007, 1.28, 1.007)
+
+[sub_resource type="BoxMesh" id="Mesh_0p38_0p64_0p38"]
+size = Vector3(0.38, 0.64, 0.38)
+
+[sub_resource type="BoxShape3D" id="Shape_1p5_0p9_1p2"]
+size = Vector3(3.975, 1.8, 3.18)
+
+[sub_resource type="BoxMesh" id="Mesh_1p5_0p9_1p2"]
+size = Vector3(1.5, 0.9, 1.2)
+
+[sub_resource type="BoxShape3D" id="Shape_3p5_2_4"]
+size = Vector3(9.275, 4, 10.6)
+
+[sub_resource type="BoxMesh" id="Mesh_3p5_2_4"]
+size = Vector3(3.5, 2, 4)
+
+[sub_resource type="BoxShape3D" id="Shape_1p0_0p68_0p55"]
+size = Vector3(2.65, 1.36, 1.4575)
+
+[sub_resource type="BoxMesh" id="Mesh_1p0_0p68_0p55"]
+size = Vector3(1, 0.68, 0.55)
+
+[sub_resource type="StandardMaterial3D" id="Mat_hull"]
+albedo_color = Color(0.45, 0.26, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_51_0p012_8p8"]
+size = Vector3(51, 0.012, 8.8)
+
+[sub_resource type="BoxMesh" id="Mesh_47p5_0p012_8p049999999999997"]
+size = Vector3(47.5, 0.012, 8.05)
+
+[sub_resource type="BoxShape3D" id="Shape_0p65_4p7_0p65"]
+size = Vector3(1.7225, 9.4, 1.7225)
+
+[sub_resource type="BoxMesh" id="Mesh_0p65_4p7_0p65"]
+size = Vector3(0.65, 4.7, 0.65)
+
+[sub_resource type="BoxShape3D" id="Shape_6_0p38_0p45"]
+size = Vector3(15.9, 0.76, 1.1925)
+
+[sub_resource type="BoxMesh" id="Mesh_6_0p38_0p45"]
+size = Vector3(6, 0.38, 0.45)
+
+[sub_resource type="BoxShape3D" id="Shape_0p55_5p2_0p55"]
+size = Vector3(1.4575, 10.4, 1.4575)
+
+[sub_resource type="BoxMesh" id="Mesh_0p55_5p2_0p55"]
+size = Vector3(0.55, 5.2, 0.55)
+
+[sub_resource type="BoxShape3D" id="Shape_6_0p3_0p38"]
+size = Vector3(15.9, 0.6, 1.007)
+
+[sub_resource type="BoxMesh" id="Mesh_6_0p3_0p38"]
+size = Vector3(6, 0.3, 0.38)
+
+[sub_resource type="StandardMaterial3D" id="Mat_canvas"]
+albedo_color = Color(0.6, 0.63, 0.54, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_1p9_0p6_0p09"]
+size = Vector3(5.035, 1.2, 0.2385)
+
+[sub_resource type="BoxMesh" id="Mesh_1p9_0p6_0p09"]
+size = Vector3(1.9, 0.6, 0.09)
+
+[sub_resource type="StandardMaterial3D" id="Mat_signal"]
+albedo_color = Color(0.79, 0.63, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_0p38_0p8_0p38"]
+size = Vector3(1.007, 1.6, 1.007)
+
+[sub_resource type="BoxMesh" id="Mesh_0p38_0p8_0p38"]
+size = Vector3(0.38, 0.8, 0.38)
+
+[sub_resource type="BoxShape3D" id="Shape_0p19_1p64_0p19"]
+size = Vector3(0.5035, 3.28, 0.5035)
+
+[sub_resource type="BoxMesh" id="Mesh_0p19_1p64_0p19"]
+size = Vector3(0.19, 1.64, 0.19)
+
+[sub_resource type="BoxMesh" id="Mesh_0p65_0p39_0p075"]
+size = Vector3(0.65, 0.39, 0.075)
+
+[sub_resource type="BoxShape3D" id="Shape_0p25_2p65_0p25"]
+size = Vector3(0.6625, 5.3, 0.6625)
+
+[sub_resource type="BoxMesh" id="Mesh_0p25_2p65_0p25"]
+size = Vector3(0.25, 2.65, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_1p2_0p66_0p07"]
+size = Vector3(1.2, 0.66, 0.07)
+
+[sub_resource type="BoxShape3D" id="Shape_80_2p6_2p25"]
+size = Vector3(212, 5.2, 5.9625)
+
+[sub_resource type="BoxMesh" id="Mesh_80_2p6_2p25"]
+size = Vector3(80, 2.6, 2.25)
+
+[sub_resource type="BoxShape3D" id="Shape_3_2p1_2p25"]
+size = Vector3(7.95, 4.2, 5.9625)
+
+[sub_resource type="BoxMesh" id="Mesh_3_2p1_2p25"]
+size = Vector3(3, 2.1, 2.25)
+
+[sub_resource type="StandardMaterial3D" id="CampaignRigAft"]
+albedo_color = Color(0.22, 0.73, 0.76, 1)
+roughness = 0.9
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignRamp_UpperStairLowerFlight"]
+points = PackedVector3Array(-8.3475, 1.1553182, -13.8026259, -8.3475, -4.2446911, 12.697402, -8.3475, 4.2446911, -12.697402, -8.3475, -1.1553182, 13.8026259, 8.3475, 1.1553182, -13.8026259, 8.3475, -4.2446911, 12.697402, 8.3475, 4.2446911, -12.697402, 8.3475, -1.1553182, 13.8026259)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignRamp_UpperStairUpperFlight"]
+points = PackedVector3Array(-8.3475, -0.2731045, -9.662094, -8.3475, -2.8730996, 8.8879045, -8.3475, 2.8730996, -8.8879045, -8.3475, 0.2731045, 9.662094, 8.3475, -0.2731045, -9.662094, 8.3475, -2.8730996, 8.8879045, 8.3475, 2.8730996, -8.8879045, 8.3475, 0.2731045, 9.662094)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignRamp_InlandWithdrawalRamp"]
+points = PackedVector3Array(-10.40125, 2.4477721, -21.7141455, -10.40125, -5.5522278, 20.6857931, -10.40125, 5.5522278, -20.6857931, -10.40125, -2.4477721, 21.7141455, 10.40125, 2.4477721, -21.7141455, 10.40125, -5.5522278, 20.6857931, 10.40125, 5.5522278, -20.6857931, 10.40125, -2.4477721, 21.7141455)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignRamp_ReceivingDownRamp"]
+points = PackedVector3Array(-4.0625596, -0.0956124, -3.445, -4.0625596, -0.0956124, 3.445, -3.887442, 0.8956154, -3.445, -3.887442, 0.8956154, 3.445, 3.887442, -0.8956154, -3.445, 3.887442, -0.8956154, 3.445, 4.0625596, 0.0956124, -3.445, 4.0625596, 0.0956124, 3.445)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignRamp_StrandedAccessGangway"]
+points = PackedVector3Array(-4.6375, -1.6749702, -4.4529597, -4.6375, 0.92503, 4.8220376, -4.6375, -0.92503, -4.8220376, -4.6375, 1.6749702, 4.4529597, 4.6375, -1.6749702, -4.4529597, 4.6375, 0.92503, 4.8220376, 4.6375, -0.92503, -4.8220376, 4.6375, 1.6749702, 4.4529597)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignDeck_StrandedShip"]
+points = PackedVector3Array(-108.65, 0, 55.65, -108.65, 2.16, 55.65, -84.8, 0, 42.4, -84.8, 2.16, 42.4, 31.8, 0, 42.4, 31.8, 2.16, 42.4, 55.65, 0, 45.05, 55.65, 2.16, 45.05, 71.55, 0, 55.65, 71.55, 2.16, 55.65, 55.65, 0, 66.25, 55.65, 2.16, 66.25, 31.8, 0, 68.9, 31.8, 2.16, 68.9, -79.5, 0, 68.9, -79.5, 2.16, 68.9, -98.05, 0, 63.6, -98.05, 2.16, 63.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="CampaignDeck_ReceivingShip"]
+points = PackedVector3Array(-100.7, 0, 94.075, -100.7, 4.2, 94.075, -79.5, 0, 82.15, -79.5, 4.2, 82.15, 31.8, 0, 82.15, 31.8, 4.2, 82.15, 50.35, 0, 84.8, 50.35, 4.2, 84.8, 63.6, 0, 94.075, 63.6, 4.2, 94.075, 50.35, 0, 103.35, 50.35, 4.2, 103.35, 31.8, 0, 107.325, 31.8, 4.2, 107.325, -79.5, 0, 107.325, -79.5, 4.2, 107.325, -92.75, 0, 102.025, -92.75, 4.2, 102.025)
+
+[sub_resource type="BoxMesh" id="CampaignBox00"]
+size = Vector3(306, 0.025, 88)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat00"]
+albedo_color = Color(0.2666667, 0.4196078, 0.4509804, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape00"]
+size = Vector3(34, 15.4, 47)
+
+[sub_resource type="BoxMesh" id="CampaignBox01"]
+size = Vector3(34, 15.4, 47)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat01"]
+albedo_color = Color(0.4117647, 0.4666667, 0.4196078, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox02"]
+size = Vector3(24, 8.8, 34)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat02"]
+albedo_color = Color(0.4588235, 0.4980392, 0.4431373, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape01"]
+size = Vector3(34, 17.5, 47)
+
+[sub_resource type="BoxMesh" id="CampaignBox03"]
+size = Vector3(34, 17.5, 47)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat03"]
+albedo_color = Color(0.4627451, 0.5098039, 0.4509804, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox04"]
+size = Vector3(24, 10, 34)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat04"]
+albedo_color = Color(0.5137255, 0.5647059, 0.5019608, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape02"]
+size = Vector3(34, 19.6, 47)
+
+[sub_resource type="BoxMesh" id="CampaignBox05"]
+size = Vector3(34, 19.6, 47)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat05"]
+albedo_color = Color(0.3764706, 0.427451, 0.3921569, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox06"]
+size = Vector3(24, 11.2, 34)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat06"]
+albedo_color = Color(0.4078431, 0.4705882, 0.4156863, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape03"]
+size = Vector3(34, 21.7, 47)
+
+[sub_resource type="BoxMesh" id="CampaignBox07"]
+size = Vector3(34, 21.7, 47)
+
+[sub_resource type="BoxMesh" id="CampaignBox08"]
+size = Vector3(24, 12.4, 34)
+
+[sub_resource type="BoxShape3D" id="CampaignShape04"]
+size = Vector3(44, 11.4, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox09"]
+size = Vector3(44, 11.4, 28)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat07"]
+albedo_color = Color(0.4666667, 0.5137255, 0.4313725, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox10"]
+size = Vector3(32, 5.85, 19)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat08"]
+albedo_color = Color(0.5215686, 0.572549, 0.4941176, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape05"]
+size = Vector3(44, 18.24, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox11"]
+size = Vector3(44, 18.24, 28)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat09"]
+albedo_color = Color(0.5176471, 0.5490196, 0.4745098, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox12"]
+size = Vector3(32, 9.36, 19)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat10"]
+albedo_color = Color(0.545098, 0.5803922, 0.5019608, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape06"]
+size = Vector3(44, 15.2, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox13"]
+size = Vector3(44, 15.2, 28)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat11"]
+albedo_color = Color(0.4156863, 0.4705882, 0.4235294, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox14"]
+size = Vector3(32, 7.8, 19)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat12"]
+albedo_color = Color(0.4862745, 0.5333333, 0.4509804, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape07"]
+size = Vector3(44, 12.16, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox15"]
+size = Vector3(44, 12.16, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox16"]
+size = Vector3(32, 6.24, 19)
+
+[sub_resource type="BoxShape3D" id="CampaignShape08"]
+size = Vector3(44, 19, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox17"]
+size = Vector3(44, 19, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox18"]
+size = Vector3(32, 9.75, 19)
+
+[sub_resource type="BoxShape3D" id="CampaignShape09"]
+size = Vector3(44, 15.96, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox19"]
+size = Vector3(44, 15.96, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox20"]
+size = Vector3(32, 8.19, 19)
+
+[sub_resource type="BoxShape3D" id="CampaignShape10"]
+size = Vector3(44, 12.92, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox21"]
+size = Vector3(44, 12.92, 28)
+
+[sub_resource type="BoxMesh" id="CampaignBox22"]
+size = Vector3(32, 6.63, 19)
+
+[sub_resource type="BoxShape3D" id="CampaignShape11"]
+size = Vector3(0.85, 2.15, 6.42)
+
+[sub_resource type="BoxMesh" id="CampaignBox23"]
+size = Vector3(0.85, 2.15, 6.42)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat13"]
+albedo_color = Color(0.6156863, 0.5568627, 0.454902, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape12"]
+size = Vector3(9, 5.7, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox24"]
+size = Vector3(9, 5.7, 7)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat14"]
+albedo_color = Color(0.6509804, 0.627451, 0.5764706, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox25"]
+size = Vector3(9.52, 0.7, 7.6)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat15"]
+albedo_color = Color(0.4666667, 0.3647059, 0.2862745, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox26"]
+size = Vector3(6.84, 0.65, 7.4)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat16"]
+albedo_color = Color(0.5058824, 0.3960784, 0.3137255, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape13"]
+size = Vector3(11, 6.5, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox27"]
+size = Vector3(11, 6.5, 7)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat17"]
+albedo_color = Color(0.5568627, 0.545098, 0.4784314, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox28"]
+size = Vector3(11.52, 0.7, 7.6)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat18"]
+albedo_color = Color(0.4078431, 0.345098, 0.3058824, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox29"]
+size = Vector3(8.36, 0.65, 7.4)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat19"]
+albedo_color = Color(0.454902, 0.3882353, 0.3529412, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape14"]
+size = Vector3(8.6, 5.2, 8)
+
+[sub_resource type="BoxMesh" id="CampaignBox30"]
+size = Vector3(8.6, 5.2, 8)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat20"]
+albedo_color = Color(0.6627451, 0.5960784, 0.5254902, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox31"]
+size = Vector3(9.12, 0.7, 8.6)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat21"]
+albedo_color = Color(0.4823529, 0.4078431, 0.3098039, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox32"]
+size = Vector3(6.536, 0.65, 8.4)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat22"]
+albedo_color = Color(0.5098039, 0.454902, 0.3568627, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape15"]
+size = Vector3(10, 6.3, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox33"]
+size = Vector3(10, 6.3, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox34"]
+size = Vector3(10.52, 0.7, 7.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox35"]
+size = Vector3(7.6, 0.65, 7.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape16"]
+size = Vector3(10, 5.1, 9)
+
+[sub_resource type="BoxMesh" id="CampaignBox36"]
+size = Vector3(10, 5.1, 9)
+
+[sub_resource type="BoxMesh" id="CampaignBox37"]
+size = Vector3(10.52, 0.7, 9.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox38"]
+size = Vector3(7.6, 0.65, 9.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape17"]
+size = Vector3(11, 5.3, 8.5)
+
+[sub_resource type="BoxMesh" id="CampaignBox39"]
+size = Vector3(11, 5.3, 8.5)
+
+[sub_resource type="BoxMesh" id="CampaignBox40"]
+size = Vector3(11.52, 0.7, 9.1)
+
+[sub_resource type="BoxMesh" id="CampaignBox41"]
+size = Vector3(8.36, 0.65, 8.9)
+
+[sub_resource type="BoxShape3D" id="CampaignShape18"]
+size = Vector3(8, 4.6, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox42"]
+size = Vector3(8, 4.6, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox43"]
+size = Vector3(8.52, 0.7, 7.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox44"]
+size = Vector3(6.08, 0.65, 7.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape19"]
+size = Vector3(10, 5.4, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox45"]
+size = Vector3(10, 5.4, 7)
+
+[sub_resource type="BoxShape3D" id="CampaignShape20"]
+size = Vector3(8.4, 5.9, 6)
+
+[sub_resource type="BoxMesh" id="CampaignBox46"]
+size = Vector3(8.4, 5.9, 6)
+
+[sub_resource type="BoxMesh" id="CampaignBox47"]
+size = Vector3(8.92, 0.7, 6.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox48"]
+size = Vector3(6.384, 0.65, 6.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape21"]
+size = Vector3(9, 4.7, 9)
+
+[sub_resource type="BoxMesh" id="CampaignBox49"]
+size = Vector3(9, 4.7, 9)
+
+[sub_resource type="BoxMesh" id="CampaignBox50"]
+size = Vector3(9.52, 0.7, 9.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox51"]
+size = Vector3(6.84, 0.65, 9.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape22"]
+size = Vector3(9, 4.7, 10)
+
+[sub_resource type="BoxMesh" id="CampaignBox52"]
+size = Vector3(9, 4.7, 10)
+
+[sub_resource type="BoxMesh" id="CampaignBox53"]
+size = Vector3(9.52, 0.7, 10.6)
+
+[sub_resource type="BoxMesh" id="CampaignBox54"]
+size = Vector3(6.84, 0.65, 10.4)
+
+[sub_resource type="BoxShape3D" id="CampaignShape23"]
+size = Vector3(8, 5.1, 7)
+
+[sub_resource type="BoxMesh" id="CampaignBox55"]
+size = Vector3(8, 5.1, 7)
+
+[sub_resource type="BoxShape3D" id="CampaignShape24"]
+size = Vector3(5.5, 2.8, 1.7)
+
+[sub_resource type="BoxMesh" id="CampaignBox56"]
+size = Vector3(5.5, 2.8, 1.7)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat23"]
+albedo_color = Color(0.4980392, 0.5058824, 0.454902, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox57"]
+size = Vector3(2.7903993, 0.012, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat24"]
+albedo_color = Color(0.4509804, 0.5882353, 0.6039216, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox58"]
+size = Vector3(2.7362121, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox59"]
+size = Vector3(6.4760133, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox60"]
+size = Vector3(3.6743103, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox61"]
+size = Vector3(6.9884232, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox62"]
+size = Vector3(5.2056036, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox63"]
+size = Vector3(5.343256, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox64"]
+size = Vector3(6.5447598, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox65"]
+size = Vector3(6.4424674, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox66"]
+size = Vector3(4.7487896, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox67"]
+size = Vector3(5.8432327, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox68"]
+size = Vector3(5.9105912, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox69"]
+size = Vector3(4.742262, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox70"]
+size = Vector3(6.7340404, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox71"]
+size = Vector3(4.3231161, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox72"]
+size = Vector3(5.5498678, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox73"]
+size = Vector3(6.8009807, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox74"]
+size = Vector3(3.6181637, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox75"]
+size = Vector3(5.1504228, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox76"]
+size = Vector3(2.8759469, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox77"]
+size = Vector3(4.0831387, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox78"]
+size = Vector3(2.6184879, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox79"]
+size = Vector3(2.8049851, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox80"]
+size = Vector3(6.6915665, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox81"]
+size = Vector3(2.4569836, 0.012, 0.15)
+
+[sub_resource type="BoxMesh" id="CampaignBox82"]
+size = Vector3(4.9289506, 0.012, 0.15)
+
+[sub_resource type="BoxShape3D" id="CampaignShape25"]
+size = Vector3(2.2, 4.6, 2.45)
+
+[sub_resource type="BoxMesh" id="CampaignBox83"]
+size = Vector3(2.2, 4.6, 2.45)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat25"]
+albedo_color = Color(0.627451, 0.5803922, 0.5058824, 1)
+roughness = 0.93
+
+[sub_resource type="BoxMesh" id="CampaignBox84"]
+size = Vector3(2.6, 0.66, 2.84)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat26"]
+albedo_color = Color(0.7058824, 0.654902, 0.5764706, 1)
+roughness = 0.93
+
+[sub_resource type="BoxShape3D" id="CampaignShape26"]
+size = Vector3(14, 1.06, 12)
+
+[sub_resource type="BoxMesh" id="CampaignBox85"]
+size = Vector3(14, 1.06, 12)
+
+[sub_resource type="StandardMaterial3D" id="CampaignMat27"]
+albedo_color = Color(0.6117647, 0.572549, 0.4862745, 1)
+roughness = 0.93
+
+[node name="MoonwashHarborCampaign" type="Node3D"]
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Water" type="Node3D" parent="Geometry"]
+
+[node name="Quays" type="Node3D" parent="Geometry"]
+
+[node name="Walls" type="Node3D" parent="Geometry"]
+
+[node name="Rescue" type="Node3D" parent="Geometry"]
+
+[node name="Ships" type="Node3D" parent="Geometry"]
+
+[node name="Landmarks" type="Node3D" parent="Geometry"]
+
+[node name="HarborWaterline" type="MeshInstance3D" parent="Geometry/Water"]
+position = Vector3(0, -0.72, 71.48375)
+mesh = SubResource("Mesh_110_0p02_40p05")
+material_override = SubResource("Mat_water")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="InlandFoundation" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(0, -2, -41.075)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandFoundation"]
+mesh = SubResource("Mesh_106_2_45")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandFoundation"]
+shape = SubResource("Shape_106_2_45")
+
+[node name="LowerQuayCenter" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(11.925, 0.1, -1.325)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/LowerQuayCenter"]
+mesh = SubResource("Mesh_59_2p7_15")
+material_override = SubResource("Mat_quay")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/LowerQuayCenter"]
+shape = SubResource("Shape_59_2p7_15")
+
+[node name="LowerQuayEast" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(113.95, 0.1, -9.275)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/LowerQuayEast"]
+mesh = SubResource("Mesh_18_2p7_21")
+material_override = SubResource("Mat_quay")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/LowerQuayEast"]
+shape = SubResource("Shape_18_2p7_21")
+
+[node name="StairWideLanding" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-11.925, 2.7, -45.05)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/StairWideLanding"]
+mesh = SubResource("Mesh_7_5p5_4")
+material_override = SubResource("Mat_upper")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/StairWideLanding"]
+shape = SubResource("Shape_7_5p5_4")
+
+[node name="UpperStairLowerFlight" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-11.925, 3.95532, -27.052525)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/UpperStairLowerFlight"]
+mesh = SubResource("Mesh_6p3_1p6_10p358088626768938")
+material_override = SubResource("Mat_stairs")
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, 0, 0, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/UpperStairLowerFlight"]
+shape = SubResource("CampaignRamp_UpperStairLowerFlight")
+
+[node name="UpperStairUpperFlight" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-11.925, 7.9269, -60.012165)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/UpperStairUpperFlight"]
+mesh = SubResource("Mesh_6p3_1p6_7p119691004531026")
+material_override = SubResource("Mat_stairs")
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, 0, 0, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/UpperStairUpperFlight"]
+shape = SubResource("CampaignRamp_UpperStairUpperFlight")
+
+[node name="InlandShelfEast" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(63.6, 4.1, -75.525)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandShelfEast"]
+mesh = SubResource("Mesh_50_6p7_19")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandShelfEast"]
+shape = SubResource("Shape_50_6p7_19")
+
+[node name="InlandShelfCrown" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-11.925, 4.1, -84.8)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandShelfCrown"]
+mesh = SubResource("Mesh_7_6p7_12")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandShelfCrown"]
+shape = SubResource("Shape_7_6p7_12")
+
+[node name="InlandShelfWestLeft" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-103.35, 4.1, -75.525)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandShelfWestLeft"]
+mesh = SubResource("Mesh_14_6p7_19")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandShelfWestLeft"]
+shape = SubResource("Shape_14_6p7_19")
+
+[node name="InlandShelfWestRight" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-42.4, 4.1, -75.525)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandShelfWestRight"]
+mesh = SubResource("Mesh_16_6p7_19")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandShelfWestRight"]
+shape = SubResource("Shape_16_6p7_19")
+
+[node name="InlandShelfWestCrown" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-74.2, 4.1, -82.15)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandShelfWestCrown"]
+mesh = SubResource("Mesh_8_6p7_14")
+material_override = SubResource("Mat_earth")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandShelfWestCrown"]
+shape = SubResource("Shape_8_6p7_14")
+
+[node name="InlandWithdrawalRamp" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-74.2, 5.24778, -42.9141)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandWithdrawalRamp"]
+mesh = SubResource("Mesh_7p85_1p6_16p492422502470642")
+material_override = SubResource("Mat_earth")
+transform = Transform3D(2.65, 0, 0, 0, 1.9402848, 0.6427203, 0, -0.4850719, 2.5708774, 0, 0, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandWithdrawalRamp"]
+shape = SubResource("CampaignRamp_InlandWithdrawalRamp")
+
+[node name="InlandLowWest" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-109.975, 0.1, -9.275)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandLowWest"]
+mesh = SubResource("Mesh_19_2p7_21")
+material_override = SubResource("Mat_quay")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandLowWest"]
+shape = SubResource("Shape_19_2p7_21")
+
+[node name="InlandLowCenter" type="StaticBody3D" parent="Geometry/Quays"]
+position = Vector3(-75.525, 0.1, -1.325)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Quays/InlandLowCenter"]
+mesh = SubResource("Mesh_7_2p7_15")
+material_override = SubResource("Mat_quay")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Quays/InlandLowCenter"]
+shape = SubResource("Shape_7_2p7_15")
+
+[node name="HighQuayLane" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(3.975, 10.85, -83.475)
+mesh = SubResource("Mesh_89_0p012_7")
+material_override = SubResource("Mat_upper")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="InlandFooting" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(-71.55, 2.84, -5.3)
+mesh = SubResource("Mesh_24_0p012_6")
+material_override = SubResource("Mat_marsh")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="FracturedQuayStone" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(-9.275, 2.836, 7.95)
+mesh = SubResource("Mesh_31_0p012_4")
+material_override = SubResource("Mat_quay")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="LowerStairTread00" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 7.872, -37.895)
+
+[node name="LowerStairTread01" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 7.251, -34.8475)
+
+[node name="LowerStairTread02" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 6.63, -31.8)
+
+[node name="LowerStairTread03" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 6.009, -28.7525)
+
+[node name="LowerStairTread04" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 5.388, -25.705)
+
+[node name="LowerStairTread05" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 4.767, -22.6575)
+
+[node name="LowerStairTread06" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 4.146, -19.61)
+
+[node name="LowerStairTread07" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9308581, 0.6907649, 0, -0.521332, 2.558387, -11.925, 3.525, -16.5625)
+
+[node name="UpperStairTread00" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, -11.925, 10.60858, -67.1775)
+
+[node name="UpperStairTread01" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, -11.925, 10.14428, -63.865)
+
+[node name="UpperStairTread02" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, -11.925, 9.68, -60.5525)
+
+[node name="UpperStairTread03" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, -11.925, 9.21572, -57.24)
+
+[node name="UpperStairTread04" type="MeshInstance3D" parent="Geometry/Quays"]
+mesh = SubResource("Mesh_6p1_0p025_0p15")
+material_override = SubResource("Mat_wall")
+cast_shadow = 0
+transform = Transform3D(2.65, 0, 0, 0, 1.9663776, 0.4838685, 0, -0.3651837, 2.6054503, -11.925, 8.75142, -53.9275)
+
+[node name="QuayFault00" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(-19.08, 2.888, 5.3)
+rotation = Vector3(0, -0.837758, 0)
+mesh = SubResource("Mesh_2p1_0p02_0p13")
+material_override = SubResource("Mat_hazard")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="QuayFault01" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(-23.85, 2.888, 6.89)
+rotation = Vector3(0, 0.366519, 0)
+mesh = SubResource("Mesh_2p1_0p02_0p13")
+material_override = SubResource("Mat_hazard")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="QuayFault02" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(-47.7, 2.888, 7.95)
+rotation = Vector3(0, -0.436332, 0)
+mesh = SubResource("Mesh_2p1_0p02_0p13")
+material_override = SubResource("Mat_hazard")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="QuayFault03" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(28.885, 2.888, 7.95)
+rotation = Vector3(0, -0.383972, 0)
+mesh = SubResource("Mesh_2p1_0p02_0p13")
+material_override = SubResource("Mat_hazard")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="QuayFault04" type="MeshInstance3D" parent="Geometry/Quays"]
+position = Vector3(24.115, 2.888, 8.745)
+rotation = Vector3(0, 0.558505, 0)
+mesh = SubResource("Mesh_2p1_0p02_0p13")
+material_override = SubResource("Mat_hazard")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="MarshallCoverWest" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-37.1, 3.8, -15.9)
+rotation = Vector3(0, -0.122173, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/MarshallCoverWest"]
+mesh = SubResource("Mesh_4_1_2")
+material_override = SubResource("Mat_rubble")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/MarshallCoverWest"]
+shape = SubResource("Shape_4_1_2")
+
+[node name="LevyStorehouse" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(63.6, 5.4, -10.335)
+rotation = Vector3(0, -0.0698132, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/LevyStorehouse"]
+mesh = SubResource("Mesh_7_2p6_4")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/LevyStorehouse"]
+shape = SubResource("Shape_7_2p6_4")
+
+[node name="FracturedApronHunk" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-45.05, 3.4, 11.13)
+rotation = Vector3(0, -0.296706, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/FracturedApronHunk"]
+mesh = SubResource("Mesh_3p2_0p6_1p7")
+material_override = SubResource("Mat_rubble")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/FracturedApronHunk"]
+shape = SubResource("Shape_3p2_0p6_1p7")
+
+[node name="HoldfastShoulder" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-26.5, 9.5, -45.05)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/HoldfastShoulder"]
+mesh = SubResource("Mesh_3_1p3_3")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/HoldfastShoulder"]
+shape = SubResource("Shape_3_1p3_3")
+
+[node name="LandingReturn" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(4.505, 9.3, -43.195)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/LandingReturn"]
+mesh = SubResource("Mesh_2_1p1_3")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/LandingReturn"]
+shape = SubResource("Shape_2_1p1_3")
+
+[node name="UpperQuayStore" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(39.75, 13.5, -79.5)
+rotation = Vector3(0, 0.0349066, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/UpperQuayStore"]
+mesh = SubResource("Mesh_8_2p7_4")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/UpperQuayStore"]
+shape = SubResource("Shape_8_2p7_4")
+
+[node name="ReedPatchWest" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-100.7, 3.1, -3.975)
+rotation = Vector3(0, 0.20944, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/ReedPatchWest"]
+mesh = SubResource("Mesh_3_0p3_2p5")
+material_override = SubResource("Mat_marsh")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/ReedPatchWest"]
+shape = SubResource("Shape_3_0p3_2p5")
+
+[node name="ReedPatchSouth" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-74.2, 3.04, 13.25)
+rotation = Vector3(0, -0.174533, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/ReedPatchSouth"]
+mesh = SubResource("Mesh_4_0p24_1p4")
+material_override = SubResource("Mat_marsh")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/ReedPatchSouth"]
+shape = SubResource("Shape_4_0p24_1p4")
+
+[node name="WestHarborWall" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-109.975, 2, 21.995)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WestHarborWall"]
+mesh = SubResource("Mesh_21_6p4_3p4000000000000004")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WestHarborWall"]
+shape = SubResource("Shape_21_6p4_3p4000000000000004")
+
+[node name="RaisedShelterWall" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-47.7, 2.85, 23.65125)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/RaisedShelterWall"]
+mesh = SubResource("Mesh_26_7p35_4p65")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/RaisedShelterWall"]
+shape = SubResource("Shape_26_7p35_4p65")
+
+[node name="CentralSeawall" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(26.5, 1.5, 21.00125)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/CentralSeawall"]
+mesh = SubResource("Mesh_30_6_2p6500000000000004")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/CentralSeawall"]
+shape = SubResource("Shape_30_6_2p6500000000000004")
+
+[node name="EastSeawall" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(107.325, 0.8, 19.875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/EastSeawall"]
+mesh = SubResource("Mesh_23_5p6_1p8000000000000007")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/EastSeawall"]
+shape = SubResource("Shape_23_5p6_1p8000000000000007")
+
+[node name="StrandingStone" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-18.55, -1.9, 55.65)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/StrandingStone"]
+mesh = SubResource("Mesh_56_3p3_12")
+material_override = SubResource("Mat_quay")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/StrandingStone"]
+shape = SubResource("Shape_56_3p3_12")
+
+[node name="OldStreetFragment" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-103.35, -1.1, 42.4)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/OldStreetFragment"]
+mesh = SubResource("Mesh_8_3p5_6")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/OldStreetFragment"]
+shape = SubResource("Shape_8_3p5_6")
+
+[node name="DrownedReturnWall" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-98.05, -1.5, 72.875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/DrownedReturnWall"]
+mesh = SubResource("Mesh_10_3p1_3")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/DrownedReturnWall"]
+shape = SubResource("Shape_10_3p1_3")
+
+[node name="WallCrown00" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-76.85, 10.75, 23.51875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WallCrown00"]
+mesh = SubResource("Mesh_1p3599999999999994_0p55_2p75")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WallCrown00"]
+shape = SubResource("Shape_1p3599999999999994_0p55_2p75")
+
+[node name="WallCrown01" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-63.6, 10.75, 23.51875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WallCrown01"]
+mesh = SubResource("Mesh_1p3599999999999994_0p55_2p75")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WallCrown01"]
+shape = SubResource("Shape_1p3599999999999994_0p55_2p75")
+
+[node name="WallCrown02" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-50.35, 10.75, 23.51875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WallCrown02"]
+mesh = SubResource("Mesh_1p3599999999999994_0p55_2p75")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WallCrown02"]
+shape = SubResource("Shape_1p3599999999999994_0p55_2p75")
+
+[node name="WallCrown03" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-37.1, 10.75, 23.51875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WallCrown03"]
+mesh = SubResource("Mesh_1p3599999999999994_0p55_2p75")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WallCrown03"]
+shape = SubResource("Shape_1p3599999999999994_0p55_2p75")
+
+[node name="WallCrown04" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-23.85, 10.75, 23.51875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/WallCrown04"]
+mesh = SubResource("Mesh_1p3599999999999994_0p55_2p75")
+material_override = SubResource("Mat_walltop")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/WallCrown04"]
+shape = SubResource("Shape_1p3599999999999994_0p55_2p75")
+
+[node name="ShelteredMooring" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(7.95, -1.85, 34.11875)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/ShelteredMooring"]
+mesh = SubResource("Mesh_78_2p65_3p25")
+material_override = SubResource("Mat_jetty")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/ShelteredMooring"]
+shape = SubResource("Shape_78_2p65_3p25")
+
+[node name="LandwardApproach" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(100.7, -1.85, 32.33)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/LandwardApproach"]
+mesh = SubResource("Mesh_18_2p65_7p6")
+material_override = SubResource("Mat_jetty")
+position = Vector3(0, 0.028, 0)
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/LandwardApproach"]
+shape = SubResource("Shape_18_2p65_7p6")
+
+[node name="PierLandwardHead" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(72.875, -1.85, 44.3875)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierLandwardHead"]
+mesh = SubResource("Mesh_7_2p65_4p5")
+material_override = SubResource("Mat_rescue")
+position = Vector3(0, 0.014, 0)
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierLandwardHead"]
+shape = SubResource("Shape_7_2p65_4p5")
+
+[node name="OuterPier" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(71.55, -1.85, 72.875)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/OuterPier"]
+mesh = SubResource("Mesh_6_2p65_17")
+material_override = SubResource("Mat_rescue")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/OuterPier"]
+shape = SubResource("Shape_6_2p65_17")
+
+[node name="ReceivingGangwayDeck" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(63.6, -0.176, 93.4125)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/ReceivingGangwayDeck"]
+mesh = SubResource("Mesh_4_1p8_4p5")
+material_override = SubResource("Mat_receivingwood")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/ReceivingGangwayDeck"]
+shape = SubResource("Shape_4_1p8_4p5")
+
+[node name="ReceivingDownRamp" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(72.78755, 0.704386, 92.22)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/ReceivingDownRamp"]
+mesh = SubResource("Mesh_3p026549190084311_0p5_2p6")
+material_override = SubResource("Mat_receivingwood")
+transform = Transform3D(2.6267538, -0.2643284, 0, 0.3502351, 1.9824557, 0, 0, 0, 2.65, 0, 0, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/ReceivingDownRamp"]
+shape = SubResource("CampaignRamp_ReceivingDownRamp")
+
+[node name="StrandedAccessGangway" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(39.75, 1.72503, 37.94694)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/StrandedAccessGangway"]
+mesh = SubResource("Mesh_3p5_0p4_3p7336309405188937")
+material_override = SubResource("Mat_wood")
+transform = Transform3D(2.65, 0, 0, 0, 1.8748505, -0.9226946, 0, 0.6963733, 2.4841769, 0, 0, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/StrandedAccessGangway"]
+shape = SubResource("CampaignRamp_StrandedAccessGangway")
+
+[node name="StrandedGangwayLanding" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(39.75, 3, 45.9775)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/StrandedGangwayLanding"]
+mesh = SubResource("Mesh_3p5_0p4_2p6999999999999993")
+material_override = SubResource("Mat_wood")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/StrandedGangwayLanding"]
+shape = SubResource("Shape_3p5_0p4_2p6999999999999993")
+
+[node name="MooringBollard00" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(-84.8, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard00"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard00"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard01" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(-55.65, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard01"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard01"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard02" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(-23.85, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard02"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard02"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard03" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(7.95, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard03"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard03"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard04" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(47.7, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard04"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard04"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard05" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(87.45, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard05"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard05"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="MooringBollard06" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(106, 1.42, 36.835)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/MooringBollard06"]
+mesh = SubResource("Mesh_0p55_0p62_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/MooringBollard06"]
+shape = SubResource("Shape_0p55_0p62_0p55")
+
+[node name="PierPost00" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(78.44, 1.44, 45.05)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierPost00"]
+mesh = SubResource("Mesh_0p38_0p64_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierPost00"]
+shape = SubResource("Shape_0p38_0p64_0p38")
+
+[node name="PierPost01" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(78.44, 1.44, 58.3)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierPost01"]
+mesh = SubResource("Mesh_0p38_0p64_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierPost01"]
+shape = SubResource("Shape_0p38_0p64_0p38")
+
+[node name="PierPost02" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(78.44, 1.44, 71.55)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierPost02"]
+mesh = SubResource("Mesh_0p38_0p64_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierPost02"]
+shape = SubResource("Shape_0p38_0p64_0p38")
+
+[node name="PierPost03" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(78.44, 1.44, 82.15)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierPost03"]
+mesh = SubResource("Mesh_0p38_0p64_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierPost03"]
+shape = SubResource("Shape_0p38_0p64_0p38")
+
+[node name="PierPost04" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(78.44, 1.44, 95.4)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/PierPost04"]
+mesh = SubResource("Mesh_0p38_0p64_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/PierPost04"]
+shape = SubResource("Shape_0p38_0p64_0p38")
+
+[node name="CargoCrate" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(95.4, 1.7, 31.8)
+rotation = Vector3(0, 0.10472, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/CargoCrate"]
+mesh = SubResource("Mesh_1p5_0p9_1p2")
+material_override = SubResource("Mat_wood")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/CargoCrate"]
+shape = SubResource("Shape_1p5_0p9_1p2")
+
+[node name="EastHarborShed" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(119.25, 2.8, 31.8)
+rotation = Vector3(0, -0.0872665, 0)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/EastHarborShed"]
+mesh = SubResource("Mesh_3p5_2_4")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/EastHarborShed"]
+shape = SubResource("Shape_3p5_2_4")
+
+[node name="RescueRampMooring" type="StaticBody3D" parent="Geometry/Rescue"]
+position = Vector3(50.35, 1.48, 36.57)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Rescue/RescueRampMooring"]
+mesh = SubResource("Mesh_1p0_0p68_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Rescue/RescueRampMooring"]
+shape = SubResource("Shape_1p0_0p68_0p55")
+
+[node name="StrandedShip" type="CSGPolygon3D" parent="Geometry/Ships"]
+position = Vector3(0, 1.24, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-108.65, 55.65, -84.8, 42.4, 31.8, 42.4, 55.65, 45.05, 71.55, 55.65, 55.65, 66.25, 31.8, 68.9, -79.5, 68.9, -98.05, 63.6)
+depth = 2.16
+use_collision = false
+material = SubResource("Mat_hull")
+
+[node name="StrandedShipHull" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(0, 1.24, 0)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/StrandedShipHull"]
+shape = SubResource("CampaignDeck_StrandedShip")
+
+[node name="ReceivingShip" type="CSGPolygon3D" parent="Geometry/Ships"]
+position = Vector3(0, -2.6, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-100.7, 94.075, -79.5, 82.15, 31.8, 82.15, 50.35, 84.8, 63.6, 94.075, 50.35, 103.35, 31.8, 107.325, -79.5, 107.325, -92.75, 102.025)
+depth = 4.2
+use_collision = false
+material = SubResource("Mat_rescue")
+
+[node name="ReceivingShipHull" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(0, -2.6, 0)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ReceivingShipHull"]
+shape = SubResource("CampaignDeck_ReceivingShip")
+
+[node name="StrandedDeck" type="MeshInstance3D" parent="Geometry/Ships"]
+position = Vector3(-14.575, 3.438, 55.915)
+mesh = SubResource("Mesh_51_0p012_8p8")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="ReceivingDeck" type="MeshInstance3D" parent="Geometry/Ships"]
+position = Vector3(-15.2375, 1.638, 94.40625)
+mesh = SubResource("Mesh_47p5_0p012_8p049999999999997")
+material_override = SubResource("Mat_receivingwood")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="StrandedMast" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-7.95, 8.1, 55.65)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/StrandedMast"]
+mesh = SubResource("Mesh_0p65_4p7_0p65")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/StrandedMast"]
+shape = SubResource("Shape_0p65_4p7_0p65")
+
+[node name="BrokenYard" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-7.95, 11, 55.65)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/BrokenYard"]
+mesh = SubResource("Mesh_6_0p38_0p45")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/BrokenYard"]
+shape = SubResource("Shape_6_0p38_0p45")
+
+[node name="ReceivingMast" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-7.95, 6.8, 94.605)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/ReceivingMast"]
+mesh = SubResource("Mesh_0p55_5p2_0p55")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ReceivingMast"]
+shape = SubResource("Shape_0p55_5p2_0p55")
+
+[node name="ReceivingYard" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-7.95, 10.4, 94.605)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/ReceivingYard"]
+mesh = SubResource("Mesh_6_0p3_0p38")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ReceivingYard"]
+shape = SubResource("Shape_6_0p3_0p38")
+
+[node name="ReceivingPennant" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-5.4325, 11.16, 94.605)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/ReceivingPennant"]
+mesh = SubResource("Mesh_1p9_0p6_0p09")
+material_override = SubResource("Mat_canvas")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ReceivingPennant"]
+shape = SubResource("Shape_1p9_0p6_0p09")
+
+[node name="ForwardSignal" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(21.2, 4.2, 67.575)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/ForwardSignal"]
+mesh = SubResource("Mesh_0p38_0p8_0p38")
+material_override = SubResource("Mat_signal")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ForwardSignal"]
+shape = SubResource("Shape_0p38_0p8_0p38")
+
+[node name="AftSignal" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-58.3, 4.2, 67.575)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/AftSignal"]
+mesh = SubResource("Mesh_0p38_0p8_0p38")
+material_override = SubResource("CampaignRigAft")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/AftSignal"]
+shape = SubResource("Shape_0p38_0p8_0p38")
+
+[node name="ForwardReceiverSignal" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(21.2, 2.4, 82.68)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/ForwardReceiverSignal"]
+mesh = SubResource("Mesh_0p38_0p8_0p38")
+material_override = SubResource("Mat_signal")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/ForwardReceiverSignal"]
+shape = SubResource("Shape_0p38_0p8_0p38")
+
+[node name="AftReceiverSignal" type="StaticBody3D" parent="Geometry/Ships"]
+position = Vector3(-58.3, 2.4, 82.68)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ships/AftReceiverSignal"]
+mesh = SubResource("Mesh_0p38_0p8_0p38")
+material_override = SubResource("CampaignRigAft")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ships/AftReceiverSignal"]
+shape = SubResource("Shape_0p38_0p8_0p38")
+
+[node name="StairFlagMastWest" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-21.3325, 4.44, -11.925)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/StairFlagMastWest"]
+mesh = SubResource("Mesh_0p19_1p64_0p19")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/StairFlagMastWest"]
+shape = SubResource("Shape_0p19_1p64_0p19")
+
+[node name="StairFlagWest" type="MeshInstance3D" parent="Geometry/Landmarks"]
+position = Vector3(-20.4845, 5.7, -11.925)
+mesh = SubResource("Mesh_0p65_0p39_0p075")
+material_override = SubResource("Mat_signal")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="StairFlagMastEast" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(-2.12, 4.44, -11.925)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/StairFlagMastEast"]
+mesh = SubResource("Mesh_0p19_1p64_0p19")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/StairFlagMastEast"]
+shape = SubResource("Shape_0p19_1p64_0p19")
+
+[node name="StairFlagEast" type="MeshInstance3D" parent="Geometry/Landmarks"]
+position = Vector3(-1.272, 5.7, -11.925)
+mesh = SubResource("Mesh_0p65_0p39_0p075")
+material_override = SubResource("Mat_signal")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="HighFlagWest" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(96.725, 13.45, -93.4125)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/HighFlagWest"]
+mesh = SubResource("Mesh_0p25_2p65_0p25")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/HighFlagWest"]
+shape = SubResource("Shape_0p25_2p65_0p25")
+
+[node name="HighBannerWest" type="MeshInstance3D" parent="Geometry/Landmarks"]
+position = Vector3(98.315, 15.24, -93.4125)
+mesh = SubResource("Mesh_1p2_0p66_0p07")
+material_override = SubResource("Mat_signal")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="HighFlagEast" type="StaticBody3D" parent="Geometry/Landmarks"]
+position = Vector3(117.925, 13.45, -93.4125)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Landmarks/HighFlagEast"]
+mesh = SubResource("Mesh_0p25_2p65_0p25")
+material_override = SubResource("Mat_mast")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Landmarks/HighFlagEast"]
+shape = SubResource("Shape_0p25_2p65_0p25")
+
+[node name="HighBannerEast" type="MeshInstance3D" parent="Geometry/Landmarks"]
+position = Vector3(119.515, 15.24, -93.4125)
+mesh = SubResource("Mesh_1p2_0p66_0p07")
+material_override = SubResource("Mat_signal")
+cast_shadow = 0
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="NorthWestBoundary" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(-15.9, 13.4, -97.71875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/NorthWestBoundary"]
+mesh = SubResource("Mesh_80_2p6_2p25")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/NorthWestBoundary"]
+shape = SubResource("Shape_80_2p6_2p25")
+
+[node name="NorthEastBoundary" type="StaticBody3D" parent="Geometry/Walls"]
+position = Vector3(125.875, 12.9, -97.71875)
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Walls/NorthEastBoundary"]
+mesh = SubResource("Mesh_3_2p1_2p25")
+material_override = SubResource("Mat_wall")
+scale = Vector3(2.65, 2, 2.65)
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Walls/NorthEastBoundary"]
+shape = SubResource("Shape_3_2p1_2p25")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Spawns" type="Node3D" parent="Markers"]
+
+[node name="HumanHero" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(17.8875, 2.8, 5.3)
+rotation = Vector3(0, 0.383972, 0)
+gizmo_extents = 1.0
+
+[node name="RoyalVanguard" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-16.43, 2.8, 3.18)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="RoyalRearGuard" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(26.5, 2.8, 5.3)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="LocalLevy" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(82.15, 2.8, 5.3)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="ElfHero" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(26.5, 1.6, 95.4)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="ShipArchers" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(5.3, 3.4, 53)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="ShoreMarines" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(92.75, 0.8, 25.97)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="ForwardCrew" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(29.15, 3.4, 58.3)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="AftCrew" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-66.25, 3.4, 58.3)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="ShoreSalvagers" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(106, 0.8, 26.5)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="Routes" type="Node3D" parent="Markers"]
+
+[node name="FracturedQuay" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-1.325, 2.8, 7.95)
+rotation = Vector3(0, 0.645772, 0)
+gizmo_extents = 1.0
+
+[node name="UpperStairFoot" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-11.925, 2.8, -11.66)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="UpperStairLanding" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-11.925, 8.2, -45.05)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="UpperStairTop" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-11.925, 10.8, -71.55)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="QuaySafeTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(23.85, 2.8, -5.565)
+rotation = Vector3(0, 1.309, 0)
+gizmo_extents = 1.0
+
+[node name="InlandBypass" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-31.8, 2.8, -0.9275)
+rotation = Vector3(0, 1.3439, 0)
+gizmo_extents = 1.0
+
+[node name="InlandApproach" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-74.2, 2.8, -19.875)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="InlandStairTop" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-74.2, 10.8, -66.25)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="UpperQuay" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(21.2, 10.8, -87.45)
+rotation = Vector3(0, -1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="LandwardRescue" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-63.6, 0.8, 32.86)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="OpenMooring" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(84.8, 0.8, 32.065)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="ReceivingGangway" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(58.3, 1.6, 94.075)
+rotation = Vector3(0, 1.5708, 0)
+gizmo_extents = 1.0
+
+[node name="StrandedAccess" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(39.75, 0.8, 31.9325)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="StrandedDeckGangway" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(39.75, 3.4, 47.965)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="PierOuterTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(76.85, 0.8, 92.22)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="PierInnerTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(75.525, 0.8, 43.725)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="Objectives" type="Node3D" parent="Markers"]
+
+[node name="UpperQuayExit" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(107.325, 10.8, -90.1)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="ForwardTransfer" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(21.2, 3.4, 64.66)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="AftTransfer" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-58.3, 3.4, 64.66)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="ForwardReceiver" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(21.2, 1.6, 85.9925)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="AftReceiver" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-58.3, 1.6, 85.9925)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="ReceivingDeck" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-0.795, 1.6, 99.11)
+rotation = Vector3(0, 0, 0)
+gizmo_extents = 1.0
+
+[node name="OptionalCargo" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(94.87, 0.8, 28.09)
+rotation = Vector3(0, 3.14159, 0)
+gizmo_extents = 1.0
+
+[node name="PhaseZones" type="Node3D" parent="Markers"]
+
+[node name="FracturedSlab" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(0.795, 4.3, 7.95)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(26.5, 3, 9.275)
+
+[node name="LowerStairClosure" type="Marker3D" parent="Markers/PhaseZones"]
+position = Vector3(-11.925, 5.8, -16.165)
+gizmo_extents = 1.5
+metadata/box_size = Vector3(17.49, 5.2, 8.48)
+
+[node name="CampaignTerrain" type="Node3D" parent="Geometry"]
+
+[node name="OuterWater" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(0, -0.76, 119)
+mesh = SubResource("CampaignBox00")
+material_override = SubResource("CampaignMat00")
+
+[node name="WestHeadland0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-138, 6.2, -99)
+rotation = Vector3(0, 0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland0"]
+shape = SubResource("CampaignShape00")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland0"]
+mesh = SubResource("CampaignBox01")
+material_override = SubResource("CampaignMat01")
+
+[node name="WestRidge0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-142, 14.78, -100)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox02")
+material_override = SubResource("CampaignMat02")
+
+[node name="WestHeadland1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-149, 7.25, -61)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland1"]
+shape = SubResource("CampaignShape01")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland1"]
+mesh = SubResource("CampaignBox03")
+material_override = SubResource("CampaignMat03")
+
+[node name="WestRidge1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-153, 17, -62)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox04")
+material_override = SubResource("CampaignMat04")
+
+[node name="WestHeadland2" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-147, 8.3, -23)
+rotation = Vector3(0, -0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland2"]
+shape = SubResource("CampaignShape02")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland2"]
+mesh = SubResource("CampaignBox05")
+material_override = SubResource("CampaignMat05")
+
+[node name="WestRidge2" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-151, 19.22, -24)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox06")
+material_override = SubResource("CampaignMat06")
+
+[node name="WestHeadland3" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-145, 9.35, 17)
+rotation = Vector3(0, 0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland3"]
+shape = SubResource("CampaignShape03")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland3"]
+mesh = SubResource("CampaignBox07")
+material_override = SubResource("CampaignMat01")
+
+[node name="WestRidge3" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-149, 21.44, 16)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox08")
+material_override = SubResource("CampaignMat02")
+
+[node name="WestHeadland4" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-143, 6.2, 54)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland4"]
+shape = SubResource("CampaignShape00")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland4"]
+mesh = SubResource("CampaignBox01")
+material_override = SubResource("CampaignMat03")
+
+[node name="WestRidge4" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-147, 14.78, 53)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox02")
+material_override = SubResource("CampaignMat04")
+
+[node name="WestHeadland5" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-141, 7.25, 93)
+rotation = Vector3(0, -0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/WestHeadland5"]
+shape = SubResource("CampaignShape01")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/WestHeadland5"]
+mesh = SubResource("CampaignBox03")
+material_override = SubResource("CampaignMat05")
+
+[node name="WestRidge5" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-145, 17, 92)
+rotation = Vector3(0, 0.17, 0)
+mesh = SubResource("CampaignBox04")
+material_override = SubResource("CampaignMat06")
+
+[node name="EastHeadland0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(138, 6.2, -99)
+rotation = Vector3(0, -0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland0"]
+shape = SubResource("CampaignShape00")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland0"]
+mesh = SubResource("CampaignBox01")
+material_override = SubResource("CampaignMat01")
+
+[node name="EastRidge0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(142, 14.78, -100)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox02")
+material_override = SubResource("CampaignMat02")
+
+[node name="EastHeadland1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(149, 7.25, -61)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland1"]
+shape = SubResource("CampaignShape01")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland1"]
+mesh = SubResource("CampaignBox03")
+material_override = SubResource("CampaignMat03")
+
+[node name="EastRidge1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(153, 17, -62)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox04")
+material_override = SubResource("CampaignMat04")
+
+[node name="EastHeadland2" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(147, 8.3, -23)
+rotation = Vector3(0, 0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland2"]
+shape = SubResource("CampaignShape02")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland2"]
+mesh = SubResource("CampaignBox05")
+material_override = SubResource("CampaignMat05")
+
+[node name="EastRidge2" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(151, 19.22, -24)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox06")
+material_override = SubResource("CampaignMat06")
+
+[node name="EastHeadland3" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(145, 9.35, 17)
+rotation = Vector3(0, -0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland3"]
+shape = SubResource("CampaignShape03")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland3"]
+mesh = SubResource("CampaignBox07")
+material_override = SubResource("CampaignMat01")
+
+[node name="EastRidge3" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(149, 21.44, 16)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox08")
+material_override = SubResource("CampaignMat02")
+
+[node name="EastHeadland4" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(143, 6.2, 54)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland4"]
+shape = SubResource("CampaignShape00")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland4"]
+mesh = SubResource("CampaignBox01")
+material_override = SubResource("CampaignMat03")
+
+[node name="EastRidge4" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(147, 14.78, 53)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox02")
+material_override = SubResource("CampaignMat04")
+
+[node name="EastHeadland5" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(141, 7.25, 93)
+rotation = Vector3(0, 0.11, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/EastHeadland5"]
+shape = SubResource("CampaignShape01")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/EastHeadland5"]
+mesh = SubResource("CampaignBox03")
+material_override = SubResource("CampaignMat05")
+
+[node name="EastRidge5" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(145, 17, 92)
+rotation = Vector3(0, -0.17, 0)
+mesh = SubResource("CampaignBox04")
+material_override = SubResource("CampaignMat06")
+
+[node name="InlandCliff0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-126, 14.7, -112)
+rotation = Vector3(0, -0.1, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff0"]
+shape = SubResource("CampaignShape04")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff0"]
+mesh = SubResource("CampaignBox09")
+material_override = SubResource("CampaignMat07")
+
+[node name="InlandSpur0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-126, 22.1, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox10")
+material_override = SubResource("CampaignMat08")
+
+[node name="InlandCliff1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-90, 18.12, -115)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff1"]
+shape = SubResource("CampaignShape05")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff1"]
+mesh = SubResource("CampaignBox11")
+material_override = SubResource("CampaignMat09")
+
+[node name="InlandSpur1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-90, 30.56, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox12")
+material_override = SubResource("CampaignMat10")
+
+[node name="InlandCliff2" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-53, 16.6, -113)
+rotation = Vector3(0, 0.1, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff2"]
+shape = SubResource("CampaignShape06")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff2"]
+mesh = SubResource("CampaignBox13")
+material_override = SubResource("CampaignMat11")
+
+[node name="InlandSpur2" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-53, 26.8, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox14")
+material_override = SubResource("CampaignMat12")
+
+[node name="InlandCliff3" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-18, 15.08, -116)
+rotation = Vector3(0, -0.1, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff3"]
+shape = SubResource("CampaignShape07")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff3"]
+mesh = SubResource("CampaignBox15")
+material_override = SubResource("CampaignMat07")
+
+[node name="InlandSpur3" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-18, 23.04, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox16")
+material_override = SubResource("CampaignMat08")
+
+[node name="InlandCliff4" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(18, 18.5, -114)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff4"]
+shape = SubResource("CampaignShape08")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff4"]
+mesh = SubResource("CampaignBox17")
+material_override = SubResource("CampaignMat09")
+
+[node name="InlandSpur4" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(18, 31.5, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox18")
+material_override = SubResource("CampaignMat10")
+
+[node name="InlandCliff5" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(54, 16.98, -112)
+rotation = Vector3(0, 0.1, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff5"]
+shape = SubResource("CampaignShape09")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff5"]
+mesh = SubResource("CampaignBox19")
+material_override = SubResource("CampaignMat11")
+
+[node name="InlandSpur5" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(54, 27.74, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox20")
+material_override = SubResource("CampaignMat12")
+
+[node name="InlandCliff6" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(138, 15.46, -115)
+rotation = Vector3(0, -0.1, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/InlandCliff6"]
+shape = SubResource("CampaignShape10")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/InlandCliff6"]
+mesh = SubResource("CampaignBox21")
+material_override = SubResource("CampaignMat07")
+
+[node name="InlandSpur6" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(138, 23.98, -117)
+rotation = Vector3(0, 0.12, 0)
+mesh = SubResource("CampaignBox22")
+material_override = SubResource("CampaignMat08")
+
+[node name="StairCheek00" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-16.8, 3.81, -16)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek00"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek00"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek01" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-16.8, 5.09, -22.4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek01"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek01"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek02" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-16.8, 6.37, -28.8)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek02"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek02"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek03" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-16.8, 7.65, -35.2)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek03"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek03"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek10" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-7.05, 3.81, -16)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek10"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek10"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek11" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-7.05, 5.09, -22.4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek11"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek11"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek12" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-7.05, 6.37, -28.8)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek12"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek12"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="StairCheek13" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-7.05, 7.65, -35.2)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/StairCheek13"]
+shape = SubResource("CampaignShape11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/StairCheek13"]
+mesh = SubResource("CampaignBox23")
+material_override = SubResource("CampaignMat13")
+
+[node name="QuayShed0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(6, 13.65, -71)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed0"]
+shape = SubResource("CampaignShape12")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed0"]
+mesh = SubResource("CampaignBox24")
+material_override = SubResource("CampaignMat14")
+
+[node name="ShedEave0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(6, 16.85, -71)
+mesh = SubResource("CampaignBox25")
+material_override = SubResource("CampaignMat15")
+
+[node name="ShedRoof0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(6, 17.47, -71)
+mesh = SubResource("CampaignBox26")
+material_override = SubResource("CampaignMat16")
+
+[node name="QuayShed1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(42, 14.05, -100)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed1"]
+shape = SubResource("CampaignShape13")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed1"]
+mesh = SubResource("CampaignBox27")
+material_override = SubResource("CampaignMat17")
+
+[node name="ShedEave1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(42, 17.65, -100)
+mesh = SubResource("CampaignBox28")
+material_override = SubResource("CampaignMat18")
+
+[node name="ShedRoof1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(42, 18.27, -100)
+mesh = SubResource("CampaignBox29")
+material_override = SubResource("CampaignMat19")
+
+[node name="QuayShed2" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(67, 13.4, -76)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed2"]
+shape = SubResource("CampaignShape14")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed2"]
+mesh = SubResource("CampaignBox30")
+material_override = SubResource("CampaignMat20")
+
+[node name="ShedEave2" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(67, 16.35, -76)
+mesh = SubResource("CampaignBox31")
+material_override = SubResource("CampaignMat21")
+
+[node name="ShedRoof2" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(67, 16.97, -76)
+mesh = SubResource("CampaignBox32")
+material_override = SubResource("CampaignMat22")
+
+[node name="QuayShed3" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(95, 13.95, -102)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed3"]
+shape = SubResource("CampaignShape15")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed3"]
+mesh = SubResource("CampaignBox33")
+material_override = SubResource("CampaignMat14")
+
+[node name="ShedEave3" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(95, 17.45, -102)
+mesh = SubResource("CampaignBox34")
+material_override = SubResource("CampaignMat15")
+
+[node name="ShedRoof3" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(95, 18.07, -102)
+mesh = SubResource("CampaignBox35")
+material_override = SubResource("CampaignMat16")
+
+[node name="QuayShed4" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 13.35, -72)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed4"]
+shape = SubResource("CampaignShape16")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed4"]
+mesh = SubResource("CampaignBox36")
+material_override = SubResource("CampaignMat17")
+
+[node name="ShedEave4" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 16.25, -72)
+mesh = SubResource("CampaignBox37")
+material_override = SubResource("CampaignMat18")
+
+[node name="ShedRoof4" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 16.87, -72)
+mesh = SubResource("CampaignBox38")
+material_override = SubResource("CampaignMat19")
+
+[node name="QuayShed5" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-113, 13.45, -64)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed5"]
+shape = SubResource("CampaignShape17")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed5"]
+mesh = SubResource("CampaignBox39")
+material_override = SubResource("CampaignMat20")
+
+[node name="ShedEave5" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-113, 16.45, -64)
+mesh = SubResource("CampaignBox40")
+material_override = SubResource("CampaignMat21")
+
+[node name="ShedRoof5" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-113, 17.07, -64)
+mesh = SubResource("CampaignBox41")
+material_override = SubResource("CampaignMat22")
+
+[node name="QuayShed6" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-96, 13.1, -75)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed6"]
+shape = SubResource("CampaignShape18")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed6"]
+mesh = SubResource("CampaignBox42")
+material_override = SubResource("CampaignMat14")
+
+[node name="ShedEave6" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-96, 15.75, -75)
+mesh = SubResource("CampaignBox43")
+material_override = SubResource("CampaignMat15")
+
+[node name="ShedRoof6" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-96, 16.37, -75)
+mesh = SubResource("CampaignBox44")
+material_override = SubResource("CampaignMat16")
+
+[node name="QuayShed7" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(64, 5.5, -1)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed7"]
+shape = SubResource("CampaignShape19")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed7"]
+mesh = SubResource("CampaignBox45")
+material_override = SubResource("CampaignMat17")
+
+[node name="ShedEave7" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(64, 8.55, -1)
+mesh = SubResource("CampaignBox34")
+material_override = SubResource("CampaignMat18")
+
+[node name="ShedRoof7" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(64, 9.17, -1)
+mesh = SubResource("CampaignBox35")
+material_override = SubResource("CampaignMat19")
+
+[node name="QuayShed8" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 5.75, -15)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed8"]
+shape = SubResource("CampaignShape20")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed8"]
+mesh = SubResource("CampaignBox46")
+material_override = SubResource("CampaignMat20")
+
+[node name="ShedEave8" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 9.05, -15)
+mesh = SubResource("CampaignBox47")
+material_override = SubResource("CampaignMat21")
+
+[node name="ShedRoof8" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(87, 9.67, -15)
+mesh = SubResource("CampaignBox48")
+material_override = SubResource("CampaignMat22")
+
+[node name="QuayShed9" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-106, 5.15, -13)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed9"]
+shape = SubResource("CampaignShape21")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed9"]
+mesh = SubResource("CampaignBox49")
+material_override = SubResource("CampaignMat14")
+
+[node name="ShedEave9" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-106, 7.85, -13)
+mesh = SubResource("CampaignBox50")
+material_override = SubResource("CampaignMat15")
+
+[node name="ShedRoof9" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-106, 8.47, -13)
+mesh = SubResource("CampaignBox51")
+material_override = SubResource("CampaignMat16")
+
+[node name="QuayShed10" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(119, 3.15, 46)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed10"]
+shape = SubResource("CampaignShape22")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed10"]
+mesh = SubResource("CampaignBox52")
+material_override = SubResource("CampaignMat17")
+
+[node name="ShedEave10" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(119, 5.85, 46)
+mesh = SubResource("CampaignBox53")
+material_override = SubResource("CampaignMat18")
+
+[node name="ShedRoof10" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(119, 6.47, 46)
+mesh = SubResource("CampaignBox54")
+material_override = SubResource("CampaignMat19")
+
+[node name="QuayShed11" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-116, 3.35, 28)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/QuayShed11"]
+shape = SubResource("CampaignShape23")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/QuayShed11"]
+mesh = SubResource("CampaignBox55")
+material_override = SubResource("CampaignMat20")
+
+[node name="ShedEave11" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-116, 6.25, 28)
+mesh = SubResource("CampaignBox43")
+material_override = SubResource("CampaignMat21")
+
+[node name="ShedRoof11" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-116, 6.87, 28)
+mesh = SubResource("CampaignBox44")
+material_override = SubResource("CampaignMat22")
+
+[node name="OldWallReturn0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-95, 4.2, -42)
+rotation = Vector3(0, -0.26, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn0"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn0"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="OldWallReturn1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-76, 2.2, 21)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn1"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn1"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="OldWallReturn2" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-47, 2.2, 26)
+rotation = Vector3(0, 0.26, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn2"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn2"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="OldWallReturn3" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(56, 2.2, 39)
+rotation = Vector3(0, -0.26, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn3"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn3"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="OldWallReturn4" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(103, 2.2, 45)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn4"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn4"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="OldWallReturn5" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(113, 4.2, 11)
+rotation = Vector3(0, 0.26, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/OldWallReturn5"]
+shape = SubResource("CampaignShape24")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/OldWallReturn5"]
+mesh = SubResource("CampaignBox56")
+material_override = SubResource("CampaignMat23")
+
+[node name="SurfLine00" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(4.3707587, -0.733, 136.0169923)
+rotation = Vector3(0, -0.1226454, 0)
+mesh = SubResource("CampaignBox57")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine01" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-53.2074025, -0.733, 117.5960304)
+rotation = Vector3(0, 0.1291644, 0)
+mesh = SubResource("CampaignBox58")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine02" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-66.9130148, -0.733, 132.508935)
+rotation = Vector3(0, -0.0229314, 0)
+mesh = SubResource("CampaignBox59")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine03" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-61.1229918, -0.733, 133.6099046)
+rotation = Vector3(0, -0.1509024, 0)
+mesh = SubResource("CampaignBox60")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine04" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(61.4796016, -0.733, 120.5814292)
+rotation = Vector3(0, 0.0474568, 0)
+mesh = SubResource("CampaignBox61")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine05" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-84.8434619, -0.733, 135.3291618)
+rotation = Vector3(0, -0.0690973, 0)
+mesh = SubResource("CampaignBox62")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine06" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-98.2554533, -0.733, 127.4410137)
+rotation = Vector3(0, 0.1568484, 0)
+mesh = SubResource("CampaignBox63")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine07" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(25.8948285, -0.733, 122.3691175)
+rotation = Vector3(0, 0.0206831, 0)
+mesh = SubResource("CampaignBox64")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine08" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-39.3329407, -0.733, 123.8999121)
+rotation = Vector3(0, 0.2172256, 0)
+mesh = SubResource("CampaignBox65")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine09" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-84.3654524, -0.733, 131.0412984)
+rotation = Vector3(0, -0.0804647, 0)
+mesh = SubResource("CampaignBox66")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine10" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-46.8744367, -0.733, 128.7089216)
+rotation = Vector3(0, 0.0559714, 0)
+mesh = SubResource("CampaignBox67")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine11" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(11.3338741, -0.733, 150.6930805)
+rotation = Vector3(0, 0.1818231, 0)
+mesh = SubResource("CampaignBox68")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine12" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-35.9713735, -0.733, 123.0460216)
+rotation = Vector3(0, -0.0349549, 0)
+mesh = SubResource("CampaignBox69")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine13" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(95.117835, -0.733, 132.0811769)
+rotation = Vector3(0, -0.2060749, 0)
+mesh = SubResource("CampaignBox70")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine14" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(81.1614786, -0.733, 120.0195249)
+rotation = Vector3(0, 0.0453963, 0)
+mesh = SubResource("CampaignBox71")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine15" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(49.1009453, -0.733, 134.0804499)
+rotation = Vector3(0, 0.2150967, 0)
+mesh = SubResource("CampaignBox72")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine16" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-17.2349099, -0.733, 149.1557366)
+rotation = Vector3(0, 0.1443176, 0)
+mesh = SubResource("CampaignBox73")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine17" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-101.3561647, -0.733, 135.2973668)
+rotation = Vector3(0, 0.2180425, 0)
+mesh = SubResource("CampaignBox74")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine18" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-104.97213, -0.733, 131.828379)
+rotation = Vector3(0, 0.0469402, 0)
+mesh = SubResource("CampaignBox75")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine19" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(60.0092844, -0.733, 131.6379863)
+rotation = Vector3(0, -0.0002583, 0)
+mesh = SubResource("CampaignBox76")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine20" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-3.1486173, -0.733, 135.2099694)
+rotation = Vector3(0, -0.036521, 0)
+mesh = SubResource("CampaignBox77")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine21" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(80.7675704, -0.733, 124.0782659)
+rotation = Vector3(0, 0.1184628, 0)
+mesh = SubResource("CampaignBox78")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine22" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-83.182186, -0.733, 135.0362646)
+rotation = Vector3(0, -0.1025148, 0)
+mesh = SubResource("CampaignBox79")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine23" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(13.3356815, -0.733, 150.1416597)
+rotation = Vector3(0, 0.0326514, 0)
+mesh = SubResource("CampaignBox80")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine24" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-38.8822497, -0.733, 121.4888039)
+rotation = Vector3(0, 0.0717099, 0)
+mesh = SubResource("CampaignBox81")
+material_override = SubResource("CampaignMat24")
+
+[node name="SurfLine25" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(-74.8154659, -0.733, 144.8011199)
+rotation = Vector3(0, -0.1881721, 0)
+mesh = SubResource("CampaignBox82")
+material_override = SubResource("CampaignMat24")
+
+[node name="CausewayGate0" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(99.5, 13.1, -96.3)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/CausewayGate0"]
+shape = SubResource("CampaignShape25")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/CausewayGate0"]
+mesh = SubResource("CampaignBox83")
+material_override = SubResource("CampaignMat25")
+
+[node name="CausewayCap0" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(99.5, 15.73, -96.3)
+mesh = SubResource("CampaignBox84")
+material_override = SubResource("CampaignMat26")
+
+[node name="CausewayGate1" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(115.3, 13.1, -96.3)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/CausewayGate1"]
+shape = SubResource("CampaignShape25")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/CausewayGate1"]
+mesh = SubResource("CampaignBox83")
+material_override = SubResource("CampaignMat25")
+
+[node name="CausewayCap1" type="MeshInstance3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(115.3, 15.73, -96.3)
+mesh = SubResource("CampaignBox84")
+material_override = SubResource("CampaignMat26")
+
+[node name="CausewayApproach" type="StaticBody3D" parent="Geometry/CampaignTerrain"]
+position = Vector3(107.4, 10.27, -106.5)
+collision_layer = 3
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/CampaignTerrain/CausewayApproach"]
+shape = SubResource("CampaignShape26")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CampaignTerrain/CausewayApproach"]
+mesh = SubResource("CampaignBox85")
+material_override = SubResource("CampaignMat27")
