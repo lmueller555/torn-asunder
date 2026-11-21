@@ -477,7 +477,7 @@ func _show_skirmish() -> void:
 	var total_platoons: int = _skirmish_setup.sides[0].size() + _skirmish_setup.sides[1].size()
 	var back := _heading(
 		"AI Infantry Skirmish",
-		"%d Human Infantry platoons  ·  %d soldiers per platoon" % [total_platoons, Skirmish.PLATOON_SIZE]
+		"%d platoons  ·  %d soldiers per platoon" % [total_platoons, Skirmish.PLATOON_SIZE]
 	)
 	var viewport := _create_model_viewport(Rect2(76, 275, 1288, 392))
 	var view := SKIRMISH_SCENE.instantiate() as SkirmishView
@@ -494,7 +494,8 @@ func _show_skirmish() -> void:
 		for slot in range(count):
 			var build: SkirmishSetup.PlatoonBuild = _skirmish_setup.sides[team][slot]
 			var left := x + slot * (width + 10.0)
-			_label(_stage, "P%d  ·  Lv %d" % [slot + 1, build.level], Rect2(left, 228, width, 24), 17, IVORY)
+			var type_tag := " · Hvy" if build.unit_type == UnitCatalog.HUMAN_HEAVY_INFANTRY else ""
+			_label(_stage, "P%d · Lv %d%s" % [slot + 1, build.level, type_tag], Rect2(left, 228, width, 24), 17, IVORY)
 			var bar := _color_rect(_stage, Rect2(left, 254, width, 10), Color("#131719"))
 			for color in [Color("#63935d"), Color("#a84c47"), Color("#08090a")]:
 				_color_rect(bar, Rect2(0, 0, 0, 10), color)
@@ -578,7 +579,7 @@ func _update_training_promotion() -> void:
 		var status := "Heavy Infantry equipped" if equipped else "Heavy Infantry · Melee Power %d / %d" % [
 			_training_unit.rating(Unit.Damage.MELEE), required_rating,
 		]
-		_training_promotion_status.text = "%s\n+%d starting HP · %d less base sword damage\nPractice only · Planned speed: %d%% of Infantry" % [
+		_training_promotion_status.text = "%s\n+%d starting HP · %d less base sword damage\nPractice only · Skirmish speed: %d%% of Infantry" % [
 			status, heavy.starting_hp - regular.starting_hp,
 			regular.basic_attack[Unit.Damage.MELEE] - heavy.basic_attack[Unit.Damage.MELEE],
 			roundi(heavy.movement_scale * 100.0),
