@@ -44,6 +44,16 @@ func camera_position(target: Vector3, desired: Vector3) -> Vector3:
 	return target.move_toward(desired, clear_distance)
 
 
+func clear_melee_contact(a: Vector2, b: Vector2) -> bool:
+	var ay := ground_height(a)
+	var by := ground_height(b)
+	if absf(ay - by) > 0.65:
+		return false
+	if a == b:
+		return true
+	return _ray(Vector3(a.x, ay + 0.9, a.y), Vector3(b.x, by + 0.9, b.y), SOLID_MASK).is_empty()
+
+
 func can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 	if from == to:
 		return true

@@ -15,6 +15,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_mission = MissionScene.instantiate()
+	_mission.opposition_enabled = false
 	root.add_child(_mission)
 	_mission.set_physics_process(false)
 	await physics_frame

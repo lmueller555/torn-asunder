@@ -60,7 +60,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var movement := _motion(_stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y), _digital(KEY_A, KEY_D, KEY_W, KEY_S))
+	var movement := _movement_input()
 	var look := _motion(_stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y), _digital(KEY_Q, KEY_E, KEY_R, KEY_F))
 	if command_view:
 		_command_yaw = wrapf(_command_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
@@ -70,10 +70,21 @@ func _physics_process(delta: float) -> void:
 		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
 	# Only the hero input is suppressed in command view. Formations always advance.
-	var obstacle_check := _terrain.can_move if _terrain else Callable()
-	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw), obstacle_check)
+	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw) * _hero_move_factor(), _movement_check())
 	_update_cameras()
 	_sync_view()
+
+
+func _movement_input() -> Vector2:
+	return _motion(_stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y), _digital(KEY_A, KEY_D, KEY_W, KEY_S))
+
+
+func _hero_move_factor() -> float:
+	return 1.0
+
+
+func _movement_check() -> Callable:
+	return _terrain.can_move if _terrain else Callable()
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -41,4 +41,6 @@ Run `godot --headless --script tests/command_mine.gd` to check the shared mine s
 
 Run `godot game/battlefield/mara_mine_escort.tscn`. Walk to the gold Godbridle marker, press **Cross** or **Space** in hero view, then carry it along the road to the marked east exit. **Cross** still issues Hold while L2 is down. Choose **Restart**, press **Options**, or press **Backspace** to try the route again.
 
-This standalone scene tests pickup, delivery, and commands. It has no enemies, combat, or campaign progression. The failure outcomes are tested separately because no combat in this scene can trigger them. The full route and input check is `godot --headless --script tests/mara_mine_escort.gd`.
+One hostile road guard watches the east pass. When it raises its blade and **WINDUP** appears, face it and hold **L1 / U** to guard or dodge out of the swing with **Circle / L**. Move with the dodge for directional travel; without a direction, Mara dodges forward. **Square / J** is a quick light attack; **Triangle / K** winds up a stronger attack. Face the target and stay within reach until contact. Confirmed hits replenish team Battle Points, which start at 400 each attempt. The guard still attacks while you give orders, and Mara's defeat fails the escort.
+
+The scene is a one-enemy combat prototype, not formation combat or campaign progression. Run `godot --headless --script tests/mara_mine_escort.gd` for the isolated objective route or `godot --headless --script tests/mara_mine_encounter.gd` for attacks, guard, dodge, BP, and enemy-caused failure.

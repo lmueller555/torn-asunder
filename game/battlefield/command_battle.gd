@@ -65,14 +65,18 @@ func order_hold(index: int) -> void:
 func step(delta: float, hero_direction: Vector2, can_move := Callable()) -> void:
 	if hero_direction != Vector2.ZERO:
 		hero_heading = hero_direction.normalized()
-		var next := clamp_to_field(hero_position + hero_direction.limit_length() * HERO_SPEED * delta)
-		if not can_move.is_valid() or can_move.call(hero_position, next, false):
-			hero_position = next
-		else:
-			# Let the hero slide along an obstruction rather than stopping diagonal input.
-			for axis_point in [Vector2(next.x, hero_position.y), Vector2(hero_position.x, next.y)]:
-				if axis_point != hero_position and can_move.call(hero_position, axis_point, false):
-					hero_position = axis_point
-					break
+		move_hero(hero_direction.limit_length() * HERO_SPEED * delta, can_move)
 	for formation in formations:
 		formation.advance(delta, can_move)
+
+
+func move_hero(displacement: Vector2, can_move := Callable()) -> void:
+	var next := clamp_to_field(hero_position + displacement)
+	if not can_move.is_valid() or can_move.call(hero_position, next, false):
+		hero_position = next
+	else:
+		# Let the hero slide along an obstruction rather than stopping diagonal input.
+		for axis_point in [Vector2(next.x, hero_position.y), Vector2(hero_position.x, next.y)]:
+			if axis_point != hero_position and can_move.call(hero_position, axis_point, false):
+				hero_position = axis_point
+				break
