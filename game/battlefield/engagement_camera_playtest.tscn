@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="Script" path="res://game/battlefield/engagement_camera_playtest.gd" id="2_preview"]
+
+[node name="EngagementCameraPlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("2_preview")
+enable_sector_camera = true
+local_sector_size = 24.0

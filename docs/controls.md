@@ -65,4 +65,6 @@ Try route orders in the standalone flat-field scene: `godot game/battlefield/way
 
 The standalone selection policy keeps three contexts distinct. An unengaged selected platoon uses the terrain cursor and tactical camera. Selecting a fighting ally follows that platoon without taking away formation orders. Selecting the fighting hero's platoon switches to direct hero action. An unrelated fight never steals the camera, and returning to tactical view keeps the previous cursor point.
 
-This is a tested policy, not a change to the current L2 controls or the live cameras. Run `godot --headless --script tests/engagement_camera_policy.gd` after importing the project.
+Try the policy in the isolated development preview: `godot game/battlefield/engagement_camera_playtest.tscn`. Move Shield Infantry toward the **Practice patrol**: on contact, the camera follows the selected platoon and Square/right-click still issues Move. Cycle to the Hero Platoon and move it toward the **Sparring opponent**: on contact, the stick moves the hero and Square attacks. L1 guards and Circle dodges. Cycle to an unengaged platoon or leave contact to return to the saved tactical cursor. The opponents and formations use existing debug visuals; this tests controls, not final art or enemy combat AI.
+
+Live missions still hold **L2** for command. After importing, verify the policy with `godot --headless --script tests/engagement_camera_policy.gd` and the preview inputs with `godot --headless --script tests/engagement_camera_playtest.gd`.
