@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "scope": "Exact V1 two fixed closed-vault load-bearing jambs and attached capitals in Sova’s Year Five No New Command only. Door leaf, lintel, closure cues, terrain and other campaigns excluded.",
+  "author": "Torn Asunder vault environment prop author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independent matched 1280×720 Godot hero approach, playable oblique and true shelf/side return with HUD, actual command/overview and legal witness terrace. The door leaf, stock lintel and foreground closure cue are unchanged in matched near crops.",
+    "close_up": "Real legal oblique and both actual exterior return views show grounded feet, worn stone courses, fitted capital and close joint continuity against the stock lintel. The old central surface is dark and not included in the aesthetic decision.",
+    "reproduction": "Godot 4.7.2 Compatibility / Mesa llvmpipe. Launch Sova’s No New Command and reach the true exterior BridleReturn along each of the shelf and side paths. Check the witness sightlines, wrong point/command/contested refusal and real projected guards/Hold, then use Space or Cross at the intended exterior marker. Check the original closed door and lintel ray. Native tactical mode uses Shift/L2.",
+    "measurements": "One 160-triangle opaque surface and one 512² S3TC color texture, 174,776 bytes compressed with mip chain. Reuses exact stock shadows and adds 136 submitted primitives and removes one draw in each view. Eight alternations per view produced median candidate/stock .956 approach, 1.035 true return, .983 sector, 1.007 overview, with host variability. No hardware frame-rate equivalence claimed."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Two fitted bearing jambs support the unchanged lintel with tapered wear, grounded foot courses and defined caps. No false opening or new mechanism."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Quiet material variation reads as weathered stacked cut stone from the legal near perspectives with one matte atlas and existing shadows."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The black recess stays closed and clearly separate from the existing exterior return ring and closure marker. Existing near and tactical silhouettes, actionable feet and distant footprint hold."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "The two jambs and capitals are stationary. Door, characters and closure effects are not included."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "All 75 inherited collision transforms/resources held, original pick and witness rays preserved, events proven on both real routes, stock contexts unchanged. Budget ≤256 added submitted primitives, no more draws, one ≤0.2 MiB compressed atlas. Measured on software only."
+    }
+  },
+  "files": {
+    "assets/models/environment/vault_jamb.glb": "0487098443b60f24546f82ab1ce5664553fc6cec0890b36ed888ed03ceb418c3",
+    "assets/models/environment/vault_jamb.glb.import": "09ff47e2169dbd6921fc3f010b4eb0f260f6a9277087ef79b750033609311236",
+    "assets/models/environment/vault_jamb_import.gd": "da3c532c4fc071f9598b8ba2c98e34aa4e71dafca9df65803b9e726493eaae61",
+    "assets/models/environment/vault_jamb_import.gd.uid": "2840de2740862a40c985cce5c05b298b3937038fcdf998d2ea29be02351a52ee",
+    "assets/source/cairnspine_vault_road/vault_jamb.blend": "e5c8d5abcba42fe91d1fe415666dfcfc1bb82f1134f5faccda37a46afbe5d791",
+    "game/battlefields/cairnspine_vault_road.tscn": "1fe5d8a247df59514c216837bc40ea47b25ae21d4c6e8d441e1b8abf58f0bcf0",
+    "game/battlefields/cairnspine_vault_road_sova_jamb.tscn": "2a6bfaf36b2e745c4c8f43ac610b55f6ae670060b5a5431cfab185fb1bec4c67"
+  },
+  "integration_scope": {
+    "reviewed_deployment": "game/battlefield/sova_vault_return_playtest.tscn",
+    "field_variant": "game/battlefields/cairnspine_vault_road_sova_jamb.tscn",
+    "shared_field": "game/battlefields/cairnspine_vault_road.tscn",
+    "reviewed_deployment_sha256_at_delivery": "e9d55ad6cbd672d4853f3514ccb0f9eca7420ba252c6ee36cf25391b66cde820",
+    "context": "Only Sova’s Year Five deployment selects the exact wrapper. Neris, Sereth and the Year Two hearing still use the original shared field, and other geometry and story do not change."
+  },
+  "review_manifest_sha256": "d4c0f329601251ed6b68ae2f8d9bc746064530ecb04d1bb81759c166de3188e1",
+  "offline_evidence_sha256": {
+    "editable-source.txt": "a94b364b04f8495b60a475b4f42ca0ae4de6d7943b72455e835bbcc1ee716b65",
+    "test-cairnspine_vault_road.txt": "f7f76f8354ece7ad98b890d6e2c707eb2659e18b345827c29ec1c648bb35b184",
+    "matched-jamb-live-review.jpg": "3d45cffd79e2f7af77c04449755a851ede0cfcec2c3c657033929da8aa85a251",
+    "test-sova_vault_return_playtest.txt": "edf64202757ebe0c455610c46fef2bd346811ee4bf5695101b124bc195ca553b",
+    "mesh-check.txt": "21522ff47f0c6701c1bf167492986ab4b74e1aaf8079cac9df077a34689fc12e"
+  },
+  "measurements": {
+    "base_triangles": 160,
+    "compressed_texture_bytes_with_mips": 174776,
+    "new_material_surfaces": 1,
+    "added_primitives_all_views": [
+      136,
+      136,
+      136,
+      136
+    ],
+    "draw_call_deltas_all_views": [
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "short_software_frame_ratios_approach_true_return_sector_overview": [
+      0.956,
+      1.035,
+      0.983,
+      1.007
+    ],
+    "hardware_fps_claim": false
+  }
+}
