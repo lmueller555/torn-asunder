@@ -14,17 +14,31 @@ The hero view has two modes. **Marching** is whenever the leader isn't fighting:
 | Circle | Clear the route and hold | Dodge | Clear the current target |
 | D-pad up | Clear the route and hold | — | Aim on the minimap (where available) |
 | Triangle | — | Heavy attack | Order the selected unit to attack the highlighted enemy |
-| L1 | — | Guard | — |
-| R2 | — | Sundering Strike (Mara, where unlocked) | — |
+| L1 | Tighter formation for the selected platoon | Guard | Tighter formation for the selected platoon |
+| R2 | Wider formation for the selected platoon | Sundering Strike (Mara, where unlocked) | Wider formation for the selected platoon |
 | Cross | Interact with an objective | Interact with an objective | Order the selected unit to hold its current position |
 
-Keyboard: WASD marker or hero · **G** set waypoint · **J** add to route · **T** clear · **Z / X** switch platoon. In combat **J / K / L / U / V** attack, heavy, dodge, guard and Sundering Strike.
+Keyboard: WASD marker or hero · **G** set waypoint · **J** add to route · **T** clear · **Z / X** switch platoon · **I / O** tighter / wider formation. In combat **J / K / L / U / V** attack, heavy, dodge, guard and Sundering Strike.
 
 The **roster line** under the selected platoon lists every platoon you can switch to, brackets the selected one, and marks who is fighting. When combat starts, the Lead Platoon is selected for you. When it ends, the platoon you had selected before comes back, unless you switched platoons during the fight.
 
 At the mine, hold **L2**, select the archers with the **D-pad**, move the cursor over the Orc company approaching the escort, and press **Triangle**. Release **L2** to return to the hero while the archers carry out the order.
 
 The first playtest should check whether the player can redirect a unit mid-fight and return to the hero in time to read the next incoming attack.
+
+## Formations
+
+Melee platoons (infantry, guards, marines and the leader's own platoon) travel in one of three formations. Archers and civilian groups such as refugees and witnesses keep a single formation.
+
+| Formation | Spacing | Pace |
+|---|---|---|
+| **Closed** | Soldiers gather in, shoulder to shoulder | 0.5× |
+| **Normal** | The usual layout (every platoon starts here) | 1× |
+| **Open** | Soldiers fan out | 1.5× |
+
+Press **L1 / I** to step the selected platoon one formation tighter and **R2 / O** to step it one wider. This works while marching and in command view. While you fight as the leader, L1 is guard and R2 is the Sundering Strike, so switch to another platoon (or hold L2) to change formations mid-fight. The soldiers ease into the new spacing over about half a second. The platoon line in the HUD shows the current formation. In Grain Crossing and the Well Road, L1 switches carts, so tighten with **I** there.
+
+Formations change spacing and pace only; they don't yet change combat strength. Run `godot --headless --script tests/formation_spacing.gd` to check the pace, the spreading and gathering, the controls and the settings rows.
 
 ## PlayStation 3 controller (DualShock 3) on macOS
 

@@ -710,3 +710,8 @@ func _face(actor: Node3D, target: Vector3) -> void:
 	var offset := target - actor.global_position
 	if Vector2(offset.x, offset.z).length_squared() > 0.00001:
 		actor.rotation.y = atan2(-offset.x, -offset.z)
+
+
+func _march_route_controls() -> String:
+	# L1 switches carts on this road, so tightening stays on the keyboard.
+	return super._march_route_controls().replace("L1 / I: tighter formation", "I: tighter formation (L1 switches carts here)")

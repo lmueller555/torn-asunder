@@ -270,9 +270,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		and event.axis == JOY_AXIS_TRIGGER_RIGHT and _uses_joypad(event.device):
 		var was_down := _special_pad_down
 		_special_pad_down = event.axis_value > SPECIAL_RELEASE if was_down else event.axis_value >= SPECIAL_PRESS
-		if _special_pad_down and not was_down:
-			_try_sundering_strike()
-		return
+		if hero_combat_active():
+			if _special_pad_down and not was_down:
+				_try_sundering_strike()
+			return
+		# Outside the fight R2 widens the selected platoon's formation.
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE:
 			restart_mission()
@@ -323,6 +325,9 @@ func _handle_combat_input(event: InputEvent) -> bool:
 	# waypoint controls.
 	if not command_view and not hero_combat_active():
 		_release_guard()
+		return false
+	# In command view L1 changes the selected platoon's formation instead of guarding.
+	if command_view and event is InputEventJoypadButton and event.button_index == JOY_BUTTON_LEFT_SHOULDER:
 		return false
 	var key := 0
 	if event is InputEventKey and not event.echo:

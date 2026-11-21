@@ -102,6 +102,7 @@ var _destination_marker: MeshInstance3D
 @onready var _formation_label: Label = $HUD/Panel/Margin/Readout/Formation
 var _roster_label: Label
 var _lead_was_engaged := false
+var _r2_down := false
 var _pre_combat_index := Battle.LEAD_INDEX
 @onready var _controls_label: Label = $HUD/Panel/Margin/Readout/Controls
 
@@ -414,11 +415,18 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_G: if march_mode(): add_march_waypoint()
 				KEY_J: if march_mode(): queue_march_waypoint()
 				KEY_T: if march_mode(): clear_march_route()
+				KEY_I: step_formation(-1)
+				KEY_O: step_formation(1)
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
 		if event.axis == JOY_AXIS_TRIGGER_LEFT:
 			_l2_down = event.axis_value > L2_RELEASE if _l2_down else event.axis_value >= L2_PRESS
 			_update_mode()
+		elif event.axis == JOY_AXIS_TRIGGER_RIGHT:
+			var was_down := _r2_down
+			_r2_down = event.axis_value > L2_RELEASE if was_down else event.axis_value >= L2_PRESS
+			if _r2_down and not was_down:
+				step_formation(1)
 	elif event is InputEventJoypadButton and event.pressed and _uses_joypad(event.device):
 		# Godot names face buttons by their Xbox positions: X is Square and A is Cross.
 		match event.button_index:
@@ -431,6 +439,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif march_mode():
 					queue_march_waypoint()
 			JOY_BUTTON_B: if march_mode(): clear_march_route()
+			JOY_BUTTON_LEFT_SHOULDER: step_formation(-1)
 			JOY_BUTTON_A: _hold_selected()
 			JOY_BUTTON_RIGHT_STICK: _toggle_overview()
 			JOY_BUTTON_LEFT_STICK: _center_on_hero()
@@ -453,6 +462,7 @@ func _notification(what: int) -> void:
 		_keys.clear()
 		_axes.clear()
 		_l2_down = false
+		_r2_down = false
 		_update_mode()
 
 
@@ -463,6 +473,7 @@ func _uses_joypad(device: int) -> bool:
 		if _input_device >= 0:
 			_axes.clear()
 			_l2_down = false
+			_r2_down = false
 		_input_device = device
 	return _input_device == device
 
@@ -473,6 +484,7 @@ func _on_joy_connection_changed(device: int, connected: bool) -> void:
 		_input_device = devices[0] if not devices.is_empty() else -1
 		_axes.clear()
 		_l2_down = false
+		_r2_down = false
 		_update_mode()
 
 
@@ -603,6 +615,7 @@ func _sync_view() -> void:
 		var yaw := atan2(-formation.heading.x, -formation.heading.y)
 		var origin := _ground(formation.position)
 		var moved := model.position != origin or not is_equal_approx(model.rotation.y, yaw)
+		moved = _apply_spread(_formation_members[index], formation.spread) or moved
 		model.position = origin
 		model.rotation.y = yaw
 		if _terrain and moved:
@@ -621,11 +634,13 @@ func _sync_view() -> void:
 		status = "In combat · direct control"
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else ("HERO VIEW  /  COMBAT" if battle.lead_engaged else "HERO VIEW  /  MARCHING")
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
+	if battle.lead_platoon_enabled and selected.uses_formations():
+		_formation_label.text += "  ·  %s formation" % selected.spacing_name()
 	_sync_roster()
 	if command_view:
 		if _sector:
 			_mode_label.text = "%s  /  LIVE" % ("FIELD OVERVIEW" if _sector.overview else "TACTICAL SECTOR")
-		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold"
+		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold\nL1 / I: tighter formation   ·   R2 / O: wider formation"
 		if _sector:
 			_controls_label.text += "\nR3 / M: overview / sector   ·   L3 / Home: center on hero"
 			if not _sector.overview:
@@ -642,7 +657,7 @@ func _sync_view() -> void:
 
 
 func _march_route_controls() -> String:
-	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon"
+	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon\nL1 / I: tighter formation   ·   R2 / O: wider formation"
 
 
 ## The platoon roster under the selected platoon: every platoon you can switch to
@@ -716,6 +731,7 @@ func restart_battle() -> void:
 	_keys.clear()
 	_axes.clear()
 	_l2_down = false
+	_r2_down = false
 	_hero_yaw = 0.0
 	_hero_pitch = deg_to_rad(23.0)
 	_command_yaw = 0.0
@@ -931,10 +947,45 @@ func _sync_lead_platoon() -> void:
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
 	_lead_model.rotation.y = yaw
+	_apply_spread(_lead_members, battle.lead.spread)
 	if _terrain:
 		for member in _lead_members:
 			var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, yaw)
 			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin.y
+
+
+## Gathers soldiers in or fans them out from their Normal places as a platoon changes
+## formation. Returns true if any soldier moved.
+static func _apply_spread(members: Array, spread: float) -> bool:
+	var moved := false
+	for member: Node3D in members:
+		if not member.has_meta(&"formation_base"):
+			member.set_meta(&"formation_base", Vector2(member.position.x, member.position.z))
+		var base: Vector2 = member.get_meta(&"formation_base")
+		var target := base * spread
+		if not is_equal_approx(member.position.x, target.x) or not is_equal_approx(member.position.z, target.y):
+			member.position.x = target.x
+			member.position.z = target.y
+			moved = true
+	return moved
+
+
+## L1 / I: one formation tighter. R2 / O: one formation wider. Works while marching
+## and in command view, for the selected platoon.
+func step_formation(direction: int) -> bool:
+	if not battle.lead_platoon_enabled or not (march_mode() or command_view):
+		return false
+	var selected := battle.formation_at(selected_index)
+	if selected == null:
+		return false
+	if not battle.step_spacing(selected_index, direction):
+		if not selected.uses_formations():
+			_march_note = "%s keep a single formation" % selected.title
+		_sync_view()
+		return false
+	_march_note = "%s: %s formation" % [selected.title, selected.spacing_name()]
+	_sync_view()
+	return true
 
 
 ## Scenes may fill the existing feet anchor without changing simulation or formations.
