@@ -34,6 +34,8 @@ const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
 const ILYRA_COAST_SURVEY_DISPATCH := &"ilyra_coast_survey_dispatch"
 const ILYRA_COAST_SURVEY_BEACH_DEBRIEF := &"ilyra_coast_survey_debrief_beach"
 const ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF := &"ilyra_coast_survey_debrief_headland"
+const ILYRA_SPANWATER_DISPATCH := &"ilyra_spanwater_dispatch"
+const ILYRA_SPANWATER_DEBRIEF := &"ilyra_spanwater_debrief"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
 const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
@@ -70,6 +72,7 @@ const PILOT := "Moonwash Pilot"
 const SIGNALLER := "Fleet Signaller"
 const PORT_CLERK := "Harbor Clerk"
 const INLET_PILOT := "Fishing Inlet Pilot"
+const PORT_CAPTAIN := "Port Captain"
 
 const NERIS := "Rootspeaker Neris Alder"
 const GROVE_ENVOY := "Grove Envoy"
@@ -387,6 +390,29 @@ const BEATS := {
 			{"speaker": PORT_CLERK, "text": "One copy for the ports and one for the villages?"},
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "The same chart for all of them. Let the ports argue their claim with the inlet still on the page."},
 			{"speaker": INLET_PILOT, "text": "I'll carry ours home. If you need boats in the shallows again, send for us."},
+		],
+	},
+	ILYRA_SPANWATER_DISPATCH: {
+		"title": "Last Boat at Spanwater",
+		"location": "Spanwater south bank · Before the evacuation",
+		"lines": [
+			{"speaker": INLET_PILOT, "text": "Both groups made the south bank. They can't get across the causeway. We can take them from the low landing, one launch at the berth at a time."},
+			{"speaker": SIGNALLER, "text": "Raska's at the spillway. He means to fill the riverbed, not open the sea gate. Watch the landing steps for the last departure. If the current is too strong, the launches hold at the outflow."},
+			{"speaker": PORT_CAPTAIN, "text": "My port is signaling our ships to break off. Others have sent the same order. They want the Godbridle convoy while it's still within reach."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Signal back that the launches stay. The village pilots came to get people through the shallows. That's what we'll do."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Post the marines at the landing approach. I'll call the near group or the far one, whichever we can get down first. Don't count either group safe until its launch is past the boat exit."},
+		],
+	},
+	ILYRA_SPANWATER_DEBRIEF: {
+		"title": "One More Mile",
+		"location": "Spanwater downstream bank · After the evacuation",
+		"lines": [
+			{"speaker": SIGNALLER, "text": "Both household groups are past the boat exit. I counted them again on the bank."},
+			{"speaker": PORT_CAPTAIN, "text": "The ports that ordered the pursuit have recalled their pledged ships. Mine's one of them. Who'll take our place in the fleet?"},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Can you take one family a little farther downriver before you go? They have people waiting for them below the bend."},
+			{"speaker": PORT_CAPTAIN, "text": "I can take them that far. Tell them to bring their things."},
+			{"speaker": INLET_PILOT, "text": "I'll stay to witness the handover, if Mara brings the case down. What do you want on the record?"},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Only what you see change hands. I still want our coast back. It isn't in that case, and you aren't there to give it away."},
 		],
 	},
 	NERIS_FAILING_GROVE_DISPATCH: {

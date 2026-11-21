@@ -33,6 +33,7 @@ func _run() -> void:
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
 	passed = _check_ilyra_coast_survey_beats() and passed
+	passed = _check_ilyra_spanwater_beats() and passed
 	passed = _check_raska_well_road_beats() and passed
 	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
@@ -393,6 +394,45 @@ func _check_survey_debrief_selection(site: Survey.SignalSite, expected: StringNa
 	survey.advance(report)
 	return Beats.survey_debrief_id(survey.phase, survey.signal_site) == &"" \
 		or _fail("Cutter defeat incorrectly selected a debrief.")
+
+
+func _check_ilyra_spanwater_beats() -> bool:
+	var cases := [
+		[Beats.ILYRA_SPANWATER_DISPATCH, ["one launch at the berth", "not open the sea gate", "last departure", "hold at the outflow", "the launches stay", "near group or the far one", "past the boat exit"]],
+		[Beats.ILYRA_SPANWATER_DEBRIEF, ["Both household groups are past the boat exit", "ports that ordered the pursuit have recalled their pledged ships", "one family a little farther downriver", "Only what you see change hands", "I still want our coast back"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		ids.append(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("An Ilyra Spanwater beat was missing or invalid: %s" % id)
+		var visible_text := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			visible_text += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.ILYRA:
+				if not _portrait().visible or _portrait().texture != Beats.ILYRA_PORTRAIT:
+					return _fail("Ilyra's existing portrait did not appear at Spanwater.")
+				portrait_seen = true
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[1]:
+			if not phrase in visible_text:
+				return _fail("Ilyra's Spanwater dialogue lost an order or an ending fact: %s" % id)
+		if id == Beats.ILYRA_SPANWATER_DEBRIEF:
+			for variant_fact in ["near group", "far group", "both launches", "reserve", "patrol", "Orrun,"]:
+				if variant_fact in visible_text:
+					return _fail("The shared Elven ending asserted a boarding order, boat count, reserve fate, or new command.")
+		if not portrait_seen or _button("AdvanceButton").text != "Finish" \
+				or _completions.size() != start + ids.size() - 1:
+			return _fail("Ilyra's Spanwater dialogue completed before the final explicit Finish.")
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("Ilyra's Spanwater beat did not finish under its own stable ID: %s" % id)
+	return _completions.slice(start) == ids or _fail("Ilyra's finale emitted duplicate or out-of-order completions.")
 
 
 func _check_raska_well_road_beats() -> bool:
