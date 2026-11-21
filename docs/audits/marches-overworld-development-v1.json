@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Opt-in Marches 3D development playtest only at Marches Camp, Greyhollow Mine and Road into the Marches. Not main-game default, wider campaigns, hardware certification, forward bases or optional encounters.",
+  "author": "Torn Asunder Marches overworld asset and composition authors",
+  "reviewer": "Independent in-engine Marches geometry, visual and title-flow review",
+  "evidence": {
+    "godot_context": "Exact full title scene injection with a separate profile on Godot 4.7.2 Compatibility, 1280\u00d7720, Mesa llvmpipe, actual regional, in-flight camera, mine arrival, locked road, original briefing and supplemental labeled lateral mine angle. Normal import, original Greyhollow battlefield and exact approved Human runtime art.",
+    "close_up": "Lateral mine approach confirms grounded retreating shale toe, workshop posts and rail approach without visible floating plinth. Regional and route samples verify smoother V3 river edge, foliage tiers, distinct tent/gantry landmarks and in-world selection/lock cues.",
+    "motion": "Authored route samples validated against ray-tested Godot mesh. In-title waypoint, mid-curve and arrival measurements verify camera follow and map pin alignment; canceled movement returns to the previous commit. Fixed renderer captures are sampled states rather than full hardware smoothness verification.",
+    "reproduction": "Normally import, run godot --path . --script res://game/overworld/marches_overworld_playtest.gd; start Mara, select Greyhollow, travel or cancel and retry, inspect locked Road and confirm briefing separately. See docs/overworld.md and run tests/campaign_overworld_authored_title.gd.",
+    "measurements": "395 authored road ray points within 2.59 mm; separate registered fixture 407 checks and 14 in-scene movement/cancel/gate checks. Exact actual-title atlas samples at 1280\u00d7720: regional 76 draws / 233,895 visible triangles / 65,026 shadow triangles; in-flight 92 / 217,369 / 371,328; lateral Mine 59 / 173,042 / 325,516. Atlas review reduced isolated landmark submission counts while preserving source triangles and near LOD0 visuals. These are submission counts, not FPS."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Distinct camp supply roofs, scenic field boundaries, lowered river banks and mine portal integrated into a darker graded slope; intentional original relief composition and coherent scale."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "V3 tuned pigment retains softer shale and shoal transitions, forest values, and brighter route accents. Repacked palettes preserve appearance and materials in matched near comparisons. Independent observer verified exact visual runtime hashes."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Tilted terrain, real landmark distinction, separate regional/selected views, readable contextual action, barred lock, visible party marker and menu legibility. No preview unlock bleeds into existing chapters."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Sampled actual motion framing and root footprint follow baked paths; reduced-motion toggle still respects gates and committed arrival. No claim of measured device smoothness or exhaustive LOD transitions."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Normal import, exact enabled title Begin to original Greyhollow, arrival persistence, cancel, retry, gate, mandatory resume dialogue and unchanged normal startup all demonstrated. Explicit depth-tier shading/shadows and measured software submissions above approved for exact opt-in development scope only."
+    }
+  },
+  "files": {
+    "assets/overworld/marches/anchors.json": "ac2dcdbd77b7017ba401afd12ca8301c01446bc6663916b4e815e2cf9eb13c21",
+    "assets/overworld/marches/detail/marches-surface-detail.png": "ffeeac961872f470822d0ec42d76a343e5924beac84d757acd73b9fee67141f5",
+    "assets/overworld/marches/detail/marches-surface-detail.png.import": "63d0b842e42b93816ad87e63d1d2f27fa949c1f316790bbf9d6eeafa362fcec4",
+    "assets/overworld/marches/detail/marches_surface.gdshader": "94b50b6fb6a22a1a68702a813757285650210050fe436744973d82b853c1f821",
+    "assets/overworld/marches/greyhollow-mine.glb": "1b0e67362e5b3a50eabfb218a53d70763bed12be60b0094e9542490402579db7",
+    "assets/overworld/marches/greyhollow-mine.glb.import": "e2ad0a87ff13b4ed32d14d8b3497ee742c8f18a27792fd2a692b4ac12aca30a0",
+    "assets/overworld/marches/marches-camp.glb": "b1fb1b43b5055eaba216c99d5e4023453ae1543b22831620a1ad619ed6e7486a",
+    "assets/overworld/marches/marches-camp.glb.import": "63ab28f5cdd5c710b534e7f43e2fc407a27e55b69ddd0b5fef443f8bdd585a3c",
+    "assets/overworld/marches/marches-copse-near.glb": "61873725137dc981900b395c1ae2d7a05e4a7dd29bb2a723fed4bda17b9a3060",
+    "assets/overworld/marches/marches-copse-near.glb.import": "8b77d82ce83bce24ee364a93f7dbaa8bb34b2142359bbcdf31c99c072e8aaa13",
+    "assets/overworld/marches/marches-copse-regional.glb": "c08090a01f2c61e7aa6637d431aa30d6d1b493d52f73c264b990dbbd84ed3734",
+    "assets/overworld/marches/marches-copse-regional.glb.import": "91d0be6c4f4f8ebac4ead94f336ff9e4798869e3daabbfd7d88e69f75961e51a",
+    "assets/overworld/marches/marches-corridor.glb": "12bf57ce790f488b0314a0220073a958aadd90fb1e836f3fd77fa4f790609110",
+    "assets/overworld/marches/marches-corridor.glb.import": "69d7beb8efe06182b8423b709387d83661bac38e203f9c21a07f2afde437bbff",
+    "assets/source/overworld/marches/greyhollow-mine.blend": "f454f762091ea9c3d274057b1cb5904a460c048c9fa232ceb7ddc4e0707163da",
+    "assets/source/overworld/marches/marches-camp.blend": "008ba3a49c50848ff33bcb74fc62d93565c21b1bb058c7e3f11ace2a4f9591eb",
+    "assets/source/overworld/marches/marches-copse.blend": "38fb097fab80ef12d812f2f23b9b4c669b084d0b92a6d4110b6c99f1f3074a88",
+    "assets/source/overworld/marches/marches-corridor.blend": "cc4133e0b0fa5894fd5a6ddbf5c4dbaae153493b5135a1b9e8b981ce8589fe8a",
+    "game/campaign_overworld_3d.gd": "e089a72aa7676cde847a0727261418dd0b9654b6072518dcd1143afa682e8ed9",
+    "game/overworld/marches_overworld_playtest.gd": "eee7c3d771c0088abb80146011078e1ceeeea12619dc6ea4ac65dd1e9eb0dbed",
+    "game/overworld/marches_overworld_renderer.gd": "30977d6e0982900eb8111991f5c7d0d35c561ee35b359f4a0337463191fcf502",
+    "game/overworld/marches_overworld_renderer.tscn": "cf2dc3d9a5320416671f9a3c2b7b8e33a8047dc18a477a6ac82aa29fbf082088",
+    "game/overworld/marches_overworld_view.gd": "21f893578f614c018c00804a2b550b3b66cd0d88b5d8018a1b914b9150138a40",
+    "game/title_screen.gd": "5ecc7c82d47e16ac68cabbd70b25c0eacae01acbc15082486e76030d93e16772"
+  }
+}
