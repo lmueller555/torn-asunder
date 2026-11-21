@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/moonwash_harbor_campaign.tscn" id="1_harbor"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/quay_threshold.glb" id="2_threshold"]
+
+[node name="MoonwashHarborCampaign" instance=ExtResource("1_harbor")]
+
+[node name="Mesh" parent="Geometry/CampaignTerrain/CausewayGate0" index="1"]
+cast_shadow = 3
+
+[node name="Mesh" parent="Geometry/CampaignTerrain/CausewayGate1" index="1"]
+cast_shadow = 3
+
+[node name="CausewayCap0" parent="Geometry/CampaignTerrain" index="116"]
+cast_shadow = 3
+
+[node name="CausewayCap1" parent="Geometry/CampaignTerrain" index="118"]
+cast_shadow = 3
+
+[node name="MaraCausewayThreshold" parent="Geometry/CampaignTerrain" instance=ExtResource("2_threshold")]
+position = Vector3(107.4, 10.8, -96.3)
+
+[node name="QUAY_THRESHOLD" parent="Geometry/CampaignTerrain/MaraCausewayThreshold" index="0"]
+cast_shadow = 0
+
+[editable path="Geometry/CampaignTerrain/MaraCausewayThreshold"]

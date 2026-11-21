@@ -61,6 +61,12 @@ BEACH_BATTLEFIELD = "game/battlefields/moonwash_survey_shore.tscn"
 BEACH_BINDING = "game/battlefield/props/ilyra_beach_signal_stand_binding.gd"
 BEACH_ASSET = "assets/models/environment/ilyra_beach_signal/beach_signal_stand.tscn"
 BEACH_RECEIPT = "docs/audits/ilyra-beach-signal-stand-v1.json"
+QUAY_MISSION = "mara_moonwash_quay"
+QUAY_DEPLOYMENT = "game/battlefield/mara_moonwash_playtest.tscn"
+QUAY_WRAPPER = "game/battlefields/moonwash_harbor_campaign_mara_exit.tscn"
+QUAY_BASE = "game/battlefields/moonwash_harbor_campaign.tscn"
+QUAY_ASSET = "assets/models/environment/quay_threshold.glb"
+QUAY_RECEIPT = "docs/audits/mara-high-quay-threshold-v1.json"
 DEVELOPMENT = "still uses development art"
 ID = r"[a-z][a-z0-9_]*"
 PACKED_RESOURCE = re.compile(
@@ -220,6 +226,17 @@ def _verify_ilyra_beach_stand(root: Path, deployments: dict[str, str], battlefie
                            {BEACH_ASSET, BEACH_BINDING}, "mission_deployment", BEACH_DEPLOYMENT)
 
 
+def _verify_mara_quay_threshold(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    if deployments.get(QUAY_MISSION) != QUAY_DEPLOYMENT or [
+        mission for mission, field in battlefields.items() if field == QUAY_WRAPPER
+    ] != [QUAY_MISSION]:
+        raise ValueError("Mara High Quay threshold: wrapper is not isolated to its reviewed placement")
+    if battlefields.get("ilyra_moonwash_rescue") != QUAY_BASE:
+        raise ValueError("Mara High Quay threshold: Ilyra must still use the unmodified shared harbor binding")
+    return _receipt_record(root, "Mara’s fixed Upper Quay threshold (V1)", QUAY_RECEIPT, 7,
+                           {QUAY_ASSET, QUAY_WRAPPER, QUAY_BASE}, "mission_deployment", QUAY_DEPLOYMENT)
+
+
 def _verify_adapter(root: Path, deployment: str, script: str, node: str, context: str) -> None:
     scene = (root / deployment).read_text(encoding="utf-8")
     ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(script)}" id="([^"]+)"\]$',
@@ -259,6 +276,7 @@ def build_report(root: Path) -> dict:
     custody_case = _verify_custody_case(root, deployments)
     spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
     beach_stand = _verify_ilyra_beach_stand(root, deployments, battlefields)
+    quay_threshold = _verify_mara_quay_threshold(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -271,7 +289,8 @@ def build_report(root: Path) -> dict:
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
                 + ([custody_case] if mission == CASE_MISSION else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
-                + ([beach_stand] if mission == BEACH_MISSION else []),
+                + ([beach_stand] if mission == BEACH_MISSION else [])
+                + ([quay_threshold] if mission == QUAY_MISSION else []),
             }
             for mission, scene in deployments.items()
         ],
