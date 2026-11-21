@@ -32,12 +32,16 @@ func _run() -> void:
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
 	passed = _check_raska_well_road_beats() and passed
+	passed = _check_raska_spanwater_beats() and passed
 	passed = _check_sova_public_record_beats() and passed
+	passed = _check_sova_vault_return_beats() and passed
+	passed = _check_neris_failing_grove_beats() and passed
+	passed = _check_sereth_cut_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road and Sova hearing continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including Sereth’s opening), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -336,6 +340,43 @@ func _check_raska_well_road_beats() -> bool:
 	return _completions.size() == initial_count + cases.size() or _fail("Well Road emitted duplicate completions.")
 
 
+func _check_raska_spanwater_beats() -> bool:
+	var cases := [
+		[Beats.RASKA_SPANWATER_DISPATCH, ["spillway sends water down the old riverbed", "assembly town stands below that waterline", "counted the last barrels", "The assembly sent me for the river", "The sea gate stays shut", "our companies go home", "get to the high bank", "low crossing won't stay open"]],
+		[Beats.RASKA_SPANWATER_DEBRIEF, ["Water reached the mark", "The sea gate stayed shut", "the assembly town is safe", "Boats at the low landing", "People on the feeder path", "Leave those lanes to them", "left by the causeway"]],
+		[Beats.RASKA_SPANWATER_CODA, ["saw Mara hand the Godbridle to Sova", "The Elven witness saw it too", "Sova took custody", "Separate page"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		ids.append(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("A Spanwater beat was missing or invalid: %s" % id)
+		var words := ""
+		var portrait_seen := false
+		for index in range(beat.lines.size()):
+			words += _label("DialogueLine").text + "\n"
+			if _label("SpeakerName").text == Beats.RASKA:
+				portrait_seen = _portrait().visible and _portrait().texture == Beats.RASKA_PORTRAIT
+				if not portrait_seen:
+					return _fail("Raska's portrait did not render at Spanwater.")
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[1]:
+			if not phrase in words:
+				return _fail("Spanwater dialogue lost an order, cost, or witness fact: %s" % id)
+		if (id != Beats.RASKA_SPANWATER_CODA and "Godbridle" in words) or "Orrun," in words:
+			return _fail("Spanwater introduced a bridle action into the river operation.")
+		if not portrait_seen or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size() - 1:
+			return _fail("Spanwater completion fired before an explicit Finish: %s" % id)
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("A Spanwater beat did not finish under its own ID: %s" % id)
+	return _completions.slice(start) == ids or _fail("Spanwater dialogue emitted duplicate or out-of-order completions.")
+
+
 func _check_sova_public_record_beats() -> bool:
 	var cases := [
 		[Beats.SOVA_PUBLIC_RECORD_DISPATCH, ["recessed lectern", "public scribe", "keep the exit clear", "Let them go", "all three passages"]],
@@ -361,6 +402,139 @@ func _check_sova_public_record_beats() -> bool:
 	if not speakers.has(Beats.ORC_WITNESS) or not speakers.has(Beats.ELVEN_WITNESS):
 		return _fail("The Year Four custody transfer lacked both witnesses.")
 	return _completions.size() == initial_count + cases.size() or _fail("Sova's beats emitted duplicate completions.")
+
+
+func _check_sova_vault_return_beats() -> bool:
+	var cases := [
+		[Beats.SOVA_VAULT_RETURN_DISPATCH, "No New Command",
+			["shelf is the shorter climb", "side path bends back to the same forecourt",
+				"custody terms", "I'll carry the Godbridle", "witness road open", "Clear the ring",
+				"No one gives a new command"]],
+		[Beats.SOVA_VAULT_RETURN_DEBRIEF, "Leave the Record Open",
+			["hand you that case at Spanwater", "From the terrace", "door shut",
+				"Orrun is still carrying out Mara's order", "Godbridle is back in the vault",
+				"We gave no new command", "open to every valley", "reason to blame us"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title", "") != fixture[1] or not "Year Five" in beat.get("location", "") or not _panel.present(id, beat):
+			return _fail("The Year Five vault beat was missing, invalid, or set in the wrong year: %s" % id)
+		var words := ""
+		var speakers := {}
+		for index in range(beat.lines.size()):
+			var speaker := _label("SpeakerName").text
+			words += _label("DialogueLine").text + "\n"
+			speakers[speaker] = true
+			if speaker == Beats.SOVA and (not _portrait().visible or _portrait().texture != Beats.SOVA_PORTRAIT):
+				return _fail("Sova's portrait did not render at the vault.")
+			if index < beat.lines.size() - 1:
+				if index % 2 == 0:
+					_send_pad(JOY_BUTTON_A)
+				else:
+					_send_key(KEY_ENTER)
+		for phrase: String in fixture[2]:
+			if not phrase in words:
+				return _fail("A vault beat lost a route, custody, or consequence detail: %s" % phrase)
+		if id == Beats.SOVA_VAULT_RETURN_DEBRIEF:
+			for witness in [Beats.ORC_WITNESS, Beats.ELVEN_WITNESS, Beats.MARCH_WITNESS]:
+				if not speakers.has(witness):
+					return _fail("The return lost a witness from the separate terrace: %s" % witness)
+		if not speakers.has(Beats.SOVA) or "Orrun," in words or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
+			return _fail("The vault dialogue issued a command, lost Sova, or advanced without Finish.")
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("The vault beat did not finish under its own ID.")
+		ids.append(id)
+	return _completions.slice(start) == ids or _fail("Vault dialogue emitted duplicate or out-of-order completions.")
+
+
+func _check_neris_failing_grove_beats() -> bool:
+	var cases := [
+		[Beats.NERIS_FAILING_GROVE_DISPATCH, "What We Planted Here",
+			["The grove said no", "keep the old feeder open", "The well is still the town's",
+				"No crossing", "call the volunteers", "sunken track", "raised road"]],
+		[Beats.NERIS_FAILING_GROVE_DEBRIEF, "Room for the First Tree",
+			["The first tree is upright", "soil is wet", "can't fit the whole grove here today",
+				"send a crew to the feeder", "Their ground is still dry", "still ask to hold it",
+				"your answer about the crossing stands"]],
+	]
+	var start := _completions.size()
+	var ids: Array[StringName] = []
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.get("title", "") != fixture[1] or not _panel.present(id, beat):
+			return _fail("Neris's dialogue was missing or invalid: %s" % id)
+		var spoken := ""
+		var speakers := {}
+		for index in range(beat.lines.size()):
+			var speaker := _label("SpeakerName").text
+			spoken += _label("DialogueLine").text + "\n"
+			speakers[speaker] = true
+			if speaker == Beats.NERIS and (not _portrait().visible or _portrait().texture != Beats.NERIS_PORTRAIT):
+				return _fail("Neris's existing portrait did not render: %s" % id)
+			if index < beat.lines.size() - 1:
+				_send_pad(JOY_BUTTON_A)
+		for phrase: String in fixture[2]:
+			if not phrase in spoken:
+				return _fail("A grove beat lost a local choice or objective: %s" % phrase)
+		if not speakers.has(Beats.NERIS) or not speakers.has(Beats.GROVE_ENVOY) or not speakers.has(Beats.FEEDER_KEEPER):
+			return _fail("Neris, the grove, and the town did not all speak for themselves.")
+		if "Orrun," in spoken or _button("AdvanceButton").text != "Finish" or _completions.size() != start + ids.size():
+			return _fail("A grove beat issued a new command or skipped explicit Finish: %s" % id)
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("A grove beat did not finish under its own ID: %s" % id)
+		ids.append(id)
+	return _completions.slice(start) == ids or _fail("Grove dialogue emitted duplicate or out-of-order completions.")
+
+
+func _check_sereth_cut_beats() -> bool:
+	var dispatch := Beats.get_beat(Beats.SERETH_CUT_DISPATCH)
+	var debrief := Beats.get_beat(Beats.SERETH_CUT_DEBRIEF)
+	if dispatch.get("title", "") != "Before Anyone Writes It Down" or debrief.get("title", "") != "In Her Own Words":
+		return _fail("Sereth's independent dispatch and debrief were missing.")
+	var cases := [
+		[Beats.SERETH_CUT_DISPATCH, dispatch, [Beats.VILLAGE_CLERK, Beats.HOUSEHOLD_GUARD, Beats.SERETH, Beats.VILLAGE_CLERK, Beats.SERETH]],
+		[Beats.SERETH_CUT_DEBRIEF, debrief, [Beats.IREN, Beats.VILLAGE_CLERK, Beats.SERETH, Beats.VILLAGE_CLERK, Beats.SERETH]],
+	]
+	var completions := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat: Dictionary = fixture[1]
+		var speakers: Array = fixture[2]
+		if "Year Three" not in beat.get("location", "") or beat.lines.size() != speakers.size() \
+				or not _panel.present(id, beat):
+			return _fail("Sereth's Year Three beat did not open under its own ID: %s" % id)
+		for index in range(speakers.size()):
+			if _label("SpeakerName").text != speakers[index]:
+				return _fail("The records and the witness's testimony gained the wrong speaker: %s" % id)
+			var is_sereth: bool = speakers[index] == Beats.SERETH
+			if _portrait().visible != is_sereth or _label("PortraitFallback").visible == is_sereth \
+					or (is_sereth and _portrait().texture != Beats.SERETH_PORTRAIT):
+				return _fail("The panel gave a voice or civilian an invented portrait, or lost Sereth's.")
+			if index < speakers.size() - 1:
+				if index % 2 == 0:
+					_send_pad(JOY_BUTTON_A)
+				else:
+					_send_key(KEY_ENTER)
+		if _button("AdvanceButton").text != "Finish" or not _panel.visible:
+			return _fail("Sereth's beat closed before explicitly finishing.")
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("Sereth's beat did not complete exactly once under its own ID: %s" % id)
+
+	if _completions.slice(completions) != [Beats.SERETH_CUT_DISPATCH, Beats.SERETH_CUT_DEBRIEF]:
+		return _fail("Sereth's dialogue completion order or count changed.")
+	return ("account book" in dispatch.lines[3].text and "even if the papers aren't here yet" in dispatch.lines[3].text
+		and "I'll sign that much" in debrief.lines[0].text and "I recognized the voice" in debrief.lines[0].text
+		and "own entry in the register" in debrief.lines[1].text and "Seal the bundle for cataloging" in debrief.lines[2].text
+		and "doesn't tell us who wants to return" in debrief.lines[2].text and "secure the Godbridle" in debrief.lines[3].text
+		and "If you come across a letter" in debrief.lines[4].text) \
+		or _fail("The cut beats lost Iren's agency, ambiguity, separate written records, or the unchanged commission.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:

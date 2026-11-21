@@ -1,5 +1,5 @@
 extends SceneTree
-## Plays the Elven campaign's first mission through the title screen, overworld, generic
+## Plays the Undead campaign's first mission through the title screen, overworld, generic
 ## mission view and debrief, and checks that the clear opens the next route.
 
 const Title := preload("res://game/title_screen.gd")
@@ -32,7 +32,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("The Elven campaign travels, deploys, clears and opens its next route through the generic mission view.")
+		print("The Undead campaign travels, deploys, clears and opens its next route through the generic mission view.")
 	quit(0 if passed else 1)
 
 
@@ -42,20 +42,20 @@ func _flow() -> bool:
 			var deployment := Deployments.for_mission(mission.id)
 			if deployment.is_empty() or not deployment.has("scene"):
 				return _fail("%s has no deployment." % mission.id)
-	var ilyra: Dictionary = Campaigns.ALL.filter(func(c: Dictionary) -> bool: return c.id == "ilyra")[0]
-	_title._open_campaign(ilyra)
-	if _title._page != Title.Page.WORLD_MAP or _title._campaign_world.current_waypoint_id() != "moonwash_fleet":
-		return _fail("The Elven campaign did not open at the fleet on the overworld.")
-	var clears := _title._profile.completed_missions("ilyra")
-	if _title._campaign_world.travel_to("moonwash_harbor", clears) != _title._campaign_world.TravelResult.ARRIVED:
-		return _fail("The fleet could not travel to Moonwash Harbor.")
-	_title._show_campaign_mission_briefing("ilyra_moonwash_rescue")
+	var sereth: Dictionary = Campaigns.ALL.filter(func(c: Dictionary) -> bool: return c.id == "sereth")[0]
+	_title._open_campaign(sereth)
+	if _title._page != Title.Page.WORLD_MAP or _title._campaign_world.current_waypoint_id() != "still_court":
+		return _fail("The Undead campaign did not open at the Still Court on the overworld.")
+	var clears := _title._profile.completed_missions("sereth")
+	if _title._campaign_world.travel_to("still_kingdom_cut", clears) != _title._campaign_world.TravelResult.ARRIVED:
+		return _fail("The court could not travel to the cut.")
+	_title._show_campaign_mission_briefing("sereth_voices_at_the_cut")
 	if _title._page != Title.Page.MISSION_BRIEFING:
-		return _fail("The harbor did not offer the rescue briefing.")
-	_title._deploy_campaign_mission("ilyra_moonwash_rescue")
+		return _fail("The cut did not offer its briefing.")
+	_title._deploy_campaign_mission("sereth_voices_at_the_cut")
 	await process_frame
 	var view = _title._campaign_battle
-	if view == null or view.get("mission_id") != "ilyra_moonwash_rescue" or view.battle == null:
+	if view == null or view.get("mission_id") != "sereth_voices_at_the_cut" or view.battle == null:
 		return _fail("Deployment did not start the generic mission view.")
 	for i in range(30):
 		await physics_frame
@@ -63,7 +63,7 @@ func _flow() -> bool:
 	view.finish(true)
 	await process_frame
 	await process_frame
-	if not _title._profile.completed_missions("ilyra").has("ilyra_moonwash_rescue"):
+	if not _title._profile.completed_missions("sereth").has("sereth_voices_at_the_cut"):
 		return _fail("The victory did not save the mission clear.")
 	if _title._page != Title.Page.CAMPAIGN_DIALOGUE:
 		return _fail("The victory did not present the debrief.")
@@ -76,9 +76,9 @@ func _flow() -> bool:
 		await process_frame
 	if _title._page != Title.Page.WORLD_MAP:
 		return _fail("The debrief did not return to the overworld.")
-	var options: Array[Dictionary] = _title._campaign_world.route_options(_title._profile.completed_missions("ilyra"))
-	if not options.has({"waypoint_id": "pilot_villages", "required_clear_id": "ilyra_moonwash_rescue", "is_open": true}):
-		return _fail("The clear did not open the route to the pilot villages.")
+	var options: Array[Dictionary] = _title._campaign_world.route_options(_title._profile.completed_missions("sereth"))
+	if not options.has({"waypoint_id": "court_chambers", "required_clear_id": "sereth_voices_at_the_cut", "is_open": true}):
+		return _fail("The clear did not open the route to the court chambers.")
 	return true
 
 

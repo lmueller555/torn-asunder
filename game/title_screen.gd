@@ -254,7 +254,8 @@ func _open_campaign(campaign: Dictionary) -> void:
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
 	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
-		_show_world_map()
+		if not _show_waypoint_intermission():
+			_show_world_map()
 	else:
 		_show_briefing()
 		_show_campaign_warning()
@@ -272,15 +273,30 @@ func _show_world_map() -> void:
 	_show_campaign_warning()
 
 
-func _on_waypoint_arrived(id: String) -> void:
-	var beat: String = _campaign_world.waypoint(id).get("beat", "")
-	if not beat.is_empty():
-		_present_campaign_dialogue.call_deferred(StringName(beat), _show_world_map)
+func _on_waypoint_arrived(_id: String) -> void:
 	if _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The arrived waypoint could not be saved."
-		# A battlefield arrival immediately switches to a briefing; display the warning there.
-		if _campaign_world.mission_at_current_waypoint().is_empty():
-			_show_campaign_warning()
+	if not _show_waypoint_intermission(false) and _campaign_world.mission_at_current_waypoint().is_empty():
+		_show_campaign_warning()
+
+
+func _show_waypoint_intermission(include_victory_coda := true) -> bool:
+	var campaign_id := _campaign_world.campaign_id()
+	var beat := CampaignDeployments.intermission_at(campaign_id, _campaign_world.current_waypoint_id())
+	if beat == &"" and include_victory_coda:
+		var mission_id := _campaign_world.mission_at_current_waypoint()
+		if _profile.completed_missions(campaign_id).has(mission_id):
+			beat = CampaignDeployments.for_mission(mission_id).get("victory_coda", &"")
+	if beat == &"" or _profile.has_seen_intermission(campaign_id, beat):
+		return false
+	_present_campaign_dialogue(beat, _finish_waypoint_intermission.bind(campaign_id, beat))
+	return true
+
+
+func _finish_waypoint_intermission(campaign_id: String, beat: StringName) -> void:
+	if _profile.record_intermission_seen(campaign_id, beat) != OK:
+		_campaign_warning = "The intermission could not be marked as read."
+	_show_world_map()
 
 
 func _show_campaign_mission_briefing(mission_id: String) -> void:
@@ -328,7 +344,7 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 		mission.set("campaign_id", campaign_id)
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
-		mission.connect(&"mission_cleared", _on_grain_cleared.bind(mission, campaign_id, mission_id))
+		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
 	else:
 		mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
@@ -344,21 +360,29 @@ func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: Strin
 		_record_campaign_victory(mission, campaign_id, mission_id, deployment.debrief)
 
 
-func _on_grain_cleared(result: StringName, mission: Node3D, campaign_id: String, mission_id: String) -> void:
-	var debrief := DialogueBeats.grain_debrief_id(result)
+func _on_campaign_result(result: StringName, mission: Node3D, campaign_id: String, mission_id: String) -> void:
+	var debrief := &""
+	match mission_id:
+		"mara_grain_crossing":
+			debrief = DialogueBeats.grain_debrief_id(result)
+		"ilyra_moonwash_rescue":
+			debrief = DialogueBeats.moonwash_debrief_id(result)
 	if debrief != &"":
 		_record_campaign_victory(mission, campaign_id, mission_id, debrief, result)
 
 
-func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: String, debrief: StringName, grain_result := &"") -> void:
+func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: String, debrief: StringName, result := &"") -> void:
 	if mission != _campaign_battle or _victory_pending:
 		return
 	_victory_pending = true
 	var saved: Error
-	if grain_result == &"":
-		saved = _profile.record_mission_clear(campaign_id, mission_id)
-	else:
-		saved = _profile.record_grain_clear(grain_result)
+	match mission_id:
+		"mara_grain_crossing":
+			saved = _profile.record_grain_clear(result)
+		"ilyra_moonwash_rescue":
+			saved = _profile.record_ilyra_moonwash_clear(result)
+		_:
+			saved = _profile.record_mission_clear(campaign_id, mission_id)
 	if saved != OK:
 		_campaign_warning = "The mission was completed, but its clear could not be saved."
 	elif _profile.record_world_waypoint(_campaign_world) != OK:
@@ -368,7 +392,12 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 
 func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
 	if mission == _campaign_battle:
-		_present_campaign_dialogue(debrief, _show_world_map)
+		_present_campaign_dialogue(debrief, _return_from_campaign_debrief)
+
+
+func _return_from_campaign_debrief() -> void:
+	if not _show_waypoint_intermission():
+		_show_world_map()
 
 
 func _return_from_campaign_battle() -> void:

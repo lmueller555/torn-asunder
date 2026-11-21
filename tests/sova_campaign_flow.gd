@@ -8,11 +8,15 @@ const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Mission := preload("res://game/battlefield/sova_mine_evacuation.gd")
 const Evacuation := preload("res://game/battlefield/sova_mine_tunnels.gd")
+const Hearing := preload("res://game/battlefield/sova_public_record.gd")
+const HearingMission := preload("res://game/battlefield/sova_public_record_playtest.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const CAMP := "cairnspine_camp"
 const MINE := "year_one_mine"
 const ASSEMBLY := "cairnspine_assembly"
 const CLEAR := "sova_mine_tunnels"
+const HEARING_CLEAR := "sova_public_record"
+const VAULT_ROAD := "cairnspine_vault_road"
 const HUMAN_CLEAR := "mara_mine_escort"
 const DT := 1.0 / 60.0
 
@@ -47,7 +51,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Sova campaign: camp dispatch, shared Mine briefing, explicit deployment, both releases, debrief, independent route and Continue passed.")
+		print("Sova campaign: real Mine evacuation and public hearing, separate dispatch/debriefs, gated Vault Road, independent saves and Continue passed.")
 	quit(0 if passed else 1)
 
 
@@ -117,17 +121,66 @@ func _flow() -> bool:
 	if not _on_map(MINE):
 		return _fail("Druid debrief did not return to the same Mine position.")
 	_map().select_waypoint(ASSEMBLY)
-	if not _press("ConfirmTravel") or _title._campaign_world.current_waypoint_id() != ASSEMBLY:
-		return _fail("Sova's clear did not open the route to the Assembly hearing.")
+	if not _press("ConfirmTravel") or not _on_briefing(HEARING_CLEAR) or _saved_clears() != PackedStringArray([CLEAR]):
+		return _fail("Mine victory did not unlock the hearing briefing as an arrived Assembly waypoint.")
+	if not _press("Read Dispatch") or not _is_dialogue(Beats.SOVA_PUBLIC_RECORD_DISPATCH):
+		return _fail("The hearing briefing did not offer its authored dispatch.")
+	_read_dialogue()
+	if not _on_briefing(HEARING_CLEAR) or not _press("Confirm Deployment") or not _title._campaign_battle is HearingMission:
+		return _fail("The dispatch did not return to an explicitly deployable hearing briefing.")
+	var assembly_save := FileAccess.get_file_as_string(_profile_path)
+	_joy(JOY_BUTTON_BACK)
+	if not _on_map(ASSEMBLY) or FileAccess.get_file_as_string(_profile_path) != assembly_save:
+		return _fail("Abandoning a hearing attempt changed progress.")
+	_map().select_waypoint(VAULT_ROAD)
+	_joy(JOY_BUTTON_A)
+	if not _on_map(ASSEMBLY) or not _map()._detail.text.contains("Let Them Walk Out"):
+		return _fail("The Vault Road was not correctly gated by the hearing clear.")
+	_map().select_waypoint(ASSEMBLY)
+	if not _press("ConfirmTravel") or not _on_briefing(HEARING_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("Could not reopen the arrived Assembly briefing and deploy the hearing.")
+
+	var hearing := _title._campaign_battle as HearingMission
+	hearing.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	for marker in ["RecessedApproach", "RecessedRingCenter", "RecessedLectern"]:
+		if not _walk_to(hearing, marker, "Hearing"):
+			return false
+	_key(KEY_SPACE)
+	for _step in range(60 * 10):
+		if hearing.objective.passages_read >= 2:
+			break
+		hearing._physics_process(DT)
+	if hearing.objective.venue != Hearing.Venue.RECESSED or hearing.objective.passages_read != 2 \
+			or hearing.objective.phase == Hearing.Phase.SUCCEEDED or _saved_clears() != PackedStringArray([CLEAR]):
+		return _fail("The first two real passages did not read, or a partial hearing registered a clear.")
+	for _step in range(60 * 5):
+		if hearing.objective.phase == Hearing.Phase.SUCCEEDED:
+			break
+		hearing._physics_process(DT)
+	_key(KEY_SPACE, false)
+	await process_frame
+	if not _is_dialogue(Beats.SOVA_PUBLIC_RECORD_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR, HEARING_CLEAR]) \
+			or Profile.new(_profile_path).load_campaign_world("sova").current_waypoint_id() != ASSEMBLY:
+		return _fail("Completing three real passages did not persist the clear and show the authored debrief.")
+	_read_dialogue(5)
+	if not _on_map(ASSEMBLY):
+		return _fail("The hearing debrief did not return to Assembly.")
+	_map().select_waypoint(VAULT_ROAD)
+	if not _press("ConfirmTravel") or _title._campaign_world.current_waypoint_id() != VAULT_ROAD \
+			or _title._campaign_world.mission_at_current_waypoint() != "sova_vault_return":
+		return _fail("The hearing did not open the Vault Road and its vault mission.")
 	if _title._page == Title.Page.MISSION_BRIEFING:
 		_joy(JOY_BUTTON_B)
 	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or not _on_map(ASSEMBLY):
-		return _fail("Continue did not restore Sova's arrived Assembly waypoint.")
+	if not _press("Continue") or not _on_map(VAULT_ROAD):
+		return _fail("Continue did not restore Sova's arrived Vault Road.")
+
 	var saved := Profile.new(_profile_path)
 	if saved.completed_missions("mara") != PackedStringArray([HUMAN_CLEAR]) \
 			or saved.load_campaign_world("mara").current_waypoint_id() != "marches_road" \
-			or saved.completed_missions("sova") != PackedStringArray([CLEAR]):
+			or saved.completed_missions("sova") != PackedStringArray([CLEAR, HEARING_CLEAR]):
 		return _fail("One campaign overwrote clear or position state in the other.")
 	return true
 
@@ -137,13 +190,13 @@ func _open_and_deploy() -> bool:
 		and _title._campaign_battle is Mission
 
 
-func _walk_to(mission: Mission, marker: String) -> bool:
-	var world := mission.battlefield_marker(NodePath("Markers/Routes/" + marker)).global_position
-	var point := mission.to_local(world)
+func _walk_to(mission: Node3D, marker: String, group := "Routes") -> bool:
+	var world: Vector3 = mission.battlefield_marker(NodePath("Markers/" + group + "/" + marker)).global_position
+	var point: Vector3 = mission.to_local(world)
 	var target := Vector2(point.x, point.z)
 	var budget := ceili(target.distance_to(mission.battle.hero_position) / Battle.HERO_SPEED / DT) + 90
 	for _step in range(budget):
-		var offset := target - mission.battle.hero_position
+		var offset: Vector2 = target - mission.battle.hero_position
 		if offset.length() < 0.12:
 			break
 		var move := offset.normalized().rotated(mission._hero_yaw)
@@ -164,9 +217,9 @@ func _on_map(id: String) -> bool:
 		and _title._campaign_world.campaign_id() == "sova" and _title._campaign_world.current_waypoint_id() == id
 
 
-func _on_briefing() -> bool:
+func _on_briefing(mission_id := CLEAR) -> bool:
 	return _title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null \
-		and _title._campaign_world.mission_at_current_waypoint() == CLEAR
+		and _title._campaign_world.mission_at_current_waypoint() == mission_id
 
 
 func _is_dialogue(id: StringName) -> bool:
@@ -174,8 +227,8 @@ func _is_dialogue(id: StringName) -> bool:
 	return dialogue != null and dialogue._active and dialogue._beat_id == id
 
 
-func _read_dialogue() -> void:
-	for _line in range(4):
+func _read_dialogue(lines := 4) -> void:
+	for _line in range(lines):
 		_key(KEY_ENTER)
 
 
@@ -183,11 +236,11 @@ func _saved_clears() -> PackedStringArray:
 	return Profile.new(_profile_path).completed_missions("sova")
 
 
-func _key(code: Key) -> void:
+func _key(code: Key, down := true) -> void:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.physical_keycode = code
-	event.pressed = true
+	event.pressed = down
 	root.push_input(event, true)
 
 

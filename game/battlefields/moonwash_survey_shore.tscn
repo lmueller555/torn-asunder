@@ -1,0 +1,1150 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_sea"]
+albedo_color = Color(0.2, 0.43, 0.51, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_360_2_244"]
+size = Vector3(360, 2, 244)
+
+[sub_resource type="BoxMesh" id="Mesh_360_2_244"]
+size = Vector3(360, 2, 244)
+
+[sub_resource type="BoxMesh" id="Mesh_360_0p012_128"]
+size = Vector3(360, 0.012, 128)
+
+[sub_resource type="StandardMaterial3D" id="Mat_grass"]
+albedo_color = Color(0.44, 0.53, 0.35, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_360_6p3_128"]
+size = Vector3(360, 6.3, 128)
+
+[sub_resource type="BoxMesh" id="Mesh_360_6p3_128"]
+size = Vector3(360, 6.3, 128)
+
+[sub_resource type="StandardMaterial3D" id="Mat_dune"]
+albedo_color = Color(0.61, 0.55, 0.38, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_141_6p3_6"]
+size = Vector3(141, 6.3, 6)
+
+[sub_resource type="BoxMesh" id="Mesh_141_6p3_6"]
+size = Vector3(141, 6.3, 6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wetstone"]
+albedo_color = Color(0.41, 0.48, 0.46, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_4_6p3_3"]
+size = Vector3(4, 6.3, 3)
+
+[sub_resource type="BoxMesh" id="Mesh_4_6p3_3"]
+size = Vector3(4, 6.3, 3)
+
+[sub_resource type="StandardMaterial3D" id="Mat_sand"]
+albedo_color = Color(0.75, 0.69, 0.51, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_5_6p3_3"]
+size = Vector3(5, 6.3, 3)
+
+[sub_resource type="BoxMesh" id="Mesh_5_6p3_3"]
+size = Vector3(5, 6.3, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_192_6p3_6"]
+size = Vector3(192, 6.3, 6)
+
+[sub_resource type="BoxMesh" id="Mesh_192_6p3_6"]
+size = Vector3(192, 6.3, 6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.36, 0.27, 0.22, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_6_0p36_7p6"]
+size = Vector3(6, 0.36, 7.6)
+
+[sub_resource type="BoxMesh" id="Mesh_6_0p36_7p6"]
+size = Vector3(6, 0.36, 7.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_headland"]
+albedo_color = Color(0.48, 0.57, 0.39, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_34_12p3_68"]
+size = Vector3(34, 12.3, 68)
+
+[sub_resource type="BoxMesh" id="Mesh_34_12p3_68"]
+size = Vector3(34, 12.3, 68)
+
+[sub_resource type="StandardMaterial3D" id="Mat_path"]
+albedo_color = Color(0.68, 0.59, 0.42, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_10_1p6_35p510561809129406"]
+size = Vector3(10, 1.6, 35.5106)
+
+[sub_resource type="BoxMesh" id="Mesh_10_1p6_35p510561809129406"]
+size = Vector3(10, 1.6, 35.5106)
+
+[sub_resource type="StandardMaterial3D" id="Mat_shelfsea"]
+albedo_color = Color(0.28, 0.54, 0.58, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_shoal"]
+albedo_color = Color(0.48, 0.62, 0.56, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_foam"]
+albedo_color = Color(0.65, 0.78, 0.7, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag4p7"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 4.7
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_ShoalWestBar"]
+points = PackedVector3Array(0, -2.35, 16, 11.727, -2.35, 9.9758, 14.624, -2.35, -3.5603, 6.5083, -2.35, -14.416, -6.5083, -2.35, -14.416, -14.624, -2.35, -3.5603, -11.727, -2.35, 9.9758, 0, 2.35, 7.52, 5.5119, 2.35, 4.6886, 6.8732, 2.35, -1.6734, 3.0589, 2.35, -6.7753, -3.0589, 2.35, -6.7753, -6.8732, 2.35, -1.6734, -5.5119, 2.35, 4.6886)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_ShoalBend"]
+points = PackedVector3Array(0, -2.35, 16, 16.418, -2.35, 9.9758, 20.473, -2.35, -3.5603, 9.1116, -2.35, -14.416, -9.1116, -2.35, -14.416, -20.473, -2.35, -3.5603, -16.418, -2.35, 9.9758, 0, 2.35, 7.52, 7.7167, 2.35, 4.6886, 9.6225, 2.35, -1.6734, 4.2824, 2.35, -6.7753, -4.2824, 2.35, -6.7753, -9.6225, 2.35, -1.6734, -7.7167, 2.35, 4.6886)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_ShoalOuterBarBody"]
+points = PackedVector3Array(0, -2.35, 9, 10.946, -2.35, 5.6114, 13.649, -2.35, -2.0027, 6.0744, -2.35, -8.1087, -6.0744, -2.35, -8.1087, -13.649, -2.35, -2.0027, -10.946, -2.35, 5.6114, 0, 2.35, 4.23, 5.1445, 2.35, 2.6374, 6.415, 2.35, -0.94126, 2.855, 2.35, -3.8111, -2.855, 2.35, -3.8111, -6.415, 2.35, -0.94126, -5.1445, 2.35, 2.6374)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag12"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 12
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WestBackShoulder"]
+points = PackedVector3Array(0, -6, 17, 13.291, -6, 10.599, 16.574, -6, -3.7829, 7.376, -6, -15.316, -7.376, -6, -15.316, -16.574, -6, -3.7829, -13.291, -6, 10.599, 0, 6, 7.99, 6.2468, 6, 4.9817, 7.7897, 6, -1.7779, 3.4667, 6, -7.1987, -3.4667, 6, -7.1987, -7.7897, 6, -1.7779, -6.2468, 6, 4.9817)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WestHeadland"]
+points = PackedVector3Array(0, -6, 30, 21.109, -6, 18.705, 26.323, -6, -6.6756, 11.715, -6, -27.029, -11.715, -6, -27.029, -26.323, -6, -6.6756, -21.109, -6, 18.705, 0, 6, 14.1, 9.9214, 6, 8.7912, 12.372, 6, -3.1375, 5.506, 6, -12.704, -5.506, 6, -12.704, -12.372, 6, -3.1375, -9.9214, 6, 8.7912)
+
+[sub_resource type="StandardMaterial3D" id="Mat_caprock"]
+albedo_color = Color(0.42, 0.46, 0.4, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag6"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 6
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WestToe"]
+points = PackedVector3Array(0, -3, 16, 17.982, -3, 9.9758, 22.423, -3, -3.5603, 9.9793, -3, -14.416, -9.9793, -3, -14.416, -22.423, -3, -3.5603, -17.982, -3, 9.9758, 0, 3, 7.52, 8.4516, 3, 4.6886, 10.539, 3, -1.6734, 4.6903, 3, -6.7753, -4.6903, 3, -6.7753, -10.539, 3, -1.6734, -8.4516, 3, 4.6886)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag13"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 13
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_EastHeadland"]
+points = PackedVector3Array(0, -6.5, 21, 17.2, -6.5, 13.093, 21.448, -6.5, -4.6729, 9.5454, -6.5, -18.92, -9.5454, -6.5, -18.92, -21.448, -6.5, -4.6729, -17.2, -6.5, 13.093, 0, 6.5, 9.87, 8.0841, 6.5, 6.1538, 10.081, 6.5, -2.1963, 4.4864, 6.5, -8.8926, -4.4864, 6.5, -8.8926, -10.081, 6.5, -2.1963, -8.0841, 6.5, 6.1538)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag7"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 7
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_EastToe"]
+points = PackedVector3Array(0, -3.5, 15, 10.946, -3.5, 9.3523, 13.649, -3.5, -3.3378, 6.0744, -3.5, -13.515, -6.0744, -3.5, -13.515, -13.649, -3.5, -3.3378, -10.946, -3.5, 9.3523, 0, 3.5, 7.05, 5.1445, 3.5, 4.3956, 6.415, 3.5, -1.5688, 2.855, 3.5, -6.3518, -2.855, 3.5, -6.3518, -6.415, 3.5, -1.5688, -5.1445, 3.5, 4.3956)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_EastCliffFace"]
+points = PackedVector3Array(0, -3, 13, 13.291, -3, 8.1054, 16.574, -3, -2.8928, 7.376, -3, -11.713, -7.376, -3, -11.713, -16.574, -3, -2.8928, -13.291, -3, 8.1054, 0, 3, 6.11, 6.2468, 3, 3.8095, 7.7897, 3, -1.3596, 3.4667, 3, -5.5049, -3.4667, 3, -5.5049, -7.7897, 3, -1.3596, -6.2468, 3, 3.8095)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_UpperLandwardRib"]
+points = PackedVector3Array(0, -3.5, 18, 7.8183, -3.5, 11.223, 9.7493, -3.5, -4.0054, 4.3388, -3.5, -16.217, -4.3388, -3.5, -16.217, -9.7493, -3.5, -4.0054, -7.8183, -3.5, 11.223, 0, 3.5, 8.46, 3.6746, 3.5, 5.2747, 4.5822, 3.5, -1.8825, 2.0393, 3.5, -7.6222, -2.0393, 3.5, -7.6222, -4.5822, 3.5, -1.8825, -3.6746, 3.5, 5.2747)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WestInlandRise"]
+points = PackedVector3Array(0, -6.5, 18, 18.764, -6.5, 11.223, 23.398, -6.5, -4.0054, 10.413, -6.5, -16.217, -10.413, -6.5, -16.217, -23.398, -6.5, -4.0054, -18.764, -6.5, 11.223, 0, 6.5, 8.46, 8.8191, 6.5, 5.2747, 10.997, 6.5, -1.8825, 4.8942, 6.5, -7.6222, -4.8942, 6.5, -7.6222, -10.997, 6.5, -1.8825, -8.8191, 6.5, 5.2747)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag14"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 14
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_MiddleInlandRise"]
+points = PackedVector3Array(0, -7, 23, 28.146, -7, 14.34, 35.097, -7, -5.118, 15.62, -7, -20.722, -15.62, -7, -20.722, -35.097, -7, -5.118, -28.146, -7, 14.34, 0, 7, 10.81, 13.229, 7, 6.7399, 16.496, 7, -2.4055, 7.3413, 7, -9.7395, -7.3413, 7, -9.7395, -16.496, 7, -2.4055, -13.229, 7, 6.7399)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag11"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 11
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_FarEasternRise"]
+points = PackedVector3Array(0, -5.5, 19, 17.982, -5.5, 11.846, 22.423, -5.5, -4.2279, 9.9793, -5.5, -17.118, -9.9793, -5.5, -17.118, -22.423, -5.5, -4.2279, -17.982, -5.5, 11.846, 0, 5.5, 8.93, 8.4516, 5.5, 5.5678, 10.539, 5.5, -1.9871, 4.6903, 5.5, -8.0457, -4.6903, 5.5, -8.0457, -10.539, 5.5, -1.9871, -8.4516, 5.5, 5.5678)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag9"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 9
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_WestInlandPromontory"]
+points = PackedVector3Array(0, -4.5, 20, 14.855, -4.5, 12.47, 18.524, -4.5, -4.4504, 8.2438, -4.5, -18.019, -8.2438, -4.5, -18.019, -18.524, -4.5, -4.4504, -14.855, -4.5, 12.47, 0, 4.5, 9.4, 6.9818, 4.5, 5.8608, 8.7061, 4.5, -2.0917, 3.8746, 4.5, -8.4691, -3.8746, 4.5, -8.4691, -8.7061, 4.5, -2.0917, -6.9818, 4.5, 5.8608)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag8"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 8
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_EastInlandPromontory"]
+points = PackedVector3Array(0, -4, 19, 14.073, -4, 11.846, 17.549, -4, -4.2279, 7.8099, -4, -17.118, -7.8099, -4, -17.118, -17.549, -4, -4.2279, -14.073, -4, 11.846, 0, 4, 8.93, 6.6143, 4, 5.5678, 8.2479, 4, -1.9871, 3.6707, 4, -8.0457, -3.6707, 4, -8.0457, -8.2479, 4, -1.9871, -6.6143, 4, 5.5678)
+
+[sub_resource type="CylinderMesh" id="Mesh_Crag5"]
+top_radius = 0.47
+bottom_radius = 1.0
+height = 5
+radial_segments = 7
+rings = 0
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_InletLandmark"]
+points = PackedVector3Array(0, -2.5, 15, 13.291, -2.5, 9.3523, 16.574, -2.5, -3.3378, 7.376, -2.5, -13.515, -7.376, -2.5, -13.515, -16.574, -2.5, -3.3378, -13.291, -2.5, 9.3523, 0, 2.5, 7.05, 6.2468, 2.5, 4.3956, 7.7897, 2.5, -1.5688, 3.4667, 2.5, -6.3518, -3.4667, 2.5, -6.3518, -7.7897, 2.5, -1.5688, -6.2468, 2.5, 4.3956)
+
+[sub_resource type="ConvexPolygonShape3D" id="Shape_EastStakeBarrier"]
+points = PackedVector3Array(0, -3.5, 15, 9.382, -3.5, 9.3523, 11.699, -3.5, -3.3378, 5.2066, -3.5, -13.515, -5.2066, -3.5, -13.515, -11.699, -3.5, -3.3378, -9.382, -3.5, 9.3523, 0, 3.5, 7.05, 4.4095, 3.5, 4.3956, 5.4986, 3.5, -1.5688, 2.4471, 3.5, -6.3518, -2.4471, 3.5, -6.3518, -5.4986, 3.5, -1.5688, -4.4095, 3.5, 4.3956)
+
+[sub_resource type="BoxShape3D" id="Shape_4p2_0p68_3p3"]
+size = Vector3(4.2, 0.68, 3.3)
+
+[sub_resource type="BoxMesh" id="Mesh_4p2_0p68_3p3"]
+size = Vector3(4.2, 0.68, 3.3)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stone"]
+albedo_color = Color(0.43, 0.43, 0.41, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_1p5_2p25_0p76"]
+size = Vector3(1.5, 2.25, 0.76)
+
+[sub_resource type="BoxMesh" id="Mesh_1p5_2p25_0p76"]
+size = Vector3(1.5, 2.25, 0.76)
+
+[sub_resource type="BoxShape3D" id="Shape_4_0p62_1"]
+size = Vector3(4, 0.62, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_4_0p62_1"]
+size = Vector3(4, 0.62, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_5_2p4_0p9"]
+size = Vector3(5, 2.4, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_5_2p4_0p9"]
+size = Vector3(5, 2.4, 0.9)
+
+[sub_resource type="BoxShape3D" id="Shape_6_1p8_0p48"]
+size = Vector3(6, 1.8, 0.48)
+
+[sub_resource type="BoxMesh" id="Mesh_6_1p8_0p48"]
+size = Vector3(6, 1.8, 0.48)
+
+[sub_resource type="BoxShape3D" id="Shape_0p55_1p8_0p54"]
+size = Vector3(0.55, 1.8, 0.54)
+
+[sub_resource type="BoxMesh" id="Mesh_0p55_1p8_0p54"]
+size = Vector3(0.55, 1.8, 0.54)
+
+[sub_resource type="BoxShape3D" id="Shape_6p4_0p36_0p45"]
+size = Vector3(6.4, 0.36, 0.45)
+
+[sub_resource type="BoxMesh" id="Mesh_6p4_0p36_0p45"]
+size = Vector3(6.4, 0.36, 0.45)
+
+[sub_resource type="BoxShape3D" id="Shape_1p9_0p54_4p2"]
+size = Vector3(1.9, 0.54, 4.2)
+
+[sub_resource type="BoxMesh" id="Mesh_1p9_0p54_4p2"]
+size = Vector3(1.9, 0.54, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_0p57_3p2_0p57"]
+size = Vector3(0.57, 3.2, 0.57)
+
+[sub_resource type="BoxMesh" id="Mesh_0p57_3p2_0p57"]
+size = Vector3(0.57, 3.2, 0.57)
+
+[sub_resource type="StandardMaterial3D" id="Mat_marker"]
+albedo_color = Color(0.74, 0.46, 0.25, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_1p4_0p59_0p14"]
+size = Vector3(1.4, 0.59, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_1p4_0p59_0p14"]
+size = Vector3(1.4, 0.59, 0.14)
+
+[sub_resource type="StandardMaterial3D" id="Mat_cloth"]
+albedo_color = Color(0.27, 0.56, 0.69, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_1p5_2p9_23"]
+size = Vector3(1.5, 2.9, 23)
+
+[sub_resource type="BoxMesh" id="Mesh_1p5_2p9_23"]
+size = Vector3(1.5, 2.9, 23)
+
+[sub_resource type="BoxShape3D" id="Shape_1p43_2p94_22"]
+size = Vector3(1.43, 2.94, 22)
+
+[sub_resource type="BoxMesh" id="Mesh_1p43_2p94_22"]
+size = Vector3(1.43, 2.94, 22)
+
+[sub_resource type="BoxShape3D" id="Shape_1p25_2p04_14"]
+size = Vector3(1.25, 2.04, 14)
+
+[sub_resource type="BoxMesh" id="Mesh_1p25_2p04_14"]
+size = Vector3(1.25, 2.04, 14)
+
+[sub_resource type="BoxShape3D" id="Shape_1p5_2p9_24"]
+size = Vector3(1.5, 2.9, 24)
+
+[sub_resource type="BoxMesh" id="Mesh_1p5_2p9_24"]
+size = Vector3(1.5, 2.9, 24)
+
+[sub_resource type="BoxShape3D" id="Shape_6p3_3p2_1p3"]
+size = Vector3(6.3, 3.2, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_6p3_3p2_1p3"]
+size = Vector3(6.3, 3.2, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_9_0p012_60"]
+size = Vector3(9, 0.012, 60)
+
+[sub_resource type="BoxMesh" id="Mesh_13_0p012_11p899999999999999"]
+size = Vector3(13, 0.012, 11.9)
+
+[sub_resource type="BoxMesh" id="Mesh_0p3_2p5_0p3"]
+size = Vector3(0.3, 2.5, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_0p49_0p49_0p49"]
+size = Vector3(0.49, 0.49, 0.49)
+
+[node name="MoonwashSurveyShore" type="Node3D"]
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Coast" type="Node3D" parent="Geometry"]
+
+[node name="Beach" type="Node3D" parent="Geometry"]
+
+[node name="Inlet" type="Node3D" parent="Geometry"]
+
+[node name="Ancestral" type="Node3D" parent="Geometry"]
+
+[node name="Headlands" type="Node3D" parent="Geometry"]
+
+[node name="Sea" type="Node3D" parent="Geometry"]
+
+[node name="Shoal" type="Node3D" parent="Geometry"]
+
+[node name="Pressure" type="Node3D" parent="Geometry"]
+
+[node name="Boundary" type="Node3D" parent="Geometry"]
+
+[node name="Seafloor" type="StaticBody3D" parent="Geometry/Sea"]
+position = Vector3(0, -6.2, 2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Sea/Seafloor"]
+mesh = SubResource("Mesh_360_2_244")
+material_override = SubResource("Mat_sea")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Sea/Seafloor"]
+shape = SubResource("Shape_360_2_244")
+
+[node name="WaterSurface" type="MeshInstance3D" parent="Geometry/Sea"]
+position = Vector3(0, -0.004, 60)
+mesh = SubResource("Mesh_360_0p012_128")
+material_override = SubResource("Mat_sea")
+cast_shadow = 0
+
+[node name="DryCoast" type="StaticBody3D" parent="Geometry/Coast"]
+position = Vector3(0, -1.95, -56)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Coast/DryCoast"]
+mesh = SubResource("Mesh_360_6p3_128")
+material_override = SubResource("Mat_grass")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Coast/DryCoast"]
+shape = SubResource("Shape_360_6p3_128")
+
+[node name="WestBeachLip" type="StaticBody3D" parent="Geometry/Coast"]
+position = Vector3(-109.5, -1.95, 11)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Coast/WestBeachLip"]
+mesh = SubResource("Mesh_141_6p3_6")
+material_override = SubResource("Mat_dune")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Coast/WestBeachLip"]
+shape = SubResource("Shape_141_6p3_6")
+
+[node name="CoveWestShoulder" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-37, -1.95, 9.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/CoveWestShoulder"]
+mesh = SubResource("Mesh_4_6p3_3")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/CoveWestShoulder"]
+shape = SubResource("Shape_4_6p3_3")
+
+[node name="CoveEastShoulder" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-14.5, -1.95, 9.5)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/CoveEastShoulder"]
+mesh = SubResource("Mesh_5_6p3_3")
+material_override = SubResource("Mat_sand")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/CoveEastShoulder"]
+shape = SubResource("Shape_5_6p3_3")
+
+[node name="EastBeachLip" type="StaticBody3D" parent="Geometry/Coast"]
+position = Vector3(84, -1.95, 11)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Coast/EastBeachLip"]
+mesh = SubResource("Mesh_192_6p3_6")
+material_override = SubResource("Mat_sand")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Coast/EastBeachLip"]
+shape = SubResource("Shape_192_6p3_6")
+
+[node name="FishingJetty" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-25, 1.02, 11.7)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/FishingJetty"]
+mesh = SubResource("Mesh_6_0p36_7p6")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/FishingJetty"]
+shape = SubResource("Shape_6_0p36_7p6")
+
+[node name="HeadlandApron" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(82, 1.05, 1)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HeadlandApron"]
+mesh = SubResource("Mesh_34_12p3_68")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HeadlandApron"]
+shape = SubResource("Shape_34_12p3_68")
+
+[node name="LandwardHeadlandClimb" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(79, 3.4115, -50.3648)
+rotation = Vector3(-0.169778, 0, 0)
+collision_layer = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/LandwardHeadlandClimb"]
+mesh = SubResource("Mesh_10_1p6_35p510561809129406")
+material_override = SubResource("Mat_path")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/LandwardHeadlandClimb"]
+shape = SubResource("Shape_10_1p6_35p510561809129406")
+
+[node name="LongCoastLane" type="CSGPolygon3D" parent="Geometry/Coast"]
+position = Vector3(0, 1.212, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-175, -39, -91, -39, -35.93, -39, 41.05, -41.27, 64.72, -67.55, 92.66, -66.85, 105.3, -40.42, 174.9, -39, 175.1, -57, 110.7, -57.58, 99.34, -79.15, 59.28, -80.45, 36.95, -56.73, -36.07, -57, -91, -57, -175, -57)
+depth = 0.015
+material = SubResource("Mat_path")
+cast_shadow = 0
+
+[node name="StoneFootpath" type="CSGPolygon3D" parent="Geometry/Ancestral"]
+position = Vector3(0, 1.216, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-137.8, -45.37, -117.6, -20.55, -92.87, 0.4419, -61.21, -12.06, -38.3, -11.13, -28.5, 6.928, -21.5, 3.072, -33.7, -18.87, -62.79, -21.94, -91.13, -12.44, -110.4, -27.45, -128.2, -52.63)
+depth = 0.015
+material = SubResource("Mat_dune")
+cast_shadow = 0
+
+[node name="FishingBeachLink" type="CSGPolygon3D" parent="Geometry/Inlet"]
+position = Vector3(0, 1.218, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-24.77, 7.49, -14.54, 6.44, -7.339, 11.98, 30.06, 12.5, 50.17, 11.5, 49.83, 4.504, 29.94, 5.501, -6.661, 6.019, -13.46, 1.56, -25.23, 2.51)
+depth = 0.015
+material = SubResource("Mat_sand")
+cast_shadow = 0
+
+[node name="HeadlandInlandTrack" type="CSGPolygon3D" parent="Geometry/Coast"]
+position = Vector3(0, 1.216, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-21, 5, -22.02, -12.33, 19.69, -38.39, 54.6, -69.33, 78.39, -65.05, 79.61, -72.95, 51.4, -76.67, 14.31, -45.61, -27.98, -17.67, -29, 5)
+depth = 0.015
+material = SubResource("Mat_dune")
+cast_shadow = 0
+
+[node name="EastReserveLane" type="CSGPolygon3D" parent="Geometry/Pressure"]
+position = Vector3(0, 1.217, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(141.9, -91.88, 114.9, -85.87, 90.96, -78.86, 77.82, -74.82, 80.18, -67.18, 93.04, -71.14, 117.1, -76.13, 144.1, -82.12)
+depth = 0.015
+material = SubResource("Mat_dune")
+cast_shadow = 0
+
+[node name="BeachLandingTrack" type="CSGPolygon3D" parent="Geometry/Pressure"]
+position = Vector3(0, 1.219, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(49.75, 3.507, 31.89, 5.001, 13, 5, -7, 5, -7, 13, 13, 13, 32.11, 13, 50.25, 12.49)
+depth = 0.015
+material = SubResource("Mat_sand")
+cast_shadow = 0
+
+[node name="TidalSand" type="CSGPolygon3D" parent="Geometry/Beach"]
+position = Vector3(0, 1.207, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-43, -5, -29, -9, 12, -10, 36, -4, 55, 11, 42, 13, -12, 13, -12, 10, -17, 10, -17, 7.75, -35, 7.75, -35, 10, -39, 10, -39, 13, -42, 13)
+depth = 0.015
+material = SubResource("Mat_sand")
+cast_shadow = 0
+
+[node name="CutterSeaEdge" type="CSGPolygon3D" parent="Geometry/Sea"]
+position = Vector3(0, -0.004, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-176, 14, -142, 14, -118, 22, -88, 36, -52, 34, -36, 26, -10, 21, 14, 21, 48, 25, 80, 39, 105, 47, 124, 28, 176, 15, 176, 23, 129, 35, 108, 56, 96, 56, 76, 47, 50, 32, 16, 28, -17, 27, -47, 38, -85, 47, -117, 30, -147, 20, -176, 19)
+depth = 0.015
+material = SubResource("Mat_shelfsea")
+cast_shadow = 0
+
+[node name="ShoalWaterTint" type="CSGPolygon3D" parent="Geometry/Shoal"]
+position = Vector3(0, -0.001, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-35, 25, -15, 22, 7, 27, 17, 34, 31, 38, 37, 54, 34, 63, 26, 70, 8, 72, -10, 67, -20, 59, -26, 49, -37, 37)
+depth = 0.015
+material = SubResource("Mat_shoal")
+cast_shadow = 0
+
+[node name="ShoalOuterBar" type="CSGPolygon3D" parent="Geometry/Shoal"]
+position = Vector3(0, 0.007, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-12, 65, 3, 68, 21, 67, 32, 62, 31, 64, 23, 70, 6, 71, -8, 69)
+depth = 0.015
+material = SubResource("Mat_foam")
+cast_shadow = 0
+
+[node name="ShoalInnerBar" type="CSGPolygon3D" parent="Geometry/Shoal"]
+position = Vector3(0, 0.009, 0)
+rotation = Vector3(1.5708, 0, 0)
+polygon = PackedVector2Array(-32, 32, -22, 27, -8, 30, 1, 35, 1, 37, -10, 33, -23, 30, -32, 35)
+depth = 0.015
+material = SubResource("Mat_foam")
+cast_shadow = 0
+
+[node name="ShoalWestBar" type="StaticBody3D" parent="Geometry/Shoal"]
+position = Vector3(-19, -3, 38)
+rotation = Vector3(0, 0.279253, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Shoal/ShoalWestBar"]
+scale = Vector3(15, 1, 16)
+mesh = SubResource("Mesh_Crag4p7")
+material_override = SubResource("Mat_shoal")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Shoal/ShoalWestBar"]
+shape = SubResource("Shape_ShoalWestBar")
+
+[node name="ShoalBend" type="StaticBody3D" parent="Geometry/Shoal"]
+position = Vector3(7, -3, 50)
+rotation = Vector3(0, -0.488692, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Shoal/ShoalBend"]
+scale = Vector3(21, 1, 16)
+mesh = SubResource("Mesh_Crag4p7")
+material_override = SubResource("Mat_shoal")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Shoal/ShoalBend"]
+shape = SubResource("Shape_ShoalBend")
+
+[node name="ShoalOuterBarBody" type="StaticBody3D" parent="Geometry/Shoal"]
+position = Vector3(21, -3, 61)
+rotation = Vector3(0, 0.296706, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Shoal/ShoalOuterBarBody"]
+scale = Vector3(14, 1, 9)
+mesh = SubResource("Mesh_Crag4p7")
+material_override = SubResource("Mat_shoal")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Shoal/ShoalOuterBarBody"]
+shape = SubResource("Shape_ShoalOuterBarBody")
+
+[node name="WestBackShoulder" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(-77, 6.95, 7)
+rotation = Vector3(0, 0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/WestBackShoulder"]
+scale = Vector3(17, 1, 17)
+mesh = SubResource("Mesh_Crag12")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/WestBackShoulder"]
+shape = SubResource("Shape_WestBackShoulder")
+
+[node name="WestHeadland" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(-73, 5.15, 32)
+rotation = Vector3(0, 0.314159, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/WestHeadland"]
+scale = Vector3(27, 1, 30)
+mesh = SubResource("Mesh_Crag12")
+material_override = SubResource("Mat_caprock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/WestHeadland"]
+shape = SubResource("Shape_WestHeadland")
+
+[node name="WestToe" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(-91, 2.25, 46)
+rotation = Vector3(0, -0.226893, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/WestToe"]
+scale = Vector3(23, 1, 16)
+mesh = SubResource("Mesh_Crag6")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/WestToe"]
+shape = SubResource("Shape_WestToe")
+
+[node name="EastHeadland" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(52, 5.88, 39)
+rotation = Vector3(0, 0.0872665, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/EastHeadland"]
+scale = Vector3(22, 1, 21)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_caprock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/EastHeadland"]
+shape = SubResource("Shape_EastHeadland")
+
+[node name="EastToe" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(53, 2.82, 53)
+rotation = Vector3(0, -0.279253, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/EastToe"]
+scale = Vector3(14, 1, 15)
+mesh = SubResource("Mesh_Crag7")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/EastToe"]
+shape = SubResource("Shape_EastToe")
+
+[node name="EastCliffFace" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(93, 2.7, 27)
+rotation = Vector3(0, 0.401426, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/EastCliffFace"]
+scale = Vector3(17, 1, 13)
+mesh = SubResource("Mesh_Crag6")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/EastCliffFace"]
+shape = SubResource("Shape_EastCliffFace")
+
+[node name="UpperLandwardRib" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(59, 4.52, -27)
+rotation = Vector3(0, 0.296706, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/UpperLandwardRib"]
+scale = Vector3(10, 1, 18)
+mesh = SubResource("Mesh_Crag7")
+material_override = SubResource("Mat_caprock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/UpperLandwardRib"]
+shape = SubResource("Shape_UpperLandwardRib")
+
+[node name="WestInlandRise" type="StaticBody3D" parent="Geometry/Boundary"]
+position = Vector3(-122, 7.5, -87)
+rotation = Vector3(0, -0.314159, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Boundary/WestInlandRise"]
+scale = Vector3(24, 1, 18)
+mesh = SubResource("Mesh_Crag13")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Boundary/WestInlandRise"]
+shape = SubResource("Shape_WestInlandRise")
+
+[node name="MiddleInlandRise" type="StaticBody3D" parent="Geometry/Boundary"]
+position = Vector3(-38, 8, -83)
+rotation = Vector3(0, 0.261799, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Boundary/MiddleInlandRise"]
+scale = Vector3(36, 1, 23)
+mesh = SubResource("Mesh_Crag14")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Boundary/MiddleInlandRise"]
+shape = SubResource("Shape_MiddleInlandRise")
+
+[node name="FarEasternRise" type="StaticBody3D" parent="Geometry/Boundary"]
+position = Vector3(123, 6.5, -26)
+rotation = Vector3(0, -0.331613, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Boundary/FarEasternRise"]
+scale = Vector3(23, 1, 19)
+mesh = SubResource("Mesh_Crag11")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Boundary/FarEasternRise"]
+shape = SubResource("Shape_FarEasternRise")
+
+[node name="WestInlandPromontory" type="StaticBody3D" parent="Geometry/Boundary"]
+position = Vector3(-163, 5.5, -10)
+rotation = Vector3(0, 0.244346, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Boundary/WestInlandPromontory"]
+scale = Vector3(19, 1, 20)
+mesh = SubResource("Mesh_Crag9")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Boundary/WestInlandPromontory"]
+shape = SubResource("Shape_WestInlandPromontory")
+
+[node name="EastInlandPromontory" type="StaticBody3D" parent="Geometry/Boundary"]
+position = Vector3(162, 5, 6)
+rotation = Vector3(0, -0.174533, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Boundary/EastInlandPromontory"]
+scale = Vector3(18, 1, 19)
+mesh = SubResource("Mesh_Crag8")
+material_override = SubResource("Mat_caprock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Boundary/EastInlandPromontory"]
+shape = SubResource("Shape_EastInlandPromontory")
+
+[node name="InletLandmark" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(-103, 2.65, 18)
+rotation = Vector3(0, -0.279253, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/InletLandmark"]
+scale = Vector3(17, 1, 15)
+mesh = SubResource("Mesh_Crag5")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/InletLandmark"]
+shape = SubResource("Shape_InletLandmark")
+
+[node name="EastStakeBarrier" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(107, 4.5, 7)
+rotation = Vector3(0, -0.261799, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/EastStakeBarrier"]
+scale = Vector3(12, 1, 15)
+mesh = SubResource("Mesh_Crag7")
+material_override = SubResource("Mat_headland")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/EastStakeBarrier"]
+shape = SubResource("Shape_EastStakeBarrier")
+
+[node name="StonePlinth" type="StaticBody3D" parent="Geometry/Ancestral"]
+position = Vector3(-92, 1.54, -0.6)
+rotation = Vector3(0, 0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ancestral/StonePlinth"]
+mesh = SubResource("Mesh_4p2_0p68_3p3")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ancestral/StonePlinth"]
+shape = SubResource("Shape_4p2_0p68_3p3")
+
+[node name="AncestralStone" type="StaticBody3D" parent="Geometry/Ancestral"]
+position = Vector3(-92, 2.79, -0.6)
+rotation = Vector3(0, 0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ancestral/AncestralStone"]
+mesh = SubResource("Mesh_1p5_2p25_0p76")
+material_override = SubResource("Mat_stone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ancestral/AncestralStone"]
+shape = SubResource("Shape_1p5_2p25_0p76")
+
+[node name="FallenStone" type="StaticBody3D" parent="Geometry/Ancestral"]
+position = Vector3(-98, 1.51, -1)
+rotation = Vector3(0, -0.331613, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ancestral/FallenStone"]
+mesh = SubResource("Mesh_4_0p62_1")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Ancestral/FallenStone"]
+shape = SubResource("Shape_4_0p62_1")
+
+[node name="InletDryRack" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-35, 2.4, 7.3)
+rotation = Vector3(0, 0.15708, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/InletDryRack"]
+mesh = SubResource("Mesh_5_2p4_0p9")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/InletDryRack"]
+shape = SubResource("Shape_5_2p4_0p9")
+
+[node name="InletNetRail" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-33, 2.1, 1)
+rotation = Vector3(0, -0.0523599, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/InletNetRail"]
+mesh = SubResource("Mesh_6_1p8_0p48")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/InletNetRail"]
+shape = SubResource("Shape_6_1p8_0p48")
+
+[node name="InletMooringPost" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-25, 2.1, 12.6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/InletMooringPost"]
+mesh = SubResource("Mesh_0p55_1p8_0p54")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/InletMooringPost"]
+shape = SubResource("Shape_0p55_1p8_0p54")
+
+[node name="InletJettyCrossbeam" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-25, 0.43, 13)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/InletJettyCrossbeam"]
+mesh = SubResource("Mesh_6p4_0p36_0p45")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/InletJettyCrossbeam"]
+shape = SubResource("Shape_6p4_0p36_0p45")
+
+[node name="InletSkiff" type="StaticBody3D" parent="Geometry/Inlet"]
+position = Vector3(-27, 0.36, 20)
+rotation = Vector3(0, -0.20944, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Inlet/InletSkiff"]
+mesh = SubResource("Mesh_1p9_0p54_4p2")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Inlet/InletSkiff"]
+shape = SubResource("Shape_1p9_0p54_4p2")
+
+[node name="BeachSignalStand" type="StaticBody3D" parent="Geometry/Beach"]
+position = Vector3(-7, 2.8, 12.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Beach/BeachSignalStand"]
+mesh = SubResource("Mesh_0p57_3p2_0p57")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Beach/BeachSignalStand"]
+shape = SubResource("Shape_0p57_3p2_0p57")
+
+[node name="BeachFlag" type="StaticBody3D" parent="Geometry/Beach"]
+position = Vector3(-6.5, 4.04, 12.55)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Beach/BeachFlag"]
+mesh = SubResource("Mesh_1p4_0p59_0p14")
+material_override = SubResource("Mat_marker")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Beach/BeachFlag"]
+shape = SubResource("Shape_1p4_0p59_0p14")
+
+[node name="HighSignalStand" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(85, 8.8, 32)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighSignalStand"]
+mesh = SubResource("Mesh_0p57_3p2_0p57")
+material_override = SubResource("Mat_wood")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighSignalStand"]
+shape = SubResource("Shape_0p57_3p2_0p57")
+
+[node name="HighFlag" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(85.5, 10, 32)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighFlag"]
+mesh = SubResource("Mesh_1p4_0p59_0p14")
+material_override = SubResource("Mat_cloth")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighFlag"]
+shape = SubResource("Shape_1p4_0p59_0p14")
+
+[node name="HighStoneScreenWest" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(68.5, 8.65, -10.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighStoneScreenWest"]
+mesh = SubResource("Mesh_1p5_2p9_23")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighStoneScreenWest"]
+shape = SubResource("Shape_1p5_2p9_23")
+
+[node name="HighStoneScreenEast" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(92.5, 8.67, -9)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighStoneScreenEast"]
+mesh = SubResource("Mesh_1p43_2p94_22")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighStoneScreenEast"]
+shape = SubResource("Shape_1p43_2p94_22")
+
+[node name="HighSignalWallEast" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(93, 8.22, 17.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighSignalWallEast"]
+mesh = SubResource("Mesh_1p25_2p04_14")
+material_override = SubResource("Mat_caprock")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighSignalWallEast"]
+shape = SubResource("Shape_1p25_2p04_14")
+
+[node name="HighApronBaffleWest" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(68.5, 8.65, 14.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighApronBaffleWest"]
+mesh = SubResource("Mesh_1p5_2p9_24")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighApronBaffleWest"]
+shape = SubResource("Shape_1p5_2p9_24")
+
+[node name="HighStoneScreenNorth" type="StaticBody3D" parent="Geometry/Headlands"]
+position = Vector3(68.6, 8.8, -28)
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Headlands/HighStoneScreenNorth"]
+mesh = SubResource("Mesh_6p3_3p2_1p3")
+material_override = SubResource("Mat_wetstone")
+
+[node name="Collision" type="CollisionShape3D" parent="Geometry/Headlands/HighStoneScreenNorth"]
+shape = SubResource("Shape_6p3_3p2_1p3")
+
+[node name="HighDeckRoad" type="MeshInstance3D" parent="Geometry/Headlands"]
+position = Vector3(79.5, 7.222, -2)
+mesh = SubResource("Mesh_9_0p012_60")
+material_override = SubResource("Mat_path")
+cast_shadow = 0
+
+[node name="HeadlandSignalPlatform" type="MeshInstance3D" parent="Geometry/Headlands"]
+position = Vector3(80.5, 7.221, 28.95)
+mesh = SubResource("Mesh_13_0p012_11p899999999999999")
+material_override = SubResource("Mat_sand")
+cast_shadow = 0
+
+[node name="ShoalPost1" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-41, 0.12, 39)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop1" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-41, 1.25, 39)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="ShoalPost2" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-34, 0.12, 57)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop2" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-34, 1.25, 57)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="ShoalPost3" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-14, 0.12, 73)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop3" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(-14, 1.25, 73)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="ShoalPost4" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(12, 0.12, 77)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop4" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(12, 1.25, 77)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="ShoalPost5" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(30, 0.12, 74)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop5" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(30, 1.25, 74)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="ShoalPost6" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(40, 0.12, 53)
+mesh = SubResource("Mesh_0p3_2p5_0p3")
+material_override = SubResource("Mat_wood")
+cast_shadow = 0
+
+[node name="ShoalTop6" type="MeshInstance3D" parent="Geometry/Shoal"]
+position = Vector3(40, 1.25, 53)
+mesh = SubResource("Mesh_0p49_0p49_0p49")
+material_override = SubResource("Mat_marker")
+cast_shadow = 0
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Spawns" type="Node3D" parent="Markers"]
+
+[node name="Ilyra" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-138, 1.2, -49)
+
+[node name="ShoreDetachment" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(-119, 1.2, -48)
+
+[node name="LandingCrew" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(44, 1.2, 8)
+
+[node name="HeadlandPressure" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(142, 1.2, -85)
+
+[node name="Objectives" type="Node3D" parent="Markers"]
+
+[node name="AncestralStone" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-92, 1.2, -6)
+
+[node name="FishingInlet" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-25, 1.2, 5)
+
+[node name="BeachSignal" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(-7, 1.2, 9)
+
+[node name="HeadlandSignal" type="Marker3D" parent="Markers/Objectives"]
+position = Vector3(79, 7.2, 28)
+
+[node name="Routes" type="Node3D" parent="Markers"]
+
+[node name="WestMarchEdge" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-164, 1.2, -48)
+
+[node name="WestCoastLane" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-123, 1.2, -49)
+
+[node name="InlandJunction" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-91, 1.2, -48)
+
+[node name="MidCoastLane" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-36, 1.2, -48)
+
+[node name="HeadlandRoadFork" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(39, 1.2, -49)
+
+[node name="WestRampBypass" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(62, 1.2, -74)
+
+[node name="EastRampBypass" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(96, 1.2, -73)
+
+[node name="FarCoastLane" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(108, 1.2, -49)
+
+[node name="EastMarchEdge" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(166, 1.2, -48)
+
+[node name="StoneTrailTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-114, 1.2, -24)
+
+[node name="StoneExit" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-92, 1.2, -16)
+
+[node name="InletTrailTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-36, 1.2, -15)
+
+[node name="InletBacktrack" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-25, 1.2, -15)
+
+[node name="InletFork" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-25, 1.2, -43)
+
+[node name="InletBeachTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-13, 1.2, 4)
+
+[node name="BeachGuard" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(0, 1.2, 2)
+
+[node name="LandingLine" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(24, 1.2, 8.5)
+
+[node name="LandingWarning" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(11, 1.2, 9)
+
+[node name="HeadlandReserveTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(113, 1.2, -79)
+
+[node name="HeadlandGuard" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(88, 1.2, -71)
+
+[node name="HeadlandInlandCut" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(17, 1.2, -42)
+
+[node name="HeadlandLandwardTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(53, 1.2, -73)
+
+[node name="HeadlandRampFoot" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(79, 1.2, -69)
+
+[node name="HeadlandRampTop" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(79, 7.2, -32)
+
+[node name="HeadlandApron" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(79, 7.2, -9)
+
+[node name="HighGuard" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(79, 7.2, 12)
+
+[node name="BoatRoute" type="Node3D" parent="Markers"]
+
+[node name="WestBlindPass" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(-130, 0, 45)
+
+[node name="WestRound" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(-121, 0, 84)
+
+[node name="BeachApproach" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(-71, 0, 91)
+
+[node name="BeachHold" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(-16, 0, 91)
+
+[node name="EastBlindPass" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(8, 0, 90)
+
+[node name="ShoalReturnBend" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(46, 0, 101)
+
+[node name="HeadlandApproach" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(76, 0, 99)
+
+[node name="HeadlandHold" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(105, 0, 87)
+
+[node name="EastOuterTurn" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(138, 0, 98)
+
+[node name="OuterEast" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(135, 0, 114)
+
+[node name="OuterWest" type="Marker3D" parent="Markers/BoatRoute"]
+position = Vector3(-136, 0, 113)

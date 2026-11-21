@@ -31,13 +31,9 @@ const _MAPS := {
 				"id": "moonwash_road", "label": "Road to Moonwash", "kind": WaypointKind.REGION,
 				"map_position": Vector2(0.46, 0.82),
 			},
-			"headwater_council": {
-				"id": "headwater_council", "label": "Headwater Council", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.27, 0.86), "beat": "mara_water_request",
-			},
 			"moonwash_harbor": {
 				"id": "moonwash_harbor", "label": "Moonwash Harbor", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.07, 0.56), "mission_id": "mara_moonwash_quay",
+				"map_position": Vector2(0.27, 0.90), "mission_id": "mara_moonwash_quay",
 			},
 		},
 		"routes": [
@@ -45,8 +41,7 @@ const _MAPS := {
 			{"from_id": "year_one_mine", "to_id": "marches_road", "required_clear_id": "mara_mine_escort"},
 			{"from_id": "marches_road", "to_id": "marches_crossing"},
 			{"from_id": "marches_crossing", "to_id": "moonwash_road", "required_clear_id": "mara_grain_crossing"},
-			{"from_id": "moonwash_road", "to_id": "headwater_council", "required_clear_id": "mara_grain_crossing"},
-			{"from_id": "headwater_council", "to_id": "moonwash_harbor", "required_clear_id": "mara_grain_crossing"},
+			{"from_id": "moonwash_road", "to_id": "moonwash_harbor"},
 		],
 	},
 	"raska": {
@@ -64,20 +59,15 @@ const _MAPS := {
 				"id": "basin_well_road", "label": "Basin Well Road", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.83, 0.65), "mission_id": "orc_well_road",
 			},
-			"assembly_town": {
-				"id": "assembly_town", "label": "Assembly Town", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.90, 0.47), "beat": "raska_assembly_interlude",
-			},
 			"spanwater_lock": {
 				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.62, 0.63), "mission_id": "orc_spanwater_release",
+				"map_position": Vector2(0.69, 0.87), "mission_id": "orc_spanwater_release",
 			},
 		},
 		"routes": [
 			{"from_id": "basin_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "basin_well_road", "required_clear_id": "orc_mine_witness"},
-			{"from_id": "basin_well_road", "to_id": "assembly_town", "required_clear_id": "orc_well_road"},
-			{"from_id": "assembly_town", "to_id": "spanwater_lock", "required_clear_id": "orc_well_road"},
+			{"from_id": "basin_well_road", "to_id": "spanwater_lock", "required_clear_id": "orc_well_road"},
 		],
 	},
 	"sova": {
@@ -95,87 +85,72 @@ const _MAPS := {
 				"id": "cairnspine_assembly", "label": "Cairnspine Assembly", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.78, 0.55), "mission_id": "sova_public_record",
 			},
-			"spanwater_bank": {
-				"id": "spanwater_bank", "label": "Spanwater High Bank", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.62, 0.63), "beat": "sova_godbridle_handover",
-			},
-			"cairnspine_pass": {
-				"id": "cairnspine_pass", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.52, 0.13), "mission_id": "sova_vault_return",
+			"cairnspine_vault_road": {
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.86, 0.76), "mission_id": "sova_vault_return",
 			},
 		},
 		"routes": [
 			{"from_id": "cairnspine_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "cairnspine_assembly", "required_clear_id": "sova_mine_tunnels"},
-			{"from_id": "cairnspine_assembly", "to_id": "spanwater_bank", "required_clear_id": "sova_public_record"},
-			{"from_id": "spanwater_bank", "to_id": "cairnspine_pass", "required_clear_id": "sova_public_record"},
+			{"from_id": "cairnspine_assembly", "to_id": "cairnspine_vault_road", "required_clear_id": "sova_public_record"},
 		],
 	},
 	"ilyra": {
-		"start": "moonwash_fleet",
+		"start": "moonwash_camp",
 		"waypoints": {
-			"moonwash_fleet": {
-				"id": "moonwash_fleet", "label": "Moonwash Fleet", "kind": WaypointKind.CAMP,
-				"map_position": Vector2(0.05, 0.42),
+			"moonwash_camp": {
+				"id": "moonwash_camp", "label": "Moonwash Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.13, 0.73),
 			},
 			"moonwash_harbor": {
 				"id": "moonwash_harbor", "label": "Moonwash Harbor", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.07, 0.56), "mission_id": "ilyra_moonwash_rescue",
+				"map_position": Vector2(0.27, 0.90), "mission_id": "ilyra_moonwash_rescue",
+			},
+			"moonwash_survey_shore": {
+				"id": "moonwash_survey_shore", "label": "Survey Shore", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.52, 0.82), "mission_id": "ilyra_coast_survey",
 			},
 			"pilot_villages": {
 				"id": "pilot_villages", "label": "Pilot Villages", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.06, 0.70), "beat": "ilyra_record_interlude",
-			},
-			"survey_shore": {
-				"id": "survey_shore", "label": "Survey Shore", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.11, 0.80), "mission_id": "ilyra_coast_survey",
-			},
-			"new_channel": {
-				"id": "new_channel", "label": "The New Channel", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.40, 0.72),
+				"map_position": Vector2(0.13, 0.70),
 			},
 			"spanwater_lock": {
 				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.62, 0.63), "mission_id": "ilyra_spanwater_evacuation",
+				"map_position": Vector2(0.69, 0.87), "mission_id": "ilyra_spanwater_evacuation",
 			},
 		},
 		"routes": [
-			{"from_id": "moonwash_fleet", "to_id": "moonwash_harbor"},
-			{"from_id": "moonwash_harbor", "to_id": "pilot_villages", "required_clear_id": "ilyra_moonwash_rescue"},
-			{"from_id": "pilot_villages", "to_id": "survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
-			{"from_id": "survey_shore", "to_id": "new_channel", "required_clear_id": "ilyra_coast_survey"},
-			{"from_id": "new_channel", "to_id": "spanwater_lock", "required_clear_id": "ilyra_coast_survey"},
+			{"from_id": "moonwash_camp", "to_id": "moonwash_harbor"},
+			{"from_id": "moonwash_harbor", "to_id": "moonwash_survey_shore", "required_clear_id": "ilyra_moonwash_rescue"},
+			{"from_id": "moonwash_survey_shore", "to_id": "pilot_villages", "required_clear_id": "ilyra_coast_survey"},
+			{"from_id": "pilot_villages", "to_id": "spanwater_lock", "required_clear_id": "ilyra_coast_survey"},
 		],
 	},
 	"neris": {
-		"start": "deepwood_edge",
+		"start": "grove_camp",
 		"waypoints": {
-			"deepwood_edge": {
-				"id": "deepwood_edge", "label": "Deepwood Edge", "kind": WaypointKind.CAMP,
-				"map_position": Vector2(0.22, 0.90),
+			"grove_camp": {
+				"id": "grove_camp", "label": "Grove Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.34, 0.46),
 			},
-			"isolated_grove": {
-				"id": "isolated_grove", "label": "The Isolated Grove", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.38, 0.84), "mission_id": "neris_failing_grove",
-			},
-			"town_nursery": {
-				"id": "town_nursery", "label": "Town Nursery", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.47, 0.78), "beat": "neris_nursery_interlude",
+			"isolated_grove_nursery": {
+				"id": "isolated_grove_nursery", "label": "Isolated Grove", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.54, 0.63), "mission_id": "neris_failing_grove",
 			},
 			"spanwater_lock": {
 				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.62, 0.63), "mission_id": "neris_spanwater_feeder",
+				"map_position": Vector2(0.69, 0.87), "mission_id": "neris_spanwater_feeder",
 			},
-			"cairnspine_pass": {
-				"id": "cairnspine_pass", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
+			"cairnspine_vault_road": {
+				"id": "cairnspine_vault_road", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.52, 0.13), "mission_id": "neris_cairnspine_passage",
 			},
 		},
 		"routes": [
-			{"from_id": "deepwood_edge", "to_id": "isolated_grove"},
-			{"from_id": "isolated_grove", "to_id": "town_nursery", "required_clear_id": "neris_failing_grove"},
-			{"from_id": "town_nursery", "to_id": "spanwater_lock", "required_clear_id": "neris_failing_grove"},
-			{"from_id": "spanwater_lock", "to_id": "cairnspine_pass", "required_clear_id": "neris_spanwater_feeder"},
+			{"from_id": "grove_camp", "to_id": "isolated_grove_nursery"},
+			{"from_id": "isolated_grove_nursery", "to_id": "spanwater_lock", "required_clear_id": "neris_failing_grove"},
+			{"from_id": "spanwater_lock", "to_id": "cairnspine_vault_road", "required_clear_id": "neris_spanwater_feeder"},
 		],
 	},
 	"sereth": {
@@ -185,28 +160,28 @@ const _MAPS := {
 				"id": "still_court", "label": "The Still Court", "kind": WaypointKind.CAMP,
 				"map_position": Vector2(0.94, 0.10),
 			},
-			"the_cut": {
-				"id": "the_cut", "label": "The Cut", "kind": WaypointKind.BATTLEFIELD,
+			"still_kingdom_cut": {
+				"id": "still_kingdom_cut", "label": "The Cut", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.85, 0.24), "mission_id": "sereth_voices_at_the_cut",
 			},
 			"court_chambers": {
 				"id": "court_chambers", "label": "Court Chambers", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.93, 0.27), "beat": "sereth_writ_interlude",
+				"map_position": Vector2(0.93, 0.30),
 			},
-			"boundary_post": {
-				"id": "boundary_post", "label": "Boundary Post", "kind": WaypointKind.BATTLEFIELD,
+			"cairnspine_boundary_post": {
+				"id": "cairnspine_boundary_post", "label": "Boundary Post", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.68, 0.19), "mission_id": "sereth_pass_writ",
 			},
-			"cairnspine_pass": {
-				"id": "cairnspine_pass", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
+			"cairnspine_vault_road": {
+				"id": "cairnspine_vault_road", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.52, 0.13), "mission_id": "sereth_no_proxy",
 			},
 		},
 		"routes": [
-			{"from_id": "still_court", "to_id": "the_cut"},
-			{"from_id": "the_cut", "to_id": "court_chambers", "required_clear_id": "sereth_voices_at_the_cut"},
-			{"from_id": "court_chambers", "to_id": "boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
-			{"from_id": "boundary_post", "to_id": "cairnspine_pass", "required_clear_id": "sereth_pass_writ"},
+			{"from_id": "still_court", "to_id": "still_kingdom_cut"},
+			{"from_id": "still_kingdom_cut", "to_id": "court_chambers", "required_clear_id": "sereth_voices_at_the_cut"},
+			{"from_id": "court_chambers", "to_id": "cairnspine_boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
+			{"from_id": "cairnspine_boundary_post", "to_id": "cairnspine_vault_road", "required_clear_id": "sereth_pass_writ"},
 		],
 	},
 }

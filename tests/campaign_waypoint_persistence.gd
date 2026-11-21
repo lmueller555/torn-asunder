@@ -16,6 +16,7 @@ func _initialize() -> void:
 	passed = _check_arrival_and_reload(path) and passed
 	passed = _check_failed_save(path) and passed
 	passed = _check_invalid_and_foreign_records(path) and passed
+	passed = _check_intermission_record(path) and passed
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 	if FileAccess.file_exists(path + ".tmp") or DirAccess.dir_exists_absolute(path + ".tmp"):
@@ -23,6 +24,28 @@ func _initialize() -> void:
 	if passed:
 		print("Verified legacy fallback, real arrival save/reload, locks, campaign isolation, and failed-write rollback.")
 	quit(0 if passed else 1)
+
+
+func _check_intermission_record(path: String) -> bool:
+	var profile := Profile.new(path)
+	var beat := &"mara_water_request"
+	var original := FileAccess.get_file_as_string(path)
+	var clears := profile.completed_missions("mara")
+	if profile.has_seen_intermission("mara", beat) or DirAccess.make_dir_absolute(path + ".tmp") != OK:
+		return _fail("Could not prepare the legacy intermission test.")
+	var failed := profile.record_intermission_seen("mara", beat)
+	DirAccess.remove_absolute(path + ".tmp")
+	if failed == OK or profile.has_seen_intermission("mara", beat) or FileAccess.get_file_as_string(path) != original:
+		return _fail("A failed story save must not leave a seen marker in memory or on disk.")
+	if profile.record_intermission_seen("mara", beat) != OK:
+		return _fail("The finished intermission did not save.")
+	var after := FileAccess.get_file_as_string(path)
+	profile = Profile.new(path)
+	if not profile.has_seen_intermission("mara", beat) or profile.has_seen_intermission("raska", beat) \
+		or profile.completed_missions("mara") != clears or profile.record_intermission_seen("mara", beat) != OK \
+		or FileAccess.get_file_as_string(path) != after:
+		return _fail("Intermission records must survive reload, stay campaign-local, and not duplicate writes.")
+	return true
 
 
 func _check_fresh_and_legacy(path: String) -> bool:
@@ -102,7 +125,7 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 	if fixture.load(path) != OK:
 		return _fail("Couldn't reopen the profile for malformed saved values.")
 	fixture.erase_section(Profile.MISSION_PROGRESS)
-	fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "unknown_campaign", MINE)
+	fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "neris", MINE)
 	for value in [ROAD, "foreign_waypoint", 17, ""]:
 		fixture.set_value(Profile.CAMPAIGN_WAYPOINTS, "mara", value)
 		if fixture.save(path) != OK:
@@ -112,9 +135,12 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 		var world := profile.load_campaign_world("mara")
 		if world.current_waypoint_id() != CAMP or world.visited_waypoint_ids() != PackedStringArray([CAMP]):
 			return _fail("A locked, unknown, malformed or blank save fabricated an arrival.")
-		var foreign_world := profile.load_campaign_world("unknown_campaign")
-		if not foreign_world.current_waypoint_id().is_empty() or profile.record_world_waypoint(foreign_world) != ERR_INVALID_PARAMETER:
-			return _fail("A campaign without a map inherited another campaign's waypoint.")
+		var foreign_world := profile.load_campaign_world("neris")
+		if foreign_world.current_waypoint_id() != "grove_camp" \
+				or foreign_world.visited_waypoint_ids() != PackedStringArray(["grove_camp"]):
+			return _fail("A Dryad save pointing to Mara's Mine did not fall back to Grove Camp.")
+		if profile.record_world_waypoint(profile.load_campaign_world("unknown_campaign")) != ERR_INVALID_PARAMETER:
+			return _fail("Saving a campaign without an overworld should be rejected.")
 		if profile.record_world_waypoint(null) != ERR_INVALID_PARAMETER or FileAccess.get_file_as_string(path) != before:
 			return _fail("Rejecting invalid or foreign state modified the profile.")
 	var profile := Profile.new(path)
@@ -122,9 +148,9 @@ func _check_invalid_and_foreign_records(path: String) -> bool:
 	mara.travel_to(MINE, PackedStringArray())
 	if profile.record_world_waypoint(mara) != OK or fixture.load(path) != OK:
 		return _fail("Saving a new legal waypoint after fallback failed.")
-	if fixture.get_value(Profile.CAMPAIGN_WAYPOINTS, "unknown_campaign", "") != MINE:
+	if fixture.get_value(Profile.CAMPAIGN_WAYPOINTS, "neris", "") != MINE:
 		return _fail("Mara's save overwrote another campaign key.")
-	if not profile.completed_missions("unknown_campaign").is_empty() or not profile.completed_missions("mara").is_empty():
+	if not profile.completed_missions("neris").is_empty() or not profile.completed_missions("mara").is_empty():
 		return _fail("A position fallback or save fabricated a campaign clear.")
 	return true
 

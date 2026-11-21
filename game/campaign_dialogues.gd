@@ -10,11 +10,16 @@ const RASKA_MINE_DISPATCH := &"raska_mine_dispatch"
 const RASKA_MINE_DEBRIEF := &"raska_mine_debrief"
 const RASKA_WELL_ROAD_DISPATCH := &"raska_well_road_dispatch"
 const RASKA_WELL_ROAD_DEBRIEF := &"raska_well_road_debrief"
+const RASKA_SPANWATER_DISPATCH := &"raska_spanwater_dispatch"
+const RASKA_SPANWATER_DEBRIEF := &"raska_spanwater_debrief"
+const RASKA_SPANWATER_CODA := &"raska_spanwater_coda"
 const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
 const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
 const SOVA_PUBLIC_RECORD_DISPATCH := &"sova_public_record_dispatch"
 const SOVA_PUBLIC_RECORD_DEBRIEF := &"sova_public_record_debrief"
 const SOVA_GODBRIDLE_HANDOVER := &"sova_godbridle_handover"
+const SOVA_VAULT_RETURN_DISPATCH := &"sova_vault_return_dispatch"
+const SOVA_VAULT_RETURN_DEBRIEF := &"sova_vault_return_debrief"
 const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
 const MARA_GRAIN_SEED_DEBRIEF := &"mara_grain_debrief_seed_only"
 const MARA_GRAIN_BREAD_DEBRIEF := &"mara_grain_debrief_bread_only"
@@ -25,10 +30,16 @@ const MARA_HIGH_QUAY_DEBRIEF := &"mara_high_quay_debrief"
 const ILYRA_MOONWASH_DISPATCH := &"ilyra_moonwash_dispatch"
 const ILYRA_MOONWASH_CARGO_DEBRIEF := &"ilyra_moonwash_debrief_cargo_recovered"
 const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
+const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
+const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
+const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
+const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
 const ILYRA_PORTRAIT := preload("res://assets/art/ilyra.webp")
+const NERIS_PORTRAIT := preload("res://assets/art/neris.webp")
+const SERETH_PORTRAIT := preload("res://assets/art/sereth.webp")
 const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
 const RASKA := "War Marshal Raska Vennor"
@@ -40,6 +51,7 @@ const GUARD := "Cairnspine Guard"
 const SCRIBE := "Public Scribe"
 const ORC_WITNESS := "Orc Witness"
 const ELVEN_WITNESS := "Elven Witness"
+const MARCH_WITNESS := "Marches Witness"
 const CLERK := "Council Clerk"
 const MILLER := "Mill Steward"
 const BAKER := "Town Baker"
@@ -49,6 +61,14 @@ const ILYRA := "Tide Speaker Ilyra Venn"
 const PILOT := "Moonwash Pilot"
 const SIGNALLER := "Fleet Signaller"
 const PORT_CLERK := "Harbor Clerk"
+
+const NERIS := "Rootspeaker Neris Alder"
+const GROVE_ENVOY := "Grove Envoy"
+const FEEDER_KEEPER := "Town Feeder Keeper"
+const SERETH := "High Executor Sereth Vale"
+const IREN := "Iren"
+const VILLAGE_CLERK := "Village Clerk"
+const HOUSEHOLD_GUARD := "Household Guard"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -115,6 +135,39 @@ const BEATS := {
 			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "The assembly sent me for its river. I can promise you that much. Not the sea."},
 		],
 	},
+	RASKA_SPANWATER_DISPATCH: {
+		"title": "River, Not Sea",
+		"location": "Spanwater causeway · Before the release",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "Two controls. The spillway sends water down the old riverbed. Open the sea gate and the old shore fills. The assembly town stands below that waterline."},
+			{"speaker": LOWER_CAPTAIN, "text": "I counted the last barrels onto your cart. We can get you to the wheel today. But my towns sent me to bring back the shore, not just fill your river."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "I remember what I promised. The assembly sent me for the river. The sea gate stays shut."},
+			{"speaker": LOWER_CAPTAIN, "text": "Then we'll see you to the wheel, as agreed. If you open the spillway alone, our companies go home."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Take the raised causeway and clear the wheel. I'll open the spillway. Hold it until the river reaches its mark, then get to the high bank. The low crossing won't stay open."},
+		],
+	},
+	RASKA_SPANWATER_DEBRIEF: {
+		"title": "Below the Mark",
+		"location": "Spanwater high bank · After the release",
+		"lines": [
+			{"speaker": LIEUTENANT, "text": "The spillway held. Water reached the mark in the old riverbed. The sea gate stayed shut; the assembly town is safe from the flood."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Boats at the low landing. People on the feeder path, too. Keep our regulars on the high bank. Leave those lanes to them."},
+			{"speaker": LIEUTENANT, "text": "The captain's companies raised their standards and left by the causeway when we opened the spillway. I asked her if we should expect them back. She said no."},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Put that in the report. Don't fill their places on the roster until someone actually comes to stand in them."},
+			{"speaker": LIEUTENANT, "text": "What do I tell the lower towns when they ask where the water stops?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Tell them where it stops. They shouldn't have to come all this way to find out."},
+		],
+	},
+	RASKA_SPANWATER_CODA: {
+		"title": "What I Saw",
+		"location": "Spanwater · Later that year",
+		"lines": [
+			{"speaker": SCRIBE, "text": "The case is closed. For the assembly's copy: what did you see change hands?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "I saw Mara hand the Godbridle to Sova. The Elven witness saw it too. Write that Sova took custody. That's what we came to witness."},
+			{"speaker": SCRIBE, "text": "Shall I put it with the report on the water?"},
+			{"speaker": RASKA, "portrait": RASKA_PORTRAIT, "text": "Separate page. One says who carries the bridle. The other says who got water. Don't let anyone read one as an answer to the other."},
+		],
+	},
 	SOVA_MINE_DISPATCH: {
 		"title": "The Workers First",
 		"location": "Old mine tunnels · Before the evacuation",
@@ -165,6 +218,29 @@ const BEATS := {
 			{"speaker": ELVEN_WITNESS, "text": "I see the bridle. I'll attest that it passed from your hands to his."},
 			{"speaker": ORC_WITNESS, "text": "So will I. I'm here to witness a handover, not to sign away anyone's claim."},
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Close the case. I'll take it into custody. When the valleys meet, this goes into the public record too."},
+		],
+	},
+	SOVA_VAULT_RETURN_DISPATCH: {
+		"title": "No New Command",
+		"location": "Cairnspine assembly · Year Five, before the vault return",
+		"lines": [
+			{"speaker": GUARD, "text": "The shelf is the shorter climb. The side path bends back to the same forecourt. A rival reserve is gathering north of it."},
+			{"speaker": SCRIBE, "text": "The valleys pledged their guards when we put the full record into the custody terms. The witnesses have their own way to the terrace."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "I'll carry the Godbridle. Hold the approach to the vault, and leave the witness road open."},
+			{"speaker": GUARD, "text": "If their reserve gets inside the closure ring, do we follow them in?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Give me room to step back. Clear the ring, and I'll try the door again. We're here to return the bridle. No one gives a new command."},
+		],
+	},
+	SOVA_VAULT_RETURN_DEBRIEF: {
+		"title": "Leave the Record Open",
+		"location": "Cairnspine witness terrace · Year Five, after closure",
+		"lines": [
+			{"speaker": ORC_WITNESS, "text": "I watched Mara hand you that case at Spanwater. From the terrace I saw you carry it into the vault."},
+			{"speaker": ELVEN_WITNESS, "text": "I saw the same, and I saw the door shut. I'll put my name to the return."},
+			{"speaker": MARCH_WITNESS, "text": "And mine. What do I tell the towns still waiting for their water?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Orrun is still carrying out Mara's order. The Godbridle is back in the vault. We gave no new command."},
+			{"speaker": SCRIBE, "text": "I'll leave a copy at the assembly. Who may read the vault record?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Leave it open to every valley. Keep our names in it, even when the people asking to read it have reason to blame us."},
 		],
 	},
 	MARA_GRAIN_DISPATCH: {
@@ -268,6 +344,50 @@ const BEATS := {
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Ask them what they can spare. Put every sack we borrow in the log, and ask their pilots to take us along the shore."},
 			{"speaker": PORT_CLERK, "text": "Sova read the sealed record in public. This is a copy. It names the old Druid command that drowned the coast."},
 			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Bring it when the pilots come in. I know where my street was. I want the chart to show where their villages fish and land now."},
+		],
+	},
+	NERIS_FAILING_GROVE_DISPATCH: {
+		"title": "What We Planted Here",
+		"location": "Isolated grove · Before the transplant",
+		"lines": [
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I thought I could bring the Deepwood to your roots. The river's new cut has left you dry."},
+			{"speaker": GROVE_ENVOY, "text": "Your crossing would run under the wells of the town that gave us this ground. The grove said no. We asked you here to help move a tree."},
+			{"speaker": FEEDER_KEEPER, "text": "The nursery has watered ground for the first one. Help us keep the old feeder open, and we'll keep that plot for you. The well is still the town's."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "No crossing. Show me the loading yard. I'll call the volunteers once we're there."},
+			{"speaker": GROVE_ENVOY, "text": "Keep watch on the sunken track while we load. Take the raised road with the sled. It's the only way wide enough."},
+		],
+	},
+	NERIS_FAILING_GROVE_DEBRIEF: {
+		"title": "Room for the First Tree",
+		"location": "Town nursery · After the transplant",
+		"lines": [
+			{"speaker": GROVE_ENVOY, "text": "The first tree is upright. Reach down past the cloth. The soil is wet all the way to the root ball."},
+			{"speaker": FEEDER_KEEPER, "text": "I can water this plot. I can't fit the whole grove here today. The feeder needs hands before I can spare any more ground."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
+			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
+		],
+	},
+	SERETH_CUT_DISPATCH: {
+		"title": "Before Anyone Writes It Down",
+		"location": "Still Kingdom village · Year Three, before the defense",
+		"lines": [
+			{"speaker": VILLAGE_CLERK, "text": "The bank fell away beside the old graves. It left a bundle of records below the stair. Iren asked to tell you what she heard. She's waiting above the cut."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "A March party is coming for the bundle. One guard can hold the stair while the other watches the road."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Hold the stair. If they get the bundle first, stop the carrier before they reach the east exit. Bring the papers back to the record room."},
+			{"speaker": VILLAGE_CLERK, "text": "I'll keep the account book open at my table. Come back and tell me what Iren says, even if the papers aren't here yet."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll ask her what she wants on the page. Let her finish before we ask her to put her name to it."},
+		],
+	},
+	SERETH_CUT_DEBRIEF: {
+		"title": "In Her Own Words",
+		"location": "Village record room · Year Three, after the defense",
+		"lines": [
+			{"speaker": IREN, "text": "I heard my name. I recognized the voice. I'll sign that much. Don't put anything else down for me."},
+			{"speaker": VILLAGE_CLERK, "text": "That's what's in the account, under your name. The recovered bundle has its own entry in the register."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Seal the bundle for cataloging. Don't send the court a list of names to call back. Hearing a name doesn't tell us who wants to return."},
+			{"speaker": VILLAGE_CLERK, "text": "The court's courier is at the door. They want you to secure the Godbridle before anyone gives another command."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll go. If you come across a letter for me, put it in the register with everything else. It can wait."},
 		],
 	},
 }

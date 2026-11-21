@@ -1,0 +1,63 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
+[ext_resource type="PackedScene" path="res://game/battlefields/cairnspine_vault_road.tscn" id="2_cairnspine"]
+[ext_resource type="Script" path="res://game/battlefield/sova_vault_return_playtest.gd" id="3_playtest"]
+
+[node name="SovaVaultReturnPlaytest" instance=ExtResource("1_harness")]
+script = ExtResource("3_playtest")
+battlefield_scene = ExtResource("2_cairnspine")
+field_bounds = Rect2(-154, -105, 299, 212)
+enable_sector_camera = true
+local_sector_size = 70.0
+hero_spawn = NodePath("Markers/Spawns/SovaCarrier")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/KeeperShelfGuard"), NodePath("Markers/Spawns/KeeperSideGuard")])
+
+[node name="VaultHUD" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="VaultHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -190.0
+offset_right = 760.0
+offset_bottom = -20.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="VaultHUD/Panel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Readout" type="VBoxContainer" parent="VaultHUD/Panel/Margin"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
+text = "NO NEW COMMAND  /  YEAR FIVE VAULT PLAYTEST"
+theme_override_colors/font_color = Color(0.65, 0.90, 0.80, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Goal" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 21
+
+[node name="Detail" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
+[node name="Reserve" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
+theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="Progress" type="ProgressBar" parent="VaultHUD/Panel/Margin/Readout"]
+custom_minimum_size = Vector2(0, 13)
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="Restart" type="Button" parent="VaultHUD/Panel/Margin/Readout"]
+size_flags_horizontal = 0
+focus_mode = 0
+text = "Restart  [Backspace / Options]"

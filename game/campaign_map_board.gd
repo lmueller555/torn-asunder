@@ -95,6 +95,8 @@ func _draw_terrain() -> void:
 		match world.campaign_id():
 			"sova": area = "CAIRNSPINE APPROACH"
 			"raska": area = "RED BASIN APPROACH"
+			"ilyra": area = "THE MOONWASH COAST"
+			"neris": area = "ISOLATED GROVES"
 	draw_string(TYPE, Vector2(26, 30), "VARETH  /  " + area, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 15, QUIET)
 	var compass := Vector2(size.x - 45.0, 44.0)
 	draw_line(compass - Vector2(0, 17), compass + Vector2(0, 15), QUIET, 1.0, true)

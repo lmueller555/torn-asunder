@@ -48,4 +48,7 @@ These are stable design IDs under the existing campaign ID `mara`, not scene pat
 - **Marches crossing:** One compact map with a fork, bridge, ford, and two receivers. The carts can follow authored paths; no campaign economy or supply simulation is required. The crossing layout can serve future Marches encounters with different orders.
 - **Moonwash:** Build the exposed harbor walls, moorings, upper quay and exits as one shared layout for Human withdrawal and Ilyra's rescue. Use distinct starts and objective markers, not distinct harbor geometry. The Human point of view establishes the cost of the command; it doesn't play Ilyra's decision or award the player her rescue.
 
+
+**Current campaign prototype.** All three Human missions are reachable through Mara's overworld. The first arrival on the Road to Moonwash after Grain on Credit presents the Water Request intermission; once read or skipped, it does not replay on revisits. At Moonwash Harbor, open the High Quay briefing before deploying. A successful withdrawal clears the third mission and marks the campaign complete on the map. The harbor playtest uses the shared large graybox and does not yet include levy combat.
+
 Acceptance passes: try leaving the mine without the bridle and then with it; play the crossing with no deliveries, each single-load result, and both loads delivered; reverse which platoon leads the retreat at Moonwash. Verify only clears advance, all successful cart results can reach the same ending, and no Human objective can invalidate the Orc, Druid, or Elven account.
