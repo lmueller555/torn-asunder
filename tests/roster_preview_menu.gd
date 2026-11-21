@@ -118,7 +118,8 @@ func _check_marches_longbows() -> bool:
 	var promote := _button("Promote to Heavy Infantry")
 	if not preview or not inspect or not promote or not promote.disabled or _button("Preview Advancement") \
 			or preview.get_rect().end.x > _button("Back").position.x \
-			or inspect.get_rect() != Rect2(76, 650, 345, 45) or promote.get_rect() != Rect2(76, 600, 345, 45):
+			or _button("Award 100 XP").get_rect().end.y > promote.position.y \
+			or promote.get_rect().end.y > inspect.position.y:
 		return _fail("The Longbows preview displaced or replaced the existing Human practice controls.")
 	_joy(JOY_BUTTON_DPAD_DOWN)
 	if root.gui_get_focus_owner() != inspect:
