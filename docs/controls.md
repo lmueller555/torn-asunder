@@ -67,7 +67,7 @@ The standalone selection policy keeps three contexts distinct. An unengaged sele
 
 Try the policy in the isolated development preview: `godot game/battlefield/engagement_camera_playtest.tscn`. Move Shield Infantry toward the **Practice patrol**: on contact, the camera follows the selected platoon and Square/right-click still issues Move. Cycle to the Hero Platoon and move it toward the **Sparring opponent**: on contact, the stick moves the hero and Square attacks. L1 guards and Circle dodges. Cycle to an unengaged platoon or leave contact to return to the saved tactical cursor. The opponents and formations use existing debug visuals; this tests controls, not final art or enemy combat AI.
 
-Live missions still hold **L2** for command. After importing, verify the policy with `godot --headless --script tests/engagement_camera_policy.gd` and the preview inputs with `godot --headless --script tests/engagement_camera_playtest.gd`.
+While holding **L2 / Shift** in Mara’s campaign Mine, the local command camera gently follows selected Shield Infantry once they are in real melee contact. It leaves the cursor and orders in place; pointer or stick aiming, overview, and the minimap draft take priority. Release **L2 / Shift** to return to Mara’s unchanged direct controls. After importing, verify the policy with `godot --headless --script tests/engagement_camera_policy.gd` and the preview inputs with `godot --headless --script tests/engagement_camera_playtest.gd`.
 
 ## Mixed formation drill
 
