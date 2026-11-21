@@ -378,6 +378,11 @@ func _move_detachment(paths: Array) -> bool:
 	for path: String in paths:
 		var target := _xz(_point(path))
 		_mission.cursor = target
+		# Contact selects Ilyra's own platoon; D-pad over to the detachment.
+		for _step in 3:
+			if _mission.selected_index == 0:
+				break
+			_joy(JOY_BUTTON_DPAD_RIGHT)
 		_joy(JOY_BUTTON_X)
 		if detachment.order != Battle.Order.MOVE:
 			return _fail("Square did not issue a tactical Move.")
@@ -393,6 +398,11 @@ func _move_detachment(paths: Array) -> bool:
 	_joy(JOY_BUTTON_A)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_tick()
+	# Back to Ilyra's own platoon, so the stick fights as her again.
+	for _step in 3:
+		if _mission.selected_index == Battle.LEAD_INDEX:
+			break
+		_joy(JOY_BUTTON_DPAD_LEFT)
 	return detachment.order == Battle.Order.HOLD or _fail("Cross did not keep the detachment at the guard marker.")
 
 

@@ -88,7 +88,10 @@ func _recover_and_win() -> void:
 	var guarded := _mission.battle.formations[1]
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_RIGHT_STICK)
-	_button(JOY_BUTTON_DPAD_RIGHT)
+	for _step in 3: # From whichever platoon is selected (contact selects Neris's own).
+		if _mission.selected_index == 1:
+			break
+		_button(JOY_BUTTON_DPAD_RIGHT)
 	var screen := _mission.to_global(_mission._ground(_mission._screen_point))
 	_order_at(screen)
 	_check(_mission.selected_index == 1 and guarded.order == Battle.Order.MOVE,
