@@ -34,12 +34,20 @@ func _exercise() -> void:
 	var objective := _mission.objective
 	var sled_spawn := _marker("Spawns/RootSled")
 	var crew_spawn := _marker("Spawns/VolunteerCrew")
+	_check(_mission._sled_banner.text == "ROOT SLED" and _mission._sled_banner.is_visible_in_tree()
+		and _mission._sled_banner.modulate.a == 1.0 and not _mission._crew_banner.is_visible_in_tree(),
+		"The distant original sled remains named, and uncalled volunteers aren't shown.")
 	_check(_mission._sled.global_position == sled_spawn and _mission._crew.global_position == crew_spawn and not _mission._crew.visible,
 		"Starting sled and volunteers must use actual spawn markers.")
 	_key(KEY_SPACE)
 	_tick()
 	_check(objective.phase == Grove.Phase.AWAITING_ENVOY, "A remote interaction must not reach the envoy.")
 	_drive_to(_marker("Routes/GroveAssembly"))
+	_drive_to(sled_spawn + Vector3(0.0, 0.0, -10.0))
+	_check(_mission._sled_banner.is_visible_in_tree() and _mission._sled_banner.modulate.a > 0.0
+		and _mission._sled_banner.modulate.a < 1.0
+		and is_equal_approx(_mission._sled_banner.modulate.a, _mission._sled_banner.outline_modulate.a),
+		"The nearby transition fades both the sled text face and outline smoothly.")
 	_drive_to(_marker("Objectives/GroveEnvoy"))
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_A)
@@ -71,7 +79,15 @@ func _exercise() -> void:
 	_tick(60)
 	_check(is_equal_approx(work_before, objective.loading_progress), "Waiting under pressure cannot add or erase work.")
 
+	_drive_to(_marker("Objectives/RootBallLoad") + Vector3(3.6, 0.0, -3.1))
+	_check(_mission._sled.visible and _mission._crew.visible and not _mission._sled_banner.is_visible_in_tree()
+		and not _mission._crew_banner.is_visible_in_tree() and _mission._screen_beacon.visible,
+		"Close hero view clears only the two overlapping captions, not the actors or screen beacon.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tick()
+	_check(_mission._sled_banner.is_visible_in_tree() and _mission._crew_banner.is_visible_in_tree()
+		and _mission._sled_banner.modulate.a == 1.0 and _mission._crew_banner.outline_modulate.a == 1.0,
+		"Actual tactical input immediately restores both original captions at full opacity.")
 	_button(JOY_BUTTON_RIGHT_STICK)
 	_button(JOY_BUTTON_DPAD_RIGHT)
 	var guard := _mission.battle.formations[1]
@@ -89,6 +105,9 @@ func _exercise() -> void:
 		and _mission._tree.global_position.y > _mission._sled.global_position.y,
 		"The tree must finish loading visibly before road travel.")
 
+	_check(_mission._sled_banner.text == "LOADED ROOT SLED" and not _mission._sled_banner.is_visible_in_tree()
+		and not _mission._crew_banner.is_visible_in_tree(),
+		"The loaded state stays accurate and nearby hero captions remain clear.")
 	var previous := _mission._sled.global_position
 	var visited := 0
 	for tick in range(3400):
@@ -120,7 +139,13 @@ func _exercise() -> void:
 		and _mission._tree.global_position.distance_to(_mission._sled.global_position) > 2.9,
 		"Physical transplant wins exactly once and moves the tree into the nursery soil.")
 
+	_check(_mission._sled.visible and _mission._sled_banner.text == "EMPTY ROOT SLED"
+		and not _mission._sled_banner.is_visible_in_tree() and not _mission._crew.visible,
+		"Planting leaves the original empty sled, removes its stale loaded cue, and retires the volunteers.")
 	_key(KEY_BACKSPACE)
+	_check(_mission._sled_banner.is_visible_in_tree() and _mission._sled_banner.text == "ROOT SLED"
+		and _mission._sled_banner.modulate.a == 1.0 and not _mission._crew_banner.is_visible_in_tree(),
+		"Real restart restores the original distant label and no volunteers.")
 	_check(objective.phase == Grove.Phase.AWAITING_ENVOY and _mission._sled.global_position == sled_spawn and not _mission._patrol.visible \
 		and not _mission._crew.visible and _mission._cloth.visible and not _mission.command_view,
 		"Restart must reset actors, clothing, terrain poses, and objective gates.")
