@@ -16,6 +16,7 @@ const PATHS := {
 		"OrcIntercept", "InterceptFork", "InterceptMouth", "InterceptRoadMerge", "EastPass",
 	],
 	"Orc reserve": ["OrcIntercept", "EastReserve", "InterceptMouth"],
+	"Road guard approach": ["RoadCut", "MaraRoadGuard", "EastPass"],
 	"Orc reach to the mine yard": [
 		"OrcCrewParty", "OrcApproach", "RidgeEastFoot", "RidgeEastCrest", "RidgeOverlook",
 		"RidgeWestCrest", "RidgeWestFoot", "RidgeWestApproach", "WestAssembly", "QuarryTurn", "RoadWest", "MineYard",
@@ -50,10 +51,10 @@ func _run() -> void:
 	_map.position = Vector3(11, 3, -15)
 	var pocket := POCKET.instantiate()
 	for old: Node in pocket.find_children("*", "Marker3D"):
-		var current := _map.get_node_or_null(pocket.get_path_to(old))
-		if not current is Marker3D:
+		var path := pocket.get_path_to(old)
+		if not _map.get_node_or_null(path) is Marker3D:
 			pocket.free()
-			_fail("Missing inherited pocket marker %s." % old.name)
+			_fail("Missing inherited pocket Marker3D at %s." % path)
 			return
 	pocket.free()
 

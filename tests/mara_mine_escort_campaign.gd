@@ -34,8 +34,10 @@ func _run() -> void:
 		and archer.position.is_equal_approx(_xz(_marker("Spawns/HumanArchers")))
 		and _mission.battle.formations[0].position.is_equal_approx(_xz(_marker("Spawns/HumanInfantry"))),
 		"Hero, infantry and archers start at their campaign-map markers.")
-	_check(fight != null and fight.enemy_position.is_equal_approx(_xz(_marker("Routes/EastPass"))),
-		"The road guard is active and physically staged on the larger pass.")
+	var guard_spawn := _marker("Spawns/MaraRoadGuard")
+	_check(guard_spawn != null and fight != null and fight.enemy_position.is_equal_approx(_xz(guard_spawn))
+		and fight.enemy_position.distance_to(_xz(_marker("Routes/EastPass"))) > 3.0,
+		"The road guard uses its authored approach spawn instead of falling back to the pass marker.")
 	_check(_mission.get_node("ObjectiveHUD/Panel/Margin/Readout/Title").text.contains("PROTOTYPE"),
 		"The large-map one-guard encounter is explicitly labeled as a prototype.")
 
