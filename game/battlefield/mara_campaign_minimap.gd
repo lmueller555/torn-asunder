@@ -17,6 +17,35 @@ const SOLID_MASK := 1
 @onready var _mission: Mission = get_parent().get_parent() as Mission
 
 
+func _ready() -> void:
+	map.right_click_to_move = true
+	map.point_requested.connect(_focus_map_point)
+	map.move_requested.connect(_move_from_map)
+
+
+func _focus_map_point(point: Vector2) -> void:
+	if not _mission.command_view or not _mission._sector:
+		return
+	_mission._mouse_cursor_active = false
+	_mission.cursor = point
+	_mission._sector.center_on(point)
+	_mission._update_cameras()
+	_mission._sync_view()
+
+
+func _move_from_map(point: Vector2) -> void:
+	if not _mission.command_view or not _mission._terrain or not _mission._sector:
+		return
+	# Use the same solid-hit rule as a world click; a painted map tile is
+	# not necessarily walkable (e.g. a roof over a tunnel or a crag).
+	var vertical_start := Vector3(point.x, 30.0, point.y)
+	var vertical_end := Vector3(point.x, -12.0, point.y)
+	if _mission._terrain.destination_from_ray(vertical_start, vertical_end) == null:
+		return
+	_focus_map_point(point)
+	_mission._move_selected()
+
+
 func _physics_process(_delta: float) -> void:
 	refresh()
 
@@ -25,6 +54,9 @@ func refresh() -> void:
 	# Child controls are readied before their parent mission has loaded terrain.
 	if not _mission.is_node_ready():
 		return
+	if map.click_to_focus != _mission.command_view:
+		map.click_to_focus = _mission.command_view
+		map.tooltip_text = "Left click: inspect sector. Right click: move the selected platoon." if _mission.command_view else ""
 	var battle := _mission.battle
 	var objective := _mission.objective
 	var encounter := _mission.encounter
