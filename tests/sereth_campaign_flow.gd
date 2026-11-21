@@ -10,13 +10,18 @@ const Beats := preload("res://game/campaign_dialogues.gd")
 const Deployment := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/sereth_cut_playtest.gd")
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
+const WritScene := preload("res://game/battlefield/sereth_pass_writ_playtest.gd")
+const Writ := preload("res://game/battlefield/sereth_pass_writ.gd")
+const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Account := Cut.AccountStatus
 const Bundle := Cut.BundleStatus
 const CAMP := "still_kingdom_camp"
 const VILLAGE := "still_kingdom_cut"
 const POST := "cairnspine_boundary_post"
+const ASSEMBLY := "cairnspine_assembly"
 const CLEAR := "sereth_voices_at_the_cut"
+const WRIT_CLEAR := "sereth_pass_writ"
 const DT := 1.0 / 60.0
 const TO_WITNESS := ["Routes/ApproachRoadWest", "Routes/WestLaneRoadJunction", "Routes/WestLaneEntrance",
 	"Routes/GateInnerTurn", "Routes/GateOuterTurn", "Objectives/WitnessAccount"]
@@ -26,6 +31,16 @@ const TO_CLERK := ["Routes/GraveCutApproach", "Routes/CemeteryStairFoot", "Route
 	"Routes/CemeteryHold", "Routes/GateOuterTurn", "Routes/GateInnerTurn", "Routes/LaneWestTurn",
 	"Routes/LaneSouthTurn", "Routes/LaneSecurityBend", "Routes/LaneEastTurn", "Routes/LaneClerkTurn",
 	"Routes/ClerkYard", "Routes/RecordRoomDoor", "Routes/RecordRoomInside", "Objectives/AccountEntry"]
+const TRACK_IN := ["Routes/WestRoadFork", "Routes/WestTrackJunction", "Routes/WestTrackTurn",
+	"Routes/WestRampTop", "Routes/WestRampBottom", "Routes/SheepTrackBend", "Routes/SheepPinch", "Routes/CoveredTrackHold"]
+const TRACK_OUT := ["Routes/EastRampBottom", "Routes/EastRampTop", "Routes/EastTrackLanding",
+	"Routes/TrackEmergence", "Routes/TrackWallCorner", "Routes/PostTrackTurn", "Objectives/WritHandover"]
+const UNSCREENED_ROAD := ["Routes/RoadScreen", "Routes/OpenRoadBrace", "Routes/RoadCenter",
+	"Routes/ScoutRoadBypassWest", "Routes/ScoutRampFoot", "Routes/ScoutRampTop", "Routes/HighBankScout",
+	"Routes/ScoutRampTop", "Routes/ScoutRampFoot", "Routes/ScoutRoadBypassEast", "Routes/RoadEastStraight",
+	"Routes/LookoutBendRoad"]
+const RALLY_APPROACH := ["Routes/WestRoadFork", "Routes/WestMarchEdge", "Routes/RallyOpenTurn", "Routes/RallyScreenCorner"]
+
 
 var _title: Title
 var _mission: Mission
@@ -48,14 +63,14 @@ func _run() -> void:
 	if passed:
 		passed = await _play_and_retry()
 	if passed:
-		passed = _check_return_and_saves()
+		passed = await _check_return_and_saves()
 	_title.queue_free()
 	await process_frame
 	for path in [_path, _path + ".tmp"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Sereth campaign: own camp and briefing, physical Cut defeat/retry and clear, independent saves, debrief and travel-only Boundary Post passed.")
+		print("Sereth campaign: real Cut and writ, physical defeat/retry, hearing-only debrief, independent saves, replay and travel-only Valley Assembly passed.")
 	quit(0 if passed else 1)
 
 
@@ -166,44 +181,137 @@ func _check_return_and_saves() -> bool:
 	if not _on_map(VILLAGE) or FileAccess.get_file_as_string(_path) != saved:
 		return _fail("Abandoning a replay changed the saved clear.")
 	_map().select_waypoint(POST)
-	if not _press("ConfirmTravel") or not _on_map(POST) or _button("Confirm Deployment") \
-			or not Deployment.for_mission("sereth_pass_writ").is_empty():
-		return _fail("A win did not unlock the post as travel only.")
+	if not _press("ConfirmTravel") or not _on_briefing(WRIT_CLEAR):
+		return _fail("Securing the records did not open the explicit boundary-post briefing.")
 	_joy(JOY_BUTTON_B)
-	if not _press("Continue") or not _on_map(POST):
-		return _fail("Continue did not restore Sereth's last arrived post.")
+	if not _on_map(POST) or not _map().select_waypoint(ASSEMBLY) or not _button("ConfirmTravel").disabled \
+			or not _map()._detail.text.contains("An Audience, Not a Seizure"):
+		return _fail("Arrival without the writ clear unlocked the Valley Assembly.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(POST) or not _press("ConfirmTravel") or not _on_briefing(WRIT_CLEAR) \
+			or not _press("Read Dispatch") or not _is_dialogue(Beats.SERETH_PASS_WRIT_DISPATCH):
+		return _fail("Continue did not restore the post or its distinct Year Four dispatch.")
+	_finish_dialogue()
+	if not _on_briefing(WRIT_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("The dispatch did not return to a separately deployable briefing.")
+	var post := _title._campaign_battle as WritScene
+	if not post or post._field.name != &"CairnspineBoundaryPost" or post.battle.bounds.size != Vector2(290, 178):
+		return _fail("Sereth did not deploy at the real boundary map.")
+	post.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	var at_post := FileAccess.get_file_as_string(_path)
+	if not _play_writ_and_retry(post, at_post):
+		return false
+	await process_frame
 	var profile := Profile.new(_path)
+	var debrief := _title._stage.get_node_or_null("CampaignDialogue") as Dialogue
+	if not _is_dialogue(Beats.SERETH_PASS_WRIT_DEBRIEF) \
+			or profile.completed_missions("sereth") != PackedStringArray([CLEAR, WRIT_CLEAR]) \
+			or profile.load_campaign_world("sereth").current_waypoint_id() != POST:
+		return _fail("The withdrawal did not record only the writ clear and play the hearing debrief.")
+	_key(KEY_ENTER)
+	var line := debrief.find_child("DialogueLine", true, false) as Label
+	if not line or not line.text.contains("a hearing only, at the valley assembly"):
+		return _fail("The hearing debrief did not retain its limited terms.")
+	for _remaining in range(Beats.get_beat(Beats.SERETH_PASS_WRIT_DEBRIEF).lines.size() - 1):
+		_key(KEY_ENTER)
+	if not _on_map(POST) or _map()._heading.text == "Campaign Complete":
+		return _fail("The writ debrief did not return to the still-unfinished campaign.")
+	var completed_writ := FileAccess.get_file_as_string(_path)
+	if not _press("ConfirmTravel") or not _on_briefing(WRIT_CLEAR) or not _press("Confirm Deployment"):
+		return _fail("The cleared writ could not be replayed.")
+	var replay := _title._campaign_battle as WritScene
+	if not replay or replay.objective.phase != Writ.Phase.CARRYING_WRIT or replay.objective.audience_granted \
+			or not _press("ReturnToMap") or not _on_map(POST) or FileAccess.get_file_as_string(_path) != completed_writ:
+		return _fail("The replay did not start fresh or changed the existing writ clear.")
+	if not _map().select_waypoint(ASSEMBLY) or not _press("ConfirmTravel") or not _on_map(ASSEMBLY) \
+			or not _title._campaign_world.mission_at_current_waypoint().is_empty() \
+			or not Deployment.for_mission("sereth_no_proxy").is_empty():
+		return _fail("The writ did not open the next waypoint as travel only.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(ASSEMBLY) or not _button("ConfirmTravel").disabled:
+		return _fail("Continue did not restore the unfinished campaign at the Valley Assembly.")
+	profile = Profile.new(_path)
 	return (profile.completed_missions("mara") == PackedStringArray(["mara_mine_escort"]) \
 		and profile.load_campaign_world("mara").current_waypoint_id() == "marches_road" \
 		and profile.completed_missions("neris") == PackedStringArray(["neris_failing_grove"]) \
 		and profile.load_campaign_world("neris").current_waypoint_id() == "spanwater_lock" \
-		and profile.completed_missions("sereth") == PackedStringArray([CLEAR])) \
-		or _fail("Sereth's clear or travel contaminated one of the other campaigns.")
+		and profile.completed_missions("sova").is_empty() \
+		and profile.completed_missions("sereth") == PackedStringArray([CLEAR, WRIT_CLEAR])) \
+		or _fail("Sereth's hearing or travel contaminated or needed another campaign's clear.")
 
 
-func _walk(ids: Array) -> bool:
+func _play_writ_and_retry(post: WritScene, at_post: String) -> bool:
+	if not _walk(UNSCREENED_ROAD, post) or not _wait_writ(post, func() -> bool:
+		return post.objective.post_occupation_warned, 2300
+	):
+		return _fail("Taking the exposed road did not cause a real occupation warning.")
+	if not post._yard.has_point(post._patrol.global_position + Vector3.UP * 0.8) \
+			or not _wait_writ(post, func() -> bool: return post.objective.phase == Writ.Phase.FAILED, 450) \
+			or post.objective.failure != Writ.Failure.KEEPER_DRIVEN_AWAY \
+			or FileAccess.get_file_as_string(_path) != at_post or _title._page != Title.Page.CAMPAIGN_BATTLE:
+		return _fail("A real patrol occupation did not cause a defeat without saving.")
+	_joy(JOY_BUTTON_START)
+	if post.objective.phase != Writ.Phase.CARRYING_WRIT or not post._keeper.visible \
+			or post.objective.reserve != Writ.Reserve.UNALERTED or not _walk(TRACK_IN, post) \
+			or post.objective.reserve != Writ.Reserve.UNALERTED or post.hero_world_position().y > -3.9:
+		return _fail("Retry did not reset the playtest or the covered approach did not conceal Sereth.")
+	if not _walk(TRACK_OUT, post):
+		return false
+	_joy(JOY_BUTTON_A)
+	post._physics_process(DT)
+	if post.objective.phase != Writ.Phase.AWAITING_KEEPER or post.objective.audience_granted \
+			or not _wait_writ(post, func() -> bool: return post.objective.audience_granted, 100) \
+			or not post._keeper.global_position.is_equal_approx(post._keeper_reply_spot) \
+			or post.objective.phase != Writ.Phase.WITHDRAWING or FileAccess.get_file_as_string(_path) != at_post:
+		return _fail("The physical hearing was not separate from the offer, or wrote a clear before withdrawal.")
+	var east := TRACK_OUT.duplicate()
+	east.reverse()
+	var west := TRACK_IN.duplicate()
+	west.reverse()
+	if not _walk(east + west + RALLY_APPROACH, post) \
+			or not _walk(["Objectives/WithdrawalRally"], post, WritScene.RALLY_RADIUS):
+		return false
+	return (post.objective.phase == Writ.Phase.SUCCEEDED and post.objective.audience_granted \
+		and post.hero_world_position().distance_to(_point("Objectives/WithdrawalRally", post)) <= WritScene.RALLY_RADIUS \
+		and post.objective.reserve != Writ.Reserve.UNALERTED) \
+		or _fail("The physical west rally did not finish the hearing-only mission with a live reserve.")
+
+
+func _wait_writ(post: WritScene, condition: Callable, attempts: int) -> bool:
+	for _attempt in attempts:
+		if condition.call():
+			return true
+		post._physics_process(DT)
+	return condition.call()
+
+
+func _walk(ids: Array, field: Harness = null, tolerance := 0.16) -> bool:
+	var active := field if field else _mission
 	for id: String in ids:
-		var point := _point(id)
-		var local := _mission.to_local(point)
+		var point := _point(id, active)
+		var local := active.to_local(point)
 		var target := Vector2(local.x, local.z)
-		var budget := ceili(target.distance_to(_mission.battle.hero_position) / Battle.HERO_SPEED / DT) + 100
+		var budget := ceili(target.distance_to(active.battle.hero_position) / Battle.HERO_SPEED / DT) + 100
 		for _step in range(budget):
-			var remaining := target - _mission.battle.hero_position
-			if remaining.length() < 0.1:
+			var remaining := target - active.battle.hero_position
+			if remaining.length() < 0.1 or active.hero_world_position().distance_to(point) <= tolerance:
 				break
-			var move := remaining.normalized().rotated(_mission._hero_yaw)
+			var move := remaining.normalized().rotated(active._hero_yaw)
 			_axis(JOY_AXIS_LEFT_X, move.x)
 			_axis(JOY_AXIS_LEFT_Y, move.y)
-			_tick()
+			active._physics_process(DT)
 		_axis(JOY_AXIS_LEFT_X, 0.0)
 		_axis(JOY_AXIS_LEFT_Y, 0.0)
-		if _mission.hero_world_position().distance_to(point) >= 0.16:
+		if active.hero_world_position().distance_to(point) > tolerance:
 			return _fail("Actual terrain blocked Sereth before " + id)
 	return true
 
 
-func _point(id: String) -> Vector3:
-	return _mission.battlefield_marker(NodePath("Markers/" + id)).global_position
+func _point(id: String, field: Harness = null) -> Vector3:
+	var active := field if field else _mission
+	return active.battlefield_marker(NodePath("Markers/" + id)).global_position
 
 
 func _tick(count := 1) -> void:
@@ -220,9 +328,9 @@ func _on_map(id: String) -> bool:
 		and _title._campaign_world.campaign_id() == "sereth" and _title._campaign_world.current_waypoint_id() == id
 
 
-func _on_briefing() -> bool:
+func _on_briefing(mission_id := CLEAR) -> bool:
 	return _title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null \
-		and _title._campaign_world.mission_at_current_waypoint() == CLEAR
+		and _title._campaign_world.mission_at_current_waypoint() == mission_id
 
 
 func _is_dialogue(id: StringName) -> bool:

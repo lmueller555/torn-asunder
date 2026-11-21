@@ -128,6 +128,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "STILL KINGDOM CUT · CEMETERY STAIR AND RECORD ROOM",
 		"orders": "Hear Iren by the stair and relay her account to the village clerk. Carry the exposed bundle to the record room. If raiders take it, hold a guard to stall them and recover it before they reach the east exit.",
 	},
+	"sereth_pass_writ": {
+		"scene": preload("res://game/battlefield/sereth_pass_writ_playtest.tscn"),
+		"dispatch": Beats.SERETH_PASS_WRIT_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_PASS_WRIT_DEBRIEF,
+		"battlefield_label": "KEEPER BOUNDARY POST · OPEN ROAD AND SHEEP TRACK",
+		"orders": "Carry the writ to the neutral Keeper. Use the sheep track for cover or screen the open road. Protect the post, offer the writ in person, and wait for the Keeper's reply. Once the hearing is granted, withdraw to the west rally. You do not need to defeat the riders.",
+	},
 }
 
 
