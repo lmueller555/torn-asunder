@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/raska_mine_witness.tscn" id="1_raska"]
+[ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine_campaign.tscn" id="2_valley"]
+
+[node name="RaskaMineWitnessCampaign" instance=ExtResource("1_raska")]
+battlefield_scene = ExtResource("2_valley")
+field_bounds = Rect2(-160, -108, 320, 224)
+enable_sector_camera = true
+local_sector_size = 116.0
+crew_outlet_turn = NodePath("Markers/Routes/EvacuationTurn")
+detachment_flank = PackedVector3Array(-103, 0, 111, -67, 0, 103)
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 480.0

@@ -14,6 +14,11 @@ const TRAIL := ^"Markers/Routes/EvacuationTrail"
 const SAFETY := ^"Markers/Objectives/MinerEvacuation"
 const RALLY := ^"Markers/Routes/OrcApproach"
 
+## Large layouts can hold the workers straight until they are clear of the portal.
+@export var crew_outlet_turn: NodePath
+## Optional local start/end for the detachment's visible advance beside the crew trail.
+@export var detachment_flank := PackedVector3Array()
+
 var objective := Witness.new()
 var _outlet: Vector3
 var _rally: Vector3
@@ -45,6 +50,15 @@ func _ready() -> void:
 	# The detachment advances on the exposed flank beside the workers' route, not through the tunnel.
 	_screen_start = _marker(SAFETY) + Vector3(0.0, 0.0, 2.2)
 	_screen_end = _outlet + Vector3(-3.2, 0.0, 1.8)
+	if not crew_outlet_turn.is_empty():
+		var outlet_turn := battlefield_marker(crew_outlet_turn)
+		if outlet_turn:
+			_crew_route.insert(2, outlet_turn.global_position)
+		else:
+			push_error("Raska crew outlet turn is not a Marker3D: %s" % crew_outlet_turn)
+	if detachment_flank.size() == 2:
+		_screen_start = to_global(detachment_flank[0])
+		_screen_end = to_global(detachment_flank[1])
 	_outlet_beacon = _beacon(_outlet, "TUNNEL OUTLET", Color("#afdcc6"))
 	_screen_beacon = _beacon(_screen_end, "SCREEN THE APPROACH", Color("#ffc681"))
 	_rally_beacon = _beacon(_rally, "ORC RALLY", Color("#9ee5a0"))
@@ -189,9 +203,13 @@ func _refresh_objective() -> void:
 			elif not _screen_held:
 				_goal.text = "Stop the approaching detachment"
 				_hint.text = "Reach the red detachment with Raska or one of his formations before it seals the outlet."
+				if detachment_flank.size() == 2:
+					_goal.text += "   ·   %d m from sealing the outlet" % ceili(_detachment.global_position.distance_to(_screen_end))
 			else:
 				_goal.text = "Outlet screened   ·   Workers withdrawing"
 				_hint.text = "Wait at the tunnel outlet while the remaining workers reach Druid safety."
+				if detachment_flank.size() == 2:
+					_hint.text = "The workers are %d m from Druid safety. Return to the outlet to hear the witness." % ceili(_crew.global_position.distance_to(_crew_route[-1]))
 		Witness.Phase.TERMS_OFFERED:
 			_goal.text = "The witness offers her terms"
 			_hint.text = "She will testify if the others go free. Approach her and press Cross / Space to accept."
