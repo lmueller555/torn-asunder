@@ -3,6 +3,7 @@ extends "res://game/battlefield/command_harness.gd"
 
 signal mission_finished(won: bool)
 
+const CommandCaptions := preload("res://game/battlefield/raska_brace_command_captions.gd")
 const WellRoad := preload("res://game/battlefield/raska_well_road.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const MountedPass := preload("res://game/combat/mounted_brace_encounter.gd")
@@ -76,6 +77,8 @@ var _pass: MountedPass
 var _brace_line: Platoon
 var _mounted_line: Platoon
 var _explicit_brace := false
+var _brace_banner: Label3D
+var _command_captions_active := false
 
 @onready var _rival: Rival = $MountedReserve
 @onready var _goal: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
@@ -118,6 +121,24 @@ func _ready() -> void:
 func _build_placeholders() -> void:
 	_name_formations()
 	super._build_placeholders()
+	for child in _formation_models[BRACE_INDEX].get_children():
+		if child is Label3D:
+			_brace_banner = child as Label3D
+			break
+
+
+func _sync_view() -> void:
+	super._sync_view()
+	if not is_instance_valid(_brace_banner) or not is_instance_valid(_rival._banner):
+		return
+	var show_pass := _pass_stage == PassStage.RUNNING \
+			or (_pass_stage == PassStage.ARMED and _rival.status == Rival.Status.MARCHING)
+	if command_view and show_pass:
+		CommandCaptions.place(_command_camera, _formation_members[BRACE_INDEX], _brace_banner, _rival._banner)
+		_command_captions_active = true
+	elif _command_captions_active:
+		CommandCaptions.restore(_brace_banner, _rival._banner)
+		_command_captions_active = false
 
 
 func _physics_process(delta: float) -> void:
