@@ -7,19 +7,21 @@ The [original Xbox manual, pp. 12–15](https://manuals.plus/m/77bff80c4c8a7cc0c
 
 ## Scale and interception
 
-Use one of five battlefield sizes. Size means a normal infantry platoon's unopposed march between playable terrain edges, along a real route on the field. These are planning targets, not mission timers or limits on roads, detours or mounts.
+Use one of five battlefield sizes. Size means a normal infantry platoon's unopposed march between playable terrain edges, along a real route on the field. The new targets double linear travel distance and time at the same speed. They do not change mission timers, sight and aggro radii, or camera scale.
 
 | Size | Target march time | Planning distance at 3 m/s |
 |---|---:|---:|
-| Compact | 90 s | 270 m |
-| Small | 110 s | 330 m |
-| Standard | 130 s | 390 m |
-| Large | 155 s | 465 m |
-| Expansive | 180 s | 540 m |
+| Compact | 180 s | 540 m |
+| Small | 220 s | 660 m |
+| Standard | 260 s | 780 m |
+| Large | 310 s | 930 m |
+| Expansive | 360 s | 1,080 m |
 
-Pick a plausible through-route using edge markers. March with the real formation and terrain adapters, with no combat or waiting, and record both measured time and route length. A rectangle, an objective-only route, or the length along a blocked straight line is not a scale measurement. The [tier helper](../../game/battlefield/battlefield_march_scale.gd) reports the nearest target while flagging marches outside the 90–180 s band separately. This sets all five targets; it does not claim an authored map exists for each class.
+Pick a plausible through-route using edge markers. March with the real formation and terrain adapters, with no combat or waiting, and measure time and distance in both directions. A larger camera or command rectangle, a route padded with detours, or a blocked straight line is not a scale measurement. The [tier helper](../../game/battlefield/battlefield_march_scale.gd) reports the nearest target and separately flags marches outside 180–360 s. Treat new terrain, reachable command bounds, and sightline and objective continuity as separate checks. Any new or revised visual terrain must pass the [asset quality gate](../asset-quality-gate.md).
 
-### Measured examples in current development maps
+### Original baselines, before terrain expansion
+
+The labels below refer to the previous 90–180 s targets. These are measured, playable development routes, not evidence that the battlefield has been expanded. The baseline tests continue to exercise them during the transition.
 
 | Nearest class | Normal infantry benchmark | What the measurement covers |
 | --- | --- | --- |

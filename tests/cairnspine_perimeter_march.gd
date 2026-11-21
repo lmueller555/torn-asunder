@@ -63,8 +63,8 @@ func _run() -> void:
 		for route: Array[Vector2] in [RIM_ROUTE, reversed]:
 			var march := _walk(route)
 			var seconds: float = march.seconds
-			if not march.reached or not Scale.within_target_band(seconds) \
-					or Scale.classify(seconds) != Scale.Tier.EXPANSIVE \
+			if not march.reached or not Scale.within_baseline_band(seconds) \
+					or Scale.classify_baseline(seconds) != Scale.Tier.EXPANSIVE \
 					or absf(seconds - 174.2) > 0.1 or absf(march.meters - 522.48) > 0.25:
 				_fail("Expected the Expansive perimeter march in %s at %s: %s" % [mission_id, route[-1], march])
 				return

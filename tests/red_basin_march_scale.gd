@@ -48,13 +48,13 @@ func _run() -> void:
 	var salt := _march(START + SALT + FINISH, EAST)
 	var covered := _march(START + WASH + FINISH, EAST)
 	var extraction := _march(START + WASH + FINISH, exit)
-	_check(_near(salt, Vector2(321.8, 107.3)) and Scale.classify(salt.y) == Scale.Tier.SMALL,
+	_check(_near(salt, Vector2(321.8, 107.3)) and Scale.classify_baseline(salt.y) == Scale.Tier.SMALL,
 		"The live salt road no longer matches the short benchmark: %s." % salt)
-	_check(_near(covered, Vector2(443.1, 147.8)) and Scale.classify(covered.y) == Scale.Tier.LARGE,
+	_check(_near(covered, Vector2(443.1, 147.8)) and Scale.classify_baseline(covered.y) == Scale.Tier.LARGE,
 		"The live covered route no longer matches the near-Large benchmark: %s." % covered)
-	_check(_near(extraction, Vector2(438.1, 146.2)) and Scale.classify(extraction.y) == Scale.Tier.LARGE,
+	_check(_near(extraction, Vector2(438.1, 146.2)) and Scale.classify_baseline(extraction.y) == Scale.Tier.LARGE,
 		"The original extraction must remain distinct from the clamp: %s." % extraction)
-	_check(covered.y < Scale.TARGET_SECONDS[Scale.Tier.LARGE] and Scale.within_target_band(covered.y),
+	_check(covered.y < Scale.BASELINE_TARGET_SECONDS[Scale.Tier.LARGE] and Scale.within_baseline_band(covered.y),
 		"Nearest tier must not be mistaken for the nominal 155-second target.")
 	_mission.queue_free()
 	await process_frame

@@ -69,8 +69,8 @@ func _run() -> void:
 				(_mission as Raska).restart_mission()
 			var march := _walk(route, live)
 			var seconds: float = march.seconds
-			if not march.reached or not Scale.within_target_band(seconds) \
-					or Scale.classify(seconds) != Scale.Tier.LARGE \
+			if not march.reached or not Scale.within_baseline_band(seconds) \
+					or Scale.classify_baseline(seconds) != Scale.Tier.LARGE \
 					or absf(seconds - 157.1667) > 0.1 or absf(march.meters - 471.28) > 0.25:
 				_fail("Expected the Large dry perimeter march in %s at %s: %s" % [mission_id, route[-1], march])
 				return
