@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/mara_mine_escort.tscn" id="1_mara"]
+[ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine_campaign.tscn" id="2_valley"]
+
+[node name="MaraMineEscortCampaign" instance=ExtResource("1_mara")]
+battlefield_scene = ExtResource("2_valley")
+field_bounds = Rect2(-160, -108, 320, 224)
+enable_sector_camera = true
+local_sector_size = 116.0
+hero_spawn = NodePath("Markers/Spawns/HumanEscort")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HumanInfantry"), NodePath("Markers/Spawns/HumanArchers")])
+
+[node name="Sun" parent="." index="1"]
+directional_shadow_max_distance = 480.0
+
+[node name="Title" parent="ObjectiveHUD/Panel/Margin/Readout" index="0"]
+text = "MARA / YEAR ONE MINE ESCORT · PROTOTYPE"
