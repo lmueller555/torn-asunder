@@ -39,7 +39,7 @@ jobs:
         run: '"$RUNNER_TEMP/godot" --headless --import'
       - name: Run campaign, battlefield and combat smoke tests
         run: |
-          for test in campaign_missions mara_greyhollow_rescue greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap minimap_route_overlay ilyra_headland_relay_skin cairnspine_perimeter_march battle_points; do
+          for test in campaign_missions mara_greyhollow_rescue mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap minimap_route_overlay ilyra_headland_relay_skin cairnspine_perimeter_march battle_points; do
             echo "::group::$test"
             "$RUNNER_TEMP/godot" --headless --script "res://tests/$test.gd"
             echo "::endgroup::"

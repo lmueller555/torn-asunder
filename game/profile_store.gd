@@ -18,6 +18,7 @@ const LEAD_TRAINING := "lead_training"
 const MARA_LEAD_MELEE := "mara_mine_melee_point"
 const MARA := "mara"
 const MARA_MINE := "mara_mine_escort"
+const GREYHOLLOW_REVEAL_PENDING := "greyhollow_reveal_pending"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 const ILYRA := "ilyra"
@@ -79,6 +80,34 @@ func record_mission_clear(id: String, mission_id: String) -> Error:
 		return OK
 	completed.append(mission_id)
 	return _set_value(MISSION_PROGRESS, id, completed)
+
+
+## The new rescue and its mandatory reveal are one save transaction. A legacy
+## escort clear uses record_mission_clear and never queues this cutscene.
+func record_greyhollow_rescue_clear() -> Error:
+	var cleared := completed_missions(MARA)
+	# A particularly old escort save has the same clear ID but lacks this
+	# acknowledgement. Its first actual rescue can still queue the scene.
+	var recorded: Variant = _config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, "")
+	if cleared.has(MARA_MINE) and recorded is bool:
+		return OK
+	if not cleared.has(MARA_MINE):
+		cleared.append(MARA_MINE)
+	return _set_values({
+		MISSION_PROGRESS: {MARA: cleared},
+		MISSION_RESULTS: {GREYHOLLOW_REVEAL_PENDING: true},
+	})
+
+
+func greyhollow_reveal_pending() -> bool:
+	var pending: Variant = _config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false)
+	return pending is bool and pending and completed_missions(MARA).has(MARA_MINE)
+
+
+func finish_greyhollow_reveal() -> Error:
+	if not greyhollow_reveal_pending():
+		return OK
+	return _set_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false)
 
 
 ## Detached plan for the one Human slot. Old saves without the marker are
