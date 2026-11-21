@@ -12,7 +12,7 @@ const _DEPLOYMENTS := {
 		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
 	},
 	"mara_grain_crossing": {
-		"scene": preload("res://game/battlefield/mara_grain_crossing_playtest.tscn"),
+		"scene": preload("res://game/battlefield/mara_grain_crossing_campaign.tscn"),
 		"dispatch": Beats.MARA_GRAIN_DISPATCH,
 		"briefing_dispatch": true,
 		"result_debrief": true,

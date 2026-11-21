@@ -67,6 +67,13 @@ QUAY_WRAPPER = "game/battlefields/moonwash_harbor_campaign_mara_exit.tscn"
 QUAY_BASE = "game/battlefields/moonwash_harbor_campaign.tscn"
 QUAY_ASSET = "assets/models/environment/quay_threshold.glb"
 QUAY_RECEIPT = "docs/audits/mara-high-quay-threshold-v1.json"
+BRIDGE_MISSION = "mara_grain_crossing"
+BRIDGE_DEPLOYMENT = "game/battlefield/mara_grain_crossing_campaign.tscn"
+BRIDGE_BATTLEFIELD = "game/battlefields/marches_crossing.tscn"
+BRIDGE_BINDING = "game/battlefield/mara_grain_bridge_visual.gd"
+BRIDGE_NEAR = "assets/models/environment/marches_north_timber_bridge.glb"
+BRIDGE_SECTOR = "assets/models/environment/marches_north_timber_bridge_sector.glb"
+BRIDGE_RECEIPT = "docs/audits/mara-marches-north-bridge-v1.json"
 DEVELOPMENT = "still uses development art"
 ID = r"[a-z][a-z0-9_]*"
 PACKED_RESOURCE = re.compile(
@@ -237,6 +244,15 @@ def _verify_mara_quay_threshold(root: Path, deployments: dict[str, str], battlef
                            {QUAY_ASSET, QUAY_WRAPPER, QUAY_BASE}, "mission_deployment", QUAY_DEPLOYMENT)
 
 
+def _verify_mara_north_bridge(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
+    if [mission for mission, scene in deployments.items() if scene == BRIDGE_DEPLOYMENT] != [BRIDGE_MISSION] \
+            or battlefields.get(BRIDGE_MISSION) != BRIDGE_BATTLEFIELD:
+        raise ValueError("Mara North Bridge: exact camera binding is not isolated to its reviewed deployment")
+    return _receipt_record(root, "Mara’s North Bridge (V1 near and sector)", BRIDGE_RECEIPT, 10,
+                           {BRIDGE_NEAR, BRIDGE_SECTOR, BRIDGE_DEPLOYMENT, BRIDGE_BINDING, BRIDGE_BATTLEFIELD},
+                           "mission_deployment", BRIDGE_DEPLOYMENT)
+
+
 def _verify_adapter(root: Path, deployment: str, script: str, node: str, context: str) -> None:
     scene = (root / deployment).read_text(encoding="utf-8")
     ext = re.findall(rf'^\[ext_resource type="Script" path="res://{re.escape(script)}" id="([^"]+)"\]$',
@@ -277,6 +293,7 @@ def build_report(root: Path) -> dict:
     spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
     beach_stand = _verify_ilyra_beach_stand(root, deployments, battlefields)
     quay_threshold = _verify_mara_quay_threshold(root, deployments, battlefields)
+    north_bridge = _verify_mara_north_bridge(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -290,7 +307,8 @@ def build_report(root: Path) -> dict:
                 + ([custody_case] if mission == CASE_MISSION else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
                 + ([beach_stand] if mission == BEACH_MISSION else [])
-                + ([quay_threshold] if mission == QUAY_MISSION else []),
+                + ([quay_threshold] if mission == QUAY_MISSION else [])
+                + ([north_bridge] if mission == BRIDGE_MISSION else []),
             }
             for mission, scene in deployments.items()
         ],

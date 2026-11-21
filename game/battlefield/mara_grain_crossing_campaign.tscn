@@ -1,0 +1,15 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/mara_grain_crossing_playtest.tscn" id="1_base"]
+[ext_resource type="PackedScene" path="res://game/battlefields/marches_crossing.tscn" id="2_marches"]
+[ext_resource type="Script" path="res://game/battlefield/mara_grain_bridge_visual.gd" id="3_bridge"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/marches_north_timber_bridge.glb" id="4_near"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/marches_north_timber_bridge_sector.glb" id="5_sector"]
+
+[node name="MaraGrainCrossingCampaign" instance=ExtResource("1_base")]
+battlefield_scene = ExtResource("2_marches")
+
+[node name="NorthBridgeVisual" type="Node" parent="."]
+script = ExtResource("3_bridge")
+near_bridge = ExtResource("4_near")
+sector_bridge = ExtResource("5_sector")
