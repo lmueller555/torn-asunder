@@ -8,6 +8,7 @@ const Points := preload("res://game/combat/battle_points.gd")
 
 # From RECOIL through KNOCKDOWN, states are ordered by contact priority.
 enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER }
+enum AbilityStatus { READY, BATTLE_ENDED, INVALID_CASTER, INVALID_TARGET, UNHURT_TARGET, STAT_REQUIREMENT, INSUFFICIENT_BP }
 
 const PLATOON_SIZE := 32
 const FORMATION_COLUMNS := 8
@@ -45,6 +46,10 @@ const ARENA_LIMIT := Vector2(9.0, 10.0)
 const VICTORY_CLEAR_TIME := 0.75
 const VICTORY_CHEERS := 3
 const KNOCKDOWN_RECOVERY_GRACE := 0.5
+# Prototype tuning for the first Holy support spell, not a global ability default.
+const FIELD_BENEDICTION_HOLY_RATING := 10
+const FIELD_BENEDICTION_BP_COST := 100
+const FIELD_BENEDICTION_HEAL_FRACTION := 0.15
 const DURATIONS := {
 	State.ATTACK: (88.0 / 60.0) / Catalog.INFANTRY_SWORD_SLASH_SPEED,
 	State.RAISE: 0.32,
@@ -176,6 +181,40 @@ func battle_points_for_team(team: int) -> Points:
 	if team < 0 or team >= _team_battle_points.size():
 		return null
 	return _team_battle_points[team]
+
+
+# A read-only readiness check for ability previews and order admission.
+func field_benediction_status(team: int, caster_index: int, target_index: int) -> AbilityStatus:
+	if winner != LIVE:
+		return AbilityStatus.BATTLE_ENDED
+	var pool := battle_points_for_team(team)
+	if pool == null or caster_index < 0 or caster_index >= soldiers.size():
+		return AbilityStatus.INVALID_CASTER
+	var caster := soldiers[caster_index]
+	if caster.team != team or not caster.unit.is_alive():
+		return AbilityStatus.INVALID_CASTER
+	if target_index < 0 or target_index >= soldiers.size():
+		return AbilityStatus.INVALID_TARGET
+	var target := soldiers[target_index]
+	if target.team != team or not target.unit.is_alive():
+		return AbilityStatus.INVALID_TARGET
+	if target.unit.hp >= target.unit.max_hp:
+		return AbilityStatus.UNHURT_TARGET
+	if caster.unit.rating(Unit.Damage.HOLY) < FIELD_BENEDICTION_HOLY_RATING:
+		return AbilityStatus.STAT_REQUIREMENT
+	if not pool.can_afford(FIELD_BENEDICTION_BP_COST):
+		return AbilityStatus.INSUFFICIENT_BP
+	return AbilityStatus.READY
+
+
+# Return HP restored. Reject an invalid order before spending from the team's pool.
+func cast_field_benediction(team: int, caster_index: int, target_index: int) -> float:
+	if field_benediction_status(team, caster_index, target_index) != AbilityStatus.READY:
+		return 0.0
+	if not _team_battle_points[team].try_spend(FIELD_BENEDICTION_BP_COST, true):
+		return 0.0
+	var target := soldiers[target_index].unit
+	return target.receive_healing(target.max_hp * FIELD_BENEDICTION_HEAL_FRACTION)
 
 
 # The caller confirms charge contact before invoking this resolver. An ineffective
