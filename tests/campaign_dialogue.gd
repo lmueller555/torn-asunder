@@ -32,11 +32,12 @@ func _run() -> void:
 	passed = _check_high_quay_beats() and passed
 	passed = _check_ilyra_moonwash_beats() and passed
 	passed = _check_raska_well_road_beats() and passed
+	passed = _check_sova_public_record_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, High Quay and Well Road continuity, mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, High Quay, Well Road and Sova hearing continuity, mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -333,6 +334,33 @@ func _check_raska_well_road_beats() -> bool:
 		if not portrait_seen or _panel.visible or _completions.back() != id:
 			return _fail("Well Road dialogue did not finish under its own ID: %s" % id)
 	return _completions.size() == initial_count + cases.size() or _fail("Well Road emitted duplicate completions.")
+
+
+func _check_sova_public_record_beats() -> bool:
+	var cases := [
+		[Beats.SOVA_PUBLIC_RECORD_DISPATCH, ["recessed lectern", "public scribe", "keep the exit clear", "Let them go", "all three passages"]],
+		[Beats.SOVA_PUBLIC_RECORD_DEBRIEF, ["command to raise the Cairnspine", "Elven coast drowned", "Red Basin lost its sea", "I made a copy for Ilyra", "they need to be able to say no"]],
+		[Beats.SOVA_GODBRIDLE_HANDOVER, ["take custody of it", "Break the seal so the witnesses can see", "not to sign away anyone's claim", "Close the case"]],
+	]
+	var initial_count := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat := Beats.get_beat(id)
+		if beat.is_empty() or not _panel.present(id, beat):
+			return _fail("Sova's hearing or custody beat was missing: %s" % id)
+		var account := _finish_visible_beat(beat)
+		for detail: String in fixture[1]:
+			if not detail in account:
+				return _fail("Sova's dialogue lost a hearing rule or historical fact: %s" % id)
+		if "Orrun," in account or _completions.back() != id or _panel.visible:
+			return _fail("A new command or incorrect completion entered Sova's hearing/custody beat.")
+	var handover := Beats.get_beat(Beats.SOVA_GODBRIDLE_HANDOVER)
+	var speakers: Array[String] = []
+	for line: Dictionary in handover.lines:
+		speakers.append(line.speaker)
+	if not speakers.has(Beats.ORC_WITNESS) or not speakers.has(Beats.ELVEN_WITNESS):
+		return _fail("The Year Four custody transfer lacked both witnesses.")
+	return _completions.size() == initial_count + cases.size() or _fail("Sova's beats emitted duplicate completions.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:
