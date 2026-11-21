@@ -36,11 +36,12 @@ func _run() -> void:
 	passed = _check_sova_public_record_beats() and passed
 	passed = _check_sova_vault_return_beats() and passed
 	passed = _check_neris_failing_grove_beats() and passed
+	passed = _check_sereth_cut_beats() and passed
 	_panel.queue_free()
 	_underlay.queue_free()
 	await process_frame
 	if passed:
-		print("Verified campaign dialogue, branching outcomes, mission continuity (including the Dryad grove and Sova’s vault), mixed-device input, and replay.")
+		print("Verified campaign dialogue, branching outcomes, mission continuity (including Sereth’s opening), mixed-device input, and replay.")
 	quit(0 if passed else 1)
 
 
@@ -489,6 +490,51 @@ func _check_neris_failing_grove_beats() -> bool:
 			return _fail("A grove beat did not finish under its own ID: %s" % id)
 		ids.append(id)
 	return _completions.slice(start) == ids or _fail("Grove dialogue emitted duplicate or out-of-order completions.")
+
+
+func _check_sereth_cut_beats() -> bool:
+	var dispatch := Beats.get_beat(Beats.SERETH_CUT_DISPATCH)
+	var debrief := Beats.get_beat(Beats.SERETH_CUT_DEBRIEF)
+	if dispatch.get("title", "") != "Before Anyone Writes It Down" or debrief.get("title", "") != "In Her Own Words":
+		return _fail("Sereth's independent dispatch and debrief were missing.")
+	var cases := [
+		[Beats.SERETH_CUT_DISPATCH, dispatch, [Beats.VILLAGE_CLERK, Beats.HOUSEHOLD_GUARD, Beats.SERETH, Beats.VILLAGE_CLERK, Beats.SERETH]],
+		[Beats.SERETH_CUT_DEBRIEF, debrief, [Beats.IREN, Beats.VILLAGE_CLERK, Beats.SERETH, Beats.VILLAGE_CLERK, Beats.SERETH]],
+	]
+	var completions := _completions.size()
+	for fixture: Array in cases:
+		var id: StringName = fixture[0]
+		var beat: Dictionary = fixture[1]
+		var speakers: Array = fixture[2]
+		if "Year Three" not in beat.get("location", "") or beat.lines.size() != speakers.size() \
+				or not _panel.present(id, beat):
+			return _fail("Sereth's Year Three beat did not open under its own ID: %s" % id)
+		for index in range(speakers.size()):
+			if _label("SpeakerName").text != speakers[index]:
+				return _fail("The records and the witness's testimony gained the wrong speaker: %s" % id)
+			var is_sereth: bool = speakers[index] == Beats.SERETH
+			if _portrait().visible != is_sereth or _label("PortraitFallback").visible == is_sereth \
+					or (is_sereth and _portrait().texture != Beats.SERETH_PORTRAIT):
+				return _fail("The panel gave a voice or civilian an invented portrait, or lost Sereth's.")
+			if index < speakers.size() - 1:
+				if index % 2 == 0:
+					_send_pad(JOY_BUTTON_A)
+				else:
+					_send_key(KEY_ENTER)
+		if _button("AdvanceButton").text != "Finish" or not _panel.visible:
+			return _fail("Sereth's beat closed before explicitly finishing.")
+		_send_key(KEY_SPACE)
+		if _panel.visible or _completions.back() != id:
+			return _fail("Sereth's beat did not complete exactly once under its own ID: %s" % id)
+
+	if _completions.slice(completions) != [Beats.SERETH_CUT_DISPATCH, Beats.SERETH_CUT_DEBRIEF]:
+		return _fail("Sereth's dialogue completion order or count changed.")
+	return ("account book" in dispatch.lines[3].text and "even if the papers aren't here yet" in dispatch.lines[3].text
+		and "I'll sign that much" in debrief.lines[0].text and "I recognized the voice" in debrief.lines[0].text
+		and "own entry in the register" in debrief.lines[1].text and "Seal the bundle for cataloging" in debrief.lines[2].text
+		and "doesn't tell us who wants to return" in debrief.lines[2].text and "secure the Godbridle" in debrief.lines[3].text
+		and "If you come across a letter" in debrief.lines[4].text) \
+		or _fail("The cut beats lost Iren's agency, ambiguity, separate written records, or the unchanged commission.")
 
 
 func _send_key(key_code: Key, echo := false) -> void:

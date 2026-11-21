@@ -32,11 +32,14 @@ const ILYRA_MOONWASH_CARGO_DEBRIEF := &"ilyra_moonwash_debrief_cargo_recovered"
 const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
+const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
+const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
 const ILYRA_PORTRAIT := preload("res://assets/art/ilyra.webp")
 const NERIS_PORTRAIT := preload("res://assets/art/neris.webp")
+const SERETH_PORTRAIT := preload("res://assets/art/sereth.webp")
 const MARA := "King Mara Halden"
 const CAPTAIN := "Royal Captain"
 const RASKA := "War Marshal Raska Vennor"
@@ -62,6 +65,10 @@ const PORT_CLERK := "Harbor Clerk"
 const NERIS := "Rootspeaker Neris Alder"
 const GROVE_ENVOY := "Grove Envoy"
 const FEEDER_KEEPER := "Town Feeder Keeper"
+const SERETH := "High Executor Sereth Vale"
+const IREN := "Iren"
+const VILLAGE_CLERK := "Village Clerk"
+const HOUSEHOLD_GUARD := "Household Guard"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -359,6 +366,28 @@ const BEATS := {
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll send a crew to the feeder. Tell me where they should meet you."},
 			{"speaker": GROVE_ENVOY, "text": "We'll go back for the other trees when there's room. Their ground is still dry. You mean to keep asking for the Godbridle?"},
 			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll still ask to hold it. The other groves may not have a town willing to lend them ground. But your answer about the crossing stands."},
+		],
+	},
+	SERETH_CUT_DISPATCH: {
+		"title": "Before Anyone Writes It Down",
+		"location": "Still Kingdom village · Year Three, before the defense",
+		"lines": [
+			{"speaker": VILLAGE_CLERK, "text": "The bank fell away beside the old graves. It left a bundle of records below the stair. Iren asked to tell you what she heard. She's waiting above the cut."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "A March party is coming for the bundle. One guard can hold the stair while the other watches the road."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Hold the stair. If they get the bundle first, stop the carrier before they reach the east exit. Bring the papers back to the record room."},
+			{"speaker": VILLAGE_CLERK, "text": "I'll keep the account book open at my table. Come back and tell me what Iren says, even if the papers aren't here yet."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll ask her what she wants on the page. Let her finish before we ask her to put her name to it."},
+		],
+	},
+	SERETH_CUT_DEBRIEF: {
+		"title": "In Her Own Words",
+		"location": "Village record room · Year Three, after the defense",
+		"lines": [
+			{"speaker": IREN, "text": "I heard my name. I recognized the voice. I'll sign that much. Don't put anything else down for me."},
+			{"speaker": VILLAGE_CLERK, "text": "That's what's in the account, under your name. The recovered bundle has its own entry in the register."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Seal the bundle for cataloging. Don't send the court a list of names to call back. Hearing a name doesn't tell us who wants to return."},
+			{"speaker": VILLAGE_CLERK, "text": "The court's courier is at the door. They want you to secure the Godbridle before anyone gives another command."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll go. If you come across a letter for me, put it in the register with everything else. It can wait."},
 		],
 	},
 }
