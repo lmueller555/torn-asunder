@@ -4,9 +4,9 @@ extends RefCounted
 
 const _BY_CAMPAIGN := {
 	"mara": [
-		{"id": "mara_mine_escort", "title": "The Pass Below the Mine", "year": 1, "battlefield_id": "year_one_mine"},
-		{"id": "mara_grain_crossing", "title": "Grain on Credit", "year": 2, "battlefield_id": "marches_crossing"},
-		{"id": "mara_moonwash_quay", "title": "The High Quay", "year": 2, "battlefield_id": "moonwash_harbor"},
+		{"id": "mara_mine_escort", "title": "Get Them Out", "year": 3, "battlefield_id": "year_one_mine"},
+		{"id": "mara_grain_crossing", "title": "Grain on Credit", "year": 3, "battlefield_id": "marches_crossing"},
+		{"id": "mara_moonwash_quay", "title": "The High Quay", "year": 3, "battlefield_id": "moonwash_harbor"},
 	],
 	"raska": [
 		{"id": "orc_mine_witness", "title": "One Person to Ask", "year": 1, "battlefield_id": "year_one_mine"},

@@ -235,7 +235,7 @@ func _blocking_clear_for_selection() -> String:
 
 func _locked_route_detail(clear: String, destination: String) -> String:
 	if clear == "mara_mine_escort":
-		return "Complete the Mine Escort to open the road into the Marches."
+		return "Complete the Greyhollow rescue to open the road into the Marches."
 	var mission := Missions.mission_for_campaign(_world.campaign_id(), clear)
 	return "Complete %s to open the route to %s." % [mission.get("title", "the required mission"), destination]
 

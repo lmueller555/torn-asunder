@@ -11,7 +11,7 @@ const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
 const Archer := preload("res://game/combat/human_archer_volley.gd")
 
 enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED, AT_RESERVE, INTERCEPTING }
-enum Target { NONE, HERO, INFANTRY, ARCHERS }
+enum Target { NONE, HERO, INFANTRY, ARCHERS, CIVILIAN }
 
 const HERO_TEAM := 0
 const ENEMY_TEAM := 1
@@ -34,6 +34,12 @@ var archer_attack: ArcherAttack
 var _feet: Callable
 var enemy := Unit.new(ENEMY_HP)
 var defense: Defense
+var enemy_title := "Road guard"
+var enemy_damage := ENEMY_DAMAGE
+var civilian_positions: Callable
+var civilian_hit: Callable
+var civilian_aggro_radius := 0.0
+var _civilian_index := -1
 var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
@@ -49,7 +55,8 @@ var _interception_leg := 0
 
 
 func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable(), lead_level := 1,
-		infantry: InfantryAttack = null, lead_melee_invested := false) -> void:
+		infantry: InfantryAttack = null, lead_melee_invested := false, title := "Road guard") -> void:
+	enemy_title = title
 	infantry_attack = infantry if infantry else InfantryAttack.new()
 	enemy_position = spawn
 	_feet = feet
@@ -201,31 +208,50 @@ func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: 
 	if archers.order == Battle.Order.ATTACK and archer_attack.attacker.is_alive() \
 		and archer_distance <= AGGRO_RANGE and archer_distance < nearest \
 		and clear_contact.call(enemy_position, archers.position):
-		return Target.ARCHERS
-	return target
+		target = Target.ARCHERS
+	if target != Target.NONE or not civilian_positions.is_valid():
+		return target
+	var civilians: PackedVector2Array = civilian_positions.call()
+	var nearest_civilian := civilian_aggro_radius
+	_civilian_index = -1
+	for index in range(civilians.size()):
+		var civilian := civilians[index]
+		if not civilian.is_finite():
+			continue
+		var distance := enemy_position.distance_to(civilian)
+		if distance < nearest_civilian and clear_contact.call(enemy_position, civilian):
+			_civilian_index = index
+			nearest_civilian = distance
+	return Target.CIVILIAN if _civilian_index >= 0 else Target.NONE
 
 
 func _target_position(battle: Battle, target: Target) -> Vector2:
 	match target:
 		Target.INFANTRY: return battle.formations[InfantryAttack.INFANTRY_INDEX].position
 		Target.ARCHERS: return battle.formations[ArcherAttack.ARCHER_INDEX].position
+		Target.CIVILIAN:
+			var civilians: PackedVector2Array = civilian_positions.call()
+			return civilians[_civilian_index] if _civilian_index >= 0 and _civilian_index < civilians.size() else Vector2.INF
 	return battle.hero_position
 
 func _resolve_enemy_contact(battle: Battle, clear_contact: Callable) -> void:
 	var target := _target_position(battle, _windup_target)
 	var toward := target - enemy_position
-	if toward.length_squared() > CONTACT_RANGE * CONTACT_RANGE \
+	if not target.is_finite() or toward.length_squared() > CONTACT_RANGE * CONTACT_RANGE \
 		or (not toward.is_zero_approx() and toward.normalized().dot(enemy_heading) < Attack.MIN_FORWARD_DOT) \
 		or not clear_contact.call(enemy_position, target):
-		_feedback("Road guard missed")
+		_feedback("%s missed" % enemy_title)
 		return
-	var hit_profile := {Unit.Damage.MELEE: ENEMY_DAMAGE}
+	var hit_profile := {Unit.Damage.MELEE: enemy_damage}
 	if _windup_target == Target.HERO:
 		var hit := defense.resolve_incoming_hit(enemy, ENEMY_TEAM, hit_profile, true, battle.hero_heading, -toward)
 		match hit.outcome:
 			Defense.HitOutcome.HIT: _feedback("Mara hit · −%d HP" % roundi(hit.hp_lost))
 			Defense.HitOutcome.GUARDED: _feedback("Guarded · −%d HP" % roundi(hit.hp_lost))
 			Defense.HitOutcome.EVADED: _feedback("Dodged the swing")
+	elif _windup_target == Target.CIVILIAN and civilian_hit.is_valid():
+		if civilian_hit.call(_civilian_index):
+			_feedback("%s struck a miner" % enemy_title)
 	elif _windup_target == Target.INFANTRY and infantry_attack.attacker.is_alive():
 		var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
 		var lost := infantry_attack.attacker.receive_hit(enemy, hit_profile)

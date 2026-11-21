@@ -122,6 +122,14 @@ func _ready() -> void:
 	super._ready()
 	if sundering_strike_enabled and _input_device >= 0:
 		_special_pad_down = Input.get_joy_axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
+	_bind_objective()
+	_restart_button.pressed.connect(restart_mission)
+	_build_combat_visuals()
+	_reset_encounter()
+	_refresh_objective_view(hero_world_position())
+
+
+func _bind_objective() -> void:
 	_pickup = battlefield_marker(^"Markers/Objectives/GodbridlePickup")
 	_exit = battlefield_marker(^"Markers/Objectives/GodbridleExit")
 	_pass_release = battlefield_marker(interception_approach)
@@ -129,10 +137,6 @@ func _ready() -> void:
 	_pickup_beacon = _beacon(_pickup, PICKUP_RADIUS, WARM_LIGHT, "GODBRIDLE")
 	_exit_beacon = _beacon(_exit, EXIT_RADIUS, EXIT_LIGHT, "EAST ROAD EXIT")
 	_bridle = _make_bridle()
-	_restart_button.pressed.connect(restart_mission)
-	_build_combat_visuals()
-	_reset_encounter()
-	_refresh_objective_view(hero_world_position())
 
 
 func _physics_process(delta: float) -> void:
@@ -147,6 +151,15 @@ func _physics_process(delta: float) -> void:
 		if encounter:
 			_refresh_combat_view()
 	var feet := hero_world_position()
+	_advance_objective(feet, delta)
+	_refresh_objective_view(feet)
+	if _finished():
+		if encounter:
+			_refresh_sundering_readout(team_battle_points_frame())
+		mission_finished.emit(_objective_won())
+
+
+func _advance_objective(feet: Vector3, _delta: float) -> void:
 	var observation := Escort.Observation.new()
 	observation.interact_pressed = _interact_requested and not command_view
 	observation.hero_in_pickup_zone = feet.distance_to(_pickup.global_position) <= PICKUP_RADIUS
@@ -160,11 +173,15 @@ func _physics_process(delta: float) -> void:
 	observation.bridle_lost = _bridle_lost
 	_interact_requested = false
 	objective.advance(observation)
-	_refresh_objective_view(feet)
-	if _finished():
-		if encounter:
-			_refresh_sundering_readout(team_battle_points_frame())
-		mission_finished.emit(objective.phase == Escort.Phase.SUCCEEDED)
+
+
+func _objective_won() -> bool:
+	return objective.phase == Escort.Phase.SUCCEEDED
+
+
+## Campaign variants can provide an alternate HUD landmark set.
+func alternate_minimap_objective() -> Dictionary:
+	return {}
 
 
 func _inside_pass_approach(feet: Vector3) -> bool:
@@ -377,7 +394,7 @@ func report_bridle_lost() -> void:
 
 
 func restart_mission() -> void:
-	objective.restart()
+	_reset_objective()
 	_hero_incapacitated = false
 	_bridle_lost = false
 	_interact_requested = false
@@ -389,6 +406,10 @@ func restart_mission() -> void:
 	_sync_infantry_animation(true)
 	_reset_encounter()
 	_refresh_objective_view(hero_world_position())
+
+
+func _reset_objective() -> void:
+	objective.restart()
 
 
 func _finished() -> bool:
@@ -489,7 +510,7 @@ func _reset_encounter() -> void:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
 	var infantry: InfantryAttack = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE) if _heavy_replay_loadout else null
 	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane,
-		_launch_lead_level, infantry, _launch_lead_melee_invested) \
+		_launch_lead_level, infantry, _launch_lead_melee_invested, _enemy_title()) \
 		if opposition_enabled and guard_marker else null
 	if encounter and _pass_release:
 		var route := PackedVector2Array()
@@ -503,10 +524,18 @@ func _reset_encounter() -> void:
 	_refresh_combat_view()
 
 
+func _enemy_color() -> Color:
+	return Color("#b45e4c")
+
+
+func _enemy_title() -> String:
+	return "Road guard"
+
+
 func _build_combat_visuals() -> void:
 	_enemy_visual = Node3D.new()
 	add_child(_enemy_visual)
-	var rust := _material(Color("#b45e4c"))
+	var rust := _material(_enemy_color())
 	var iron := _material(Color("#c4b2a5"))
 	_mesh(_enemy_visual, _box(Vector3(0.83, 1.26, 0.58)), rust, Vector3(0, 0.81, 0))
 	_mesh(_enemy_visual, _box(Vector3(0.58, 0.44, 0.50)), rust, Vector3(0, 1.58, 0))
@@ -543,9 +572,12 @@ func _refresh_combat_view() -> void:
 	_enemy_weapon.rotation.x = -1.15 if _enemy_warning.visible else 0.3
 	var targets_infantry := encounter.windup_target == Encounter.Target.INFANTRY
 	var targets_archers := encounter.windup_target == Encounter.Target.ARCHERS
+	var targets_civilian := encounter.windup_target == Encounter.Target.CIVILIAN
 	var target_callout := " → INFANTRY" if targets_infantry else (" → ARCHERS" if targets_archers else "")
-	_enemy_status.text = "WINDUP" + target_callout if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
-		"TARGET: " if target_selected else "", ceili(encounter.enemy.hp),
+	if targets_civilian:
+		target_callout = " → MINER"
+	_enemy_status.text = "WINDUP" + target_callout if _enemy_warning.visible else "%s%s  ·  %d HP" % [
+		"TARGET: " if target_selected else "", _enemy_title().to_upper(), ceili(encounter.enemy.hp),
 	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
 	var attack_phase := encounter.defense.attack_phase
@@ -567,20 +599,22 @@ func _refresh_combat_view() -> void:
 	if not encounter.hero.is_alive():
 		_combat_tell.text = "Mara is incapacitated"
 	elif not encounter.enemy.is_alive():
-		_combat_tell.text = "Road guard defeated"
+		_combat_tell.text = "%s defeated" % _enemy_title()
 	elif _enemy_warning.visible:
-		if targets_infantry:
-			_combat_tell.text = "Road guard winding up at %s!" % infantry.title
+		if targets_civilian:
+			_combat_tell.text = "%s is attacking a miner!" % _enemy_title()
+		elif targets_infantry:
+			_combat_tell.text = "%s winding up at %s!" % [_enemy_title(), infantry.title]
 		elif targets_archers:
-			_combat_tell.text = "Road guard winding up at Archers! Pull back."
+			_combat_tell.text = "%s winding up at Archers! Pull back." % _enemy_title()
 		else:
-			_combat_tell.text = "Road guard winding up!  Face it and guard, or dodge."
+			_combat_tell.text = "%s winding up!  Face it and guard, or dodge." % _enemy_title()
 	elif not encounter.active_feedback().is_empty():
 		_combat_tell.text = encounter.active_feedback()
 	elif encounter.enemy_phase == Encounter.EnemyPhase.INTERCEPTING:
 		_combat_tell.text = "Orc guard advancing onto the east road"
 	elif encounter.enemy_phase == Encounter.EnemyPhase.AT_RESERVE:
-		_combat_tell.text = "No enemy on the escort road"
+		_combat_tell.text = _enemy_reserve_readout()
 	elif attack_phase == Attack.Phase.WINDUP:
 		if special:
 			_combat_tell.text = "Mara winding up Sundering Strike"
@@ -589,12 +623,16 @@ func _refresh_combat_view() -> void:
 	elif target_selected:
 		_combat_tell.text = "Triangle / K: order %s to attack" % selected.title
 	elif archers.order == Battle.Order.ATTACK and encounter.archer_attack.volley.phase == Archer.Phase.IDLE:
-		_combat_tell.text = "Archers need distance. Move them away from the guard."
+		_combat_tell.text = "Archers need distance. Move them away from the %s." % _enemy_title().to_lower().trim_prefix("road ")
 	elif infantry.order == Battle.Order.ATTACK:
-		_combat_tell.text = "%s attacking the road guard" % infantry.title
+		_combat_tell.text = "%s attacking the %s" % [infantry.title, _enemy_title().to_lower()]
 	else:
-		_combat_tell.text = "Road guard %d / %d HP" % [ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
+		_combat_tell.text = "%s %d / %d HP" % [_enemy_title(), ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
 
+
+
+func _enemy_reserve_readout() -> String:
+	return "No enemy on the escort road"
 
 
 ## Read-only encounter status. The scene and combat resolvers still use the live pool.

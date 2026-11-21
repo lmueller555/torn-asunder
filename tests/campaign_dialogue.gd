@@ -28,6 +28,7 @@ func _run() -> void:
 	var passed := _check_authoring_and_invalid_data()
 	passed = (await _check_advancement()) and passed
 	passed = _check_cancellation_and_replay() and passed
+	passed = _check_mara_greyhollow_reveal() and passed
 	passed = _check_other_mine_beats() and passed
 	passed = _check_grain_beats() and passed
 	passed = _check_high_quay_beats() and passed
@@ -54,7 +55,7 @@ func _run() -> void:
 func _check_authoring_and_invalid_data() -> bool:
 	var dispatch := Beats.get_beat(Beats.MARA_MINE_DISPATCH)
 	var debrief := Beats.get_beat(Beats.MARA_MINE_DEBRIEF)
-	if dispatch.lines.size() != 4 or debrief.lines.size() != 4 or not Beats.get_beat(&"missing").is_empty():
+	if dispatch.lines.size() != 4 or debrief.lines.size() != 7 or not Beats.get_beat(&"missing").is_empty():
 		return _fail("The dialogue catalog did not return the two intended standalone beats.")
 	var first_line: String = dispatch.lines[0].text
 	dispatch.lines[0].text = "Do not leak this edit."
@@ -118,10 +119,10 @@ func _check_advancement() -> bool:
 func _check_cancellation_and_replay() -> bool:
 	var id := Beats.MARA_MINE_DEBRIEF
 	for use_pad in [true, false]:
-		if not _panel.present(id, Beats.get_beat(id)) or not _at_line("01 / 04"):
-			return _fail("A debrief replay did not restart from the first line.")
-		if not "None of the miners came with us" in _label("DialogueLine").text:
-			return _fail("The debrief lost the current campaign outcome.")
+		if not _panel.present(id, Beats.get_beat(id)) or not _at_line("01 / 07"):
+			return _fail("The Greyhollow reveal replay did not restart from the first card.")
+		if not "counts the miners" in _label("DialogueLine").text or _button("BackButton").text != "Skip Scene":
+			return _fail("The reveal lost its opening shelter headcount or its skip control.")
 		_send_pad(JOY_BUTTON_A)
 		if use_pad:
 			_send_pad(JOY_BUTTON_B)
@@ -140,6 +141,42 @@ func _check_cancellation_and_replay() -> bool:
 	if _panel.visible or _cancellations != [id, id, id]:
 		return _fail("Keyboard activation of the selected Back button advanced instead.")
 	return true
+
+
+func _check_mara_greyhollow_reveal() -> bool:
+	var dispatch := Beats.get_beat(Beats.MARA_MINE_DISPATCH)
+	var briefing: String = (dispatch.title + "\n" + dispatch.location).to_lower()
+	for line: Dictionary in dispatch.lines:
+		briefing += "\n" + line.text.to_lower()
+	for word in ["godbridle", "bridle", "relic", "artifact", "orrun", "custody"]:
+		if word in briefing:
+			return _fail("Mara's briefing spoiled the post-rescue discovery: " + word)
+	if not ("dryad fighters" in briefing and "south tunnel" in briefing and "count the miners" in briefing):
+		return _fail("Mara's dispatch did not establish the rescue, opposition, and safe route.")
+	var id := Beats.MARA_MINE_DEBRIEF
+	var beat := Beats.get_beat(id)
+	if beat.get("presentation") != &"cinematic" or beat.get("setting") != &"greyhollow" \
+			or not _panel.present(id, beat, true):
+		return _fail("Mara's reveal must use Greyhollow's cinematic presentation.")
+	var start := _completions.size()
+	for index in beat.lines.size():
+		var text := _label("DialogueLine").text
+		if not _at_line("%02d / 07" % (index + 1)) or text != beat.lines[index].text:
+			return _fail("The cinematic revealed a card other than the one the player advanced to.")
+		if index < 3 and "bridle" in text.to_lower():
+			return _fail("The artifact was named or shown before the bundle opened.")
+		if index == 3 and (not "a bridle" in text or _portrait().is_visible_in_tree()):
+			return _fail("The first reveal must be a distinct, unvoiced action card.")
+		if index == 4 and (not "The Godbridle" in text or _label("SpeakerName").text != Beats.MARA \
+				or not _portrait().is_visible_in_tree() or _portrait().texture != Beats.MARA_PORTRAIT):
+			return _fail("Mara must recognize the Godbridle only after the wrap is opened.")
+		if index < beat.lines.size() - 1:
+			_send_pad(JOY_BUTTON_A)
+	if _completions.size() != start or _button("AdvanceButton").text != "Finish":
+		return _fail("The reveal must wait for Finish.")
+	_send_key(KEY_ENTER)
+	return not _panel.visible and _completions.size() == start + 1 and _completions.back() == id \
+		or _fail("The reveal did not finish exactly once under its authored ID.")
 
 
 func _check_other_mine_beats() -> bool:

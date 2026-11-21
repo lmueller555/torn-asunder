@@ -1,12 +1,12 @@
 extends "res://tests/mara_campaign_flow.gd"
-## Reuse the real Mine traverse from the campaign flow. Menu actions use actual
+## Reuse the real Greyhollow rescue from the campaign flow. Menu actions use actual
 ## viewport keyboard/controller input; training is never seeded into the save.
 
 const DrillTraining := preload("res://game/combat/mara_subordinate_training.gd")
 const Minimap := preload("res://game/battlefield/mara_campaign_minimap.gd")
 const HEAVY := "Replay with Heavy Infantry"
 const HEAVY_MODEL := "res://assets/models/human_heavy_infantry.glb"
-const CASE_MODEL := "res://assets/models/environment/godbridle_custody_case.glb"
+const MapGlyphs := preload("res://game/battlefield/battlefield_minimap.gd")
 const DRILL := "Shield Infantry Drill"
 const CONFIRM := "Confirm Training (1 drill credit)"
 const SLOT := DrillTraining.SHIELD_INFANTRY_SLOT
@@ -33,7 +33,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Mara Shield Infantry: real Mine clear, drill, guarded replay choice, queue, approved case, regular default and save/BP isolation passed.")
+		print("Mara Shield Infantry: real Greyhollow clear, drill, guarded replay choice, queue, rescue HUD, regular default and save/BP isolation passed.")
 	quit(0 if passed else 1)
 
 
@@ -47,7 +47,7 @@ func _exercise_training_menu() -> bool:
 	if not await _open_drill(false):
 		return false
 	var fresh := FileAccess.get_file_as_string(_profile_path)
-	if not _state(1, 0, "Clear The Pass Below the Mine", false) or not _focused("Back"):
+	if not _state(1, 0, "Get Them Out", false) or not _focused("Back"):
 		return _fail("The fresh menu did not show locked rank 1 and focus only Back.")
 	await _capture("01-locked-default")
 	_tap_key(KEY_DOWN)
@@ -73,14 +73,14 @@ func _exercise_training_menu() -> bool:
 	var at_mine := FileAccess.get_file_as_string(_profile_path)
 	mission.report_hero_incapacitated()
 	_tick()
-	if mission.objective.phase != Escort.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != at_mine:
+	if mission.rescue_phase != Mission.Rescue.FAILED or FileAccess.get_file_as_string(_profile_path) != at_mine:
 		return _fail("Defeat granted a campaign clear or changed the arrived profile.")
 	_tap_key(KEY_BACKSPACE)
-	if not _mine_budget(mission, 1, 700) or not _win_escort():
+	if not _mine_budget(mission, 1, 700) or not _win_rescue():
 		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]):
-		return _fail("A real first delivery did not grant the saved Mine clear.")
+		return _fail("A real first rescue did not grant the saved Mine clear.")
 	_tap_joy(JOY_BUTTON_B)
 	if not _on_map(MINE) or not _open_mine_briefing(false):
 		return _fail("An untrained Mine replay did not hide the Heavy option.")
@@ -124,14 +124,16 @@ func _exercise_training_menu() -> bool:
 		return false
 	mission = _title._campaign_battle as Mission
 	var before_retry := FileAccess.get_file_as_string(_profile_path)
-	if not await _heavy_queue_and_case(mission):
+	if not await _heavy_queue_and_rescue_hud(mission):
 		return false
 	_tap_key(KEY_BACKSPACE)
 	if not _mine_budget(mission, 2, 720) or not _heavy_active(mission) \
-			or mission.objective.phase != Escort.Phase.AWAITING_PICKUP \
-			or mission._custody_case._keeper.is_visible_in_tree() or FileAccess.get_file_as_string(_profile_path) != before_retry:
-		return _fail("Per-attempt Retry did not keep the Heavy loadout and restore the original BP and case.")
-	if not _win_escort():
+			or mission.rescue_phase != Mission.Rescue.RALLY \
+			or mission._count(Mission.Miner.WAITING) != Mission.MINER_COUNT \
+			or not _rescue_hud(mission, "Human miners", MapGlyphs.Icon.PICKUP, "HERO") \
+			or FileAccess.get_file_as_string(_profile_path) != before_retry:
+		return _fail("Per-attempt Retry did not keep the Heavy loadout and restore the original BP, crew, and rescue HUD.")
+	if not _win_rescue():
 		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or before_retry != FileAccess.get_file_as_string(_profile_path):
@@ -266,7 +268,7 @@ func _heavy_active(mission: Mission) -> bool:
 		and mission.battle.formations[0].title == "Heavy Infantry")
 
 
-func _heavy_queue_and_case(mission: Mission) -> bool:
+func _heavy_queue_and_rescue_hud(mission: Mission) -> bool:
 	var hud := mission.get_node("MinimapHUD/Panel") as Minimap
 	hud.set_physics_process(false)
 	var group := mission.battle.formations[0]
@@ -289,26 +291,44 @@ func _heavy_queue_and_case(mission: Mission) -> bool:
 		return _fail("The Heavy queue did not consume on physical arrival or changed BP.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_tick()
-	var prop := mission._custody_case
-	if mission.custody_case_scene.resource_path != CASE_MODEL or not prop._case.is_visible_in_tree() \
-		or prop._keeper.is_visible_in_tree():
-		return _fail("The replay changed the approved ground case.")
-	for marker in ["Routes/WestAssembly", "Routes/QuarryTurn", "Routes/RoadWest", "Routes/MineYard", "Objectives/GodbridlePickup"]:
-		if not _drive_to(marker):
+	if not _rescue_hud(mission, "Human miners", MapGlyphs.Icon.PICKUP, "HERO"):
+		return _fail("The replay did not show miners as the starting objective.")
+	for point in [Vector2(-76, 21), Vector2(-61, 38), Vector2(-60.5, 51), Vector2(-60.5, 56)]:
+		if not _drive_rescue(point):
 			return false
 	_tap_joy(JOY_BUTTON_A)
 	_tick()
-	if mission.objective.phase != Escort.Phase.ESCORTING or not prop._case.is_visible_in_tree() \
-		or not prop._keeper.is_visible_in_tree() or prop._tactical_case.is_visible_in_tree():
-		return _fail("Actual pickup on the title-deployed Heavy replay changed the approved carried case.")
+	if mission.rescue_phase != Mission.Rescue.ESCORT or mission._count(Mission.Miner.FOLLOWING) != Mission.MINER_COUNT \
+			or not _rescue_hud(mission, "Safe hollow", MapGlyphs.Icon.EXIT, "HERO"):
+		return _fail("Actual rally on the title-deployed Heavy replay did not show the evacuation objective.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tick()
-	if not prop._tactical_case.is_visible_in_tree() or prop._case.is_visible_in_tree() or prop._keeper.is_visible_in_tree():
-		return _fail("The original tactical carry LOD was not preserved.")
-	await _capture("05-heavy-replay-custody")
+	if not _rescue_hud(mission, "Safe hollow", MapGlyphs.Icon.EXIT, "SECTOR"):
+		return _fail("The tactical view lost the evacuation objective or changed the Heavy roster.")
+	await _capture("05-heavy-replay-rescue")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
 	_tick()
 	return true
+
+
+func _rescue_hud(mission: Mission, place: StringName, icon: MapGlyphs.Icon, view: String) -> bool:
+	var hud := mission.get_node("MinimapHUD/Panel") as Minimap
+	hud.refresh()
+	var objectives := PackedStringArray()
+	var marker := Mission.RALLY_PATH if icon == MapGlyphs.Icon.PICKUP else Mission.SAFETY_PATH
+	var target := mission._marker_position(mission.battlefield_marker(marker))
+	var seen_heavy := false
+	for glyph: MapGlyphs.Glyph in hud.map._glyphs:
+		if glyph.icon in [MapGlyphs.Icon.PICKUP, MapGlyphs.Icon.EXIT, MapGlyphs.Icon.ALERT]:
+			objectives.append(glyph.id if glyph.icon == icon and glyph.position == target else "wrong objective glyph")
+		if glyph.id == &"Heavy Infantry" and glyph.icon == MapGlyphs.Icon.ALLY:
+			seen_heavy = glyph.selected == (mission.selected_index == 0) \
+				and glyph.position == mission.battle.formations[0].position
+	return (mission._custody_case == null and mission.custody_case_scene == null
+		and _no_pre_rescue_reveal(mission) and seen_heavy
+		and root.get_camera_3d() == (mission._command_camera if view == "SECTOR" else mission._hero_camera)
+		and hud._status.text == "GREYHOLLOW  /  " + view
+		and objectives == PackedStringArray([place]))
 
 
 func _state(rank: int, credit: int, summary: String, can_confirm: bool) -> bool:

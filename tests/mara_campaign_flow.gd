@@ -6,11 +6,10 @@ const Profile := preload("res://game/profile_store.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
-const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
+const Mission := preload("res://game/battlefield/mara_greyhollow_rescue.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const BP := preload("res://game/combat/battle_points.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
-const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const GrainScene := preload("res://game/battlefield/mara_grain_crossing_playtest.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
@@ -55,7 +54,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Mara campaign: all three authored missions, the once-only Water Request, immutable first Grain result, all debriefs, defeat, replay, completion and Continue passed.")
+		print("Mara campaign: Greyhollow rescue and success-only reveal, all three missions, Water Request, immutable first Grain result, training, replay, completion and Continue passed.")
 	quit(0 if passed else 1)
 
 
@@ -77,15 +76,16 @@ func _flow() -> bool:
 	_joy(JOY_BUTTON_A)
 	if _title._page != Title.Page.BRIEFING or _mine_briefing_label() or not _button("Unit Progression") or not _press("Read Dispatch"):
 		return _fail("Camp Operations did not offer practice and the dispatch.")
-	if not _is_dialogue(Beats.MARA_MINE_DISPATCH):
-		return _fail("Camp Operations did not start the authored mine dispatch.")
-	_read_dialogue()
+	if not _is_dialogue(Beats.MARA_MINE_DISPATCH) or not _no_pre_rescue_reveal(_title._stage):
+		return _fail("Camp Operations did not start the rescue dispatch without disclosing the artifact.")
+	if not _read_rescue_dispatch():
+		return false
 	if not _button("Read Dispatch") or not _press("Back") or not _on_map(CAMP):
 		return _fail("Finishing the dispatch did not return through camp to the map.")
 
 	_map().select_waypoint(ROAD)
 	_joy(JOY_BUTTON_A)
-	if not _on_map(CAMP) or not _map()._detail.text.contains("Complete the Mine Escort"):
+	if not _on_map(CAMP) or not _map()._detail.text.contains("road into the Marches"):
 		return _fail("Selecting the gated adjoining road bypassed the opening mission.")
 	_map().select_waypoint(MINE)
 	if not _on_map(CAMP) or not _press("ConfirmTravel"):
@@ -94,8 +94,8 @@ func _flow() -> bool:
 		return _fail("Mine arrival did not persist the waypoint and stop at briefing without awarding a clear.")
 	if not _has_playtest_notice():
 		return _fail("The deployment briefing did not identify the placeholder art before confirmation.")
-	if not _mine_briefing_budget(1, 700) or _title._campaign_battle:
-		return _fail("The initial Mine briefing lacked the level-one budget or deployed without confirmation.")
+	if not _no_pre_rescue_reveal(_title._stage) or not _mine_briefing_budget(1, 700) or _title._campaign_battle:
+		return _fail("The initial Mine briefing mentioned the artifact, lacked the level-one budget, or deployed without confirmation.")
 	_joy(JOY_BUTTON_B)
 	if not _on_map(MINE) or _mine_briefing_label() or not _press("ConfirmTravel") or not _on_briefing() \
 			or not _mine_briefing_budget(1, 700):
@@ -114,6 +114,8 @@ func _flow() -> bool:
 	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
 		return false
 	var mission := _title._campaign_battle as Mission
+	if not mission:
+		return _fail("Mara did not deploy the Greyhollow rescue.")
 	mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
@@ -124,23 +126,30 @@ func _flow() -> bool:
 	_key(KEY_V)
 	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
 		return _fail("The fresh attempt did not spend on the existing special.")
-	mission.report_hero_incapacitated()
-	_tick()
-	if mission.objective.phase != Escort.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != at_mine:
-		return _fail("Defeat saved an escort clear or opened the debrief.")
+	_tick() # Sync the authored lead spawn before its first march.
+	var spawn := mission.battle.hero_position
+	if not _drive_rescue(Vector2(-76, 21)) or not _drive_rescue(spawn):
+		return false
+	_tick(2600)
+	await process_frame
+	if mission.rescue_phase != Mission.Rescue.FAILED or mission._count(Mission.Miner.LOST) < 2 \
+			or _title._page != Title.Page.CAMPAIGN_BATTLE or _button("Advance") \
+			or FileAccess.get_file_as_string(_profile_path) != at_mine:
+		return _fail("Losing the crew saved a rescue clear or opened the reveal.")
 	_key(KEY_BACKSPACE)
-	if mission.objective.phase != Escort.Phase.AWAITING_PICKUP or FileAccess.get_file_as_string(_profile_path) != at_mine \
+	if mission.rescue_phase != Mission.Rescue.RALLY or FileAccess.get_file_as_string(_profile_path) != at_mine \
 			or not _mine_budget(mission, 1, 700):
 		return _fail("Retry did not refill 400 BP at the same launch cap or changed the saved profile.")
-	if not _win_escort():
+	if not _win_rescue():
 		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]) \
 			or _saved_world() != MINE:
-		return _fail("Real delivery did not persist the clear and waypoint before the debrief.")
-	_read_dialogue()
+		return _fail("The physical rescue did not persist the stable clear and waypoint before the reveal.")
+	if not _reveal_names_artifact():
+		return false
 	if not _on_map(MINE):
-		return _fail("Finishing debrief did not return to the mine on the campaign map.")
+		return _fail("Finishing the reveal did not return to the mine on the campaign map.")
 	_map().select_waypoint(CROSSING)
 	_joy(JOY_BUTTON_A)
 	if not _on_map(MINE) or not _map()._confirm_button.disabled:
@@ -166,7 +175,7 @@ func _flow() -> bool:
 	_key(KEY_BACKSPACE)
 	if not _mine_budget(mission, 2, 720) or FileAccess.get_file_as_string(_profile_path) != after_clear:
 		return _fail("Retry must refill without reverting the higher launch cap or touching the profile.")
-	if not _win_escort():
+	if not _win_rescue():
 		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or FileAccess.get_file_as_string(_profile_path) != after_clear:
@@ -267,9 +276,9 @@ func _mine_melee_contact(mission: Mission, melee: int) -> bool:
 		return _fail("The actual light contact did not use Mara's launch rating or preserve the fixed BP award.")
 	_tick(32)
 	var incoming := Encounter.HERO_HP - fight.hero.hp
-	if not is_equal_approx(incoming, 90.0 * Unit.damage_factor(1, melee)):
-		return _fail("The road guard's confirmed melee contact did not use the same defensive rating.")
-	print("Mine lead melee %d: light dealt %.3f HP · guard dealt %.3f HP · +12 BP." % [melee, outgoing, incoming])
+	if not is_equal_approx(incoming, Mission.DRYAD_DAMAGE * Unit.damage_factor(1, melee)):
+		return _fail("The Dryad raider's confirmed melee contact did not use the same defensive rating.")
+	print("Mine lead melee %d: light dealt %.3f HP · Dryad dealt %.3f HP · +12 BP." % [melee, outgoing, incoming])
 	return true
 
 
@@ -435,7 +444,7 @@ func _completed_mine_replay() -> bool:
 	await physics_frame
 	if not _mine_budget(mission, 3, 740):
 		return _fail("A completed campaign should reopen the Mine at lead level three with 400 / 740 BP.")
-	if not _win_escort():
+	if not _win_rescue():
 		return false
 	await process_frame
 	return (_is_dialogue(Beats.MARA_MINE_DEBRIEF) and FileAccess.get_file_as_string(_profile_path) == mine_profile
@@ -643,58 +652,96 @@ func _saved_grain() -> StringName:
 	return Profile.new(_profile_path).grain_clear_result()
 
 
-func _win_escort() -> bool:
-	for id: String in ["Routes/WestAssembly", "Routes/QuarryTurn", "Routes/RoadWest", "Routes/MineYard", "Objectives/GodbridlePickup"]:
-		if not _drive_to(id):
+func _win_rescue() -> bool:
+	var mission := _title._campaign_battle as Mission
+	var before := FileAccess.get_file_as_string(_profile_path)
+	var dryad_start := mission.encounter.enemy_position
+	# Place the Archers, use their real attack order, and stop after the first
+	# contact. The living Dryad pursues Mara while she gets the crew out.
+	_key(KEY_SHIFT)
+	_key(KEY_X)
+	mission.cursor = Vector2(-77, 19)
+	_joy(JOY_BUTTON_X)
+	_key(KEY_SHIFT, false)
+	_tick(1100)
+	_key(KEY_SHIFT)
+	mission.cursor = dryad_start
+	_key(KEY_K)
+	_key(KEY_SHIFT, false)
+	_tick(85)
+	if mission.encounter.enemy.hp >= Encounter.ENEMY_HP or not mission.encounter.enemy.is_alive():
+		return _fail("A real archer attack did not wound the Dryad in the yard.")
+	_key(KEY_SHIFT)
+	_joy(JOY_BUTTON_A)
+	_key(KEY_SHIFT, false)
+	for point in [Vector2(-76, 21), Vector2(-61, 38), Vector2(-60.5, 51), Vector2(-60.5, 56)]:
+		if not _drive_rescue(point):
 			return false
+	if not _no_pre_rescue_reveal(mission) or mission.custody_case_scene != null or mission._bridle:
+		return _fail("The battlefield showed the discovery before the miners were safe.")
 	_joy(JOY_BUTTON_A)
 	_tick()
-	var mission := _title._campaign_battle as Mission
-	if mission.objective.phase != Escort.Phase.ESCORTING:
-		return _fail("Cross did not interact with the deployed battlefield's bridle.")
-	for id: String in ["Routes/MineYard", "Routes/RoadWest", "Routes/RoadJunction", "Routes/RoadCut"]:
-		if not _drive_to(id):
+	if mission.rescue_phase != Mission.Rescue.ESCORT or mission._count(Mission.Miner.SAFE) != 0 \
+			or _title._page != Title.Page.CAMPAIGN_BATTLE or FileAccess.get_file_as_string(_profile_path) != before:
+		return _fail("Rallying the miners either failed or prematurely saved/revealed the outcome.")
+	for point in [Vector2(-63, 69), Vector2(-63, 81), Vector2(-63, 93), Vector2(-63, 102),
+		Vector2(-75, 104), Vector2(-87, 105), Vector2(-99, 106), Vector2(-111, 108), Vector2(-124, 108)]:
+		if not _drive_rescue(point):
 			return false
-	if not _drive_to("Routes/EastPass") or not _drive_to("Routes/InterceptRoadMerge", true):
-		return false
-	_key(KEY_U)
-	_tick(43)
-	_key(KEY_U, false)
-	_key(KEY_J)
-	_tick(35)
-	for _attack in range(2):
-		_key(KEY_K)
-		_tick(58)
-	if mission.encounter.enemy.is_alive() or mission.objective.phase != Escort.Phase.ESCORTING:
-		return _fail("Fighting the road guard did not preserve the still-incomplete escort.")
-	for id: String in ["Routes/PassRelease", "Objectives/GodbridleExit"]:
-		if not _drive_to(id):
-			return false
-	return mission.objective.phase == Escort.Phase.SUCCEEDED or _fail("Actual east exit delivery did not win.")
+		_tick(100)
+	return (mission.rescue_phase == Mission.Rescue.SUCCEEDED
+		and mission._count(Mission.Miner.SAFE) >= Mission.MIN_SAFE and mission.encounter.enemy.is_alive()) \
+		or _fail("Too few miners reached the safe hollow, or the route required killing the raider.")
 
 
-func _drive_to(marker_id: String, until_windup := false) -> bool:
+func _drive_rescue(target: Vector2) -> bool:
 	var mission := _title._campaign_battle as Mission
-	var mark := mission.battlefield_marker(NodePath("Markers/" + marker_id))
-	var local := mission.to_local(mark.global_position)
-	var target := Vector2(local.x, local.z)
-	var budget := ceili(target.distance_to(mission.battle.hero_position) / Battle.LEAD_SPEED / DT) + 120
-	var reached := false
-	for _step in range(budget):
-		var remaining := target - mission.battle.hero_position
-		var radius := Mission.EXIT_RADIUS if mark.name == &"GodbridleExit" else 0.13
-		if (until_windup and mission.encounter.enemy_phase == Encounter.EnemyPhase.WINDUP) \
-				or (not until_windup and remaining.length() < radius):
-			reached = true
+	var command_sent := false
+	for step in range(1000):
+		var offset := target - mission.battle.hero_position
+		if offset.length() < 0.18 or mission._finished():
 			break
-		if mission._finished():
-			break
-		var aim := remaining.normalized().rotated(mission._hero_yaw)
-		_march_lead(Vector2(aim.x, aim.y), mission)
+		if mission.battle.direct_hero_control():
+			command_sent = false
+			var stick := offset.normalized().rotated(mission._hero_yaw)
+			_axis(JOY_AXIS_LEFT_X, stick.x)
+			_axis(JOY_AXIS_LEFT_Y, stick.y)
+		elif not command_sent:
+			_axis(JOY_AXIS_LEFT_X, 0.0)
+			_axis(JOY_AXIS_LEFT_Y, 0.0)
+			_key(KEY_SHIFT)
+			if mission.selected_index == 1:
+				_key(KEY_X)
+			elif mission.selected_index == 0:
+				_key(KEY_Z)
+			mission.cursor = target
+			_joy(JOY_BUTTON_X)
+			_key(KEY_SHIFT, false)
+			command_sent = true
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
-	return reached or _fail("The actual route did not reach " + marker_id)
+	return (mission.battle.hero_position.distance_to(target) < 0.18
+		or mission.rescue_phase == Mission.Rescue.SUCCEEDED) \
+		or _fail("Mara could not reach the Greyhollow point %s." % [target])
+
+
+func _no_pre_rescue_reveal(page: Node) -> bool:
+	for label in page.find_children("*", "Label", true, false) + page.find_children("*", "Label3D", true, false):
+		if label.is_visible_in_tree() and label.text.to_lower().contains("godbridle"):
+			return false
+	return true
+
+
+func _reveal_names_artifact() -> bool:
+	var dialogue := _title._stage.get_node_or_null("CampaignDialogue") as Dialogue
+	if not dialogue or not dialogue._cinematic:
+		return _fail("The successful rescue did not activate the shelter cinematic.")
+	var named := false
+	for _line in Beats.get_beat(Beats.MARA_MINE_DEBRIEF).lines:
+		named = named or dialogue._body.text.contains("Godbridle")
+		_key(KEY_ENTER)
+	return named or _fail("The shelter cinematic never names what the miners found.")
 
 
 func _has_playtest_notice() -> bool:
@@ -721,9 +768,12 @@ func _is_dialogue(id: StringName) -> bool:
 	return dialogue != null and dialogue._active and dialogue._beat_id == id
 
 
-func _read_dialogue() -> void:
-	for _line in range(4):
+func _read_rescue_dispatch() -> bool:
+	for _line in Beats.get_beat(Beats.MARA_MINE_DISPATCH).lines:
+		if not _no_pre_rescue_reveal(_title._stage):
+			return _fail("The rescue dispatch named the artifact before anyone was safe.")
 		_key(KEY_ENTER)
+	return true
 
 
 func _saved_world() -> String:

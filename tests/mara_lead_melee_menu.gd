@@ -1,5 +1,5 @@
 extends "res://tests/mara_campaign_flow.gd"
-## Uses the real Mine traverse; no training or confirmed clear is seeded.
+## Uses the real Greyhollow rescue; no training or confirmed clear is seeded.
 
 const TRAINING := "Lead Melee Training"
 const INVEST := "Confirm Investment (1 lead point)"
@@ -35,7 +35,7 @@ func _exercise_training_menu() -> bool:
 		return _fail("Keyboard and D-pad did not reach Mara's training from the real Camp Operations.")
 	var locked_save := FileAccess.get_file_as_bytes(_profile_path)
 	_tap_joy(JOY_BUTTON_DPAD_DOWN)
-	if not _training_state(1, "Locked", false) or not _focused("Back") \
+	if not _training_state(1, "Locked: Clear Get Them Out", false) or not _focused("Back") \
 			or FileAccess.get_file_as_bytes(_profile_path) != locked_save:
 		return _fail("Locked status must be read-only and must not focus a phantom confirmation.")
 	await _capture("locked")
@@ -46,7 +46,7 @@ func _exercise_training_menu() -> bool:
 	if not _focused("Shield Infantry Drill"):
 		return _fail("The separate Shield Drill lost its position in the focus chain.")
 	_tap_key(KEY_ESCAPE)
-	if not await _deploy_mine_at_rating(1, 700) or not _win_escort():
+	if not await _deploy_mine_at_rating(1, 700) or not _win_rescue():
 		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]) \
@@ -97,9 +97,13 @@ func _exercise_training_menu() -> bool:
 	_tap_key(KEY_ESCAPE)
 	if not await _deploy_mine_at_rating(2, 720):
 		return false
+	var before_retry := FileAccess.get_file_as_bytes(_profile_path)
 	_tap_key(KEY_BACKSPACE)
-	if not _mine_lead_melee_build(_title._campaign_battle as Mission, 2, false):
-		return _fail("Retry did not retain Mara's opted-in rating and the normal Shield loadout.")
+	var retry := _title._campaign_battle as Mission
+	if not retry or not _mine_lead_melee_build(retry, 2, false) \
+			or retry.rescue_phase != Mission.Rescue.RALLY \
+			or FileAccess.get_file_as_bytes(_profile_path) != before_retry:
+		return _fail("Retry did not retain Mara's rating, normal Shield loadout, fresh objective, and invested save.")
 	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
 	if not _press("New Game") or not _press("raska") or not _map():
@@ -144,6 +148,8 @@ func _deploy_mine_at_rating(melee: int, cap: int) -> bool:
 	return (_mine_budget(mission, 1 if cap == 700 else 2, cap)
 		and mission.encounter.hero.rating(Unit.Damage.MELEE) == melee
 		and mission.encounter.hero.hp == Encounter.HERO_HP
+		and mission.rescue_phase == Mission.Rescue.RALLY
+		and mission._custody_case == null
 		and mission.battle.formations[0].title == "Shield Infantry") \
 		or _fail("Deployment did not apply the saved choice to Mara alone.")
 

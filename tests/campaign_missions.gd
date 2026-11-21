@@ -8,9 +8,9 @@ const Beats := preload("res://game/campaign_dialogues.gd")
 
 const EXPECTED := {
 	"mara": [
-		["mara_mine_escort", 1, "year_one_mine"],
-		["mara_grain_crossing", 2, "marches_crossing"],
-		["mara_moonwash_quay", 2, "moonwash_harbor"],
+		["mara_mine_escort", 3, "year_one_mine"],
+		["mara_grain_crossing", 3, "marches_crossing"],
+		["mara_moonwash_quay", 3, "moonwash_harbor"],
 	],
 	"raska": [
 		["orc_mine_witness", 1, "year_one_mine"],
@@ -127,7 +127,7 @@ func _check_isolation() -> bool:
 	var looked_up := Missions.mission_for_campaign("mara", "mara_mine_escort")
 	looked_up.year = 5
 	var fresh := Missions.missions_for_campaign("mara")
-	if fresh.size() != 3 or fresh[0].title == "Edited locally" or fresh[0].year != 1:
+	if fresh.size() != 3 or fresh[0].title == "Edited locally" or fresh[0].year != 3:
 		return _fail("A caller mutated the authored catalog.")
 	return true
 
