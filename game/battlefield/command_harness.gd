@@ -23,7 +23,12 @@ const MARKER_SPEED := 16.0
 const MARKER_LEASH := 60.0
 ## The marker starts this far ahead of the platoon when it is (re)selected.
 const MARKER_START := 4.0
-const MARKER_CAMERA_DISTANCE := 11.0
+const MARKER_CAMERA_DISTANCE := 9.0
+## How far ahead of the platoon, toward the marker, the marching camera aims.
+const MARKER_CAMERA_LOOK_AHEAD := 5.0
+## The marker can't be pulled closer than this, so it never crosses the platoon
+## and swings the camera round.
+const MARKER_MIN_DISTANCE := 2.0
 const MARKER_BEAM_HEIGHT := 9.0
 
 @export var battlefield_scene: PackedScene
@@ -73,6 +78,7 @@ var _march_tether: MeshInstance3D
 var _route_pins: Array[Node3D] = []
 var _march_note := ""
 var _camera_pivot := Vector3.INF
+var _camera_yaw := 0.0
 var _formation_models: Array[Node3D] = []
 var _formation_members: Array[Array] = []
 var _field: Node3D
@@ -122,9 +128,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			cursor = battle.clamp_to_field(cursor + movement.rotated(-_command_yaw) * CURSOR_SPEED * delta)
 	else:
-		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
+		var orbit := -look.x * ORBIT_SPEED * delta
+		_hero_yaw = wrapf(_hero_yaw + orbit, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
-		_step_march_marker(movement, delta)
+		_step_march_marker(movement, delta, orbit)
 	_update_lead_engagement(delta)
 	# Stick and D-pad steer the leader only in combat; otherwise the lead platoon
 	# follows its Move order or waypoints. Formations always advance.
@@ -147,22 +154,34 @@ func march_mode() -> bool:
 	return battle.lead_platoon_enabled and not command_view and not battle.direct_hero_control()
 
 
-func _step_march_marker(movement: Vector2, delta: float) -> void:
+func _step_march_marker(movement: Vector2, delta: float, orbit := 0.0) -> void:
 	var active := march_mode()
 	var selected := battle.formation_at(selected_index)
 	if not active or selected == null:
 		_marker_active = false
 		return
+	var origin := selected.position
 	if not _marker_active or _marker_owner != selected_index:
 		_reset_march_marker()
+	elif orbit != 0.0:
+		# The right stick swings the marker round its platoon, and the camera with it.
+		march_marker = origin + (march_marker - origin).rotated(-orbit)
 	_marker_active = true
 	if movement != Vector2.ZERO:
 		march_marker += movement.rotated(-_hero_yaw) * MARKER_SPEED * delta
 		_march_note = ""
-	var origin := selected.position
-	if march_marker.distance_to(origin) > MARKER_LEASH:
-		march_marker = origin + (march_marker - origin).normalized() * MARKER_LEASH
+	var offset := march_marker - origin
+	if offset.length() > MARKER_LEASH:
+		march_marker = origin + offset.normalized() * MARKER_LEASH
+	elif offset.length() < MARKER_MIN_DISTANCE:
+		var bearing := offset.normalized() if offset.length() > 0.001 else Vector2(-sin(_hero_yaw), -cos(_hero_yaw))
+		march_marker = origin + bearing * MARKER_MIN_DISTANCE
 	march_marker = battle.clamp_to_field(march_marker)
+	# The camera stays behind the platoon looking toward the marker, so the stick
+	# pushes the marker away, pulls it back, or swings it left and right.
+	offset = march_marker - origin
+	if offset.length() > 0.5:
+		_hero_yaw = atan2(-offset.x, -offset.y)
 
 
 func _reset_march_marker() -> void:
@@ -260,7 +279,19 @@ func _update_lead_engagement(delta: float) -> void:
 
 
 ## Scenes can react when the leader's platoon enters or leaves combat.
-func _on_lead_engagement_changed(_engaged: bool) -> void:
+func _on_lead_engagement_changed(engaged: bool) -> void:
+	# The marching camera faced the waypoint marker; combat turns it behind the
+	# leader toward the nearest hostile (or the way the leader was walking).
+	if engaged and battle.lead_platoon_enabled:
+		var facing := battle.hero_heading
+		var nearest := INF
+		for hostile in _hostile_positions():
+			var gap := hostile.distance_to(battle.hero_position)
+			if gap > 0.01 and gap < nearest:
+				nearest = gap
+				facing = hostile - battle.hero_position
+		if facing.length() > 0.001:
+			_hero_yaw = atan2(-facing.x, -facing.y)
 	_sync_view()
 
 
@@ -450,23 +481,28 @@ func _point_cursor(screen: Vector2, allow_clamp: bool) -> bool:
 
 
 func _update_cameras() -> void:
-	# Outside combat the camera fixes on the waypoint marker and follows it; in
-	# combat it frames the leader. The pivot eases between the two.
+	# Outside combat the camera hovers over and behind the selected platoon and looks
+	# toward the waypoint marker; in combat it frames the leader.
 	var marching := march_mode() and _marker_active and not march_camera_suppressed
-	var goal := _ground(march_marker, 1.0) if marching else _ground(battle.hero_position, 1.15)
+	var selected := battle.formation_at(selected_index)
+	if selected == null:
+		marching = false
+	var goal := _ground(selected.position, 1.15) if marching else _ground(battle.hero_position, 1.15)
 	var step := get_physics_process_delta_time()
-	# Ease only while following the marker; the leader's camera keeps its exact framing.
+	# Ease only while marching; the leader's camera keeps its exact framing.
 	if not marching or not _camera_pivot.is_finite() or step <= 0.0:
 		_camera_pivot = goal
+		_camera_yaw = _hero_yaw
 	else:
 		_camera_pivot = _camera_pivot.lerp(goal, minf(1.0, 12.0 * step))
+		_camera_yaw = lerp_angle(_camera_yaw, _hero_yaw, minf(1.0, 10.0 * step))
 	var hero := _camera_pivot
 	var distance := MARKER_CAMERA_DISTANCE if marching else 6.1
 	var hero_offset := Vector3(0.0, sin(_hero_pitch), cos(_hero_pitch)) * distance
-	var desired := hero + hero_offset.rotated(Vector3.UP, _hero_yaw)
+	var desired := hero + hero_offset.rotated(Vector3.UP, _camera_yaw)
 	_hero_camera.position = _terrain.camera_position(hero, desired) if _terrain else desired
-	var look_ahead := 0.0 if marching else -2.0
-	var focus := to_global(hero + Vector3(0.0, 0.0, look_ahead).rotated(Vector3.UP, _hero_yaw))
+	var look_ahead := -MARKER_CAMERA_LOOK_AHEAD if marching else -2.0
+	var focus := to_global(hero + Vector3(0.0, 0.0, look_ahead).rotated(Vector3.UP, _camera_yaw))
 	if _hero_camera.global_position.distance_squared_to(focus) > 0.0001:
 		_hero_camera.look_at(focus)
 	if _sector:
@@ -521,7 +557,7 @@ func _sync_view() -> void:
 		if battle.direct_hero_control():
 			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nHold L2 / Shift to command other platoons"
 		else:
-			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon   ·   Right stick / Q E R F: camera" % selected.title
+			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   R1 / G: add waypoint\nD-pad Up / T: clear route   ·   D-pad / Z X: change platoon   ·   Right stick / Q E: swing the waypoint" % selected.title
 			if not _march_note.is_empty():
 				_controls_label.text += "\n" + _march_note
 

@@ -7,6 +7,8 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 
 var _mission: Mission
 var _failures := 0
+## The camera yaw at spawn: the frame the drive keys are written in.
+var _spawn_yaw := 0.0
 
 
 func _initialize() -> void:
@@ -22,6 +24,7 @@ func _run() -> void:
 	await physics_frame
 
 	var spawn := _mission.hero_world_position()
+	_spawn_yaw = _mission._hero_yaw
 	var infantry_spawn := _mission.battle.formations[0].position
 	var pickup := _mission.battlefield_marker(^"Markers/Objectives/GodbridlePickup").position
 	var road_exit := _mission.battlefield_marker(^"Markers/Objectives/GodbridleExit").position
@@ -101,7 +104,9 @@ func _move_to_pickup(pickup: Vector3) -> void:
 
 
 func _drive(key: Key, target: float, along_x := false) -> void:
-	# Outside combat the leader's platoon marches by Move orders; in combat the key steers.
+	# Outside combat the leader's platoon marches by Move orders; in combat the key
+	# steers. The marching camera turns to face the waypoint marker, so both use the
+	# spawn camera's frame.
 	var heading: Vector2 = {KEY_W: Vector2.UP, KEY_S: Vector2.DOWN, KEY_A: Vector2.LEFT, KEY_D: Vector2.RIGHT}[key]
 	var held := false
 	for index in range(1100):
@@ -110,6 +115,7 @@ func _drive(key: Key, target: float, along_x := false) -> void:
 			break
 		var battle = _mission.battle
 		if battle.direct_hero_control():
+			_mission._hero_yaw = _spawn_yaw
 			if not held:
 				_key(key, true)
 				held = true
@@ -117,7 +123,7 @@ func _drive(key: Key, target: float, along_x := false) -> void:
 			if held:
 				_key(key, false)
 				held = false
-			battle.order_move(Battle.LEAD_INDEX, battle.hero_position + heading.rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED / 60.0)
+			battle.order_move(Battle.LEAD_INDEX, battle.hero_position + heading.rotated(-_spawn_yaw) * Battle.LEAD_SPEED / 60.0)
 		_tick()
 	if held:
 		_key(key, false)

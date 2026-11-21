@@ -248,11 +248,14 @@ func _hero_waypoints() -> void:
 	_check(_mission.selected_index == lead_index and _mission.march_mode() and _mission._march_beam.is_visible_in_tree()
 		and not _map.is_visible_in_tree(), "Keyboard selects Sereth's lead and the hero-view marker, not the command map.")
 	var first := _point("Routes/ApproachRoadWest")
+	var before: Vector2 = _mission.march_marker
+	var yaw: float = _mission._hero_yaw
 	_key_event(KEY_D, true)
 	_tick(15)
 	_key_event(KEY_D, false)
-	_check(_mission.march_marker.distance_to(first) < 0.03, "Keyboard steers the marker to the authored west approach.")
-	first = _mission.march_marker
+	_check(_mission.march_marker.distance_to(before) > 1.0 and not is_equal_approx(_mission._hero_yaw, yaw),
+		"Keyboard swings the marker round the lead platoon and the camera turns to face it.")
+	first = _aim_hero_marker(first)
 	_key(KEY_G)
 	_check(_route_is(lead_index, [first]) and _orders == [lead_index] and lead.order == Battle.Order.MOVE
 		and lead.destination == first, "Hero G sends the lead platoon to the first plotted waypoint.")

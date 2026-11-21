@@ -110,6 +110,8 @@ func _check_harness_engagement() -> void:
 	harness.hostiles = PackedVector2Array([hero + Vector2(6.0, 0.0)])
 	await _frames(2)
 	_check(battle.lead_engaged and battle.direct_hero_control(), "A hostile within engagement range switches the leader to direct control.")
+	var yaw: float = harness._hero_yaw
+	_check(Vector2(-sin(yaw), -cos(yaw)).dot(Vector2.RIGHT) > 0.99, "Combat turns the camera behind the leader toward the hostile.")
 	harness.hostiles = PackedVector2Array([hero + Vector2(10.0, 0.0)])
 	await _frames(120)
 	_check(battle.lead_engaged, "Combat holds while the hostile stays inside the release range.")
@@ -137,8 +139,24 @@ func _check_waypoint_marker() -> void:
 	await _frames(20)
 	var marker: Vector2 = harness.march_marker
 	_check(marker.distance_to(start) > 5.0 and battle.hero_position == hero, "The stick moves the marker away from the platoon without moving the leader.")
-	var pivot: Vector3 = harness._camera_pivot
-	_check(Vector2(pivot.x, pivot.z).distance_to(marker) < 0.5, "The camera fixes on the marker and follows it.")
+	_check(_camera_frames(harness, battle.lead.position, marker), "The camera hovers behind the selected platoon and looks toward the marker.")
+	_axis(JOY_AXIS_LEFT_X, 1.0)
+	await _frames(20)
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	await _frames(30)
+	var swung: Vector2 = harness.march_marker
+	_check(absf(swung.distance_to(battle.lead.position) - marker.distance_to(battle.lead.position)) < 6.0 and swung.distance_to(marker) > 3.0 \
+		and _camera_frames(harness, battle.lead.position, swung), "Steering sideways swings the marker round the platoon and the camera turns to follow it.")
+	_axis(JOY_AXIS_LEFT_Y, 1.0)
+	await _frames(120)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	await _frames(30)
+	_check(harness.march_marker.distance_to(battle.lead.position) >= harness.MARKER_MIN_DISTANCE - 0.01 \
+		and _camera_frames(harness, battle.lead.position, harness.march_marker), "Pulling the marker back stops short of the platoon without spinning the camera.")
+	_axis(JOY_AXIS_LEFT_Y, -1.0)
+	await _frames(30)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	await _frames(20)
 	_button(JOY_BUTTON_RIGHT_SHOULDER)
 	_check(harness.march_waypoints(Battle.LEAD_INDEX).size() == 1 and battle.lead.order == Battle.Order.MOVE, "R1 adds a waypoint and the lead platoon sets off for it.")
 	_axis(JOY_AXIS_LEFT_X, 1.0)
@@ -166,6 +184,18 @@ func _check_waypoint_marker() -> void:
 	_check(not harness.march_mode() and not harness._march_beam.visible, "Combat hides the marker and returns the stick to the leader.")
 	harness.queue_free()
 	await process_frame
+
+
+## The camera sits behind the platoon (on the far side from the marker) and faces the marker.
+func _camera_frames(harness: Node, platoon: Vector2, marker: Vector2) -> bool:
+	var pivot: Vector3 = harness._camera_pivot
+	var camera: Camera3D = harness._hero_camera
+	var eye := Vector2(camera.position.x, camera.position.z)
+	var toward := (marker - platoon).normalized()
+	var facing := -camera.global_transform.basis.z
+	var flat := Vector2(facing.x, facing.z).normalized()
+	return Vector2(pivot.x, pivot.z).distance_to(platoon) < 0.5 and (platoon - eye).dot(toward) > 3.0 \
+		and flat.dot(toward) > 0.95 and camera.position.y > pivot.y + 1.0
 
 
 func _axis(code: JoyAxis, amount: float) -> void:
