@@ -7,6 +7,7 @@ const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
+const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
 const WAR_YEARS := ["", "Year One", "Year Two", "Year Three", "Year Four", "Year Five"]
@@ -362,6 +363,10 @@ func _on_campaign_result(result: StringName, mission: Node3D, campaign_id: Strin
 			debrief = DialogueBeats.grain_debrief_id(result)
 		"ilyra_moonwash_rescue":
 			debrief = DialogueBeats.moonwash_debrief_id(result)
+		"ilyra_coast_survey":
+			var survey := mission as SurveyBattle
+			if survey and result == SurveyBattle.CHART_CIRCULATED:
+				debrief = DialogueBeats.survey_debrief_id(survey.objective.phase, survey.objective.signal_site)
 	if debrief != &"":
 		_record_campaign_victory(mission, campaign_id, mission_id, debrief, result)
 

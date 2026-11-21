@@ -52,8 +52,10 @@ godot game/battlefield/ilyra_coast_survey_campaign.tscn
 godot --headless --script tests/ilyra_coast_survey_campaign.gd
 ```
 
+In the Elven campaign, clear Hulls on Stone, travel from Moonwash Harbor to Survey Shore, and confirm deployment. Completing either relay opens travel to Spanwater Lock but not a third battle. To jump straight to the prototype for testing, use the scene launch above.
+
 Follow the amber trails to the stone and working inlet and use **Cross / Space** to record each reading. The first reading gets the survey cutter under way on its full shoal-safe loop; the second draws the two port crews toward their respective relays. Their routes continue while you command. The cutter’s labeled cyan route and both marked holds appear in command view (**L2 / Shift**). The HUD distinguishes an obstructed signal, a visible approach, and a cutter actually stopped at the matching relay.
 
 Send the Shore Detachment along the inland lane to the blue guard ring at either relay. **Square / right-click** issues Move; **Cross / H** holds in command view. Ilyra can request transmission only in hero view at the selected relay; a clear terrain ray, physical cutter stop, and three uninterrupted seconds at a staffed and uncontested relay are required. If interrupted, only the signal resets. Use **Options / Backspace** or the HUD button to retry. Either relay acknowledges the same complete chart, and neither requires defeating a crew.
 
-This prototype covers route choice and local pressure, not hero injuries, cutter combat, tides, port fleet support, or campaign routing. Its completion signal emits `chart_circulated` once after the cutter acknowledges both readings.
+This prototype covers route choice and local pressure, not hero injuries, cutter combat, tides, or port fleet support. Its completion signal emits `chart_circulated` once after the cutter acknowledges both readings.
