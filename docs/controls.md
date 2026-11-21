@@ -42,7 +42,24 @@ A DualShock 3 works with the same layout. The face buttons, shoulders, sticks an
 - If Godot doesn't recognise the pad (some clones report odd names or IDs) and its name looks like a PS3 pad, the game applies a DS3 layout mapping on macOS so the buttons aren't scrambled.
 - Battles and the mission view follow whichever controller last pressed a button, so another USB or Bluetooth device that registers as a gamepad first can't take over the controls.
 
-Run `godot --headless --script tests/controller_support.gd` to check the PS3 recognition, the fallback layout, and the pad switching.
+Run `godot --headless --script tests/controller_support.gd` to check PS3 and Xbox 360 recognition, the fallback layouts, and the pad switching.
+
+## Xbox 360 controller
+
+An Xbox 360 controller uses the same layout. The prompts use PlayStation names, so read them as:
+
+| Prompt | Xbox 360 | Prompt | Xbox 360 |
+|---|---|---|---|
+| Cross | **A** | L1 / R1 | **LB / RB** |
+| Circle | **B** | L2 / R2 | **LT / RT** (hold LT for command view) |
+| Square | **X** | Options | **Start** |
+| Triangle | **Y** | Create | **Back** |
+
+The sticks, stick clicks and D-pad are the same. The Guide button isn't used.
+
+**Connecting it:**
+- **Windows and Linux:** plug it in (or use the Xbox 360 wireless receiver). Both systems have drivers built in, and Godot recognises the pad.
+- **macOS:** Macs have no built-in driver for Xbox 360 pads. macOS 15 Sequoia added wired support for newer Xbox controllers, but users report that Xbox 360 pads are detected with buttons that don't respond. If the game logs no `Controller ... connected` line, macOS isn't passing the pad through, and the game can't fix that. The community 360Controller driver can help. If the pad shows up with `(unrecognised layout)`, the game applies the 360Controller driver's layout so the buttons match the table above.
 
 ## The leader's platoon
 

@@ -8,6 +8,10 @@ extends Node
 ##   Cross = A, Circle = B, Square = X, Triangle = Y, L2/R2 = trigger axes,
 ##   Start = START, Select = BACK. If Godot doesn't recognise the pad (some clones),
 ##   a DS3 layout mapping is applied on macOS so the buttons aren't scrambled.
+## - Recognises Xbox 360 controllers. SDL maps them to the same standard layout
+##   (A = Cross, B = Circle, X = Square, Y = Triangle, LB/RB = L1/R1, LT/RT = L2/R2,
+##   Start = Options, Back = Create). An unrecognised 360 pad on macOS (seen through
+##   the community 360Controller driver) gets that driver's layout.
 ## - Logs each controller as it connects, for checking a pad on a new machine.
 ##
 ## The state is static, so scripts that only preload this file (and headless tests,
@@ -19,6 +23,12 @@ extends Node
 const PS3_MAC_MAPPING := "a:b14,b:b13,back:b0,dpdown:b6,dpleft:b7,dpright:b5,dpup:b4,guide:b16," \
 	+ "leftshoulder:b10,leftstick:b1,lefttrigger:b8,leftx:a0,lefty:a1,rightshoulder:b11," \
 	+ "rightstick:b2,righttrigger:b9,rightx:a2,righty:a3,start:b3,x:b15,y:b12"
+## SDL mapping body for a wired Xbox 360 pad as the 360Controller driver exposes it on macOS.
+const XBOX360_MAC_MAPPING := "a:b0,b:b1,back:b9,dpdown:b12,dpleft:b13,dpright:b14,dpup:b11,guide:b10," \
+	+ "leftshoulder:b4,leftstick:b6,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5," \
+	+ "rightstick:b7,righttrigger:a5,rightx:a3,righty:a4,start:b8,x:b2,y:b3"
+## Name fragments reported for Xbox 360 pads and licensed third-party 360 pads.
+const XBOX360_NAMES: PackedStringArray = ["xbox 360", "x360", "xbox360"]
 ## Name fragments SDL and macOS report for PlayStation 3 pads and common clones.
 const PS3_NAMES: PackedStringArray = ["ps3", "playstation(r)3", "playstation 3", "dualshock 3", "sixaxis", "shanwan"]
 ## Before any pad is chosen, a stick has to move this far to choose it.
@@ -64,8 +74,20 @@ static func is_playstation3(device_id: int) -> bool:
 
 
 static func looks_like_playstation3(joy_name: String) -> bool:
+	return _matches(joy_name, PS3_NAMES)
+
+
+static func is_xbox360(device_id: int) -> bool:
+	return looks_like_xbox360(Input.get_joy_name(device_id))
+
+
+static func looks_like_xbox360(joy_name: String) -> bool:
+	return _matches(joy_name, XBOX360_NAMES)
+
+
+static func _matches(joy_name: String, fragments: PackedStringArray) -> bool:
 	var lowered := joy_name.to_lower()
-	for fragment in PS3_NAMES:
+	for fragment in fragments:
 		if lowered.contains(fragment):
 			return true
 	return false
@@ -77,11 +99,16 @@ static func describe(device_id: int) -> String:
 		"" if Input.is_joy_known(device_id) else " (unrecognised layout)"]
 
 
-## The mapping line to apply for an unrecognised PS3 pad on macOS, or "" if none applies.
+## The mapping line to apply for an unrecognised PS3 or Xbox 360 pad on macOS, or ""
+## if none applies.
 static func fallback_mapping(guid: String, joy_name: String, known: bool, os_name: String) -> String:
-	if known or os_name != "macOS" or guid.is_empty() or not looks_like_playstation3(joy_name):
+	if known or os_name != "macOS" or guid.is_empty():
 		return ""
-	return "%s,PS3 Controller,%s" % [guid, PS3_MAC_MAPPING]
+	if looks_like_playstation3(joy_name):
+		return "%s,PS3 Controller,%s" % [guid, PS3_MAC_MAPPING]
+	if looks_like_xbox360(joy_name):
+		return "%s,Xbox 360 Controller,%s" % [guid, XBOX360_MAC_MAPPING]
+	return ""
 
 
 func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
@@ -94,7 +121,7 @@ func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 		Input.is_joy_known(device_id), OS.get_name())
 	if not mapping.is_empty():
 		Input.add_joy_mapping(mapping, true)
-		print("Applied the PlayStation 3 layout to an unrecognised pad.")
+		print("Applied the %s layout to an unrecognised pad." % mapping.get_slice(",", 1))
 	print("Controller %d connected: %s" % [device_id, describe(device_id)])
 	if not Input.is_joy_known(device_id):
 		push_warning("Controller '%s' has no known layout; buttons may not match the on-screen prompts." % Input.get_joy_name(device_id))
