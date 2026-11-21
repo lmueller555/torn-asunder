@@ -71,6 +71,9 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.54, 1)
 theme_override_font_sizes/font_size = 21
 
+[node name="Infantry" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
+theme_override_font_sizes/font_size = 17
+
 [node name="Tell" type="Label" parent="CombatHUD/Panel/Margin/Readout"]
 theme_override_font_sizes/font_size = 17
 

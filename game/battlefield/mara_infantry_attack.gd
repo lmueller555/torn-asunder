@@ -14,15 +14,16 @@ const WINDUP_TIME := 0.45
 const RECOVERY_TIME := 0.85
 const BASE_DAMAGE := 42.0
 const BP_PER_HIT := 6
+const PROTOTYPE_HP := 310.0
 const MIN_FORWARD_DOT := 0.50
 
-var attacker := Unit.new()
+var attacker := Unit.new(PROTOTYPE_HP)
 var phase := Phase.APPROACH
 var _remaining := 0.0
 
 
 func issue(group: Battle.Formation, enemy: Unit, target: Vector2) -> bool:
-	if not attacker.is_alive() or not enemy.is_alive():
+	if group.order == Battle.Order.DEFEATED or not attacker.is_alive() or not enemy.is_alive():
 		return false
 	if group.order != Battle.Order.ATTACK:
 		_reset()
@@ -36,7 +37,11 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 	if group.order != Battle.Order.ATTACK:
 		_reset()
 		return 0.0
-	if not enemy.is_alive() or not attacker.is_alive():
+	if not attacker.is_alive():
+		group.defeat()
+		_reset()
+		return 0.0
+	if not enemy.is_alive():
 		group.hold()
 		_reset()
 		return 0.0

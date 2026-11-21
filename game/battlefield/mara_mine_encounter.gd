@@ -9,6 +9,7 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 
 enum EnemyPhase { WATCHING, PURSUING, WINDUP, RECOVERY, DEFEATED }
+enum Target { NONE, HERO, INFANTRY }
 
 const HERO_TEAM := 0
 const ENEMY_TEAM := 1
@@ -32,6 +33,10 @@ var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
 var last_contact := ""
+var windup_target: Target:
+	get:
+		return _windup_target
+var _windup_target := Target.NONE
 var _enemy_seconds := 0.0
 var _feedback_seconds := 0.0
 
@@ -67,44 +72,85 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 		_feedback("Shield Infantry hit · +%d BP" % credited)
 	if not enemy.is_alive():
 		enemy_phase = EnemyPhase.DEFEATED
+		_windup_target = Target.NONE
 		return
 	if not hero.is_alive():
 		return
 
-	var toward := battle.hero_position - enemy_position
-	var distance := toward.length()
-	var direction := toward.normalized()
 	match enemy_phase:
 		EnemyPhase.WATCHING:
-			if distance <= AGGRO_RANGE and sight:
+			if _nearest_visible_target(battle, sight, clear_contact) != Target.NONE:
 				enemy_phase = EnemyPhase.PURSUING
 		EnemyPhase.PURSUING:
-			enemy_heading = direction
-			if distance <= STOP_RANGE and sight:
+			var target := _nearest_visible_target(battle, sight, clear_contact)
+			if target == Target.NONE:
+				enemy_phase = EnemyPhase.WATCHING
+				return
+			var toward := _target_position(battle, target) - enemy_position
+			var distance := toward.length()
+			var direction := toward.normalized()
+			if not direction.is_zero_approx():
+				enemy_heading = direction
+			if distance <= STOP_RANGE + 0.02:
 				enemy_phase = EnemyPhase.WINDUP
 				_enemy_seconds = WINDUP_TIME
-			elif distance > STOP_RANGE:
+				_windup_target = target
+			else:
 				var next := battle.clamp_to_field(enemy_position + direction * minf(ENEMY_SPEED * delta, distance - STOP_RANGE))
 				if can_move.call(enemy_position, next, false):
 					enemy_position = next
 		EnemyPhase.WINDUP:
 			_enemy_seconds -= delta
 			if _enemy_seconds <= 0.0:
-				if sight and distance <= CONTACT_RANGE and direction.dot(enemy_heading) >= Attack.MIN_FORWARD_DOT:
-					var hit := defense.resolve_incoming_hit(enemy, ENEMY_TEAM, {Unit.Damage.MELEE: ENEMY_DAMAGE}, true,
-						battle.hero_heading, enemy_position - battle.hero_position)
-					match hit.outcome:
-						Defense.HitOutcome.HIT: _feedback("Mara hit · −%d HP" % roundi(hit.hp_lost))
-						Defense.HitOutcome.GUARDED: _feedback("Guarded · −%d HP" % roundi(hit.hp_lost))
-						Defense.HitOutcome.EVADED: _feedback("Dodged the swing")
-				else:
-					_feedback("Road guard missed")
+				_resolve_enemy_contact(battle, clear_contact)
 				enemy_phase = EnemyPhase.RECOVERY
 				_enemy_seconds = RECOVERY_TIME
+				_windup_target = Target.NONE
 		EnemyPhase.RECOVERY:
 			_enemy_seconds -= delta
 			if _enemy_seconds <= 0.0:
 				enemy_phase = EnemyPhase.PURSUING
+
+
+func _nearest_visible_target(battle: Battle, hero_visible: bool, clear_contact: Callable) -> Target:
+	var hero_distance := enemy_position.distance_to(battle.hero_position) if hero_visible and hero.is_alive() else INF
+	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
+	var infantry_distance := enemy_position.distance_to(infantry.position)
+	# The guard reacts to a formation actively threatening him. Ties favor Mara
+	# to keep targeting deterministic; a chosen swing will not retarget.
+	if infantry.order == Battle.Order.ATTACK and infantry_attack.attacker.is_alive() \
+		and infantry_distance <= AGGRO_RANGE and infantry_distance < hero_distance \
+		and clear_contact.call(enemy_position, infantry.position):
+		return Target.INFANTRY
+	return Target.HERO if hero_distance <= AGGRO_RANGE else Target.NONE
+
+
+func _target_position(battle: Battle, target: Target) -> Vector2:
+	return battle.formations[InfantryAttack.INFANTRY_INDEX].position if target == Target.INFANTRY else battle.hero_position
+
+
+func _resolve_enemy_contact(battle: Battle, clear_contact: Callable) -> void:
+	var target := _target_position(battle, _windup_target)
+	var toward := target - enemy_position
+	if toward.length_squared() > CONTACT_RANGE * CONTACT_RANGE \
+		or (not toward.is_zero_approx() and toward.normalized().dot(enemy_heading) < Attack.MIN_FORWARD_DOT) \
+		or not clear_contact.call(enemy_position, target):
+		_feedback("Road guard missed")
+		return
+	var hit_profile := {Unit.Damage.MELEE: ENEMY_DAMAGE}
+	if _windup_target == Target.HERO:
+		var hit := defense.resolve_incoming_hit(enemy, ENEMY_TEAM, hit_profile, true, battle.hero_heading, -toward)
+		match hit.outcome:
+			Defense.HitOutcome.HIT: _feedback("Mara hit · −%d HP" % roundi(hit.hp_lost))
+			Defense.HitOutcome.GUARDED: _feedback("Guarded · −%d HP" % roundi(hit.hp_lost))
+			Defense.HitOutcome.EVADED: _feedback("Dodged the swing")
+	elif _windup_target == Target.INFANTRY and infantry_attack.attacker.is_alive():
+		var lost := infantry_attack.attacker.receive_hit(enemy, hit_profile)
+		if not infantry_attack.attacker.is_alive():
+			battle.formations[InfantryAttack.INFANTRY_INDEX].defeat()
+			_feedback("Shield Infantry defeated")
+		elif lost > 0.0:
+			_feedback("Shield Infantry hit · −%d HP" % roundi(lost))
 
 
 func active_feedback() -> String:

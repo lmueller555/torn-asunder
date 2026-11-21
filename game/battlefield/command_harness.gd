@@ -226,6 +226,8 @@ func _select_relative(step: int) -> void:
 func _select_at_cursor() -> void:
 	var nearest := 2.2
 	for index in range(battle.formations.size()):
+		if battle.formations[index].order == Battle.Order.DEFEATED:
+			continue
 		var distance := battle.formations[index].position.distance_to(cursor)
 		if distance < nearest:
 			nearest = distance
@@ -288,6 +290,7 @@ func _sync_view() -> void:
 	for index in range(battle.formations.size()):
 		var formation := battle.formations[index]
 		var model := _formation_models[index]
+		model.visible = formation.order != Battle.Order.DEFEATED
 		var yaw := atan2(-formation.heading.x, -formation.heading.y)
 		var origin := _ground(formation.position)
 		var moved := model.position != origin or not is_equal_approx(model.rotation.y, yaw)
@@ -299,12 +302,12 @@ func _sync_view() -> void:
 				var feet := formation.position + Vector2(offset.x, offset.z)
 				member.position.y = _terrain.ground_height(feet) - model.position.y
 	_selection.position = _ground(selected.position, 0.05)
-	_selection.visible = command_view
+	_selection.visible = command_view and selected.order != Battle.Order.DEFEATED
 	_cursor_marker.position = _ground(cursor, 0.10)
 	_cursor_marker.visible = command_view
 	_destination_marker.position = _ground(selected.destination, 0.08)
 	_destination_marker.visible = command_view and selected.order == Battle.Order.MOVE
-	var status: String = ["Holding", "Moving", "Blocked", "Attacking"][selected.order]
+	var status: String = ["Holding", "Moving", "Blocked", "Attacking", "Defeated"][selected.order]
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else "HERO VIEW  /  LIVE"
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
 	if command_view:

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Shared simulation. Neither camera owns or recreates the field or its orders.
 
-enum Order { HOLD, MOVE, BLOCKED, ATTACK }
+enum Order { HOLD, MOVE, BLOCKED, ATTACK, DEFEATED }
 
 const FLAT_BOUNDS := Rect2(-17.0, -12.0, 34.0, 24.0)
 const HERO_SPEED := 5.5
@@ -21,7 +21,12 @@ class Formation:
 		destination = spawn
 
 	func hold() -> void:
-		order = Order.HOLD
+		if order != Order.DEFEATED:
+			order = Order.HOLD
+			destination = position
+
+	func defeat() -> void:
+		order = Order.DEFEATED
 		destination = position
 
 	func advance(delta: float, can_move: Callable) -> void:
@@ -54,6 +59,8 @@ func clamp_to_field(point: Vector2) -> Vector2:
 
 func order_move(index: int, point: Vector2) -> void:
 	var formation := formations[index]
+	if formation.order == Order.DEFEATED:
+		return
 	formation.destination = clamp_to_field(point)
 	formation.order = Order.MOVE
 
