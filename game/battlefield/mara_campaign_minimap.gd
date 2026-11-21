@@ -9,6 +9,7 @@ const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+const LeadAction := preload("res://game/battlefield/mara_lead_action_camera.gd")
 const ShieldFollow := preload("res://game/battlefield/mara_shield_follow_camera.gd")
 const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 
@@ -31,6 +32,7 @@ class AimReticle extends Control:
 
 var _reticle := AimReticle.new()
 var _route_overlay := RouteOverlay.new()
+var _lead_action := LeadAction.new()
 var _shield_follow := ShieldFollow.new()
 var _routes := Routes.new()
 var _route_battle: Battle
@@ -132,7 +134,15 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 			_captured_buttons.erase(button)
 		return true
 	if not _draft_battle:
-		if not event.pressed or not _can_open_controller():
+		if not event.pressed:
+			return false
+		if button == JOY_BUTTON_DPAD_DOWN and not _mission._finished():
+			_captured_buttons[button] = true
+			_lead_action.focused = not _lead_action.focused
+			return true
+		if _mission.command_view and button in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]:
+			_lead_action.clear()
+		if not _can_open_controller():
 			return false
 		if button == JOY_BUTTON_DPAD_UP:
 			_captured_buttons[button] = true
@@ -183,6 +193,12 @@ func _capture_key(event: InputEventKey) -> bool:
 			_captured_keys.erase(key)
 		return true
 	if not _draft_battle:
+		if key == KEY_C and event.pressed and not event.echo and not _mission._finished():
+			_captured_keys[key] = true
+			_lead_action.focused = not _lead_action.focused
+			return true
+		if event.pressed and not event.echo and _mission.command_view and key in [KEY_Z, KEY_X]:
+			_lead_action.clear()
 		if key == KEY_G and event.pressed and not event.echo and _can_open_controller():
 			_captured_keys[key] = true
 			_append_waypoint(_mission.cursor)
@@ -238,6 +254,7 @@ func _bind_route_battle() -> void:
 		for index in _route_battle.formations.size():
 			_route_battle.formations[index].order_changed.disconnect(_on_formation_order_changed.bind(index))
 	_route_battle = _mission.battle
+	_lead_action.clear()
 	_routes.reset(_route_battle)
 	_route_note = ""
 	_route_note_index = -1
@@ -357,6 +374,8 @@ func _refresh_controller_overlay() -> void:
 			_key.text += "\nNot a walkable point"
 	else:
 		_key.text = _legend + ("\nD-pad Up: minimap cursor" if _mission.command_view else "")
+		if not _mission._finished():
+			_key.text += "\nD-pad Down / C: " + ("Clear Mara focus" if _lead_action.focused else "Focus Mara")
 	if _mission.command_view:
 		_key.text += "\nR1 / G: Append waypoint  ·  %d/%d" % [pending_waypoints(_mission.selected_index).size(), Queue.MAX_WAYPOINTS]
 		if _route_note_index == _mission.selected_index and not _route_note.is_empty():
@@ -374,6 +393,7 @@ func _on_controller_connection(device: int, connected: bool) -> void:
 
 
 func _reset_capture() -> void:
+	_lead_action.clear()
 	_axes_seen.clear()
 	_axes_until_neutral.clear()
 	_captured_buttons.clear()
@@ -398,6 +418,7 @@ func _physics_process(delta: float) -> void:
 		if aim.length() > _mission.STICK_DEADZONE:
 			_step_draft(aim.limit_length() * CURSOR_SPEED * delta)
 	_shield_follow.frame(_mission, _draft_battle != null, delta)
+	_lead_action.frame(_mission, delta)
 	refresh()
 
 
