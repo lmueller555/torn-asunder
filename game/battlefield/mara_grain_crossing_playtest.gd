@@ -1,5 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
 
+const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const CART_SPEED := 7.5
 const SHALLOWS_SPEED := 3.9
@@ -29,7 +30,10 @@ var _dispatch_requested: Array[bool] = [false, false]
 var _withdraw_requested: Array[bool] = [false, false]
 var _cart_lost: Array[bool] = [false, false]
 var _hero_fell := false
+var _blocked_cart := -1
+var _rival_routes: Array[PackedVector3Array] = []
 
+@onready var rival: Rival = $RivalReserve
 @onready var _goal: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
 @onready var _status: Label = $ObjectiveHUD/Panel/Margin/Readout/Status
 @onready var _cue: Label = $ObjectiveHUD/Panel/Margin/Readout/Cue
@@ -41,6 +45,10 @@ var _hero_fell := false
 
 func _ready() -> void:
 	super._ready()
+	_rival_routes = [
+		PackedVector3Array([$RivalApproach/NorthTurn.global_position, $RivalApproach/MillTrack.global_position, _route_position("MillApproach")]),
+		PackedVector3Array([$RivalApproach/SouthTrack.global_position, _route_position("StoreApproach")]),
+	]
 	_sign(self, _route_position("ReserveFork"), "RESERVE FORK", Color("#f4dbaf"), 3.1)
 	for cart in range(ROUTES.size()):
 		var path := PackedVector3Array()
@@ -74,6 +82,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _after_battle_step(delta: float) -> void:
+	_blocked_cart = -1
+	_step_rival(delta)
 	var frame := Grain.Observation.new()
 	frame.hero_fell = _hero_fell
 	for cart in range(_carts.size()):
@@ -178,6 +188,8 @@ func restart_mission() -> void:
 func _reset_escort() -> void:
 	selected_cart = Grain.Cart.SEED
 	committed_cart = -1
+	_blocked_cart = -1
+	rival.reset($RivalApproach/ReserveMuster.global_position)
 	_hero_fell = false
 	for cart in range(_carts.size()):
 		_next_waypoint[cart] = 1
@@ -199,8 +211,12 @@ func _advance_cart(cart: Grain.Cart, delta: float) -> void:
 		var target := points[waypoint]
 		var speed := SHALLOWS_SPEED if cart == Grain.Cart.BREAD and ROUTES[cart][waypoint] in ["FordShallows", "FordEastBank"] else CART_SPEED
 		var distance := wagon.global_position.distance_to(target)
+		var trial := wagon.global_position.move_toward(target, speed * time_left)
+		if cart == committed_cart and rival.blocks_cart_step(wagon.global_position, trial):
+			_blocked_cart = cart
+			break
 		_face(wagon, target)
-		wagon.global_position = wagon.global_position.move_toward(target, speed * time_left)
+		wagon.global_position = trial
 		if wagon.global_position != target:
 			break
 		time_left -= distance / speed
@@ -227,6 +243,7 @@ func _check_crossing_cue() -> void:
 	for cart in range(_carts.size()):
 		if committed_cart == -1 and objective.outcome != Grain.Outcome.FAILED and _crossed_this_tick[cart] and objective.cart_state(cart) in [Grain.CartState.EN_ROUTE, Grain.CartState.SECURED]:
 			committed_cart = cart
+			rival.mobilize(_rival_routes[cart])
 			first_crossing_committed.emit(cart)
 		_crossed_this_tick[cart] = false
 
@@ -238,7 +255,10 @@ func _refresh_objective() -> void:
 	_select_button.disabled = not active
 	_dispatch_button.disabled = not active or selected_state != Grain.CartState.STAGED
 	_withdraw_button.disabled = not active or selected_state not in [Grain.CartState.STAGED, Grain.CartState.EN_ROUTE]
-	_status.text = "%s: %s   ·   %s: %s" % [CART_NAMES[0], STATUS[objective.cart_state(0)], CART_NAMES[1], STATUS[objective.cart_state(1)]]
+	_status.text = "%s: %s   ·   %s: %s" % [
+		CART_NAMES[0], _cart_label(Grain.Cart.SEED),
+		CART_NAMES[1], _cart_label(Grain.Cart.BREAD),
+	]
 	for cart in range(_carts.size()):
 		_commit_beacons[cart].visible = active and committed_cart == cart
 		var state := objective.cart_state(cart)
@@ -246,12 +266,7 @@ func _refresh_objective() -> void:
 	match objective.outcome:
 		Grain.Outcome.ACTIVE:
 			_goal.text = "Escort at least one load to its receiving yard"
-			if committed_cart == Grain.Cart.SEED:
-				_cue.text = "First crossing: north bridge. Consider moving the infantry reserve toward the bridge."
-			elif committed_cart == Grain.Cart.BREAD:
-				_cue.text = "First crossing: south ford. Consider moving the infantry reserve toward the ford."
-			else:
-				_cue.text = "Dispatch either cart first. Use the reserve fork to keep both approaches covered."
+			_cue.text = _rival_cue()
 		Grain.Outcome.SUCCEEDED:
 			match objective.clear_result:
 				Grain.SEED_ONLY:
@@ -264,6 +279,40 @@ func _refresh_objective() -> void:
 		Grain.Outcome.FAILED:
 			_goal.text = "The field hero fell" if objective.failure == Grain.Failure.HERO_FELL else "No grain was delivered"
 			_cue.text = "Restart to try the crossing again."
+
+
+func _step_rival(delta: float) -> void:
+	var positions := PackedVector3Array()
+	for formation in battle.formations:
+		if formation.order == Battle.Order.HOLD:
+			positions.append(to_global(_ground(formation.position)))
+	rival.step(delta, _can_rival_move, positions)
+
+
+func _can_rival_move(from: Vector3, to: Vector3) -> bool:
+	var start := to_local(from)
+	var destination := to_local(to)
+	return _terrain.can_move(Vector2(start.x, start.z), Vector2(destination.x, destination.z), true)
+
+
+func _cart_label(cart: Grain.Cart) -> String:
+	if cart == _blocked_cart and objective.cart_state(cart) == Grain.CartState.EN_ROUTE:
+		return "Blocked by rival reserve"
+	return STATUS[objective.cart_state(cart)]
+
+
+func _rival_cue() -> String:
+	if committed_cart == -1:
+		return "Dispatch either cart first. The rival reserve is still at its muster."
+	var lane := "north bridge" if committed_cart == Grain.Cart.SEED else "south ford"
+	match rival.status:
+		Rival.Status.MARCHING:
+			return "Rival reserve moving toward the %s." % lane
+		Rival.Status.BLOCKING:
+			return "Rival reserve blocking the %s. Hold a nearby ally or use the other route." % lane
+		Rival.Status.SCREENED:
+			return "Ally holding the %s approach. The cart can pass." % lane
+	return ""
 
 
 func _route_position(id: String) -> Vector3:
