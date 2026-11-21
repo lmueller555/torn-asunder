@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact existing Ilyra Lead, Shore Marine and Ship Archer visual roles on the registered Moonwash Harbor rescue deck only. Not Coast, Spanwater, additional combat actions or hardware performance.",
+  "author": "Torn Asunder Elf character art authors",
+  "reviewer": "Independent Moonwash visual and exact native presentation reviewer",
+  "evidence": {
+    "godot_context": "Normal editor imports; resolution 1280x720, Godot 4.7.2 Compatibility. Measurements use matching view, actor positions and animation phase, with confirmed identical repeats.",
+    "close_up": "Two stock moving views for each actor. Labeled supplemental same-lens camera framing of actual landed motion state to inspect Marine shield/forearm and Archer R4 sling/bow; no changed pose.",
+    "motion": "Stable native Run samples: lead 53 at 5.499988 m/s, Archer 63 at 2.999954 and Marine 62 at 3.000183. Follows one real clip advance per physical tick, with max measured error .000059s. No exhaustive sole/weapon clipping or attack claim.",
+    "reproduction": "After normal import run godot --headless --script res://tests/ilyra_moonwash_rescue_campaign.gd, res://tests/ilyra_moonwash_result_persistence.gd and res://tests/ilyra_campaign_flow.gd. In registered Harbor issue short legal receiving-deck/pier Move then Hold and verify 105m sector, Retry, crew rescue and cargo progression.",
+    "measurements": "72/72 native and 61/61 headless presenter checks, all three original regressions pass. Ilyra 23,298/7,667 near/tactical triangles; Marine 38,166/7,824; Archer 24,978/7,663.",
+    "base_check": "Human, Orc and Druid releases from 8ac6e57 through ba269ab did not alter any reviewed Harbor host, registration or controller."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Ilyra has silver hair and broad, flowing sea-blue lead silhouette; Shore Marine wears a darker layered harbor kit with tan stave shield; Ship Archer has a narrow bow/quiver shape. Revised Archer sling lies against the shoulder without the earlier visible striped rail."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Dark sea blue and weathered coastal materials hold separate boundaries under actual deck light. Marine shield strakes and Ilyra's baked etching are visible in the close use context; tactical view favors silhouette."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "All same-race roles identified on their original slots at stock movement distance. Some original world labels and formation members partially hide lower limbs, but silhouettes and role equipment are still readable. No HUD changes."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Original accepted Move and Hold for all original three roles; one presentation advance per real tick. Close moving frames show seated Shield and refitted R4 quiver/sling without gross sampled detachments. Not a full-cycle sole or combat clearance."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact _ready presenter attaches to existing _hero and original Marine and Archer member indices only. Original routes, control, Rescue, result persistence and Retry pass. Matched native close delta +53,400 visible/+53,400 shadow/+12 draws; all three panned 105m delta +23,058 visible/+38,316 shadow/+10 draws. Sector in line with earlier race receipts; no platform FPS claim."
+    }
+  },
+  "files": {
+    "assets/models/campaign/elves/ilyra_venn.glb": "4e8aa7ab427fbc02e0c471bfb1ab10f43ab2fa565417935eee8fae8aafb79b23",
+    "assets/models/campaign/elves/ilyra_venn.glb.import": "5e417378c6e5fc3ddfdb320f03ab881abff1839d538fe96bccbbb53405dc2abd",
+    "assets/models/campaign/elves/ship_archer.glb": "3132c17bc5f06ba9bbe1ea249b9a61d95558fc84f4c8a246d33825dd18916cc6",
+    "assets/models/campaign/elves/ship_archer.glb.import": "104809eb6f35ccf1fed82a7294c333b915ac8c7897a3c98f612ab0d6dc156fc7",
+    "assets/models/campaign/elves/shore_marine.glb": "38ad234b47329fcd3ecc9c98189a09ce71e7be38c8b787198ff16b5a4851e074",
+    "assets/models/campaign/elves/shore_marine.glb.import": "e2fff154dc0e9ad283189ad690bb1922b45fd5485d7c41fe3539d38182e59536",
+    "assets/source/campaign/elves/ilyra_venn.blend": "d485bb0fa16d8d270644305438aa7e49469e4532e24a910cd62c265fce8cdafb",
+    "assets/source/campaign/elves/ship_archer.blend": "e7001d25b5a49fefd42eeee9b54ad7610e6c6d6d76e4f9c28cf0f0e02c5b210d",
+    "assets/source/campaign/elves/shore_marine.blend": "4a9601f1a93f54d431d38a798351484ab762f79f610f9a853d20d141f7ab7eec",
+    "game/battlefield/ilyra_campaign_character_art.gd": "4d5c8fe24e3980cac2f705ca99261712cc4286fdbae3f63307b3ab9ded9ffe3d",
+    "game/battlefield/ilyra_moonwash_rescue_campaign.gd": "a3e030920ecf3e449891aedc03cc5513ae76193dba8a38e83b20e1d8a292c119"
+  }
+}

@@ -1,4 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
+
+const CharacterArt := preload("res://game/battlefield/ilyra_campaign_character_art.gd")
 ## The prototype's salvagers pressure the exposed fore transfer. An actual
 ## Marine Hold on the mooring screens them; neither side uses combat damage here.
 
@@ -103,6 +105,7 @@ func _ready() -> void:
 	_restart.pressed.connect(restart_mission)
 	_reset_scene()
 	_refresh_objective()
+	CharacterArt.attach(self)
 
 
 func _clear_rescue_endpoints() -> void:
