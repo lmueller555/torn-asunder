@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact Druid Mine Tunnels deployment only, existing Sova, Tunnel Guard visual and Outlet Screen visual. No other Druid mission, character name, gameplay, combat, terrain, hardware or whole-roster approval.",
+  "author": "Torn Asunder Druid character art authors",
+  "reviewer": "Independent Druid Mine visual and native role integration review",
+  "evidence": {
+    "godot_context": "Exact normal-imported 1280x720 Godot 4.7.2 Compatibility validation in registered Druid Mine, with native close hero/guard and panned 116m views. Native A/B uses identical camera, actor positions and pose clock, and the candidate repeat is unchanged.",
+    "close_up": "Three original stock selected Holding guard movement frames at 8.156–8.175 m and expected Mine Screening at 8.984 m. Sova front and rear are readable in real Mine play; an additional same-scene composition is explicitly supplemental.",
+    "motion": "Actual lead and officer orders, stable animation phase, real Advance and Hold, out-of-range interactions do not release workers, no guards added, and normal Retry. Sampled moving poses/ankle residuals do not establish exhaustive foot locking or attack safety.",
+    "reproduction": "After normal import, run godot --headless --script res://tests/sova_mine_evacuation_campaign.gd, res://tests/sova_mine_tunnels.gd, and res://tests/sova_campaign_flow.gd. In the registered Mine select the Lead, Tunnel Guard and Outlet Screen. Give short legal movement orders from spawn, switch to local 116m and Retry. The standalone other Druid missions retain their stock visuals.",
+    "measurements": "81/81 final actual presenter native, 70/70 headless, three stock regression cases. Sova 35,580/7,260, Holding 27,464/7,873, Screening 28,379/7,900. Matched draw/primitive deltas above at 1280x720. Mesa rendering is comparative evidence only.",
+    "base_check": "Published Human and Orc actor art did not alter any tested Druid host/controller file from 8ac6e57 to 8175449d7cc2445af2376378b60ea703d8543ae5."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Elder slate brow, paired pale braids and charcoal mantle read distinctly on Sova. Holding reads as a compact layered slate guard; Screening reads as lean woven guard with a visibly secured diagonal tool. The three roles were independently inspected at the intended gameplay distance. Close supplemental diagnostics are not a claim of cinematic detail."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Muted slate, dark textured wool, pale beard, lichen accents and the ash tool separate in the existing Mine light. The accepted views include three unobstructed original stock moving angles of the Holding guard; shadow and clothing boundaries remain discernible at the measured playing distances."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The three models read as separate same-race roles, using the existing Lead, Tunnel Guard and Outlet Screen presentation slots. True local 116 m confirms all three formation locations and selections; close textures are not independently legible in tactical views. No additional HUD or control cues."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Existing Lead Move produces 77 physical ticks at 5.5 m/s, and the stock guard Move commands each produce 83 at nominal 3 m/s, with one corresponding animation advance. Run playback rates scale from the same authored 2.7 m/s reference. Sampled poses and mounted locomotion show planted boots and no gross staff/cuff/cloth detachment. Stowed staff is not a new attack or interaction."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Real editor-imported _ready presenter keeps one rig/presenter per three existing roles and preserves routes, release conditions, and the same nodes on Retry. Matched repeated render samples: selected Lead close +43,381 visible/+43,381 shadow triangles/-8 draws; 116m with all three +22,937/+45,874/-15. Accepted for exact Mine context only, not hardware frame rate, whole-game load or terrain clearance certification."
+    }
+  },
+  "files": {
+    "assets/models/campaign/druids/holding_guard.glb": "4b3db5b21df45bba6203bfbf6ce6da434a0306d0cbb888149f7f93eec65a5f95",
+    "assets/models/campaign/druids/holding_guard.glb.import": "aac291649c2e9f54a60a08b55889614e0706ca21aae4b6df64a0efd8f8b70fa5",
+    "assets/models/campaign/druids/screening_guard.glb": "daadb1561f93e8aad20a3fe4ff59712096c2f8dea42b9ce256a71579a1ed8f4c",
+    "assets/models/campaign/druids/screening_guard.glb.import": "cf497da1a89b5fae160e309c9b5d31821f7a05d537c3ea6f5b6ece71b1cf5f14",
+    "assets/models/campaign/druids/sova_cairn.glb": "d51050f3169ef86c47adba17e2fea2566fbd438c6e6d676a4a23bfac1723251c",
+    "assets/models/campaign/druids/sova_cairn.glb.import": "1cfc016d6921030cada423e61f359a5524d93443e493537beb7650d45df44695",
+    "assets/source/campaign/druids/holding_guard.blend": "b6a5365732a68a937ead622121f4a46e5993803f56e04d3c165191edc63ac7f7",
+    "assets/source/campaign/druids/screening_guard.blend": "2810d760d8e0ada8cb0755266818e5c445ab2ff66da8fd0a30fc75b20470c327",
+    "assets/source/campaign/druids/sova_cairn.blend": "e88b81df90cf8f2bd251775292b5a1c82820a2fc7c33c35a4b6f64670c749135",
+    "game/battlefield/sova_mine_character_art.gd": "f9130271f181d35e06fc225c8966807f3b42d1cd611eaac6d2a88becd9c496a2",
+    "game/battlefield/sova_mine_character_art.gd.uid": "1cd98625e11bb69435495cf7cee4c2ddd11408948899af5be5e9f8c83eaa68b0",
+    "game/battlefield/sova_mine_evacuation.gd": "15f33c9c6df7633ae8f3508f5844e3c33def7c26a09d178cf14f8764a9b95313"
+  }
+}
