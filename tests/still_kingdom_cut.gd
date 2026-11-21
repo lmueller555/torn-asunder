@@ -1,5 +1,7 @@
 extends SceneTree
 
+const DEPLOYMENT := preload("res://game/battlefield/sereth_cut_playtest.tscn")
+const Scale := preload("res://game/battlefield/battlefield_march_scale.gd")
 const MAP := preload("res://game/battlefields/still_kingdom_cut.tscn")
 const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
@@ -74,33 +76,63 @@ func _run() -> void:
 	var edge_distance := _run_path("Normal edge-to-edge movement", EDGE_ROUTE)
 	if edge_distance < 0.0:
 		return
-	var march_seconds := _time_edge_march()
-	if march_seconds < 0.0:
+	if not _check_live_edge_march():
 		return
-	print("Verified %d markers, 10 hero/formation paths, covered lanes and exposed road. Edge: %.0f m / %.1f s." % [
-		_points.size(), edge_distance, march_seconds,
+	print("Verified %d markers, 10 hero/formation paths, covered lanes and exposed road. Authored edge road: %.0f m." % [
+		_points.size(), edge_distance,
 	])
 	quit()
 
 
-func _time_edge_march() -> float:
-	# Measure movement, not the support-plane width or a scripted objective.
+func _check_live_edge_march() -> bool:
+	# The Cut's road is intentionally open to the east and west. Use the actual
+	# deployed command ends, not a claim of physical crags or full terrain width.
+	var deployment := DEPLOYMENT.instantiate()
+	var battle := Battle.new()
+	battle.bounds = deployment.get("field_bounds")
+	var deployed_terrain: PackedScene = deployment.get("battlefield_scene")
+	deployment.free()
+	if deployed_terrain != MAP:
+		_fail("The timed Cut terrain is not the actual routed deployment's battlefield.")
+		return false
+	var origin := Vector2(battle.bounds.position.x, _points["WestMarchEdge"].z)
+	var end := Vector2(battle.bounds.end.x, _points["EastMarchEdge"].z)
+	var route: Array[Vector2] = [origin]
+	for id: String in EDGE_ROUTE:
+		route.append(_xz(_points[id]))
+	route.append(end)
+	var formation := battle.formations[0]
+	formation.position = origin
 	const DT := 1.0 / 60.0
-	var formation := Battle.Formation.new("Measurement", _xz(_points[EDGE_ROUTE[0]]))
 	var frames := 0
-	for i in range(1, EDGE_ROUTE.size()):
-		formation.destination = _xz(_points[EDGE_ROUTE[i]])
-		formation.order = Battle.Order.MOVE
-		var budget := ceili(formation.position.distance_to(formation.destination) / Battle.FORMATION_SPEED / DT) + 5
+	var distance := 0.0
+	for i in range(1, route.size()):
+		var target := route[i]
+		var before := formation.position
+		battle.order_move(0, target)
+		var budget := ceili(before.distance_to(target) / Battle.FORMATION_SPEED / DT) + 5
 		for tick in range(budget):
 			if formation.order != Battle.Order.MOVE:
 				break
-			formation.advance(DT, _terrain.can_move)
+			battle.step(DT, Vector2.ZERO, _terrain.can_move)
+			var point := formation.position
+			if _terrain.destination_from_ray(Vector3(point.x, 22.0, point.y),
+					Vector3(point.x, -7.0, point.y)) == null:
+				_fail("The timed Cut road loses supporting terrain at %s." % point)
+				return false
 			frames += 1
-		if formation.order != Battle.Order.HOLD or formation.position != formation.destination:
-			_fail("Normal march could not reach the edge-route waypoint %s." % EDGE_ROUTE[i])
-			return -1.0
-	return frames * DT
+		if formation.order != Battle.Order.HOLD or formation.position != target:
+			_fail("Normal Cut march did not reach the supported road point %s." % target)
+			return false
+		distance += before.distance_to(formation.position)
+	var seconds := frames * DT
+	if not Scale.within_target_band(seconds) or Scale.classify(seconds) != Scale.Tier.STANDARD:
+		_fail("Expected a Standard march across the playable Cut road; measured %.2f s." % seconds)
+		return false
+	print("Still Kingdom Cut: %.1f m / %.2f s of real infantry movement between the deployed road limits (Standard)." % [
+		distance, seconds,
+	])
+	return true
 
 
 func _test_geography() -> bool:
