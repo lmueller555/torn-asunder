@@ -32,7 +32,7 @@ func _run() -> void:
 	_check(_mission._enemy_target_ring.visible and _mission._enemy_status.text.begins_with("TARGET"), "A living road guard under the cursor is visibly marked.")
 	_button(JOY_BUTTON_DPAD_RIGHT)
 	_button(JOY_BUTTON_Y)
-	_check(_mission.battle.formations[1].order == Battle.Order.HOLD and group.order == Battle.Order.HOLD, "Archers cannot use the prototype melee order.")
+	_check(_mission.battle.formations[1].order == Battle.Order.HOLD and group.order == Battle.Order.HOLD, "An out-of-range Archer order does not fall back to a melee charge.")
 	_button(JOY_BUTTON_DPAD_LEFT)
 	_button(JOY_BUTTON_Y)
 	_check(group.order == Battle.Order.ATTACK and _mission._formation_label.text.contains("Attacking"), "Triangle issues an actual attack to Shield Infantry.")

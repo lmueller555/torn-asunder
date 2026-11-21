@@ -113,7 +113,7 @@ References for the design pattern only: [*Kingdom Under Fire: Heroes* manual, pp
 
 ## Human Archer prototype
 
-`HumanArcherVolley` is a combat component, not yet a roster entry, battlefield order, or model. An archer trades staying power for a **3.5–52 m** firing band: **960 starting HP**, **52 base Ranged damage**, **0.70 s** to draw and **1.90 s** to reload. It cannot fire while engaged in melee; getting pinned after starting the draw interrupts it and forces a reload. These numbers are provisional.
+`HumanArcherVolley` is the ranged combat component used by Mara’s prototype Archer formation. It is not a skirmish roster entry or a model. An archer trades staying power for a **3.5–52 m** firing band: **960 starting HP**, **52 base Ranged damage**, **0.70 s** to draw and **1.90 s** to reload. It cannot fire while engaged in melee; getting pinned after starting the draw interrupts it and forces a reload. These numbers are provisional. Mara’s encounter uses 248 proxy HP for Archers against 310 proxy HP for Shield Infantry; its placeholder Archers stay put when ordered to attack.
 
 A controller queries admission, selects one opposing target, and supplies current 3D foot positions, melee pressure, and a terrain/cover query. The draw locks the target. At release the component rechecks distance, visibility, and whether it is still the same living enemy. The battlefield can show a progress bar from the exposed phase and return a reason for a blocked shot. Height matters through the lane to the target, not a separate high-ground damage bonus. Shots use the ordinary Ranged rating and level rules, and only actual HP loss credits up to **4 Battle Points** to the supplied team pool.
 
