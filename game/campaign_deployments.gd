@@ -96,6 +96,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "ISOLATED GROVE · RAISED NURSERY ROAD",
 		"orders": "Speak to the grove envoy, then call the volunteers. Hold the low-track approach to keep the loading yard clear. Follow the sled along the raised road and help plant the tree at the nursery. Leave the town well alone.",
 	},
+	"neris_spanwater_feeder": {
+		"scene": preload("res://game/battlefield/neris_spanwater_playtest.tscn"),
+		"dispatch": Beats.NERIS_SPANWATER_FEEDER_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.NERIS_SPANWATER_FEEDER_DEBRIEF,
+		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
+		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
+	},
 }
 
 

@@ -139,13 +139,18 @@ const _MAPS := {
 				"map_position": Vector2(0.54, 0.63), "mission_id": "neris_failing_grove",
 			},
 			"spanwater_lock": {
-				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.69, 0.87),
+				"id": "spanwater_lock", "label": "Spanwater Lock", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.69, 0.87), "mission_id": "neris_spanwater_feeder",
+			},
+			"cairnspine_vault_road": {
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.86, 0.76),
 			},
 		},
 		"routes": [
 			{"from_id": "grove_camp", "to_id": "isolated_grove_nursery"},
 			{"from_id": "isolated_grove_nursery", "to_id": "spanwater_lock", "required_clear_id": "neris_failing_grove"},
+			{"from_id": "spanwater_lock", "to_id": "cairnspine_vault_road", "required_clear_id": "neris_spanwater_feeder"},
 		],
 	},
 }
