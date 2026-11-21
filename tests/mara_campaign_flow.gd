@@ -13,12 +13,16 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 const GrainScene := preload("res://game/battlefield/mara_grain_crossing_playtest.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
+const HighQuay := preload("res://game/battlefield/mara_moonwash_playtest.gd")
+const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
 const CLEAR_ID := "mara_mine_escort"
 const MINE := "year_one_mine"
 const CAMP := "marches_camp"
 const ROAD := "marches_road"
 const CROSSING := "marches_crossing"
 const MOONWASH := "moonwash_road"
+const HARBOR := "moonwash_harbor"
+const QUAY_ID := "mara_moonwash_quay"
 const GRAIN_ID := "mara_grain_crossing"
 const DT := 1.0 / 60.0
 
@@ -49,7 +53,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Mara campaign: real Mine escort, linked Grain briefing, both blockade lanes, all debriefs, defeat, immutable first result, replay and Continue passed.")
+		print("Mara campaign: all three authored missions, the once-only Water Request, immutable first Grain result, all debriefs, defeat, replay, completion and Continue passed.")
 	quit(0 if passed else 1)
 
 
@@ -155,7 +159,7 @@ func _grain_flow() -> bool:
 	_map().select_waypoint(CROSSING)
 	if not _press("ConfirmTravel") or not _on_briefing() or _saved_world() != CROSSING:
 		return _fail("The new linked Crossing did not stop at its briefing and save its own waypoint.")
-	if not _press("Read Dispatch") or not _finish_grain_beat(Beats.MARA_GRAIN_DISPATCH) or not _on_briefing():
+	if not _press("Read Dispatch") or not _finish_beat(Beats.MARA_GRAIN_DISPATCH) or not _on_briefing():
 		return _fail("Grain dispatch did not return to the battlefield briefing without deploying.")
 	_joy(JOY_BUTTON_B)
 	if not _on_map(CROSSING):
@@ -187,7 +191,7 @@ func _grain_flow() -> bool:
 	if (
 		_saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID])
 		or _saved_grain() != Grain.SEED_ONLY
-		or not _finish_grain_beat(Beats.MARA_GRAIN_SEED_DEBRIEF)
+		or not _finish_beat(Beats.MARA_GRAIN_SEED_DEBRIEF)
 		or not _on_map(CROSSING)
 	):
 		return _fail("The first seed-only win did not save its actual result and debrief.")
@@ -207,13 +211,162 @@ func _grain_flow() -> bool:
 	if (
 		FileAccess.get_file_as_string(_profile_path) != before
 		or _saved_grain() != Grain.SEED_ONLY
-		or not _finish_grain_beat(Beats.MARA_GRAIN_BOTH_DEBRIEF)
+		or not _finish_beat(Beats.MARA_GRAIN_BOTH_DEBRIEF)
 		or not _on_map(CROSSING)
 	):
 		return _fail("A two-cart replay did not get its own debrief or overwrote the saved seed-only result.")
+	return await _high_quay_flow()
+
+
+func _high_quay_flow() -> bool:
+	_map().select_waypoint(HARBOR)
+	_joy(JOY_BUTTON_A)
+	if not _on_map(CROSSING) or not _map()._confirm_button.disabled:
+		return _fail("Moonwash deployment skipped its linked road.")
 	_map().select_waypoint(MOONWASH)
-	return (_press("ConfirmTravel") and _on_map(MOONWASH) and _saved_world() == MOONWASH
-		and _title._campaign_battle == null and _button("Confirm Deployment") == null) or _fail("The new road was not saved, or exposed an unbuilt Moonwash battle.")
+	if not _press("ConfirmTravel") or not _is_dialogue(Beats.MARA_WATER_REQUEST) or _saved_world() != MOONWASH:
+		return _fail("The first arrival on Road to Moonwash did not stage and save the authentic intermission.")
+	if Profile.new(_profile_path).has_seen_intermission("mara", Beats.MARA_WATER_REQUEST):
+		return _fail("Presenting the intermission prematurely marked it seen.")
+	# Simulate leaving the game during the new intermission and reopening the
+	# saved waypoint. The beat remains pending until closed on this profile.
+	_title._show_title()
+	_title._profile = Profile.new(_profile_path)
+	if not _press("Continue") or not _is_dialogue(Beats.MARA_WATER_REQUEST):
+		return _fail("Continue did not recover the pending Water Request at the arrived road.")
+	if not _finish_beat(Beats.MARA_WATER_REQUEST) or not _on_map(MOONWASH) \
+		or not Profile.new(_profile_path).has_seen_intermission("mara", Beats.MARA_WATER_REQUEST) \
+		or _saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID]) or _saved_grain() != Grain.SEED_ONLY:
+		return _fail("The finished intermission should be durable without changing clears or the first Grain result.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(MOONWASH):
+		return _fail("A completed Water Request repeated on Continue.")
+
+	_map().select_waypoint(HARBOR)
+	if not _press("ConfirmTravel") or not _on_briefing() or _saved_world() != HARBOR:
+		return _fail("The linked harbor did not save arrival and offer its briefing.")
+	if not _press("Read Dispatch") or not _finish_beat(Beats.MARA_HIGH_QUAY_DISPATCH) or not _on_briefing():
+		return _fail("The authentic High Quay dispatch did not return to its briefing.")
+	_joy(JOY_BUTTON_B)
+	var before := FileAccess.get_file_as_string(_profile_path)
+	if not _on_map(HARBOR) or _map()._heading.text == "Campaign Complete" or not _press("ConfirmTravel") \
+		or not _press("Confirm Deployment"):
+		return _fail("High Quay still needs explicit deployment and does not pre-complete the campaign.")
+	var quay := _title._campaign_battle as HighQuay
+	if not quay or quay._field.name != &"MoonwashHarborCampaign":
+		return _fail("High Quay deployed the wrong battlefield.")
+	quay.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	quay.report_platoon_wiped(Quay.Platoon.SECOND)
+	quay._physics_process(DT)
+	if quay.objective.phase != Quay.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != before:
+		return _fail("Defeat did not leave the unfinished campaign profile alone.")
+	_key(KEY_BACKSPACE)
+	if quay.objective.phase != Quay.Phase.WITHDRAWING or FileAccess.get_file_as_string(_profile_path) != before:
+		return _fail("Retry did not reset only the attempt.")
+	if not _win_high_quay(quay):
+		return false
+	await process_frame
+	if not _is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) or _saved_world() != HARBOR \
+		or _saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID, QUAY_ID]) or _saved_grain() != Grain.SEED_ONLY:
+		return _fail("Only physical upper-quay withdrawal should persist the exact third clear and authentic debrief.")
+	if not _finish_beat(Beats.MARA_HIGH_QUAY_DEBRIEF) or not _on_map(HARBOR) or _map()._heading.text != "Campaign Complete":
+		return _fail("The overworld did not report the finished Human campaign.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(HARBOR) or _map()._heading.text != "Campaign Complete":
+		return _fail("Continue did not restore the completed map and current harbor.")
+	_map().select_waypoint(MOONWASH)
+	if not _press("ConfirmTravel") or not _on_map(MOONWASH):
+		return _fail("A posted intermission repeated when revisiting the road.")
+	_map().select_waypoint(HARBOR)
+	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):
+		return _fail("A completed final mission cannot be replayed.")
+	var replay_before := FileAccess.get_file_as_string(_profile_path)
+	quay = _title._campaign_battle as HighQuay
+	quay.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _win_high_quay(quay):
+		return false
+	await process_frame
+	return (_is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) and FileAccess.get_file_as_string(_profile_path) == replay_before
+		and _saved_grain() == Grain.SEED_ONLY) or _fail("Final replay duplicated a clear or rewrote the saved first result.")
+
+
+func _win_high_quay(quay: HighQuay) -> bool:
+	for id: String in ["Routes/FracturedQuay", "Routes/UpperStairFoot"]:
+		if not _drive_quay(quay, id):
+			return false
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_joy(JOY_BUTTON_RIGHT_STICK)
+	var front := quay.battle.formations[0]
+	for id: String in ["Routes/UpperStairFoot", "Routes/UpperStairLanding"]:
+		if not _march_quay(quay, front, id):
+			return false
+	_joy(JOY_BUTTON_A)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	if not _drive_quay(quay, "Routes/UpperStairLanding"):
+		return false
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_joy(JOY_BUTTON_RIGHT_STICK)
+	for id: String in ["Routes/UpperStairTop", "Routes/UpperQuay", "Objectives/UpperQuayExit"]:
+		if not _march_quay(quay, front, id):
+			return false
+	_joy(JOY_BUTTON_DPAD_RIGHT)
+	var rear := quay.battle.formations[1]
+	for id: String in ["Routes/QuaySafeTurn", "Routes/InlandBypass", "Routes/InlandApproach",
+		"Routes/InlandStairTop", "Routes/UpperQuay", "Objectives/UpperQuayExit"]:
+		if not _march_quay(quay, rear, id):
+			return false
+	if front.order != Battle.Order.EXTRACTED or rear.order != Battle.Order.EXTRACTED or quay.objective.phase != Quay.Phase.WITHDRAWING:
+		return _fail("Both real formations must be safe, but cannot win without the hero.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	for id: String in ["Routes/UpperStairTop", "Routes/UpperQuay", "Objectives/UpperQuayExit"]:
+		if not _drive_quay(quay, id):
+			return false
+	return quay.objective.phase == Quay.Phase.SUCCEEDED or _fail("Live upper-quay extraction never reached its final result.")
+
+
+func _drive_quay(quay: HighQuay, id: String) -> bool:
+	var target := _quay_target(quay, id)
+	var budget := ceili(target.distance_to(quay.battle.hero_position) / Battle.HERO_SPEED / DT) + 120
+	var reached := false
+	for step in range(budget):
+		var remaining := target - quay.battle.hero_position
+		if remaining.length() < 0.14 or (id == "Objectives/UpperQuayExit" and quay.objective.hero_extracted):
+			reached = true
+			break
+		var aim := remaining.normalized().rotated(quay._hero_yaw)
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		quay._physics_process(DT)
+	_axis(JOY_AXIS_LEFT_X, 0)
+	_axis(JOY_AXIS_LEFT_Y, 0)
+	return reached or _fail("Hero could not reach High Quay marker " + id)
+
+
+func _march_quay(quay: HighQuay, group: Battle.Formation, id: String) -> bool:
+	var marker := quay.battlefield_marker(NodePath("Markers/" + id))
+	var event := InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_RIGHT
+	event.pressed = true
+	event.position = root.get_camera_3d().unproject_position(marker.global_position)
+	root.push_input(event, true)
+	var target := _quay_target(quay, id)
+	var budget := ceili(group.position.distance_to(target) / Battle.FORMATION_SPEED / DT) + 95
+	for step in range(budget):
+		if group.order != Battle.Order.MOVE:
+			break
+		quay._physics_process(DT)
+	return ((group.order == Battle.Order.HOLD and group.position.distance_to(target) < 0.05)
+		or (id == "Objectives/UpperQuayExit" and group.order == Battle.Order.EXTRACTED)) \
+		or _fail("Formation could not reach High Quay marker " + id)
+
+
+func _quay_target(quay: HighQuay, id: String) -> Vector2:
+	var point := quay.to_local(quay.battlefield_marker(NodePath("Markers/" + id)).global_position)
+	return Vector2(point.x, point.z)
 
 
 func _fresh_bread_flow(path: String) -> bool:
@@ -241,7 +394,7 @@ func _fresh_bread_flow(path: String) -> bool:
 	if not _win_single_grain(grain, Grain.Cart.SEED):
 		return false
 	await process_frame
-	return (_saved_grain() == Grain.BREAD_ONLY and _finish_grain_beat(Beats.MARA_GRAIN_BREAD_DEBRIEF)
+	return (_saved_grain() == Grain.BREAD_ONLY and _finish_beat(Beats.MARA_GRAIN_BREAD_DEBRIEF)
 		and _on_map(CROSSING)) or _fail("The independent first bread-only clear did not save its own outcome and dialogue.")
 
 
@@ -308,7 +461,7 @@ func _grain_wait(grain: GrainScene, condition: Callable) -> bool:
 	return _fail("A Grain route event did not occur within the fixed simulation steps.")
 
 
-func _finish_grain_beat(id: StringName) -> bool:
+func _finish_beat(id: StringName) -> bool:
 	if not _is_dialogue(id):
 		return false
 	for _line in Beats.get_beat(id).lines:

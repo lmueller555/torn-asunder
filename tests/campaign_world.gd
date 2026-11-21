@@ -7,6 +7,7 @@ const MINE := "year_one_mine"
 const ROAD := "marches_road"
 const CROSSING := "marches_crossing"
 const MOONWASH := "moonwash_road"
+const HARBOR := "moonwash_harbor"
 const ESCORT := "mara_mine_escort"
 
 
@@ -20,8 +21,8 @@ func _initialize() -> void:
 func _check_topology() -> bool:
 	var map := World.new("mara")
 	var nodes := map.waypoints()
-	if nodes.size() != 5 or map.routes().size() != 4:
-		return _fail("The first two Human chapters should have five waypoints and four edges.")
+	if nodes.size() != 6 or map.routes().size() != 5:
+		return _fail("The three Human chapters should have six waypoints and five edges.")
 	var drawn_positions := {}
 	for node in nodes:
 		var point: Vector2 = node.map_position
@@ -87,11 +88,14 @@ func _check_travel() -> bool:
 		or map.mission_at_current_waypoint() != "mara_grain_crossing"
 	):
 		return _fail("The Grain briefing skipped the Marches Road or did not match the actual mission.")
-	if map.travel_to(MOONWASH, real_clear) != World.TravelResult.LOCKED:
+	if map.travel_to(MOONWASH, real_clear) != World.TravelResult.LOCKED or map.is_waypoint_reachable(HARBOR, real_clear):
 		return _fail("The Mine clear alone opened the route beyond Grain.")
 	real_clear.append("mara_grain_crossing")
 	if map.travel_to(MOONWASH, real_clear) != World.TravelResult.ARRIVED or not map.mission_at_current_waypoint().is_empty():
 		return _fail("The Grain clear did not open the non-battle road to Moonwash.")
+	if map.travel_to(HARBOR, real_clear) != World.TravelResult.ARRIVED \
+		or map.mission_at_current_waypoint() != "mara_moonwash_quay":
+		return _fail("The Moonwash Road did not link to the authored High Quay battlefield.")
 	return true
 
 

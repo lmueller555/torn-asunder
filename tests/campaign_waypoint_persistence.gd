@@ -16,6 +16,7 @@ func _initialize() -> void:
 	passed = _check_arrival_and_reload(path) and passed
 	passed = _check_failed_save(path) and passed
 	passed = _check_invalid_and_foreign_records(path) and passed
+	passed = _check_intermission_record(path) and passed
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 	if FileAccess.file_exists(path + ".tmp") or DirAccess.dir_exists_absolute(path + ".tmp"):
@@ -23,6 +24,28 @@ func _initialize() -> void:
 	if passed:
 		print("Verified legacy fallback, real arrival save/reload, locks, campaign isolation, and failed-write rollback.")
 	quit(0 if passed else 1)
+
+
+func _check_intermission_record(path: String) -> bool:
+	var profile := Profile.new(path)
+	var beat := &"mara_water_request"
+	var original := FileAccess.get_file_as_string(path)
+	var clears := profile.completed_missions("mara")
+	if profile.has_seen_intermission("mara", beat) or DirAccess.make_dir_absolute(path + ".tmp") != OK:
+		return _fail("Could not prepare the legacy intermission test.")
+	var failed := profile.record_intermission_seen("mara", beat)
+	DirAccess.remove_absolute(path + ".tmp")
+	if failed == OK or profile.has_seen_intermission("mara", beat) or FileAccess.get_file_as_string(path) != original:
+		return _fail("A failed story save must not leave a seen marker in memory or on disk.")
+	if profile.record_intermission_seen("mara", beat) != OK:
+		return _fail("The finished intermission did not save.")
+	var after := FileAccess.get_file_as_string(path)
+	profile = Profile.new(path)
+	if not profile.has_seen_intermission("mara", beat) or profile.has_seen_intermission("raska", beat) \
+		or profile.completed_missions("mara") != clears or profile.record_intermission_seen("mara", beat) != OK \
+		or FileAccess.get_file_as_string(path) != after:
+		return _fail("Intermission records must survive reload, stay campaign-local, and not duplicate writes.")
+	return true
 
 
 func _check_fresh_and_legacy(path: String) -> bool:

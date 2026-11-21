@@ -254,7 +254,8 @@ func _open_campaign(campaign: Dictionary) -> void:
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
 	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
-		_show_world_map()
+		if not _show_waypoint_intermission():
+			_show_world_map()
 	else:
 		_show_briefing()
 		_show_campaign_warning()
@@ -275,9 +276,23 @@ func _show_world_map() -> void:
 func _on_waypoint_arrived(_id: String) -> void:
 	if _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The arrived waypoint could not be saved."
-		# A battlefield arrival immediately switches to a briefing; display the warning there.
-		if _campaign_world.mission_at_current_waypoint().is_empty():
-			_show_campaign_warning()
+	if not _show_waypoint_intermission() and _campaign_world.mission_at_current_waypoint().is_empty():
+		_show_campaign_warning()
+
+
+func _show_waypoint_intermission() -> bool:
+	var campaign_id := _campaign_world.campaign_id()
+	var beat := CampaignDeployments.intermission_at(campaign_id, _campaign_world.current_waypoint_id())
+	if beat == &"" or _profile.has_seen_intermission(campaign_id, beat):
+		return false
+	_present_campaign_dialogue(beat, _finish_waypoint_intermission.bind(campaign_id, beat))
+	return true
+
+
+func _finish_waypoint_intermission(campaign_id: String, beat: StringName) -> void:
+	if _profile.record_intermission_seen(campaign_id, beat) != OK:
+		_campaign_warning = "The intermission could not be marked as read."
+	_show_world_map()
 
 
 func _show_campaign_mission_briefing(mission_id: String) -> void:
