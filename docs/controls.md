@@ -60,3 +60,9 @@ This mode is opt-in through the command scene's `enable_sector_camera`, `field_b
 The [original *Kingdom Under Fire: Heroes* Xbox manual, pp. 12–17](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) describes issuing movement the same way with the minimap on and placing up to eight waypoints. Torn Asunder’s standalone queue keeps that limit. Both a tactical cursor and a minimap can supply the same battlefield XZ point and terrain check. A direct destination replaces the route, an appended waypoint extends it, and only reaching the next point consumes it. Duplicate or invalid requests leave the route intact. Hold or cancel must clear it explicitly.
 
 Try route orders in the standalone flat-field scene: `godot game/battlefield/waypoint_command_harness.tscn`. Hold **L2 / Shift** for command, then press **R1 / G** to append the point under the terrain cursor. **Square / right-click** replaces the route; **Cross / H** clears it and holds. The selected platoon’s pending points are numbered in tactical view and in **R3 / M** overview. Orders keep advancing when you return to the hero. The regular campaign HUD and minimap are not yet wired to the queue. Run `godot --headless --script tests/platoon_waypoint_queue.gd` to check the rules.
+
+## Engagement camera policy
+
+The standalone selection policy keeps three contexts distinct. An unengaged selected platoon uses the terrain cursor and tactical camera. Selecting a fighting ally follows that platoon without taking away formation orders. Selecting the fighting hero's platoon switches to direct hero action. An unrelated fight never steals the camera, and returning to tactical view keeps the previous cursor point.
+
+This is a tested policy, not a change to the current L2 controls or the live cameras. Run `godot --headless --script tests/engagement_camera_policy.gd` after importing the project.
