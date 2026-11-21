@@ -1,5 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
 
+## Emitted once when an attempt reaches victory or defeat.
+signal mission_finished(won: bool)
+
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
@@ -78,6 +81,8 @@ func _physics_process(delta: float) -> void:
 	_interact_requested = false
 	objective.advance(observation)
 	_refresh_objective_view(feet)
+	if _finished():
+		mission_finished.emit(objective.phase == Escort.Phase.SUCCEEDED)
 
 
 func _after_battle_step(delta: float) -> void:

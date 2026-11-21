@@ -13,7 +13,9 @@ godot
 
 Use a mouse, the arrow keys and Enter, or the DualSense D-pad and Cross to navigate. Escape or Circle returns to the title screen from a submenu.
 
-New Game opens the Campaign Vault and its six leader portraits. Starting a campaign opens its briefing and writes one local save per leader. Continue opens the most recently played briefing, and Load lists every saved briefing. Settings saves fullscreen and reduced-motion preferences. Playable missions are planned for a later milestone.
+New Game opens the Campaign Vault and its six leader portraits. Choose Mara to enter the campaign map at Marches Camp. Confirm the current camp to enter **Camp Operations**, where **Read Dispatch** opens the command-post conversation. Select the linked **Mine** and confirm travel to see its briefing; choose **Confirm Deployment** there to start the campaign-scale graybox escort. Delivery records a clear and shows the debrief. Back on the map, the road into the Marches is now open. Use Escape or DualSense Create to abandon an unfinished attempt without recording a clear. Circle is for dodging.
+
+Continue and Load restore Mara's last arrived waypoint. Other leaders still open their briefing and practice screens; no other story mission can be deployed through the campaign menu. Settings saves fullscreen and reduced-motion preferences.
 
 Open **Combat Drills** from any briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 
