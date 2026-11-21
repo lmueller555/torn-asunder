@@ -6,6 +6,8 @@ This gate applies to art already in the project as well as to each new or visibl
 
 ## Existing art
 
+See the [existing visual art inventory](visual-audit-inventory.md) for confirmed findings and pending reviews.
+
 Human Infantry and Heavy Infantry are the two already-approved benchmarks. Use their finished in-game silhouettes, materials, detail and motion as the visual reference at the corresponding camera distance; do not require unrelated assets to use their mesh or texture budgets.
 
 All other existing map and gameplay art starts **Unapproved**, not grandfathered in. Inventory what actually renders and where; review each existing candidate against the same criteria below. A placeholder that visibly fails is **Rework**; missing evidence is **Blocked**. Neither is eligible for approved gameplay or release. Old grayboxes may remain only in clearly labeled development playtests so the team can keep testing routes and mechanics while replacements are built. Moving an old placeholder to a new mission, renaming it, or generating it at runtime does not make it approved.
