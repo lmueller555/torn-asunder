@@ -1,6 +1,6 @@
 # Still Kingdom cut and village: campaign graybox
 
-The [approved V7 S3TC cemetery stair kit](audits/cut-cemetery-stair-v7.json) replaces the old stair visuals, retaining sides, and footing in this placement. The original smooth traversal collision, cover and objective markers remain. The rest of the map has not passed its visual audit.
+The [approved V7 S3TC cemetery stair kit](audits/cut-cemetery-stair-v7.json) replaces the old stair visuals, retaining sides, and footing. The [approved V3.1 Record Room exterior](audits/cut-record-room-v31.json) replaces the doorway assembly, exterior walls, slate eave and sign. A [separate context review](audits/cut-cemetery-stair-v7-continuity.json) confirms the new shared scene retains the exact stair art, placement and physical ascent. Routes, cover, objective markers and collision are unchanged. The interior props, surrounding village and rest of the map have not passed the visual audit.
 
 `game/battlefields/still_kingdom_cut.tscn` is the terrain for Sereth's Year Three mission [The Names at the Cut](campaigns/undead.md#1-the-names-at-the-cut--year-three-sereth_voices_at_the_cut). This scene has no living actors, patrols, objective logic, water simulation, voices or apparitions. Iren's and the clerk's positions are placement hooks, not evidence of what the villagers heard.
 

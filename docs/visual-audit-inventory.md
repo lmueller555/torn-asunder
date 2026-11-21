@@ -33,13 +33,14 @@ The starting hero and tactical views from the [Mine integration](https://github.
 
 ## Inspected: Still Kingdom Cut and Cairnspine Boundary Post
 
-Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview](../tests/still_kingdom_cut_preview.tscn) and [Boundary Post playtest](../game/battlefield/sereth_pass_writ_playtest.tscn). The representative scenes use internal flat-color meshes; terrain-route tests do not establish art performance on target hardware. Only the independently audited replacement kit below is a pass.
+Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview](../tests/still_kingdom_cut_preview.tscn) and [Boundary Post playtest](../game/battlefield/sereth_pass_writ_playtest.tscn). The representative scenes use internal flat-color meshes; terrain-route tests do not establish art performance on target hardware. Only the two independently audited placements below are passes.
 
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
 | [Cut river and crags](../game/battlefields/still_kingdom_cut.tscn) | Rework | Repeated capped crag silhouettes and a flat river color abruptly meeting the bank. The road and blue foot lane are visually close to the water surface. |
-| [Cut cemetery stair, retaining walls and footing](audits/cut-cemetery-stair-v7.json) | Pass | The exact V7 S3TC kit replaces the old ramp appearance without changing its collision grade. Verified during actual ascent and from both cameras; pass applies only to this kit and placement, not the remaining settlement or terrain. Scene-relative rendering and memory evidence, not a hardware frame-rate claim. |
-| [Cut village shells and record-room exterior](../game/battlefields/still_kingdom_cut.tscn) | Rework | Repeated box silhouettes and blank roof decks do not distinguish the record room or its approach in the command view. |
+| [Cut cemetery stair, retaining walls and footing](audits/cut-cemetery-stair-v7.json) | Pass | The exact V7 S3TC kit replaces the old ramp appearance without changing its collision grade. Verified during actual ascent and from both cameras. The [continuity review](audits/cut-cemetery-stair-v7-continuity.json) preserves the same exact placement in the current shared scene. Scene-relative rendering and memory evidence, not a hardware frame-rate claim. |
+| [Cut Record Room exterior](audits/cut-record-room-v31.json) | Pass | V3.1 passes only the modeled stone entrance, timber header, sign, eave and exterior walls of this placement. Native hero and command views, doorway movement, roof picking and the exact LOD transition were checked; no hardware frame-rate claim. |
+| [Other Cut village shells](../game/battlefields/still_kingdom_cut.tscn) | Rework | Repeated box silhouettes and blank roof decks remain unapproved around the audited Record Room. |
 | [Cut interior record-room and small cemetery props](../game/battlefields/still_kingdom_cut.tscn) | Blocked | No representative hero close-ups for benches, shelving, graves, or document props in this audit. |
 | [Boundary Post road, trench and banks](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | Unbroken flat road strips, vertical plane cuts and repeated faceted banks look like route diagrams, not worn terrain and retaining structures. |
 | [Boundary Post shelter, low walls and posts](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | The plain roof slab, bare wall volumes and posts give the handover place no identity without its debug label and ring. |
