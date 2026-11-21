@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://game/battlefield/mara_moonwash_playtest.gd" id="3_quay"]
 
 [node name="MaraMoonwashPlaytest" instance=ExtResource("1_command")]
+formation_roles = Array[int]([1, 1])
+regular_melee_slot_files = PackedInt32Array(4, 4)
 script = ExtResource("3_quay")
 battlefield_scene = ExtResource("2_harbor")
 field_bounds = Rect2(-144, -118, 288, 242)

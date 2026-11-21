@@ -9,6 +9,7 @@ const Registry := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/sereth_cut_playtest.gd")
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Terrain := preload("res://game/battlefield/command_terrain.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
@@ -446,8 +447,10 @@ func _waypoint_queue() -> void:
 func _blocked_queue() -> void:
 	var hud := _mission._command_minimap
 	var guard := _mission.battle.formations[0]
-	var start := _point("Routes/LaneSouthTurn")
-	var first := _point("Routes/LaneEastTurn")
+	# The hero route marker at (-52, 7) overlaps OuterCourtWallB when
+	# the guard is facing east. Start with the full guard clear of that wall.
+	var start := _point("Routes/LaneSouthTurn") + Vector2(2.0, -0.75)
+	var first := _point("Routes/LaneEastTurn") + Vector2.UP * 0.75
 	var second := _point("Routes/LaneClerkTurn")
 	var roof := _point("Routes/RecordRoomInside")
 	# Isolate the straight leg across the authored EastInnerBaffle, not the
@@ -469,7 +472,17 @@ func _blocked_queue() -> void:
 		if guard.order == Battle.Order.BLOCKED:
 			break
 	var stopped := guard.position
-	_check(is_equal_approx(stopped.y, start.y) and stopped.x > -32.0 and stopped.x < -31.0
+	var baffle := _mission._field.get_node("Geometry/Village/EastInnerBaffle/Collision") as CollisionShape3D
+	var west_face := _mission._field.to_local(baffle.global_position).x - (baffle.shape as BoxShape3D).size.x * 0.5
+	var front_x := stopped.x
+	for member in guard.members:
+		front_x = maxf(front_x, guard.member_position(member).x + guard.footprint_padding.y)
+	# Movement retains a center clearance probe as well as the member hull.
+	# Whichever projects farther must stop within one physics step of contact.
+	var leading_x := maxf(front_x, stopped.x + Terrain.FORMATION_RADIUS)
+	var gap := west_face - leading_x
+	_check(is_equal_approx(stopped.y, start.y) and guard.heading.is_equal_approx(Vector2.RIGHT)
+		and gap >= -0.002 and gap <= guard.move_speed * DT + 0.002
 		and guard.destination.is_equal_approx(first) and guard.order == Battle.Order.BLOCKED,
 		"The guard physically stops on the west face of EastInnerBaffle, not at the accepted head.")
 	_check(hud._hint.text.contains("Route blocked") and _hud_fits(),
@@ -489,7 +502,7 @@ func _blocked_queue() -> void:
 
 	# Hold the cursor still on a failed append across an accepted head's arrival.
 	# The old error must not mask the new leg/count.
-	var short_leg := start + Vector2.LEFT * 3.0
+	var short_leg := start + Vector2.RIGHT * 3.0
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(short_leg))
 	_key(KEY_G)
 	var actual_head := guard.destination

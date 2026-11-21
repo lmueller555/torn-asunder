@@ -1,18 +1,19 @@
 extends RefCounted
 
-const Aggro := preload("res://game/combat/enemy_aggro.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Setup := preload("res://game/combat/skirmish_setup.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
+const Aggro := preload("res://game/combat/enemy_aggro.gd")
+const PlatoonSize := preload("res://game/combat/platoon_size.gd")
 const Points := preload("res://game/combat/battle_points.gd")
 
 # From RECOIL through KNOCKDOWN, states are ordered by contact priority.
 enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER }
 enum AbilityStatus { READY, BATTLE_ENDED, INVALID_CASTER, INVALID_TARGET, UNHURT_TARGET, STAT_REQUIREMENT, INSUFFICIENT_BP }
 
-const PLATOON_SIZE := 32
-const FORMATION_COLUMNS := 8
+const PLATOON_SIZE := PlatoonSize.REGULAR_MELEE
+const FORMATION_COLUMNS := PlatoonSize.REGULAR_MELEE_COLUMNS
 const PLATOON_SPACING := 13.5
 const MAX_ENGAGEMENTS := 3
 const LIVE := -2

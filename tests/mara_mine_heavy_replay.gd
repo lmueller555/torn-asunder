@@ -1,6 +1,8 @@
 extends SceneTree
 ## Opt-in replay proof. No title, profile, or campaign save is exercised or written.
 
+const PlatoonSize := preload("res://game/combat/platoon_size.gd")
+
 const Scene := preload("res://game/battlefield/mara_mine_escort_campaign.tscn")
 const Pocket := preload("res://game/battlefield/mara_mine_escort.tscn")
 const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
@@ -86,8 +88,9 @@ func _check_loadout(heavy: bool) -> bool:
 			or _mission.team_battle_points_frame().capacity != (720 if heavy else 700):
 		return _fail("Loadout did not keep the real two formations, correct HP/speed, default Archer, Hero or BP.")
 	var name := "HeavyInfantryModel" if heavy else "HumanInfantryModel"
-	if _mission._formation_members[0].size() != 12 or _mission._infantry_animators.size() != 12:
-		return _fail("Expected all twelve existing member anchors and animators.")
+	if _mission._formation_members[0].size() != PlatoonSize.REGULAR_MELEE \
+			or _mission._infantry_animators.size() != PlatoonSize.REGULAR_MELEE:
+		return _fail("Expected one checked native rig and animator for every regular melee member.")
 	for member: Node3D in _mission._formation_members[0]:
 		var model := member.get_node_or_null(name) as Node3D
 		if not model or member.get_child_count() != 1 or not model.position.is_zero_approx() \
@@ -144,7 +147,7 @@ func _capture_carry_and_rig() -> bool:
 	await _checkpoint("01-heavy-hero-carry")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tick()
-	if root.get_camera_3d() != _mission._command_camera or _framed_members(5.0) != 12 \
+	if root.get_camera_3d() != _mission._command_camera or _framed_members(5.0) != PlatoonSize.REGULAR_MELEE \
 			or not _case_projects(true):
 		return _fail("The unchanged tactical view lost the Heavy rig or the approved carry LOD.")
 	await _checkpoint("02-heavy-tactical-carry")

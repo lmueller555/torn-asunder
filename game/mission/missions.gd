@@ -7,6 +7,7 @@ extends RefCounted
 ## objectives differ by campaign.
 
 const Aggro := preload("res://game/combat/enemy_aggro.gd")
+const Units := preload("res://game/mission/mission_units.gd")
 const Maps := preload("res://game/mission/maps.gd")
 
 ## Battlefields are authored compactly and played at this scale.
@@ -100,6 +101,11 @@ static func _scale(value: Variant, k: float, key: String = "") -> Variant:
 static func _p(id: String, type: StringName, team: int, count: int, level: int, pos: Variant, extra: Dictionary = {}) -> Dictionary:
 	var entry := {"id": id, "type": type, "team": team, "count": count, "level": level, "pos": pos}
 	entry.merge(extra, true)
+	# Preserve authored frontage unless the author supplied explicit columns.
+	# Large regular platoons gain ranks without widening a narrow route.
+	if not entry.has("columns") and Units.platoon_count(type,count)!=count:
+		entry["columns"]=clampi(ceili(sqrt(count*1.4)),1,8)
+	entry["count"]=Units.platoon_count(type,int(entry.get("count",count)))
 	return entry
 
 
@@ -898,9 +904,9 @@ static func _neris_1() -> Dictionary:
 			_p("thornkin", &"thornkin", ALLY, 16, 3, Vector2(-30, -8), {"name": "Grove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
 			_p("spores", &"sporecasters", ALLY, 10, 3, Vector2(-30, 4), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
 			_p("crew", &"villagers", ALLY, 8, 3, Vector2(-36, 12), {"name": "Volunteer crew", "hidden": true, "commandable": false, "order": {"kind": "hold"}}),
-			_p("foragers_road", &"salvagers", FOE, 14, 3, Vector2(20, -46), {"name": "Armed Foragers", "hidden": true, "order": {"kind": "assault", "to": "road"}}),
+			_p("foragers_road", &"salvagers", FOE, 14, 3, Vector2(35, -44), {"name": "Armed Foragers", "hidden": true, "order": {"kind": "assault", "to": "road"}}),
 			_p("foragers_track", &"salvagers", FOE, 14, 3, Vector2(10, 46), {"name": "Armed Foragers", "hidden": true, "order": {"kind": "assault", "to": "yard"}}),
-			_p("foragers_late", &"salvagers", FOE, 14, 4, Vector2(0, -46), {"name": "Armed Foragers", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("foragers_late", &"salvagers", FOE, 14, 4, Vector2(-39, -45), {"name": "Armed Foragers", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
 		],
 		"interactables": [
 			{"id": "envoy", "pos": Vector2(-40, -6), "label": "Speak with the grove's envoy", "duration": 2.0},
@@ -1189,7 +1195,7 @@ static func _sereth_3() -> Dictionary:
 			_p("court_b", &"vigil_casters", ALLY, 10, 15, Vector2(14, 80), {"name": "Court Casters", "commandable": false, "order": {"kind": "hold"}}),
 			_hero("pyre", &"pyre", NEUTRAL, 17, Vector2(16, 76), {"name": "Speaker Aldous Pyre", "commandable": false}),
 			_p("witnesses", &"villagers", NEUTRAL, 8, 8, Vector2(-10, 82), {"name": "Witnesses", "commandable": false}),
-			_p("rival", &"march_levy", FOE, 16, 15, Vector2(-66, -10), {"name": "Rival Company", "hidden": true, "order": {"kind": "assault", "to": "terrace_entry"}}),
+			_p("rival", &"march_levy", FOE, 16, 15, Vector2(-66, -48), {"name": "Rival Company", "hidden": true, "order": {"kind": "assault", "to": "terrace_entry"}}),
 			_p("rival_two", &"march_riders", FOE, 12, 15, Vector2(40, -40), {"name": "Rival Riders", "hidden": true, "order": {"kind": "assault", "to": "terrace_entry"}}),
 		],
 		"interactables": [
