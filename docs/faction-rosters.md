@@ -19,7 +19,7 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc starter tree below adds metadata only. The other faction rosters are not authored here.
+`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc and Elf starter trees below add metadata only. The other faction rosters are not authored here.
 
 ### Orc starter tree: Red Basin companies
 
@@ -32,5 +32,17 @@ These are the formations already named in [Raska’s Well Road and Spanwater pla
 | `orc_basin_archers` | **Basin Archers**, Ranged | Ranged **6** and Scouting **2** | Cover a road or wash shoulder from sighted ground; lose the shot behind terrain and need infantry if pressed in melee. |
 
 From Basin Regulars, meeting both sets of gates makes both choices eligible; neither branch can skip into the other. Ratings and training are checked separately. No Battle Points, hero XP, or art availability substitute for these minima. The [official *Kingdom Under Fire: Heroes* Orc guide](https://www.kufheroes.com/eng/characters/unit_orc.asp) informs the distinction between durable general infantry and a specialist that stops mounted advances. These names, roles and numbers are Torn Asunder’s; Basin Archers come from its own Well Road scenario.
+
+### Elf starter tree: Moonwash shore and ship
+
+The [Elven campaign](campaigns/elves.md) already fields a **Shore Detachment** on Survey Shore and **Shore Marines** and **Ship Archers** at Moonwash Harbor. The Landing Marines at Spanwater are a marine assignment, not a separate unit class. These **provisional roster gates** describe training choices, not upgrades applied to those battles.
+
+| Unit key | Form and role | Advance from Shore Detachment | Tradeoff to test later |
+|---|---|---|---|
+| `elf_shore_detachment` | **Shore Detachment**, Melee | Starting unit | Screens a signal or approach without specializing in landing relief or shipboard coverage. |
+| `elf_shore_marines` | **Shore Marines**, Melee | Formation Drill **2** and Scouting **1** | Scout the route and reform after changing screens. Best used at ramps, moorings and landward approaches, not as a fixed anti-charge line. |
+| `elf_ship_archers` | **Ship Archers**, Ranged | Ranged **4** and Formation Drill **1** | Cover open moorings and boat approach lanes from a deck; harbor walls block their shots. They need a shore screen and cannot replace it. |
+
+The Marine branch needs platoon training only, while the Archer branch requires both a combat rating and formation training. Being shipboard does not grant Riding. These rows introduce no ship classes, movement modifiers, assets, combat logic or live equipment changes.
 
 Run `godot --headless --script tests/faction_roster.gd`.

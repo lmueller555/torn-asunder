@@ -12,8 +12,9 @@ func _initialize() -> void:
 	_check_branches()
 	_check_live_catalog()
 	_check_orc_catalog()
+	_check_elf_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc and Elf branches and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -127,7 +128,7 @@ func _check_orc_catalog() -> void:
 			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
 		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
 			"No Orc prototype should become an art entry or a live Human promotion.")
-	for faction in [Roster.ELVES, Roster.DRUIDS, Roster.DRYADS, Roster.UNDEAD]:
+	for faction in [Roster.DRUIDS, Roster.DRYADS, Roster.UNDEAD]:
 		_check(roster.units_for_faction(faction).is_empty(), "An unrelated faction was inadvertently populated.")
 	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
 		and not roster.has_label(archers, Roster.ANTI_RIDING),
@@ -164,6 +165,50 @@ func _check_orc_catalog() -> void:
 	exported.display_name = "Not a canon name"
 	_check(Catalog.faction_roster().unit(regulars).display_name == "Basin Regulars"
 		and roster.unit(regulars).display_name == "Basin Regulars", "Roster consumers can't rename the canon entry through a snapshot.")
+
+
+func _check_elf_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var shore := Catalog.ELF_SHORE_DETACHMENT
+	var marines := Catalog.ELF_SHORE_MARINES
+	var archers := Catalog.ELF_SHIP_ARCHERS
+	_check(roster.units_for_faction(Roster.ELVES) == [shore, marines, archers],
+		"The Elven tree should contain only the three named field units.")
+	for fixture: Array in [
+		[shore, "Shore Detachment", Roster.MELEE],
+		[marines, "Shore Marines", Roster.MELEE],
+		[archers, "Ship Archers", Roster.RANGED],
+	]:
+		var entry := roster.unit(fixture[0])
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == fixture[2]
+			and entry.get("secondary_tags", [Roster.RIDING]).is_empty() and entry.get("elite_support") == false
+			and not Catalog.TYPES.has(fixture[0]), "Elven planning rows don't imply models, elite standing, or mounted troops.")
+	# Ranged rating, Formation Drill, Scouting. Read actual ratings and ranks.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[4, 0, 1], []],
+		[[1, 2, 1], [marines]],
+		[[4, 1, 1], [archers]],
+		[[4, 2, 0], [archers]],
+		[[3, 2, 1], [marines]],
+		[[4, 2, 1], [marines, archers]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.RANGED: values[0], Unit.Damage.MELEE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.FORMATION_DRILL: values[1], Platoon.Skill.SCOUTING: values[2], Platoon.Skill.CHARGE_BRACE: 5,
+		})
+		_check(roster.eligible_advances(shore, soldier.rating, platoon.rank) == fixture[1],
+			"The coastal branches should accept only their own training and rating minima: %s." % str(values))
+		_check(not roster.can_advance(marines, archers, soldier.rating, platoon.rank)
+			and not roster.can_advance(archers, marines, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.ORC_BASIN_REGULARS, marines, soldier.rating, platoon.rank)
+			and not roster.can_advance(shore, Catalog.HUMAN_HEAVY_INFANTRY, soldier.rating, platoon.rank),
+			"Neither sibling nor established faction links are opened by the Elven branch.")
+	var trained := func(_stat: int) -> int: return 2
+	_check(roster.can_advance(shore, marines, Callable(), trained)
+		and not roster.can_advance(shore, archers, Callable(), trained),
+		"Ship Archers need a rating reader; Shore Marines can qualify through training alone.")
 
 
 func _check(ok: bool, title: String) -> void:

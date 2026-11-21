@@ -10,6 +10,9 @@ const HUMAN_ARCHER := &"human_archer"
 const ORC_BASIN_REGULARS := &"orc_basin_regulars"
 const ORC_BRACE_INFANTRY := &"orc_brace_infantry"
 const ORC_BASIN_ARCHERS := &"orc_basin_archers"
+const ELF_SHORE_DETACHMENT := &"elf_shore_detachment"
+const ELF_SHORE_MARINES := &"elf_shore_marines"
+const ELF_SHIP_ARCHERS := &"elf_ship_archers"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -82,7 +85,7 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 }
 
 
-## Battlefield taxonomy and planning gates. Human Archer and the Orc rows
+## Battlefield taxonomy and planning gates. Human Archer plus the Orc and Elf entries
 ## intentionally have no entry in the model inventory (TYPES).
 static func faction_roster() -> Roster:
 	var roster := Roster.new()
@@ -98,6 +101,15 @@ static func faction_roster() -> Roster:
 		{Unit.Damage.MELEE: 5}, {Platoon.Skill.CHARGE_BRACE: 2})
 	roster.add_advance(ORC_BASIN_REGULARS, ORC_BASIN_ARCHERS,
 		{Unit.Damage.RANGED: 6}, {Platoon.Skill.SCOUTING: 2})
+
+	roster.add_unit(ELF_SHORE_DETACHMENT, Roster.ELVES, Roster.MELEE, [], false, "Shore Detachment")
+	roster.add_unit(ELF_SHORE_MARINES, Roster.ELVES, Roster.MELEE, [], false, "Shore Marines")
+	roster.add_unit(ELF_SHIP_ARCHERS, Roster.ELVES, Roster.RANGED, [], false, "Ship Archers")
+	# Provisional shore and ship jobs, not a new naval class or mounted branch.
+	roster.add_advance(ELF_SHORE_DETACHMENT, ELF_SHORE_MARINES, {},
+		{Platoon.Skill.FORMATION_DRILL: 2, Platoon.Skill.SCOUTING: 1})
+	roster.add_advance(ELF_SHORE_DETACHMENT, ELF_SHIP_ARCHERS,
+		{Unit.Damage.RANGED: 4}, {Platoon.Skill.FORMATION_DRILL: 1})
 	return roster
 
 
