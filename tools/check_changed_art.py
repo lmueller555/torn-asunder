@@ -10,12 +10,13 @@ import sys
 
 from .check_visual_audit_receipt import verify_receipt
 
-ART_SUFFIXES = {
+VISUAL_PAYLOAD_SUFFIXES = {
     ".blend", ".fbx", ".gltf", ".glb", ".obj", ".mtl",
     ".png", ".jpg", ".jpeg", ".webp", ".svg", ".tga", ".dds", ".ktx", ".ktx2", ".hdr", ".exr",
     ".ttf", ".otf", ".woff", ".woff2",
-    ".tscn", ".scn", ".tres", ".res", ".gdshader", ".gdshaderinc", ".material",
+    ".gdshader", ".gdshaderinc", ".material",
 }
+GODOT_ASSET_SUFFIXES = {".tscn", ".scn", ".tres", ".res"}
 
 
 def _asset(path: str) -> bool:
@@ -28,10 +29,12 @@ def _asset(path: str) -> bool:
         name = name.removesuffix(sidecar)
     suffix = PurePosixPath(name).suffix
     if value.parts[0] == "game":
-        # Terrain, water and effects shaders may live beside their consuming scene.
-        return suffix in {".gdshader", ".gdshaderinc"}
+        # Standalone visual payloads may live beside their consuming scenes.
+        # A generic Godot scene or resource can instead store gameplay logic/data.
+        return suffix in VISUAL_PAYLOAD_SUFFIXES
     return value.parts[0] == "assets" and (
-        suffix in ART_SUFFIXES or (value.parts[1] == "models" and suffix == ".gd")
+        suffix in VISUAL_PAYLOAD_SUFFIXES or suffix in GODOT_ASSET_SUFFIXES
+        or (value.parts[1] == "models" and suffix == ".gd")
     )
 
 
