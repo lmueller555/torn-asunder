@@ -1,7 +1,7 @@
 extends RefCounted
 ## Shared simulation. Neither camera owns or recreates the field or its orders.
 
-enum Order { HOLD, MOVE, BLOCKED }
+enum Order { HOLD, MOVE, BLOCKED, ATTACK }
 
 const FLAT_BOUNDS := Rect2(-17.0, -12.0, 34.0, 24.0)
 const HERO_SPEED := 5.5

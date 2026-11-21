@@ -1,6 +1,7 @@
 extends "res://game/battlefield/command_harness.gd"
 
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
+const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
@@ -10,6 +11,7 @@ const WARM_LIGHT := Color("#ffd382")
 const EXIT_LIGHT := Color("#8de5d1")
 
 @export var opposition_enabled := true
+@export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
 
 var objective := Escort.new()
 var encounter: Encounter
@@ -26,6 +28,7 @@ var _guard_pad := false
 var _enemy_visual: Node3D
 var _enemy_weapon: MeshInstance3D
 var _enemy_warning: MeshInstance3D
+var _enemy_target_ring: MeshInstance3D
 var _enemy_status: Label3D
 var _hero_weapon: MeshInstance3D
 var _hero_guard: MeshInstance3D
@@ -61,9 +64,6 @@ func _physics_process(delta: float) -> void:
 			battle.move_hero(dodge, _movement_check())
 		super._physics_process(delta)
 		if encounter:
-			encounter.advance(delta, battle, _terrain.clear_melee_contact, _terrain.can_move)
-			if not encounter.hero.is_alive():
-				report_hero_incapacitated()
 			_refresh_combat_view()
 	var feet := hero_world_position()
 	var observation := Escort.Observation.new()
@@ -77,6 +77,13 @@ func _physics_process(delta: float) -> void:
 	_interact_requested = false
 	objective.advance(observation)
 	_refresh_objective_view(feet)
+
+
+func _after_battle_step(delta: float) -> void:
+	if encounter:
+		encounter.advance(delta, battle, _terrain.clear_melee_contact, _terrain.can_move)
+		if not encounter.hero.is_alive():
+			report_hero_incapacitated()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -143,7 +150,13 @@ func _handle_combat_input(event: InputEvent) -> bool:
 			JOY_BUTTON_X: key = KEY_J
 			JOY_BUTTON_Y: key = KEY_K
 			JOY_BUTTON_B: key = KEY_L
-	if command_view or _hero_incapacitated:
+	if command_view:
+		if key != KEY_K:
+			return false
+		if encounter.order_infantry_attack(battle, selected_index, cursor):
+			_sync_view()
+		return true
+	if _hero_incapacitated:
 		return false
 	var guard := _guard_key or _guard_pad
 	encounter.defense.set_guard(guard, true)
@@ -267,7 +280,10 @@ func _make_bridle() -> Node3D:
 func _reset_encounter() -> void:
 	_guard_key = false
 	_guard_pad = false
-	encounter = Encounter.new(_marker_position(battlefield_marker(^"Markers/Routes/EastPass"))) if opposition_enabled else null
+	var guard_marker := battlefield_marker(road_guard_spawn)
+	if not guard_marker:
+		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
+	encounter = Encounter.new(_marker_position(guard_marker)) if opposition_enabled and guard_marker else null
 	_refresh_combat_view()
 
 
@@ -280,6 +296,7 @@ func _build_combat_visuals() -> void:
 	_mesh(_enemy_visual, _box(Vector3(0.58, 0.44, 0.50)), rust, Vector3(0, 1.58, 0))
 	_enemy_weapon = _mesh(_enemy_visual, _box(Vector3(0.15, 1.02, 0.16)), iron, Vector3(-0.60, 0.92, -0.24))
 	_enemy_warning = _mesh(_enemy_visual, _ring(1.73, 1.89), _material(Color("#ff8a6d"), true), Vector3.UP * 0.08)
+	_enemy_target_ring = _mesh(_enemy_visual, _ring(0.88, 1.03), _material(Color("#ffd07d"), true), Vector3.UP * 0.11)
 	_enemy_status = Label3D.new()
 	_enemy_status.position.y = 2.45
 	_enemy_status.pixel_size = 0.021
@@ -301,8 +318,13 @@ func _refresh_combat_view() -> void:
 	_enemy_visual.position = _ground(encounter.enemy_position)
 	_enemy_visual.rotation.y = atan2(-encounter.enemy_heading.x, -encounter.enemy_heading.y)
 	_enemy_warning.visible = encounter.enemy_phase == Encounter.EnemyPhase.WINDUP
+	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
+	var target_selected := command_view and selected_index == InfantryAttack.INFANTRY_INDEX and encounter.target_at(cursor)
+	_enemy_target_ring.visible = command_view and (target_selected or infantry.order == Battle.Order.ATTACK)
 	_enemy_weapon.rotation.x = -1.15 if _enemy_warning.visible else 0.3
-	_enemy_status.text = "WINDUP" if _enemy_warning.visible else "ROAD GUARD  ·  %d HP" % ceili(encounter.enemy.hp)
+	_enemy_status.text = "WINDUP" if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
+		"TARGET: " if target_selected else "", ceili(encounter.enemy.hp),
+	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
 	var attack_phase := encounter.defense.attack_phase
 	_hero_weapon.rotation.x = -0.9 if attack_phase == Attack.Phase.WINDUP else (0.9 if attack_phase == Attack.Phase.RECOVERY else 0.15)
@@ -319,5 +341,9 @@ func _refresh_combat_view() -> void:
 		_combat_tell.text = encounter.active_feedback()
 	elif attack_phase == Attack.Phase.WINDUP:
 		_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
+	elif target_selected:
+		_combat_tell.text = "Triangle / K: order Shield Infantry to attack"
+	elif infantry.order == Battle.Order.ATTACK:
+		_combat_tell.text = "Shield Infantry attacking the road guard"
 	else:
 		_combat_tell.text = "Road guard %d / %d HP" % [ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
