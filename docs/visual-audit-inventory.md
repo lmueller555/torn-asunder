@@ -14,6 +14,10 @@ This inventory tracks visual assets already in Torn Asunder. It is a working rev
 | [Human Infantry](../assets/models/human_infantry.glb) | User-approved reference. The [Mine integration](https://github.com/lmueller555/torn-asunder/pull/122) has a reproducible 1280 × 720 capture of its existing armor, shield and motion in both campaign cameras. |
 | [Human Heavy Infantry](../assets/models/human_heavy_infantry.glb) | User-approved reference. The [unit workflow](unit-art-workflow.md) records construction, painted materials, readable silhouette and rig-fit evidence. |
 
+## Approved Mine entrance
+
+The [V10 audit receipt](audits/mine-timber-portal-v10.json) passes the front Mine timber portal and connected stone shoulders in the large Mine scene. It covers the exact reviewed files, both gameplay cameras, close and reverse views, and the detail-to-distance transition. The evacuation arch, mountain, nearby buildings, and other props remain unapproved. The technical result is a scene-relative asset budget, not a console frame-rate benchmark.
+
 ## Inspected: first Mine pass
 
 The starting hero and tactical views from the [Mine integration](https://github.com/lmueller555/torn-asunder/pull/122) give a matched baseline. These are individual decisions about what is visible in those views, not verdicts on every reference hidden elsewhere on the map.
