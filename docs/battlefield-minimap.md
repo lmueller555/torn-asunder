@@ -14,6 +14,10 @@ Hold **L2 / Shift** to make the minimap interactive. Left-click a map point to i
 
 Run `godot game/battlefield/controller_minimap_playtest.tscn` after importing. In tactical or ally-follow view, press **D-pad Up / N** to enlarge the minimap and start a Move draft for the selected platoon. Use the left stick, D-pad, or keyboard arrows to aim. **R1 / G** appends the highlighted point and keeps the map open; it works on the tactical cursor too, and both views use the same eight-point pending route for the selected platoon. **Cross / Enter** replaces the route with one Move. **Circle / Esc** closes the map and discards only the unsent point. Numbered points are the selected platoon’s accepted pending route. The gold line runs from its current position to its active destination and advances when the platoon reaches the next point. It disappears when the platoon is not moving. Hold clears the route. Entering direct hero action cancels the unfinished draft, and a stick held through close must return to neutral before it can move the hero. This uses the existing debug field and minimap, with no change to Mara’s mouse bindings.
 
+### Try the existing Mine terrain
+
+Run `godot game/battlefield/controller_mine_route_playtest.tscn` for the same controls on the existing large Year One Mine, without the practice opponents. Select **Scouts**, then use **D-pad Up / N** and **R1 / G** to plot the broad west ramp: approach northwest of the scouts, reach the foot, then head east along the center to the crest (editor markers: `RidgeWestApproach` → `RidgeWestFoot` → `RidgeWestCrest`). The minimap rejects the top of the tunnel roof, solid cover, and points where a formation cannot fit. Each accepted leg is a straight Move: an allowed destination does not guarantee a clear path through a cliff or wall. This preview does not change the live Mara minimap.
+
 ## Preview
 
 ```sh

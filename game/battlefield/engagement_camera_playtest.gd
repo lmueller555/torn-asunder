@@ -17,6 +17,8 @@ const PATROL_END := Vector2(-8.0, -3.7)
 const SPAR_POSITION := Vector2(4.0, 1.4)
 const LABEL := Color("#ffd0a6")
 
+@export var practice_opponents_enabled := true
+
 var policy := Policy.new(&"hero")
 var defense := Defense.new(Unit.new(), 0, null)
 var _mode := Mode.TACTICAL
@@ -36,8 +38,11 @@ func _ready() -> void:
 	]
 	policy.set_active_platoons(ROSTER)
 	super._ready()
-	_add_debug_opponent("Practice patrol", PATROL_START)
-	_add_debug_opponent("Sparring opponent", SPAR_POSITION)
+	if practice_opponents_enabled:
+		_add_debug_opponent("Practice patrol", PATROL_START)
+		_add_debug_opponent("Sparring opponent", SPAR_POSITION)
+	else:
+		_opponents.clear()
 	_sync_view()
 
 

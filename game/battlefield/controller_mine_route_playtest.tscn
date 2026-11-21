@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefield/controller_minimap_playtest.tscn" id="1_orders"]
+[ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine_campaign.tscn" id="2_mine"]
+
+[node name="ControllerMineRoutePlaytest" instance=ExtResource("1_orders")]
+battlefield_scene = ExtResource("2_mine")
+field_bounds = Rect2(-160, -108, 320, 224)
+local_sector_size = 116.0
+practice_opponents_enabled = false
+map_cursor_speed = 95.0
+hero_spawn = NodePath("Markers/Spawns/HumanEscort")
+formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HumanEscort"), NodePath("Markers/Spawns/HumanInfantry"), NodePath("Markers/Spawns/HumanArchers")])

@@ -8,6 +8,8 @@ const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 const MAP_SPEED := 13.0
 const NUDGE := 1.0
 
+@export_range(1.0, 200.0) var map_cursor_speed := MAP_SPEED
+
 class Reticle extends Control:
 	var point := Vector2.ZERO
 
@@ -58,7 +60,7 @@ func _physics_process(delta: float) -> void:
 	if _map_open:
 		var direction := Vector2(_map_axes.get(JOY_AXIS_LEFT_X, 0.0), _map_axes.get(JOY_AXIS_LEFT_Y, 0.0))
 		if direction.length() > STICK_DEADZONE:
-			_step_map_cursor(direction.limit_length() * MAP_SPEED * delta)
+			_step_map_cursor(direction.limit_length() * map_cursor_speed * delta)
 	# Existing battle orders continue while the draft is edited.
 	super._physics_process(delta)
 
@@ -244,9 +246,11 @@ func _route_point_is_valid(point: Vector2) -> bool:
 		return false
 	# Flat fixture by default; use the existing solid-hit destination rule
 	# if the preview is run over authored terrain.
-	return not _terrain or _terrain.destination_from_ray(
-		Vector3(point.x, 128.0, point.y), Vector3(point.x, -32.0, point.y)
-	) != null
+	if not _terrain:
+		return true
+	var surface: Variant = _terrain.destination_from_ray(
+		Vector3(point.x, 128.0, point.y), Vector3(point.x, -32.0, point.y))
+	return surface != null and _terrain.formation_fits_at(point)
 
 
 func _sync_view() -> void:

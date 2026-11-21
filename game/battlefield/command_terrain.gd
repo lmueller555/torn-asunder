@@ -65,6 +65,16 @@ func can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 	var floor := ground_height(to)
 	if absf(floor - ground_height(from)) > STEP_HEIGHT:
 		return false
+	return _footprint_clear(to, floor, is_formation)
+
+
+## Test a planned destination's whole footprint, not the route to that point.
+## Pair with a walkable-surface ray for a destination picked from overhead.
+func formation_fits_at(point: Vector2) -> bool:
+	return _footprint_clear(point, ground_height(point), true)
+
+
+func _footprint_clear(to: Vector2, floor: float, is_formation: bool) -> bool:
 	var radius := FORMATION_RADIUS if is_formation else HERO_RADIUS
 	# Check the footprint against steep edges while allowing the ridge ramps.
 	for offset: Vector2 in FLOOR_OFFSETS:
