@@ -1,5 +1,7 @@
 # Building a unit from concept to rig
 
+New or revised units follow the [visual asset quality gate](asset-quality-gate.md) before they enter the repository.
+
 The Human Heavy Infantry was the first unit we took through this process. Each milestone answered a visual question we could review before building on the result. Its endpoint was a painted, rigged soldier with two fit tests in Godot. The first gameplay animation comes after this sequence.
 
 ## 1. Agree on the design from several angles
