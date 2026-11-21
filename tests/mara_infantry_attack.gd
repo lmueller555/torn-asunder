@@ -53,10 +53,13 @@ func _run() -> void:
 	_button(JOY_BUTTON_A)
 	_tick(120)
 	_check(group.order == Battle.Order.HOLD and fight.enemy.hp == first_hp, "Hold cancels further attack windups.")
+	# With the guard already wounded, two more infantry contacts can finish it.
+	fight.enemy.receive_damage(fight.enemy.hp - 70.0)
+	_point(fight.enemy_position)
 	_key(KEY_K)
-	_tick(570)
-	_check(not fight.enemy.is_alive() and fight.points.balance == 442 and group.order == Battle.Order.HOLD,
-		"Infantry can defeat the same road guard and automatically stop on the final confirmed hit.")
+	_tick(285)
+	_check(not fight.enemy.is_alive() and fight.points.balance == 418 and group.order == Battle.Order.HOLD,
+		"Infantry can finish the wounded road guard and automatically stop on the final confirmed hit.")
 	_key(KEY_K)
 	_check(group.order == Battle.Order.HOLD, "A defeated enemy cannot receive another attack order.")
 

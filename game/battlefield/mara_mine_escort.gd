@@ -37,6 +37,7 @@ var _hero_guard: MeshInstance3D
 @onready var _instructions_label: Label = $ObjectiveHUD/Panel/Margin/Readout/Instructions
 @onready var _combat_panel: PanelContainer = $CombatHUD/Panel
 @onready var _combat_hp: Label = $CombatHUD/Panel/Margin/Readout/Health
+@onready var _infantry_hp: Label = $CombatHUD/Panel/Margin/Readout/Infantry
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
@@ -319,10 +320,12 @@ func _refresh_combat_view() -> void:
 	_enemy_visual.rotation.y = atan2(-encounter.enemy_heading.x, -encounter.enemy_heading.y)
 	_enemy_warning.visible = encounter.enemy_phase == Encounter.EnemyPhase.WINDUP
 	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
-	var target_selected := command_view and selected_index == InfantryAttack.INFANTRY_INDEX and encounter.target_at(cursor)
+	var target_selected := command_view and selected_index == InfantryAttack.INFANTRY_INDEX \
+		and infantry.order != Battle.Order.DEFEATED and encounter.target_at(cursor)
 	_enemy_target_ring.visible = command_view and (target_selected or infantry.order == Battle.Order.ATTACK)
 	_enemy_weapon.rotation.x = -1.15 if _enemy_warning.visible else 0.3
-	_enemy_status.text = "WINDUP" if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
+	var targets_infantry := encounter.windup_target == Encounter.Target.INFANTRY
+	_enemy_status.text = ("WINDUP → INFANTRY" if targets_infantry else "WINDUP") if _enemy_warning.visible else "%sROAD GUARD  ·  %d HP" % [
 		"TARGET: " if target_selected else "", ceili(encounter.enemy.hp),
 	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
@@ -331,12 +334,16 @@ func _refresh_combat_view() -> void:
 	_combat_hp.text = "Mara %d / %d HP    ·    Team %d / %d BP" % [
 		ceili(encounter.hero.hp), roundi(encounter.hero.max_hp), encounter.points.balance, encounter.points.capacity,
 	]
+	var troops := encounter.infantry_attack.attacker
+	_infantry_hp.text = "Shield Infantry · %d / %d prototype HP%s" % [
+		ceili(troops.hp), roundi(troops.max_hp), " · Defeated" if not troops.is_alive() else "",
+	]
 	if not encounter.hero.is_alive():
 		_combat_tell.text = "Mara is incapacitated"
 	elif not encounter.enemy.is_alive():
 		_combat_tell.text = "Road guard defeated"
 	elif _enemy_warning.visible:
-		_combat_tell.text = "Road guard winding up!  Face it and guard, or dodge."
+		_combat_tell.text = "Road guard winding up at Shield Infantry!" if targets_infantry else "Road guard winding up!  Face it and guard, or dodge."
 	elif not encounter.active_feedback().is_empty():
 		_combat_tell.text = encounter.active_feedback()
 	elif attack_phase == Attack.Phase.WINDUP:
