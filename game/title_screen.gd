@@ -342,7 +342,9 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		Rect2(76, 248, 1120, 44), 25, GOLD)
 	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(_stage, CAMPAIGN_PLAYTEST_NOTICE + " Fixed test roster.", Rect2(76, 475, 1080, 32), 21, MUTED)
+	var can_replay_heavy := _mine_replay_heavy_available(_active_campaign.id, mission_id, _profile.completed_missions(_active_campaign.id))
+	var roster_notice := " Optional replay loadout." if can_replay_heavy else " Fixed test roster."
+	_label(_stage, CAMPAIGN_PLAYTEST_NOTICE + roster_notice, Rect2(76, 475, 1080, 32), 21, MUTED)
 	var deploy_y := 555.0
 	if _active_campaign.id == "mara" and mission_id == "mara_mine_escort":
 		# The full orders initially expand the label before wrapping is enabled.
@@ -358,7 +360,18 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	var deploy := _button("Confirm Deployment", Rect2(76, deploy_y, 372, 58), _deploy_campaign_mission.bind(mission_id))
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
-	if deployment.get("briefing_dispatch", false):
+	if can_replay_heavy:
+		var heavy := _button("Replay with Heavy Infantry", Rect2(468, deploy_y, 395, 58),
+			_deploy_campaign_mission.bind(mission_id, true))
+		_link_focus(deploy, SIDE_RIGHT, heavy)
+		_link_focus(heavy, SIDE_LEFT, deploy)
+		_link_focus(heavy, SIDE_TOP, back)
+		var tradeoff := _label(_stage, "Heavy Infantry can withstand more hits, but moves slower and deals less damage. "
+			+ "Confirm Deployment uses regular Shield Infantry.",
+			Rect2(76, 649, 1150, 46), 20, MUTED)
+		tradeoff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tradeoff.name = "MineHeavyReplayTradeoff"
+	elif deployment.get("briefing_dispatch", false):
 		var dispatch := _button("Read Dispatch", Rect2(468, deploy_y, 268, 58),
 			_present_campaign_dialogue.bind(deployment.dispatch, _show_campaign_mission_briefing.bind(mission_id)))
 		_link_focus(deploy, SIDE_RIGHT, dispatch)
@@ -368,8 +381,15 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	_show_campaign_warning()
 
 
-func _deploy_campaign_mission(mission_id: String) -> void:
-	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != mission_id:
+func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confirmed_clears: PackedStringArray) -> bool:
+	return (campaign_id == MaraTraining.CAMPAIGN_ID and mission_id == MaraTraining.QUALIFYING_CLEAR
+		and _has_mara_shield_drill() and confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR)
+		and _profile.mara_shield_infantry_training().qualifies_for_branch(
+			MaraTraining.SHIELD_INFANTRY_SLOT, MaraTraining.BRANCH_UNIT))
+
+
+func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
+	if _page != Page.MISSION_BRIEFING or not _campaign_world or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
 	var campaign_id: String = _active_campaign.id
 	var confirmed_clears := _profile.completed_missions(campaign_id)
@@ -378,10 +398,21 @@ func _deploy_campaign_mission(mission_id: String) -> void:
 	var deployment := CampaignDeployments.for_mission(mission_id)
 	if deployment.is_empty():
 		return
+	# The briefing's button is not authorization. Recheck against the current
+	# campaign record immediately before configuring this one attempt.
+	var authorize_heavy := use_heavy and _mine_replay_heavy_available(campaign_id, mission_id, confirmed_clears)
+	if use_heavy and not authorize_heavy:
+		_show_notice("Heavy Infantry requires a confirmed Mine clear and Shield Infantry Drill Rank 2.")
+		return
 	var scene: PackedScene = deployment.scene
+	var mission: Node3D = scene.instantiate()
+	if use_heavy and (not mission is MaraMine or not mission.configure_replay_heavy_infantry(
+			confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR), authorize_heavy)):
+		mission.free()
+		_show_notice("Heavy Infantry is unavailable. You can still deploy with regular Shield Infantry.")
+		return
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
-	var mission: Node3D = scene.instantiate()
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
 		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
 	_campaign_battle = mission
@@ -527,7 +558,8 @@ func _show_mara_shield_drill() -> void:
 	var credit_label := _label(_stage, "Available drill credit: %d" % credit, Rect2(76, 314, 1040, 35), 25, GOLD)
 	credit_label.name = "ShieldDrillCredit"
 	var summary: String
-	if plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT):
+	var qualified := plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT)
+	if qualified:
 		summary = "Qualified for Heavy Infantry."
 	elif credit > 0:
 		summary = "Spend 1 drill credit to reach Rank 2 and qualify for Heavy Infantry."
@@ -536,8 +568,10 @@ func _show_mara_shield_drill() -> void:
 	var status := _label(_stage, summary, Rect2(76, 381, 1040, 68), 26, IVORY)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.name = "ShieldDrillStatus"
-	var availability := _label(_stage, "Heavy Infantry cannot be deployed in this campaign build. Your roster stays unchanged.",
-		Rect2(76, 459, 1040, 63), 22, MUTED)
+	var loadout_help := "On the Mine replay briefing, choose Replay with Heavy Infantry. Regular Shield Infantry is still the default."
+	if not qualified:
+		loadout_help = "Rank 2 unlocks the Heavy Infantry option on Mine replays only. Regular Shield Infantry stays the default."
+	var availability := _label(_stage, loadout_help, Rect2(76, 459, 1040, 63), 22, MUTED)
 	availability.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	availability.name = "ShieldDrillAvailability"
 	if credit > 0:

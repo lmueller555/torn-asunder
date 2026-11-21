@@ -3,6 +3,10 @@ extends "res://tests/mara_campaign_flow.gd"
 ## viewport keyboard/controller input; training is never seeded into the save.
 
 const DrillTraining := preload("res://game/combat/mara_subordinate_training.gd")
+const Minimap := preload("res://game/battlefield/mara_campaign_minimap.gd")
+const HEAVY := "Replay with Heavy Infantry"
+const HEAVY_MODEL := "res://assets/models/human_heavy_infantry.glb"
+const CASE_MODEL := "res://assets/models/environment/godbridle_custody_case.glb"
 const DRILL := "Shield Infantry Drill"
 const CONFIRM := "Confirm Training (1 drill credit)"
 const SLOT := DrillTraining.SHIELD_INFANTRY_SLOT
@@ -29,7 +33,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Mara shield drill menu: real Mine clear, locked/offered/qualified flow, keyboard/controller focus, save/retry and foreign scope passed.")
+		print("Mara Shield Infantry: real Mine clear, drill, guarded replay choice, queue, approved case, regular default and save/BP isolation passed.")
 	quit(0 if passed else 1)
 
 
@@ -78,8 +82,14 @@ func _exercise_training_menu() -> bool:
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]):
 		return _fail("A real first delivery did not grant the saved Mine clear.")
 	_tap_joy(JOY_BUTTON_B)
+	if not _on_map(MINE) or not _open_mine_briefing(false):
+		return _fail("An untrained Mine replay did not hide the Heavy option.")
+	_title._deploy_campaign_mission(CLEAR_ID, true)
+	if not _on_briefing() or _title._campaign_battle:
+		return _fail("A direct deployment request bypassed the missing drill.")
+	_tap_key(KEY_ESCAPE)
 	if not _on_map(MINE) or not _map().select_waypoint(CAMP):
-		return _fail("The Mine debrief did not return to the world map.")
+		return _fail("The Mine briefing did not return to the world map.")
 	_tap_joy(JOY_BUTTON_A)
 	if not _on_map(CAMP) or not await _open_drill(true):
 		return false
@@ -97,7 +107,7 @@ func _exercise_training_menu() -> bool:
 		return _fail("Viewing or focusing the confirm changed the save before assent.")
 	_tap_joy(JOY_BUTTON_A)
 	if not _state(2, 0, "Qualified for Heavy Infantry.", false) or not _focused("Back"):
-		return _fail("Confirm did not persist training, return safe focus, or leave equip unavailable.")
+		return _fail("Confirm did not persist training, return safe focus, or explain the replay-only option.")
 	var purchased := FileAccess.get_file_as_string(_profile_path)
 	if purchased == cleared or Profile.new(_profile_path).mara_shield_infantry_training().formation_drill_rank(SLOT) != 2:
 		return _fail("The UI confirmation did not survive reopening the saved profile.")
@@ -110,18 +120,42 @@ func _exercise_training_menu() -> bool:
 		return _fail("Reopening trained status applied a second purchase.")
 	_tap_key(KEY_ESCAPE)
 	_tap_key(KEY_ESCAPE)
-	if not await _deploy_mine(2, 720):
+	if not await _deploy_mine(2, 720, true):
 		return false
 	mission = _title._campaign_battle as Mission
 	var before_retry := FileAccess.get_file_as_string(_profile_path)
+	if not await _heavy_queue_and_case(mission):
+		return false
 	_tap_key(KEY_BACKSPACE)
-	if not _mine_budget(mission, 2, 720) or mission.encounter.infantry_attack.attacker.max_hp != 310.0 \
-			or FileAccess.get_file_as_string(_profile_path) != before_retry or not _win_escort():
-		return _fail("Training altered the deployment profile, ordinary combat roster, or retry.")
+	if not _mine_budget(mission, 2, 720) or not _heavy_active(mission) \
+			or mission.objective.phase != Escort.Phase.AWAITING_PICKUP \
+			or mission._custody_case._keeper.is_visible_in_tree() or FileAccess.get_file_as_string(_profile_path) != before_retry:
+		return _fail("Per-attempt Retry did not keep the Heavy loadout and restore the original BP and case.")
+	if not _win_escort():
+		return false
 	await process_frame
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or before_retry != FileAccess.get_file_as_string(_profile_path):
-		return _fail("Replay must not mint another credit or rewrite the outcome.")
+		return _fail("Heavy replay must not mint another credit or rewrite the outcome.")
 	_tap_joy(JOY_BUTTON_B)
+	if not await _deploy_mine(2, 720):
+		return false
+	mission = _title._campaign_battle as Mission
+	if _heavy_active(mission) or mission.encounter.infantry_attack.attacker.max_hp != 310.0 \
+			or mission.battle.formations[0].title != "Shield Infantry" or FileAccess.get_file_as_string(_profile_path) != before_retry:
+		return _fail("The ordinary button did not reset to the regular roster after leaving the Heavy attempt.")
+	_tap_key(KEY_ESCAPE)
+	if not _on_map(MINE) or not _map().select_waypoint(ROAD):
+		return _fail("The previous Heavy replay did not return through the normal campaign route.")
+	_tap_joy(JOY_BUTTON_A)
+	if not _on_map(ROAD) or not _map().select_waypoint(CROSSING):
+		return _fail("The next regular chapter is no longer reachable after replay.")
+	_tap_joy(JOY_BUTTON_A)
+	if not _on_briefing() or _button(HEAVY) or not _button("Read Dispatch"):
+		return _fail("Heavy was offered outside the Mine or replaced another chapter's dispatch.")
+	_title._deploy_campaign_mission(GRAIN_ID, true)
+	if not _on_briefing() or _title._campaign_battle:
+		return _fail("A direct Heavy request bypassed the Mine-only scope at another Human battle.")
+	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
 	_tap_key(KEY_ENTER)
 	for _offset in range(3):
@@ -130,9 +164,19 @@ func _exercise_training_menu() -> bool:
 	if not _map() or _title._campaign_world.campaign_id() != "raska":
 		return _fail("Foreign comparison did not open Raska's live campaign.")
 	_tap_joy(JOY_BUTTON_A)
-	return (_title._page == Title.Page.BRIEFING and not _button(DRILL) and not _button(CONFIRM)
-		and _button("Combat Drills") != null and _button("Unit Progression") != null
-		and _button("Read Dispatch") != null) or _fail("Human training leaked into another faction's Camp Operations.")
+	if _title._page != Title.Page.BRIEFING or _button(DRILL) or _button(CONFIRM) \
+			or not _button("Combat Drills") or not _button("Unit Progression") or not _button("Read Dispatch"):
+		return _fail("Human training leaked into another faction's Camp Operations.")
+	_tap_key(KEY_ESCAPE)
+	if not _map() or not _map().select_waypoint(MINE):
+		return _fail("Could not select the shared Mine waypoint under the Orc campaign.")
+	_tap_joy(JOY_BUTTON_A)
+	if not _on_briefing() or _button(HEAVY):
+		return _fail("Human replay choice leaked into the Orc view of the same Mine.")
+	var foreign := FileAccess.get_file_as_string(_profile_path)
+	_title._deploy_campaign_mission("orc_mine_witness", true)
+	return (_on_briefing() and not _title._campaign_battle and FileAccess.get_file_as_string(_profile_path) == foreign) \
+		or _fail("A direct foreign Heavy request changed the loaded battle or profile.")
 
 
 func _open_drill(controller: bool) -> bool:
@@ -158,21 +202,113 @@ func _open_drill(controller: bool) -> bool:
 	return _title._page == Title.Page.MARA_SHIELD_DRILL
 
 
-func _deploy_mine(level: int, capacity: int) -> bool:
-	if not _on_map(CAMP) or not _map().select_waypoint(MINE):
-		return _fail("The camp did not connect to the real Mine waypoint.")
+func _open_mine_briefing(qualified: bool) -> bool:
+	if not (_on_map(CAMP) or _on_map(MINE)) or not _map().select_waypoint(MINE):
+		return _fail("Could not select the real Mine waypoint.")
 	_tap_joy(JOY_BUTTON_A)
-	if not _on_briefing():
-		return _fail("World-map confirmation did not open the Mine briefing.")
-	_tap_key(KEY_DOWN)
-	_tap_key(KEY_ENTER)
+	return ((_on_briefing() and _focused("Back") and (_button(HEAVY) != null) == qualified)
+		or _fail("Mine briefing did not respect eligibility or retain safe initial Back focus."))
+
+
+func _deploy_mine(level: int, capacity: int, choose_heavy := false) -> bool:
+	var qualified := _title._profile.mara_shield_infantry_training().qualifies_for_branch(SLOT, DrillTraining.BRANCH_UNIT)
+	if not _open_mine_briefing(qualified):
+		return false
+	var before := FileAccess.get_file_as_string(_profile_path)
+	if level == 1:
+		_title._deploy_campaign_mission(CLEAR_ID, true)
+		if not _on_briefing() or _title._campaign_battle or FileAccess.get_file_as_string(_profile_path) != before:
+			return _fail("A fresh Mine briefing accepted a direct Heavy request.")
+	if choose_heavy:
+		if not _text("MineHeavyReplayTradeoff").contains("uses regular Shield Infantry") \
+			or not _fits(["Confirm Deployment", HEAVY, "MineHeavyReplayTradeoff"]):
+			return _fail("The optional loadout did not fit or explain the regular default.")
+		_tap_joy(JOY_BUTTON_DPAD_DOWN)
+		_tap_joy(JOY_BUTTON_DPAD_RIGHT)
+		if not _focused(HEAVY):
+			return _fail("Gamepad could not focus the optional loadout from the ordinary confirm.")
+		# A stale visible control is not authorization. Replace its supplied
+		# profile record with an independent unqualified one before real Accept.
+		var trained := _title._profile
+		_title._profile = Profile.new(_profile_path + ".untrained")
+		_tap_joy(JOY_BUTTON_A)
+		_title._profile = trained
+		if not _on_briefing() or _title._campaign_battle or FileAccess.get_file_as_string(_profile_path) != before:
+			return _fail("Deployment failed to recheck the current saved eligibility.")
+		# Reopen to clear the rejected request notice before the native capture.
+		_tap_key(KEY_ESCAPE)
+		if not _open_mine_briefing(true):
+			return false
+		_tap_joy(JOY_BUTTON_DPAD_DOWN)
+		_tap_joy(JOY_BUTTON_DPAD_RIGHT)
+		await _capture("04-heavy-replay-choice-reduced")
+		_tap_joy(JOY_BUTTON_A)
+	else:
+		_tap_key(KEY_DOWN)
+		if not _focused("Confirm Deployment"):
+			return _fail("The default deployment did not remain ordinary and keyboard-reachable.")
+		_tap_key(KEY_ENTER)
 	var mission := _title._campaign_battle as Mission
-	if not mission:
-		return _fail("Keyboard did not explicitly deploy from the Mine briefing.")
+	if not mission or FileAccess.get_file_as_string(_profile_path) != before:
+		return _fail("Deploying the selected loadout failed or rewrote the save.")
 	mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
-	return _mine_budget(mission, level, capacity) or _fail("The original Mine lead level and Battle Point budget changed.")
+	return ((_mine_budget(mission, level, capacity) and _heavy_active(mission) == choose_heavy)
+		or _fail("Mine deployment used the wrong loadout or changed lead level/BP."))
+
+
+func _heavy_active(mission: Mission) -> bool:
+	var member := mission._formation_members[0][0].get_node_or_null("HeavyInfantryModel") as Node3D
+	return (member != null and member.scene_file_path == HEAVY_MODEL
+		and mission.encounter.infantry_attack.attacker.max_hp == Mission.HEAVY_HP
+		and mission.battle.formations[0].move_speed == Mission.HEAVY_MOVE_SPEED
+		and mission.battle.formations[0].title == "Heavy Infantry")
+
+
+func _heavy_queue_and_case(mission: Mission) -> bool:
+	var hud := mission.get_node("MinimapHUD/Panel") as Minimap
+	hud.set_physics_process(false)
+	var group := mission.battle.formations[0]
+	var destination := mission._marker_position(mission.battlefield_marker(^"Markers/Routes/WestAssembly"))
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tick()
+	var mouse := InputEventMouseMotion.new()
+	mouse.position = mission._command_camera.unproject_position(mission.to_global(mission._ground(destination)))
+	root.push_input(mouse, true)
+	_tap_joy(JOY_BUTTON_RIGHT_SHOULDER)
+	if hud.pending_waypoints(0).size() != 1 or hud.pending_waypoints(0)[0].distance_to(destination) > 0.03:
+		return _fail("The title-deployed Heavy formation did not accept a real tactical waypoint.")
+	for _i in range(1100):
+		if hud.pending_waypoints(0).is_empty():
+			break
+		_tick()
+		hud._physics_process(DT)
+	if group.position.distance_to(destination) > 0.06 or group.order != Battle.Order.HOLD \
+		or not hud.pending_waypoints(0).is_empty() or mission.team_battle_points_frame().balance != 400:
+		return _fail("The Heavy queue did not consume on physical arrival or changed BP.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_tick()
+	var prop := mission._custody_case
+	if mission.custody_case_scene.resource_path != CASE_MODEL or not prop._case.is_visible_in_tree() \
+		or prop._keeper.is_visible_in_tree():
+		return _fail("The replay changed the approved ground case.")
+	for marker in ["Routes/WestAssembly", "Routes/QuarryTurn", "Routes/RoadWest", "Routes/MineYard", "Objectives/GodbridlePickup"]:
+		if not _drive_to(marker):
+			return false
+	_tap_joy(JOY_BUTTON_A)
+	_tick()
+	if mission.objective.phase != Escort.Phase.ESCORTING or not prop._case.is_visible_in_tree() \
+		or not prop._keeper.is_visible_in_tree() or prop._tactical_case.is_visible_in_tree():
+		return _fail("Actual pickup on the title-deployed Heavy replay changed the approved carried case.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tick()
+	if not prop._tactical_case.is_visible_in_tree() or prop._case.is_visible_in_tree() or prop._keeper.is_visible_in_tree():
+		return _fail("The original tactical carry LOD was not preserved.")
+	await _capture("05-heavy-replay-custody")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_tick()
+	return true
 
 
 func _state(rank: int, credit: int, summary: String, can_confirm: bool) -> bool:
@@ -181,7 +317,7 @@ func _state(rank: int, credit: int, summary: String, can_confirm: bool) -> bool:
 		and _text("ShieldDrillRank") == "Formation Drill: Rank %d" % rank \
 		and _text("ShieldDrillCredit") == "Available drill credit: %d" % credit \
 		and _text("ShieldDrillStatus").contains(summary) \
-		and _text("ShieldDrillAvailability").contains("cannot be deployed") \
+		and _text("ShieldDrillAvailability").contains("Replay with Heavy Infantry" if rank == 2 else "Mine replays only") \
 		and (button != null) == can_confirm and not _button("Promote to Heavy Infantry")
 
 
