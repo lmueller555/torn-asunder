@@ -94,23 +94,28 @@ const AT_SERETHS_WINDOW := "Later, at Sereth's window"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
-		"title": "Orders for the Pass",
-		"location": "Marches command post · Before the mine escort",
+		"title": "The Last Bell",
+		"location": "Greyhollow · Before the rescue",
 		"lines": [
-			{"speaker": CAPTAIN, "text": "The riverbed's dry. Our scouts watched an Orc company turn toward the pass. If they reach it first, we'll have no room to move."},
-			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Put my seal on the Godbridle's case. I want the bridle through the pass and into the Marches."},
-			{"speaker": CAPTAIN, "text": "I'll put the shields where the road narrows. The archers can cover them from the ridge."},
-			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Give the carrier room to run. We don't have to win the road. We have to get through it."},
+			{"speaker": CAPTAIN, "text": "Greyhollow rang the warning bell twice. Nobody's come out since. Our scout saw Dryad fighters in the yard."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Then that's where they'll expect us. Keep their eyes on the yard. Take our people out through the south tunnel."},
+			{"speaker": CAPTAIN, "text": "Do we hold the mine when they're out?"},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "No. Count the miners at the shelter. If the count is right, we're done."},
 		],
 	},
 	MARA_MINE_DEBRIEF: {
-		"title": "The Same Night",
-		"location": "Marches command post · After the mine escort",
+		"title": "What They Brought Out",
+		"location": "Greyhollow · At the shelter after the rescue",
+		"presentation": &"cinematic",
+		"setting": &"greyhollow",
 		"lines": [
-			{"speaker": CAPTAIN, "text": "The case came through under your seal. None of the miners came with us. Sova led them out through the tunnels. One went with Raska of her own accord."},
-			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Did anyone write down what she saw?"},
-			{"speaker": CAPTAIN, "text": "We have a copy of her account. She says the new spring opened the same night the river went dry."},
-			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Put her dates in our report. And ask the granaries how long their stores will last if the river stays dry."},
+			{"speaker": "At the shelter", "action": true, "text": "The captain counts the miners a second time. The last one through sets a bundle on the bench."},
+			{"speaker": CAPTAIN, "text": "Is that somebody's lunch?"},
+			{"speaker": "Greyhollow Miner", "text": "It was fitted into the stone. Hold the lamp down here. See the teeth? We thought they were holding up the roof."},
+			{"speaker": "At the shelter", "action": true, "shot": &"black", "text": "She folds back the cloth. Beneath it lies a bridle, its bit worn smooth where it was held in a mouth far larger than a horse's."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "shot": &"shelter_detail", "text": "The Godbridle. My father used to swear there was no such thing."},
+			{"speaker": "Greyhollow Miner", "text": "Please don't ask us to go back for the rest of it. There isn't any rest. That's all we found."},
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "Nobody's going back tonight. Get them water."},
 		],
 	},
 	RASKA_MINE_DISPATCH: {

@@ -501,7 +501,7 @@ func _present_campaign_dialogue(beat: StringName, then: Callable) -> void:
 	dialogue.completed.connect(func(_id: StringName) -> void: then.call())
 	dialogue.cancelled.connect(func(_id: StringName) -> void: then.call())
 	_stage.add_child(dialogue)
-	if not dialogue.present(beat, DialogueBeats.get_beat(beat)):
+	if not dialogue.present(beat, DialogueBeats.get_beat(beat), _profile.setting("reduced_motion")):
 		then.call()
 
 
@@ -582,7 +582,7 @@ func _show_mara_shield_drill() -> void:
 	elif credit > 0:
 		summary = "Spend 1 drill credit to reach Rank 2 and qualify for Heavy Infantry."
 	else:
-		summary = "Locked: Clear The Pass Below the Mine to earn 1 drill credit."
+		summary = "Locked: Clear Get Them Out to earn 1 drill credit."
 	var status := _label(_stage, summary, Rect2(76, 381, 1040, 68), 26, IVORY)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.name = "ShieldDrillStatus"
@@ -625,7 +625,7 @@ func _show_mara_lead_melee() -> void:
 	var rating := _label(_stage, "Melee Power: %d" % (2 if invested else 1),
 		Rect2(76, 236, 1040, 65), 39, IVORY, DISPLAY_FACE)
 	rating.name = "LeadMeleeRating"
-	var status := "Locked: Clear The Pass Below the Mine."
+	var status := "Locked: Clear Get Them Out."
 	match state:
 		ProfileStore.MaraLeadMeleeStatus.AVAILABLE:
 			status = "Available: Spend 1 earned lead point to raise Melee Power from 1 to 2."

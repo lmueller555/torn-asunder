@@ -16,7 +16,7 @@ const _MAPS := {
 				"map_position": Vector2(0.19, 0.63),
 			},
 			"year_one_mine": {
-				"id": "year_one_mine", "label": "The Mine", "kind": WaypointKind.BATTLEFIELD,
+				"id": "year_one_mine", "label": "Greyhollow Mine", "kind": WaypointKind.BATTLEFIELD,
 				"map_position": Vector2(0.49, 0.34), "mission_id": "mara_mine_escort",
 			},
 			"marches_road": {

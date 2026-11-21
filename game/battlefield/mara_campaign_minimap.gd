@@ -475,22 +475,31 @@ func refresh() -> void:
 			frame.selected_ally = id
 	if _mission.command_view:
 		frame.camera_footprint = _command_footprint()
-	match objective.phase:
-		Escort.Phase.AWAITING_PICKUP:
-			_add_landmark(frame, &"Godbridle", ^"Markers/Objectives/GodbridlePickup", Minimap.ObjectiveKind.PICKUP)
-		Escort.Phase.ESCORTING:
-			_add_landmark(frame, &"East exit", ^"Markers/Objectives/GodbridleExit", Minimap.ObjectiveKind.EXIT)
-	var warning := objective.phase == Escort.Phase.ESCORTING and objective.interception_triggered \
-		and encounter != null and encounter.enemy.is_alive()
-	_status.text = "YEAR ONE MINE  /  SECTOR" if _mission.command_view else "YEAR ONE MINE  /  HERO"
-	_status.modulate = Color.WHITE
-	if warning:
-		_add_landmark(frame, &"Pass warning", ^"Markers/Routes/InterceptRoadMerge", Minimap.ObjectiveKind.ALERT)
-		_status.text = "EAST PASS  /  INTERCEPTION REPORTED"
-		_status.modulate = Minimap.ALERT
-		if encounter.enemy_phase != Encounter.EnemyPhase.AT_RESERVE and _spot_guard(battle, encounter):
-			frame.visible_enemies.append(Minimap.Marker.new(&"Orc guard", encounter.enemy_position))
-			_status.text = "EAST PASS  /  ORC IN SIGHT"
+	var alternate := _mission.alternate_minimap_objective()
+	if not alternate.is_empty():
+		_status.text = "%s  /  %s" % [alternate["place"], "SECTOR" if _mission.command_view else "HERO"]
+		_status.modulate = Color.WHITE
+		for landmark in alternate.get("landmarks", []):
+			_add_landmark(frame, landmark[0], landmark[1], landmark[2])
+		if encounter and encounter.enemy.is_alive() and _spot_guard(battle, encounter):
+			frame.visible_enemies.append(Minimap.Marker.new(alternate["enemy"], encounter.enemy_position))
+	else:
+		match objective.phase:
+			Escort.Phase.AWAITING_PICKUP:
+				_add_landmark(frame, &"Godbridle", ^"Markers/Objectives/GodbridlePickup", Minimap.ObjectiveKind.PICKUP)
+			Escort.Phase.ESCORTING:
+				_add_landmark(frame, &"East exit", ^"Markers/Objectives/GodbridleExit", Minimap.ObjectiveKind.EXIT)
+		var warning := objective.phase == Escort.Phase.ESCORTING and objective.interception_triggered \
+			and encounter != null and encounter.enemy.is_alive()
+		_status.text = "YEAR ONE MINE  /  SECTOR" if _mission.command_view else "YEAR ONE MINE  /  HERO"
+		_status.modulate = Color.WHITE
+		if warning:
+			_add_landmark(frame, &"Pass warning", ^"Markers/Routes/InterceptRoadMerge", Minimap.ObjectiveKind.ALERT)
+			_status.text = "EAST PASS  /  INTERCEPTION REPORTED"
+			_status.modulate = Minimap.ALERT
+			if encounter.enemy_phase != Encounter.EnemyPhase.AT_RESERVE and _spot_guard(battle, encounter):
+				frame.visible_enemies.append(Minimap.Marker.new(&"Orc guard", encounter.enemy_position))
+				_status.text = "EAST PASS  /  ORC IN SIGHT"
 	map.show_frame(frame)
 	_refresh_controller_overlay()
 

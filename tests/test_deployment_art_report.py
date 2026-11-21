@@ -13,11 +13,11 @@ from unittest.mock import patch
 from tools.report_deployment_art import (
     BEACH_BATTLEFIELD, BEACH_DEPLOYMENT, BEACH_MISSION, BEACH_RECEIPT, BRIDGE_BATTLEFIELD,
     BRIDGE_DEPLOYMENT, BRIDGE_MISSION, BRIDGE_RECEIPT, CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, CUT_CONTINUITY_RECEIPT,
-    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, HEADLAND_RECEIPT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
+    CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, GREYHOLLOW_RESCUE, HEADLAND_RECEIPT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
     QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, STOREHOUSE_FIELD, STOREHOUSE_RECEIPT, VAULT_BASE, VAULT_DEPLOYMENT, VAULT_MISSION, VAULT_RECEIPT,
     VAULT_STOCK_DEPLOYMENTS, VAULT_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
     WHEEL_MISSION, WHEEL_RECEIPT,
-    _battlefield, _deployments, _verify_custody_case, _verify_ilyra_beach_stand, _verify_ilyra_headland_relay, _verify_kit,
+    _battlefield, _deployments, _verify_custody_case, _verify_greyhollow_rescue, _verify_ilyra_beach_stand, _verify_ilyra_headland_relay, _verify_kit,
     _verify_mara_north_bridge, _verify_mara_quay_threshold, _verify_mara_storehouse, _verify_raska_spillway_wheel,
     _verify_sova_vault_jambs, build_report, main,
 )
@@ -41,19 +41,11 @@ class DeploymentArtReportTest(unittest.TestCase):
             self.assertEqual(rows[mission]["battlefield_scene"], KITS[0].battlefield)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["receipt"], KITS[0].receipt)
             self.assertEqual(rows[mission]["verified_kit_receipts"][0]["verified_files"], 30)
-        self.assertEqual(
-            [row["receipt"] for row in rows[CASE_MISSION]["verified_kit_receipts"]],
-            [KITS[0].receipt, CASE_RECEIPT, STOREHOUSE_RECEIPT],
-        )
-        case = rows[CASE_MISSION]["verified_kit_receipts"][1]
-        self.assertEqual(case["placement_scope"], "mission_deployment")
-        self.assertEqual(case["placement_scene"], CASE_DEPLOYMENT)
-        self.assertEqual(case["verified_files"], 10)
-        self.assertEqual(
-            {m for m, row in rows.items() if any(kit["receipt"] == CASE_RECEIPT
-                                                for kit in row["verified_kit_receipts"])},
-            {CASE_MISSION},
-        )
+        self.assertEqual(rows[CASE_MISSION]["deployment_scene"], GREYHOLLOW_RESCUE)
+        self.assertEqual([kit["receipt"] for kit in rows[CASE_MISSION]["verified_kit_receipts"]],
+                         [KITS[0].receipt])
+        self.assertFalse(any(kit["receipt"] in {CASE_RECEIPT, STOREHOUSE_RECEIPT}
+                             for row in rows.values() for kit in row["verified_kit_receipts"]))
         self.assertEqual(rows["orc_mine_witness"]["verified_kit_receipts"][0]["placement_scope"],
                          "shared_battlefield")
         cut = rows["sereth_voices_at_the_cut"]
@@ -89,20 +81,28 @@ class DeploymentArtReportTest(unittest.TestCase):
             self.assertEqual(rows[mission]["battlefield_scene"], WHEEL_BATTLEFIELD)
             self.assertEqual(rows[mission]["verified_kit_receipts"], [])
 
-    def test_mine_storehouse_receipt_is_only_for_the_original_mara_field(self):
-        rows = {row["mission_id"]: row for row in build_report(ROOT)["deployments"]}
-        matches = [(row, kit) for row in rows.values() for kit in row["verified_kit_receipts"]
-                   if kit["receipt"] == STOREHOUSE_RECEIPT]
-        self.assertEqual(len(matches), 1)
-        row, kit = matches[0]
-        self.assertEqual(row["mission_id"], CASE_MISSION)
-        self.assertEqual(row["battlefield_scene"], STOREHOUSE_FIELD)
-        self.assertEqual(row["art_status"], DEVELOPMENT)
-        self.assertEqual(kit["placement_scope"], "mission_deployment")
-        self.assertEqual(kit["verified_files"], 11)
+    def test_retired_mine_placements_are_not_carried_to_new_context(self):
+        historical = _verify_mara_storehouse(ROOT, {CASE_MISSION: CASE_DEPLOYMENT}, {CASE_MISSION: STOREHOUSE_FIELD})
+        self.assertEqual(historical["placement_scene"], CASE_DEPLOYMENT)
+        self.assertEqual(historical["verified_files"], 11)
         with self.assertRaisesRegex(ValueError, "original Mine field"):
             _verify_mara_storehouse(ROOT, {CASE_MISSION: CASE_DEPLOYMENT},
                                     {CASE_MISSION: STOREHOUSE_FIELD + ".other"})
+
+    def test_greyhollow_cannot_inherit_the_case(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            dest = root / GREYHOLLOW_RESCUE
+            dest.parent.mkdir(parents=True)
+            original = (ROOT / GREYHOLLOW_RESCUE).read_text()
+            deployment = {CASE_MISSION: GREYHOLLOW_RESCUE}
+            field = {CASE_MISSION: STOREHOUSE_FIELD}
+            dest.write_text(original)
+            _verify_greyhollow_rescue(root, deployment, field)
+            dest.write_text(original.replace("custody_case_scene = null", ""))
+            with self.assertRaisesRegex(ValueError, "must not appear"):
+                _verify_greyhollow_rescue(root, deployment, field)
+
 
     def test_vault_approval_requires_the_sova_only_inherited_field(self):
         rows = {row["mission_id"]: row for row in build_report(ROOT)["deployments"]}
@@ -227,7 +227,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertIn("18 deployments lack full visual approval", diagnostics[0])
         missions = [row["mission_id"] for row in build_report(ROOT)["deployments"]]
         self.assertCountEqual([line.strip() for line in diagnostics[1:]], missions)
-        self.assertIn(CASE_MISSION, missions)  # A passing custody case is not a passing map.
+        self.assertIn(CASE_MISSION, missions)  # A passing shared portal is not a passing map.
 
     def test_catalog_and_registry_cannot_silently_diverge_or_be_empty(self):
         with tempfile.TemporaryDirectory() as temp:

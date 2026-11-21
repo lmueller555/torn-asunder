@@ -8,10 +8,12 @@ const GENERIC_SCENE := preload("res://game/mission/mission_view.tscn")
 
 const _DEPLOYMENTS := {
 	"mara_mine_escort": {
-		"scene": preload("res://game/battlefield/mara_mine_escort_campaign.tscn"),
+		"scene": preload("res://game/battlefield/mara_greyhollow_rescue_campaign.tscn"),
 		"dispatch": Beats.MARA_MINE_DISPATCH,
 		"debrief": Beats.MARA_MINE_DEBRIEF,
-		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
+		"briefing_dispatch": true,
+		"battlefield_label": "GREYHOLLOW MINE · YARD AND SOUTH TUNNEL",
+		"orders": "Reach the miners at the south tunnel before the Dryad raiders cut them off. Rally the crew, protect their way through the tunnel, and get them to the west shelter. You do not need to hold the mine.",
 	},
 	"mara_grain_crossing": {
 		"scene": preload("res://game/battlefield/mara_grain_crossing_campaign.tscn"),

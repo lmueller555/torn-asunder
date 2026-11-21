@@ -44,6 +44,7 @@ CUT_CONTINUITY_RECEIPT_SHA256: str | None = "17c488b20a6b180823516640bc9955a4186
 
 CASE_MISSION = "mara_mine_escort"
 CASE_DEPLOYMENT = "game/battlefield/mara_mine_escort_campaign.tscn"
+GREYHOLLOW_RESCUE = "game/battlefield/mara_greyhollow_rescue_campaign.tscn"
 CASE_BASE = "game/battlefield/mara_mine_escort.tscn"
 CASE_CONSUMER = "game/battlefield/mara_mine_escort.gd"
 CASE_VISUAL = "assets/models/environment/godbridle_case_visual.gd"
@@ -231,6 +232,21 @@ def _verify_custody_case(root: Path, deployments: dict[str, str]) -> dict:
                            "mission_deployment", CASE_DEPLOYMENT)
 
 
+def _verify_greyhollow_rescue(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> None:
+    # The old escort's case and storehouse receipts are not approvals for a new
+    # mission context. The rescue keeps the exact shared field but not the case.
+    if deployments.get(CASE_MISSION) != GREYHOLLOW_RESCUE or battlefields.get(CASE_MISSION) != STOREHOUSE_FIELD:
+        raise ValueError("Greyhollow rescue: expected the explicit rescue deployment and original Mine field")
+    scene = (root / GREYHOLLOW_RESCUE).read_text(encoding="utf-8")
+    parent_keys = [key for path, key in PACKED_RESOURCE.findall(scene) if path == CASE_DEPLOYMENT]
+    if len(parent_keys) != 1 or not re.search(
+        rf'^\[node name="[^"]+" instance=ExtResource\("{re.escape(parent_keys[0])}"\)\]$', scene, re.M,
+    ):
+        raise ValueError("Greyhollow rescue: expected the original Mine campaign scene as its parent")
+    if re.findall(r'^custody_case_scene = (.+)$', scene, re.M) != ["null"] or CASE_ASSET in scene:
+        raise ValueError("Greyhollow rescue: the custody case must not appear in the rescue")
+
+
 def _verify_raska_spillway_wheel(root: Path, deployments: dict[str, str], battlefields: dict[str, str]) -> dict:
     # Unlike a shared kit, the wheel's reviewed replacement is an opt-in child
     # of one deployment. The other Spanwater missions inherit the stock wheel.
@@ -338,14 +354,13 @@ def build_report(root: Path) -> dict:
         if kit.battlefield not in battlefields.values():
             raise ValueError(f"{kit.name}: reviewed placement is not used by a campaign deployment")
         verified.setdefault(kit.battlefield, []).append(_verify_kit(root, kit))
-    custody_case = _verify_custody_case(root, deployments)
+    _verify_greyhollow_rescue(root, deployments, battlefields)
     spillway_wheel = _verify_raska_spillway_wheel(root, deployments, battlefields)
     beach_stand = _verify_ilyra_beach_stand(root, deployments, battlefields)
     headland_relay = _verify_ilyra_headland_relay(root, deployments, battlefields)
     quay_threshold = _verify_mara_quay_threshold(root, deployments, battlefields)
     north_bridge = _verify_mara_north_bridge(root, deployments, battlefields)
     vault_jambs = _verify_sova_vault_jambs(root, deployments, battlefields)
-    mine_storehouse = _verify_mara_storehouse(root, deployments, battlefields)
     return {
         "notice": "Kit receipts cover only their listed art and placements, not the battlefield or deployment.",
         "deployment_count": len(deployments),
@@ -356,7 +371,6 @@ def build_report(root: Path) -> dict:
                 "battlefield_scene": battlefields[mission],
                 "art_status": DEVELOPMENT,
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
-                + ([custody_case, mine_storehouse] if mission == CASE_MISSION else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
                 + ([beach_stand, headland_relay] if mission == BEACH_MISSION else [])
                 + ([quay_threshold] if mission == QUAY_MISSION else [])

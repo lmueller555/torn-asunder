@@ -69,11 +69,11 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	_view._tween.custom_step(0.56)
 	if _view.is_travelling() or not _view.token_map_position().is_equal_approx(mine) \
 			or _world.current_waypoint_id() != MINE or _arrivals != PackedStringArray([MINE]) \
-			or _briefings != PackedStringArray([MISSION]) or _view.find_child("MaraMineEscort", true, false):
+			or _briefings != PackedStringArray([MISSION]) or _view.find_child("MaraGreyhollowRescue", true, false):
 		return _fail("Mine arrival did not raise exactly one separate briefing without deployment.")
 	_joy(JOY_BUTTON_DPAD_RIGHT)
 	if _view.selected_waypoint_id() != ROAD or not _view._confirm_button.disabled \
-			or not _view._detail.text.contains("Complete the Mine Escort"):
+			or not _view._detail.text.contains("Complete the Greyhollow rescue"):
 		return _fail("The controller could not inspect the visible road and its reason for being locked.")
 	if _route_cue(MINE, ROAD) != Board.RouteCue.LOCKED \
 			or _route_cue(ROAD, CROSSING) != Board.RouteCue.DISTANT \
