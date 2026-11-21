@@ -2,7 +2,7 @@
 
 This is the story team's spoiler reference for one history of Vareth. The campaigns follow different stretches of that history. A window marks the first and last events shown, not a chapter for every intervening year. A victory can change who gets out, what a leader learns, or whose help they win without giving a different answer about who held the Godbridle the next morning.
 
-[Vareth and the Godbridle](lore.md) establishes the public premise. The years here count from the beginning of the war, not from the discovery. **Greyhollow in Year Three is the story's midpoint:** what was a warning with a possible location becomes a thing armies can possess and use. Campaign order in the menu need not match chronological order. This is the story target, not a report that the current playtests have been rewritten.
+[Vareth and the Godbridle](lore.md) establishes the public premise. The years here count from the beginning of the war, not from the discovery. **Greyhollow in Year Three is the story's midpoint:** what was a warning with a possible location becomes a thing armies can possess and use. Campaign order in the menu need not match chronological order. Campaign and battlefield routing are tracked separately in the implementation index.
 
 ## Shared history
 
@@ -51,7 +51,7 @@ The bridle goes back into the vault without a new command. Orc, Elven, and Human
 | [**Dryads · Neris Alder · Years One–Three**](campaigns/dryads.md) | Help the drought-stricken grove, then follow the prophecy and survey the roads that point to Greyhollow. | The Dryad attack at Greyhollow. Neris fails to stop the rescue and the Humans reach the Godbridle. Her later help at the grove, the feeder, and the vault road remains part of the shared history, not part of her playable campaign. |
 | [**Undead · Sereth Vale · Years Three–Five**](campaigns/undead.md) | The village hearing its dead, after Mara's command diverts the river. A voice is reason to listen, but not permission to bring someone back. Sereth still hopes to find his sister's letter. | The bid for the vault. Sereth upholds the consent requirement he helped write even when it costs him his commission and the chance to ask Orrun for his sister back. |
 
-The [campaign implementation index](campaigns/implementation-index.md) records the existing Godot playtests. Older mission dates and objectives in that index, the Campaign Vault, and the Orc, Druid, and Elf briefs are not authoritative where they differ from this chronology. Existing playable scenes still use those briefs until adapted.
+The [campaign implementation index](campaigns/implementation-index.md) records the existing Godot playtests. The standalone mining escort and later Dryad prototypes are not alternate versions of the current campaigns.
 
 ## Where perspectives can overlap
 

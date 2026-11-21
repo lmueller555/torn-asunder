@@ -6,15 +6,15 @@ First Listener Sova Cairn begins by keeping people out of the armies' hands. He 
 
 | ID | Mission | Year | Unlock |
 |---|---|---|---|
-| `sova_mine_tunnels` | The Workers' Way Out | One | Start Sova's campaign |
-| `sova_public_record` | Let Them Walk Out | Two | Clear `sova_mine_tunnels` |
+| `sova_mine_tunnels` | The Workers' Way Out | Three | Start Sova's campaign |
+| `sova_public_record` | Let Them Walk Out | Three | Clear `sova_mine_tunnels` |
 | `sova_vault_return` | No New Command | Five | Clear `sova_public_record`, then see the Year Four custody transfer and the Year Five valley consent |
 
-These are stable IDs under campaign `sova`. Defeat retries the current mission with no unlock or canon change; preserve clear and debrief results in the active campaign save. The handover is a short interlude, not a playable Spanwater mission. Sova's campaign skips Year Three. The vault clear ends the campaign.
+These are stable IDs under campaign `sova`. Defeat retries the current mission with no unlock or canon change; preserve clear and debrief results in the active campaign save. The handover is a short interlude, not a playable Spanwater mission. The vault clear ends the campaign.
 
 ## 1. The Workers' Way Out
 
-**Briefing.** Sova's survey puts the new spring on the same night as the river's disappearance. What it cannot tell the Basin is what the miners said to Orrun. Mara's escort is moving on the pass; fighting it would leave the workers where both armies can reach them. With the volunteers who came to help his survey, open the old tunnels and get the workers out first.
+**Briefing.** The Human rescue at Greyhollow is already over, the miners have tested the bridle, and Orrun has awakened. Sova comes later, when the appearance of a spring and the loss of the Basin’s river bring armies to the mine. His survey puts the new spring on the same night as the river's disappearance. What it cannot tell the Basin is what the miners said to Orrun. Mara's escort is moving on the pass; fighting it would leave the workers where both armies can reach them. With the volunteers who came to help his survey, open the old tunnels and get the workers out first.
 
 **Victory.** Send both marked work groups through the tunnel outlet to Druid safety. The miner who volunteers to speak with Raska is with the work groups through the tunnels. At the outlet she waits under a truce; she remains safe there for the Druid objective once the others are clear, and can then walk to the Orc rally point on the terms established in [Raska's mine mission](orcs.md). The Orc rally point is not a Druid destination. **Defeat:** Sova falls, either work group is lost before safety, or the Human rear detachment holds the outlet approach until the last escape window closes. Show the same approaching detachment and announced final window as in Raska's view; no hidden clock.
 
@@ -46,6 +46,6 @@ These are stable IDs under campaign `sova`. Defeat retries the current mission w
 
 ## Shared geography and acceptance
 
-- **Mine:** One map with camp, pass, ridge, tunnels, and outlet. The Human bridle exit and Orc rally remain distinct from Druid work-group safety. A canonical clear leaves Mara holding the artifact, gives Raska a consenting witness, and gets the other workers out. No other campaign's win flag is a prerequisite.
+- **Greyhollow:** The later departure uses the same stock geography as the [Human–Dryad rescue](../combat.md#greyhollow-mine-encounters). The road exit and Orc rally remain distinct from Druid work-group safety. A canonical clear leaves Mara holding the artifact, gives Raska a consenting witness, and gets the other workers away from the mine. No other campaign's win flag is a prerequisite.
 - **Valley:** Reuse the valley ground from the hearing as the [Cairnspine pass](../war-timeline.md#where-perspectives-can-overlap) staging and safe assembly in the finale. Across Druid, Dryad, and Undead views keep the foot of the pass, narrow shelf, rejoining side path, forecourt, and separate witness terrace in the same places. Change spawns and objective ownership, not the geography. Script shared background results independently when needed.
 - **Tests:** Try the mine with both release orders and under outlet pressure. Finish the hearing at both lecterns, with a deliberate interruption and with Keepers walking out; verify that a public exit blocked by friendly troops does not complete a passage. Reach the vault from each route; contest and resume closure; confirm Druid completion does not depend on another faction's mission status. Failed or replayed attempts must not advance the history or persist a revised ending.

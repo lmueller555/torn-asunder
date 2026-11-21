@@ -93,13 +93,16 @@ Combat Drills is available from every campaign briefing. Select a skill to compa
 
 Both cameras show the same 3D map, environment, units, and animations. From above, unit animations should make it clear when a formation braces, loses cohesion, or rallies. At ground level, attack windups, gaps in the formation, and approaching reinforcements should be visible in time for the player to react.
 
-## Year One battle at the mine
+<a id="year-one-battle-at-the-mine"></a>
 
-The opening battle of the [five-year war](lore.md#the-five-year-war) uses the same terrain across three campaigns. Each faction has a different reason to engage or withdraw.
+## Greyhollow mine encounters
 
-- **Humans.** Order shield infantry to hold the road and archers to cover the ridge while the hero escorts the Godbridle down the pass. When an Orc company intercepts the escort, fight at ground level while the infantry and archers continue their orders.
-- **Orcs.** Tie down the escort with one company while another reaches the miners who can explain what happened to the river.
-- **Druids.** Use the clash at the pass to buy time to evacuate the miners through the tunnels.
+The `year_one_mine` battlefield name is a technical ID. In the [shared chronology](war-timeline.md#where-perspectives-can-overlap), both Greyhollow encounters happen in Year Three. Four campaigns use the same stock terrain for two separate events:
+
+- **Humans, during the attack.** Use shield infantry and archers to screen the miners' escape. Rally at the south tunnel entrance, then get the miners through the tunnel and west to safety. The rescue clears before the Godbridle is shown.
+- **Dryads, during the same attack.** Pressure the mine approaches and cover the withdrawal after the Human breakthrough. The breakout remains canon even when the Dryad player completes the retreat.
+- **Orcs, after Orrun awakens.** Screen the rearguard and reach a miner who can explain what happened to the Basin's river. Her consent and escort to the Orc rally matter, not taking the bridle.
+- **Druids, during the later departure.** Use the clash at the pass to buy time to evacuate the miners through the tunnels. This is not the original Human rescue; the rest of the crew is now leaving the mine area.
 
 ## Human Infantry promotion
 

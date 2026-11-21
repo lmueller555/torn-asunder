@@ -13,17 +13,17 @@ const EXPECTED := {
 		["mara_moonwash_quay", 3, "moonwash_harbor"],
 	],
 	"raska": [
-		["orc_mine_witness", 1, "year_one_mine"],
+		["orc_mine_witness", 3, "year_one_mine"],
 		["orc_well_road", 3, "red_basin_well_road"],
 		["orc_spanwater_release", 4, "spanwater_lock"],
 	],
 	"sova": [
-		["sova_mine_tunnels", 1, "year_one_mine"],
-		["sova_public_record", 2, "cairnspine_vault_road"],
+		["sova_mine_tunnels", 3, "year_one_mine"],
+		["sova_public_record", 3, "cairnspine_vault_road"],
 		["sova_vault_return", 5, "cairnspine_vault_road"],
 	],
 	"ilyra": [
-		["ilyra_moonwash_rescue", 2, "moonwash_harbor"],
+		["ilyra_moonwash_rescue", 3, "moonwash_harbor"],
 		["ilyra_coast_survey", 3, "moonwash_survey_shore"],
 		["ilyra_spanwater_evacuation", 4, "spanwater_lock"],
 	],

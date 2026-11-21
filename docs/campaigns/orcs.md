@@ -1,6 +1,6 @@
 # Orc campaign: The First Draw
 
-**War Marshal Raska Vennor · Years One–Four · Three missions**
+**War Marshal Raska Vennor · Years Three–Four · Three missions**
 
 All three chapters are playable as development builds from Raska’s campaign map. Open each briefing before deploying. See the [implementation index](implementation-index.md) for the exact mission wiring and [visual inventory](../visual-audit-inventory.md) for what remains unapproved.
 
@@ -8,18 +8,18 @@ See [Raska’s mandate](../leaders.md#orcs--war-marshal-raska-vennor), [the shar
 
 The Red Basin elected Raska to get its river back. The lower towns want the sea as well: the restored river will reach the Basin, but it will not give those towns back their pastures and shore trade. The old sea, in turn, would inundate the town that hosts the assembly. Raska’s victories let him fulfill his mandate, not settle every claim to the water.
 
-## 1. One Person to Ask — Year One (`orc_mine_witness`)
+## 1. One Person to Ask — Year Three (`orc_mine_witness`)
 
-**Briefing:** Capture someone who can account for the spring at the mine and the dry river in the Basin. The Godbridle is not the objective.
+**Briefing:** After the rescue at Greyhollow, the miners tested the Godbridle and Orrun awoke. Raska knows the Basin’s river went dry and that a new spring broke through at Greyhollow. The assembly sends him to bring back someone who can explain what happened. The Godbridle is not his objective, and this is not the Dryad attack.
 
 - **Map and orders:** One Orc infantry platoon pins the Human escort’s rearguard where the pass narrows. Send the second platoon up the east ridge ramp, across the crest using its cover, and down the west ramp toward the screened outlet approach. The Human archers can cover the road from the ridge, so do not leave the crew party on the exposed crest. The tunnel and Druid evacuation lane are not attack objectives.
 - **Turn and win:** When the workers reach the tunnel outlet, one miner stops. She will tell her story at the assembly if the others can go. Return to Raska and interact to accept her terms. She follows Raska only after the remaining workers clear the outlet toward Druid safety. Escort her to the Orc rally point. The pass platoon can disengage as soon as the outlet is covered; killing the rearguard or stopping the bridle convoy is not a win condition.
 - **Pressure and failure:** The rearguard sends a detachment to secure the outlet approach if the pass screen lets it through; the player can recover by moving the outlet platoon into its path or intercepting it as Raska. Fail if Raska or the witness falls, or if the detachment holds the marked outlet approach until the last escape window closes. Telegraph that window with the workers approaching the outlet and a marked enemy advance, not a hidden timer.
-- **Cost:** Raska gives up the pursuit even when the bridle is still in sight. In the debrief, the miner’s account and Sova’s survey place the spring and the loss of the river on the same night. Mara retains the bridle, and the rest of the crew escapes with Sova on the [same battlefield](../combat.md#year-one-battle-at-the-mine).
+- **Cost:** Raska gives up the pursuit even when the bridle is still in sight. In the debrief, the miner’s account and Sova’s survey place the spring and the loss of the river on the same night. Mara retains the bridle, and the rest of the crew escapes with Sova on the [same battlefield](../combat.md#greyhollow-mine-encounters).
 
 ## 2. The Second Bucket — Year Three (`orc_well_road`)
 
-**Briefing:** Reports from Year Two say Mara moved the water again. The new cut has left the Red Basin’s well road carrying the traffic its river used to serve. A rival March company comes for the well carts after its own supply fails.
+**Briefing:** Reports from Moonwash say Mara moved the water again earlier this year. The new cut has left the Red Basin’s well road carrying the traffic its river used to serve. A rival March company comes for the well carts after its own supply fails.
 
 - **Map and orders:** Get an upper-well cart and a lower-well cart through the Basin exit. The open salt road is shorter but gives Human cavalry a charge lane. The winding wash blocks sight and denies a straight run-up, but its single ramp is a choke point. Brace infantry on the road or post them at the ramp, and put archers on the wash shoulder for a clear shot at anything that tries to turn the screen.
 - **Turn and win:** Raska opens the lower well’s storehouse to households that have no well right, including March refugees. The second cart only starts once those households are aboard. The first can leave immediately. Win when both carts reach the exit. The player chooses route and spacing, not who is entitled to a seat.
@@ -41,7 +41,7 @@ The authored dialogue IDs are `raska_spanwater_dispatch` (before deployment), `r
 
 - **Command and hero progression:** Start with two infantry platoons at the mine and teach concurrent orders while Raska reaches the outlet. Add an archer platoon for the well road and teach the value of bracing and reforming against cavalry. At Spanwater, test reading the release, changing routes, and replacing a withdrawn company’s screen without leaving the wheel exposed.
 - **Training payoffs:** Use the existing Scouting, Charge & Brace, and Formation Drill rules to reward early detection, sustained holds, and recovery after a charge. If campaign XP hooks are available, reward objective completion rather than enemy kills; keep base-training clears viable. Exact rewards, roster counts, and hold durations are tuning values, not new combat rules.
-- **Continuity checks:** At the mine all three canonical results must coexist. At Spanwater verify that the river-stage clear leaves the sea gate shut, the lower companies gone, and the feeder and boat lanes available for their own campaigns. Neither mission requires simulating a different campaign’s win before awarding its own.
+- **Continuity checks:** At the later departure from Greyhollow, all three results must coexist: Mara keeps custody, the other miners leave safely, and one miner voluntarily testifies. At Spanwater verify that the river-stage clear leaves the sea gate shut, the lower companies gone, and the feeder and boat lanes usable independently. Neither mission requires simulating a different campaign’s win before awarding its own.
 
 Design reference only: [*Kingdom Under Fire: Heroes* manual, pp. 12–25](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) for troop orders, hero combat and control points. The campaign’s characters, events, and objectives are original.
 

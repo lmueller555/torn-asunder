@@ -38,7 +38,7 @@ The campaign registry has **18 deployments on ten base battlefield layouts**. Th
 | Layout | Route to preserve and resize direction |
 | --- | --- |
 | Marches Crossing | Extend the approaches on the west and east of the grain escort. Preserve the bridge, ford, rival contact and independent cart yards. The North Bridge receipt covers the exact original host and registered deployment. |
-| Year One Mine | Extend the shared rim approaches for Mara, Sova and Raska. Keep the original pass, tunnel portal, custody and storehouse placements and the exact battlefield identity used by Mara’s replay. |
+| Greyhollow Mine | Extend the shared rim approaches for Mara, Neris, Sova and Raska. Keep the original pass, tunnel portal, evacuation track, and exact battlefield identity used by Mara’s replay. Do not move the archived escort’s custody placement. |
 | Still Kingdom Cut | Continue the road at both ends beyond the current command limits. Keep the stair, Record Room and retreat objectives in place. Reachable ground and waypoint admission need separate checks at the new edges. |
 | Spanwater Lock | Extend the dry perimeter outside the wheel, feeder and landing. Keep the dry crossing benchmark distinct from the timed profiles. Compare actual ford close, last-departure warning, both boardings, late exit and missed landing for Ilyra; verify Neris’s rack, crest, jam and gauge; preserve the audited wheel for Raska. |
 | Cairnspine Vault Road | Extend the Year Five perimeter without stretching either objective approach or displacing the audited jambs. The Year Two hearing stays in its authored local area on the same shared layout. |
@@ -56,7 +56,13 @@ Use two different pressure modes: a **patrol** follows its lane and pursues only
 
 ## Current contracts
 
-### Mara — The Pass Below the Mine
+### Mara and Neris — the Greyhollow rescue
+
+- **Human view:** In [Get Them Out](../../game/battlefield/mara_greyhollow_rescue.gd), the field leader reaches and rallies the miners at the south tunnel. Proximity and a screen keep the crew moving under Dryad pressure. Win when at least two miners reach safety and the remaining miner's fate is resolved. Claim no item and show no Godbridle before this result. Hero defeat or too many miner losses stop the attempt without a clear or cutscene.
+- **Dryad view:** At the end of the [Dryad campaign](dryads.md), Neris advances on the same yard, convinced that Human access to the artifact will end the world. The Human miners break through to the south tunnel. Screen the fallback and get Neris and both parties out; a successful withdrawal does not prevent the Human rescue or confirm the prophecy.
+- **Continuity:** The [shared timeline](../war-timeline.md#year-three-greyhollow-then-orruns-awakening) puts the cutscene before the miners' first use and the later Orc/Druid missions. Both sides play independently with the original field, a fresh objective and no dependency on another campaign's save.
+
+### Archived Mara escort — The Pass Below the Mine
 
 - **Trigger:** The existing [escort model](../../game/battlefield/mine_escort_objective.gd) accepts a hero interaction in the pickup zone. On a later, nonterminal escort tick, `carrier_in_interception_approach` emits `interception_requested` once. The scene must report the living allied carrier, not a formation crossing the same area.
 - **Cue and decision:** The [large Mine](../year-one-mine-campaign-map.md) stages one Orc road guard at `EastReserve`. A living carrier reaching the `PassRelease` approach triggers the HUD warning, then that same guard advances through `InterceptMouth` to `InterceptRoadMerge`. Put Shields in its path, reposition and fire with the working allied Archers, or push through with the carrier. A southern reserve or scripted enemy archer response would be additional work, not an effect of the existing guard or the allied Archer controls.
