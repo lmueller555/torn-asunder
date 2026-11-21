@@ -2,11 +2,18 @@
 
 Six campaign specs cover 18 planned missions across ten battlefield layouts. For narrative order and the six briefs, see the [five-year war timeline](../war-timeline.md#six-campaign-windows). Mission IDs below are stable design IDs, not scene paths or a list of levels available from the Campaign Vault.
 
-## What exists
+## What you can play
 
-- Mara can open the campaign map at Marches Camp, read the dispatch in Camp Operations, and travel to the Mine briefing. Only confirming deployment there opens the [campaign-scale Mine prototype](../year-one-mine-campaign-map.md). A successful delivery records the clear, opens the debrief, and unlocks travel to the road into the Marches. The linked map and separate battlefield briefing follow the structure in the [original *Kingdom Under Fire: Heroes* manual, pp. 20–21](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf#page=12).
-- The [original Mine graybox](../year-one-mine-map.md) and its standalone command harness are not additional missions available from the Campaign Vault. [Moonwash](../moonwash-harbor-map.md) and [Spanwater](../spanwater-lock-map.md) have terrain grayboxes, not playable scenarios.
-- The [profile store](../../game/profile_store.gd) keeps waypoint arrivals separate from mission clears. In the same overworld flow, Sova can reach his own campaign-scale Mine briefing and evacuate workers. This unlocks Cairnspine Assembly as a waypoint, not another mission. Raska can reach the same Mine on his own route and escort the willing witness, opening Basin Well Road as a waypoint. Mara’s linked Marches Road now leads to the Grain on Credit briefing. Securing grain and resolving both carts opens the road to Moonwash, with a delivery-specific debrief and a first-result save; the end waypoint has no deployable battle. The other 14 campaign missions remain outside the playable campaign flow.
+A **campaign route** launches a mission from the Campaign Vault after travelling and confirming its briefing. A **standalone playtest** runs from its Godot scene but does not record a campaign clear. A **graybox** is a battlefield layout, not a playable mission on its own.
+
+- **Humans (Mara):** The Pass Below the Mine → Grain on Credit → The High Quay.
+- **Orcs (Raska):** One Person to Ask → The Second Bucket → River, Not Sea.
+- **Druids (Sova):** The Workers' Way Out → Let Them Walk Out. [Vault Road](../../game/battlefield/sova_vault_return_playtest.tscn) has a standalone playtest.
+- **Elves (Ilyra):** Hulls on Stone. The survey shore is the next waypoint, not a deployable mission.
+- **Dryads (Neris):** [What We Planted Here](../../game/battlefield/neris_failing_grove_playtest.tscn) is a standalone playtest with separately authored dispatch and debrief.
+- **Undead (Sereth):** The Still Kingdom Cut graybox and opening objective rules exist; neither is a routed mission.
+
+The [profile store](../../game/profile_store.gd) records waypoint arrivals separately from mission clears. First-result saves for branching missions are not rewritten by replay. The separate travel and deployment steps follow the [original *Kingdom Under Fire: Heroes* manual, pp. 20–21](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf#page=12).
 
 ## Battlefield inventory
 
@@ -14,13 +21,13 @@ Six campaign specs cover 18 planned missions across ten battlefield layouts. For
 |---|---|---|
 | **Year One Mine** · All three opening views reachable from their campaign maps | `mara_mine_escort`, `orc_mine_witness`, `sova_mine_tunnels` | One map and opening clash. Haul road and east pass for the bridle; ridge approaches for coverage and interception; tunnel, outlet and western trail for the miners. The Orc rally is separate from Druid safety. |
 | **Marches crossing** · Routed Grain escort prototype with reserve interdiction | `mara_grain_crossing` | Two carts at a road fork; short exposed bridge and screened ford lead to separate receiving yards. |
-| **Moonwash harbor** · Graybox exists; scenarios planned | `mara_moonwash_quay`, `ilyra_moonwash_rescue` | One post-rise layout. Exposed walls, moorings, lower quay, stairs and upper exit stay fixed. Humans withdraw uphill while Elves transfer crews at water level. |
-| **Moonwash survey shore** · Planned | `ilyra_coast_survey` | Ancestral stone and working inlet; beach and headland signal points serve the cutter's loop. Separate from the battle at the harbor. |
-| **Red Basin well road** · Planned | `orc_well_road` | Open salt road and winding wash offer different cover and charge lanes for the well carts. |
-| **Spanwater Lock** · Graybox exists; scenarios planned | `orc_spanwater_release`, `neris_spanwater_feeder`, `ilyra_spanwater_evacuation` | One lock and water-release event. Shared causeway, old riverbed and crossing, spillway controls, separate sea gate, feeder branch and maintenance path, and low landing and boat exit. |
+| **Moonwash harbor** · Both perspectives routed | `mara_moonwash_quay`, `ilyra_moonwash_rescue` | One post-rise layout. Exposed walls, moorings, lower quay, stairs and upper exit stay fixed. Humans withdraw uphill while Elves transfer crews at water level. |
+| **Moonwash survey shore** · Objective rules; deployment not routed | `ilyra_coast_survey` | Ancestral stone and working inlet; beach and headland signal points serve the cutter's loop. Separate from the battle at the harbor. |
+| **Red Basin well road** · Raska's second mission routed | `orc_well_road` | Open salt road and winding wash offer different cover and charge lanes for the well carts. |
+| **Spanwater Lock** · Raska finale routed; Elf and Dryad scenarios not deployable | `orc_spanwater_release`, `neris_spanwater_feeder`, `ilyra_spanwater_evacuation` | One lock and water-release event. Shared causeway, old riverbed and crossing, spillway controls, separate sea gate, feeder branch and maintenance path, and low landing and boat exit. |
 | **Isolated grove and town nursery** · Standalone playtest | `neris_failing_grove` | Loading yard, raised sled road, sunken approach, and separate nursery receiving area; dispatch/debrief are authored, not routed. |
-| **Cairnspine assembly and vault road** · Planned | `sova_public_record`, `sova_vault_return`, `neris_cairnspine_passage`, `sereth_no_proxy` | Reuse the assembly as the Year Two hearing venue and Year Five staging area. The three final views share the narrow shelf, side path, forecourt, witness terrace and vault; the Year Two hearing is a separate event confined to the assembly. |
-| **Still Kingdom cut and village** · Planned | `sereth_voices_at_the_cut` | Cemetery stair, road, screened lanes and record room; a living clerk and recoverable records are distinct objectives. |
+| **Cairnspine assembly and vault road** · Sova hearing routed; Vault Return standalone | `sova_public_record`, `sova_vault_return`, `neris_cairnspine_passage`, `sereth_no_proxy` | Reuse the assembly as the Year Two hearing venue and Year Five staging area. The three final views share the narrow shelf, side path, forecourt, witness terrace and vault; the Year Two hearing is a separate event confined to the assembly. |
+| **Still Kingdom cut and village** · Graybox and opening objective rules | `sereth_voices_at_the_cut` | Cemetery stair, road, screened lanes and record room; a living clerk and recoverable records are distinct objectives. |
 | **Cairnspine boundary post** · Planned | `sereth_pass_writ` | Road and sunken track lead to a Keeper boundary post; a courier and mounted reserve make this a separate approach, not a second vault map. |
 
 ## Shared-event checks
