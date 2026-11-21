@@ -20,14 +20,19 @@ ART_SUFFIXES = {
 
 def _asset(path: str) -> bool:
     value = PurePosixPath(path)
-    if len(value.parts) < 2 or value.parts[0] != "assets":
+    if len(value.parts) < 2:
         return False
     # Sidecars can change what the engine imports without changing the source bytes.
     name = value.name.lower()
     for sidecar in (".import", ".uid"):
         name = name.removesuffix(sidecar)
     suffix = PurePosixPath(name).suffix
-    return suffix in ART_SUFFIXES or (value.parts[1] == "models" and suffix == ".gd")
+    if value.parts[0] == "game":
+        # Terrain, water and effects shaders may live beside their consuming scene.
+        return suffix in {".gdshader", ".gdshaderinc"}
+    return value.parts[0] == "assets" and (
+        suffix in ART_SUFFIXES or (value.parts[1] == "models" and suffix == ".gd")
+    )
 
 
 def _receipt(path: str) -> bool:

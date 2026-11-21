@@ -29,11 +29,11 @@ Keep the unaudited work and private evidence out of the repository. Do not creat
 
 ## Check changed art before merging
 
-Run `python3 -B -m tools.check_changed_art --base <base-commit>` in the checked-out proposal. The check matches new or changed **tracked** art payloads under `assets/` to new or updated exact PASS receipts in `docs/audits/`. It checks the source model, exported art, textures and relevant imports; deleted payloads alone do not need a fresh receipt. Adding a file to a Git diff does not substitute for the required private review **before** publication.
+Run `python3 -B -m tools.check_changed_art --base <base-commit>` in the checked-out proposal. The check matches new or changed **tracked** art payloads under `assets/` and shader sources and sidecars under `game/` to new or updated exact PASS receipts in `docs/audits/`. It checks the source model, exported art, textures and relevant imports; deleted payloads alone do not need a fresh receipt. Adding a file to a Git diff does not substitute for the required private review **before** publication.
 
 The **Verify visual asset receipts** pull-request check runs the same check, validates active reviewed placements, and runs the Python audit tests. It does not grant approval merely by running and does not change branch protection.
 
-This check cannot decide edge cases such as a new placement of unchanged art, material or effects generated in gameplay code, or whether all previously shipped assets pass. Review those in their actual game context. The deployment report tracks the current known scope separately.
+This check cannot decide edge cases such as a new placement of unchanged art, material or effects generated only in gameplay scripts, or whether all previously shipped assets pass. Review those in their actual game context. The deployment report tracks the current known scope separately.
 
 ## Read-only deployment art report
 

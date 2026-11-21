@@ -22,6 +22,9 @@ class ChangedArtTest(unittest.TestCase):
         for path in [
             "assets/art/New asset.PNG",
             "assets/models/terrain.gdshader",
+            "game/battlefield/demo.gdshader",
+            "game/battlefield/demo.gdshader.uid",
+            "game/battlefield/silt.gdshaderinc",
             "assets/models/example.gd.uid",
             "assets/art/portrait.webp.import",
             "assets/source/source.blend",
@@ -31,7 +34,8 @@ class ChangedArtTest(unittest.TestCase):
                 check_changed_art(ROOT, [path])
 
     def test_traversal_and_docs_are_not_visual_payloads(self):
-        self.assertEqual(check_changed_art(ROOT, ["docs/controls.md", "game/campaign_world.gd", "tests/foo.tscn"]), set())
+        paths = ["docs/controls.md", "game/campaign_world.gd", "tests/foo.tscn", "tests/studio_test.gdshader"]
+        self.assertEqual(check_changed_art(ROOT, paths), set())
 
     def test_reworked_or_stale_receipts_do_not_cover_payloads(self):
         with tempfile.TemporaryDirectory() as directory:
