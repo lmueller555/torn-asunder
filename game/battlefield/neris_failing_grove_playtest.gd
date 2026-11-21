@@ -1,4 +1,6 @@
 extends "res://game/battlefield/command_harness.gd"
+
+const CharacterArt := preload("res://game/battlefield/neris_grove_character_art.gd")
 ## Standalone work and escort playtest. The track patrol interdicts, not attacks.
 
 signal mission_finished(won: bool)
@@ -78,6 +80,7 @@ func _ready() -> void:
 	_restart.pressed.connect(restart_mission)
 	_reset_actors()
 	_refresh_objective()
+	CharacterArt.attach(self)
 
 
 func _build_placeholders() -> void:
