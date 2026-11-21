@@ -4,6 +4,7 @@ const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
+const Catalog := preload("res://game/combat/unit_catalog.gd")
 
 var _title: Title
 var _profile_path: String
@@ -30,17 +31,14 @@ func _run() -> void:
 				passed = false
 				break
 	if passed:
-		passed = _open_practice("mara") and not _button("Preview Advancement") \
-			and _button("Promote to Heavy Infantry") != null
-		if not passed:
-			_fail("The provisional preview replaced or altered the Human-only practice promotion.")
+		passed = _check_marches_longbows()
 	_title.queue_free()
 	await process_frame
 	for path in [_profile_path, _profile_path + ".tmp"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Roster preview: actual title flows, all five planning factions, live practice ratings, sample rank isolation, keyboard/controller navigation and unchanged saves passed.")
+		print("Roster preview: actual title flows, all six factions, practice ratings, sample rank isolation, keyboard/controller navigation and unchanged saves passed.")
 	quit(0 if passed else 1)
 
 
@@ -105,6 +103,80 @@ func _check_route(campaign_id: String, first_branch: String) -> bool:
 		return _fail("Unit Progression showed the wrong or overflowing faction roster for " + campaign_id)
 	_joy(JOY_BUTTON_B)
 	return _return_title()
+
+
+func _check_marches_longbows() -> bool:
+	if not _open_practice("mara"):
+		return false
+	if _title._profile.record_mission_clear("mara", "mara_mine_escort") != OK \
+			or _title._profile.purchase_mara_shield_infantry_drill() != OK:
+		return _fail("Could not seed a nonzero saved Formation Drill before opening the preview.")
+	var save := FileAccess.get_file_as_bytes(_profile_path)
+	var unit := _title._training_unit
+	var preview := _button("Preview Longbows")
+	var inspect := _button("Inspect 3D Model")
+	var promote := _button("Promote to Heavy Infantry")
+	if not preview or not inspect or not promote or not promote.disabled or _button("Preview Advancement") \
+			or preview.get_rect().end.x > _button("Back").position.x \
+			or inspect.get_rect() != Rect2(76, 650, 345, 45) or promote.get_rect() != Rect2(76, 600, 345, 45):
+		return _fail("The Longbows preview displaced or replaced the existing Human practice controls.")
+	_joy(JOY_BUTTON_DPAD_DOWN)
+	if root.gui_get_focus_owner() != inspect:
+		return _fail("The usual path from XP to the inspector must still skip the locked Heavy promotion.")
+	_button("Award 100 XP").grab_focus()
+	_joy(JOY_BUTTON_DPAD_UP)
+	_joy(JOY_BUTTON_DPAD_LEFT)
+	if root.gui_get_focus_owner() != preview:
+		return _fail("The controller did not reach Preview Longbows from Back.")
+	_joy(JOY_BUTTON_A)
+	var report := _label("Branch Requirements 0")
+	var rank := _label("Sample Training Rank")
+	if _title._page != Title.Page.ROSTER_REQUIREMENTS or not report or not rank \
+			or root.gui_get_focus_owner() != _button("Raise Sample Rank") or _label("Branch Requirements 1") \
+			or not rank.text.begins_with("Sample Formation Drill: 0 / 5") \
+			or not report.text.begins_with("Marches Longbows\nLocked · Not playable") \
+			or not report.text.contains("Ranged Power: 1 / 8 · missing 7 points") \
+			or not report.text.contains("Formation Drill: 0 / 2 · missing 2 ranks"):
+		return _fail("The Human report used the wrong unit, missed a gate, or reused the saved drill rank.")
+	_joy(JOY_BUTTON_A)
+	_key(KEY_ENTER)
+	if not report.text.contains("Formation Drill: 2 / 2 · met") or not report.text.contains("Locked"):
+		return _fail("Sample Formation Drill must not substitute for insufficient Ranged Power.")
+	_joy(JOY_BUTTON_B)
+	if _title._page != Title.Page.UNIT_PROGRESSION or root.gui_get_focus_owner() != _button("Preview Longbows") \
+			or _title._training_unit != unit or unit.level != 1 or unit.stat_points != 0:
+		return _fail("Leaving the Human preview changed practice state or lost its focus.")
+
+	for i in range(25):
+		if not _press("Award 100 XP"):
+			return false
+	for i in range(7):
+		if not _press("Ranged Power"):
+			return false
+	var unspent := unit.stat_points
+	var experience := unit.experience
+	if unspent <= 0 or unit.rating(Unit.Damage.RANGED) != 8:
+		return _fail("The fixture did not reach Ranged Power 8 with unspent practice points.")
+	_key(KEY_ENTER)
+	report = _label("Branch Requirements 0")
+	rank = _label("Sample Training Rank")
+	if not report or not rank or not rank.text.contains("0 / 5") or not report.text.contains("Locked") \
+			or not report.text.contains("Ranged Power: 8 / 8 · met"):
+		return _fail("Reopening should read the new practice rating but reset sample Formation Drill.")
+	_key(KEY_ENTER)
+	_key(KEY_ENTER)
+	if not report.text.contains("Eligible in this sample · Not playable") or not report.text.contains("Formation Drill: 2 / 2 · met"):
+		return _fail("Meeting both gates should show eligibility while keeping Longbows unplayable.")
+	for node in _title._stage.find_children("*", "Button", true, false):
+		if node.name not in [&"Back", &"Lower Sample Rank", &"Raise Sample Rank"]:
+			return _fail("The Longbows planner exposed an action other than adjusting the sample or leaving.")
+	_key(KEY_ESCAPE)
+	if root.gui_get_focus_owner() != _button("Preview Longbows") or _title._training_unit != unit \
+			or _title._training_unit_id != Catalog.HUMAN_INFANTRY or unit.stat_points != unspent \
+			or unit.experience != experience or unit.rating(Unit.Damage.RANGED) != 8 \
+			or not _button("Promote to Heavy Infantry").disabled or FileAccess.get_file_as_bytes(_profile_path) != save:
+		return _fail("Preview eligibility changed the Human practice unit, stats, promotion gate, or campaign save.")
+	return true
 
 
 func _open_practice(campaign_id: String) -> bool:

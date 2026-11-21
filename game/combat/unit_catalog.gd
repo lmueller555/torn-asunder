@@ -101,7 +101,7 @@ static func faction_roster() -> Roster:
 	var roster := Roster.new()
 	roster.add_unit(HUMAN_INFANTRY, Roster.HUMANS, Roster.MELEE)
 	roster.add_unit(HUMAN_HEAVY_INFANTRY, Roster.HUMANS, Roster.MELEE)
-	roster.add_unit(HUMAN_ARCHER, Roster.HUMANS, Roster.RANGED)
+	roster.add_unit(HUMAN_ARCHER, Roster.HUMANS, Roster.RANGED, [], false, "Archer")
 	roster.add_unit(HUMAN_MARCHES_LONGBOWS, Roster.HUMANS, Roster.RANGED, [], false, "Marches Longbows")
 	roster.add_advance(HUMAN_INFANTRY, HUMAN_HEAVY_INFANTRY, TYPES[HUMAN_HEAVY_INFANTRY].promotion_minimum_ratings)
 	# Provisional Archer path, not a live promotion or a new volley profile.
