@@ -46,6 +46,8 @@ const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
 const SERETH_PASS_WRIT_DISPATCH := &"sereth_pass_writ_dispatch"
 const SERETH_PASS_WRIT_DEBRIEF := &"sereth_pass_writ_debrief"
+const SERETH_NO_PROXY_DISPATCH := &"sereth_no_proxy_dispatch"
+const SERETH_NO_PROXY_DEBRIEF := &"sereth_no_proxy_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
@@ -86,6 +88,9 @@ const IREN := "Iren"
 const VILLAGE_CLERK := "Village Clerk"
 const HOUSEHOLD_GUARD := "Household Guard"
 const COURT_COURIER := "Court Courier"
+const COURT_SPEAKER := "Court Speaker"
+const SERETH_VALE := "Sereth Vale"
+const AT_SERETHS_WINDOW := "Later, at Sereth's window"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -524,6 +529,27 @@ const BEATS := {
 			{"speaker": COURT_COURIER, "text": "The Keeper's name and yours, then. Will that get our speaker through the vault gate?"},
 			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "No entry to the vault. No right to take or use the bridle. And neither signature can answer for the dead."},
 			{"speaker": COURT_COURIER, "text": "I'll tell them they may send someone to be heard. I can't promise that's all they'll ask for."},
+		],
+	},
+	SERETH_NO_PROXY_DISPATCH: {
+		"title": "The Lamp in the Window",
+		"location": "Cairnspine valley assembly · Year Five, before the refusal",
+		"lines": [
+			{"speaker": VILLAGE_CLERK, "text": "I found this while cataloging the bundle we brought up from the cut. It was addressed to you."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I know that hand. My sister wrote, ‘When I die, leave a lamp in the window.’ That's all she asks."},
+			{"speaker": COURT_SPEAKER, "text": "The court orders you to escort me to the vault. I'll ask Orrun to bring back those who left no wishes. Someone has to speak for them."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The Keeper granted a hearing here, not a right to the bridle. I'll give you my answer here too, where the witnesses can hear it."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "If you refuse, the court troops go with the speaker. The household stays with you. The shelf and the side path both lead to the forecourt, before the custody line."},
+		],
+	},
+	SERETH_NO_PROXY_DEBRIEF: {
+		"title": "What She Asked",
+		"location": "Cairnspine terrace approach · Year Five, after the stand",
+		"lines": [
+			{"speaker": HOUSEHOLD_GUARD, "text": "The speaker didn't cross the custody line. The rival company pulled back. The witnesses can use the approach now."},
+			{"speaker": COURT_COURIER, "text": "I have the court's answer to your refusal. Your commission is revoked. Give me the seal."},
+			{"speaker": SERETH_VALE, "portrait": SERETH_PORTRAIT, "text": "Take it. Let the witnesses go on. They'll tell what they see."},
+			{"speaker": AT_SERETHS_WINDOW, "text": "Sereth lights a lamp and sets it in the window. He folds his sister's letter and leaves it beside the lamp."},
 		],
 	},
 }
