@@ -77,13 +77,18 @@ const _MAPS := {
 				"map_position": Vector2(0.49, 0.34), "mission_id": "sova_mine_tunnels",
 			},
 			"cairnspine_assembly": {
-				"id": "cairnspine_assembly", "label": "Cairnspine Assembly", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.78, 0.55),
+				"id": "cairnspine_assembly", "label": "Cairnspine Assembly", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.78, 0.55), "mission_id": "sova_public_record",
+			},
+			"cairnspine_vault_road": {
+				"id": "cairnspine_vault_road", "label": "Cairnspine Vault Road", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.86, 0.76),
 			},
 		},
 		"routes": [
 			{"from_id": "cairnspine_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "cairnspine_assembly", "required_clear_id": "sova_mine_tunnels"},
+			{"from_id": "cairnspine_assembly", "to_id": "cairnspine_vault_road", "required_clear_id": "sova_public_record"},
 		],
 	},
 	"ilyra": {

@@ -12,6 +12,7 @@ const PASSAGE_NAMES := ["The command", "Who gave it", "Who bore the cost"]
 const GUARD_NAMES := ["North Perimeter", "South Perimeter"]
 
 signal mission_cleared
+signal mission_finished(won: bool)
 
 class VenueLayout:
 	var lectern: Vector3
@@ -76,6 +77,9 @@ func _after_battle_step(delta: float) -> void:
 	_refresh_hearing()
 	if objective.phase == Hearing.Phase.SUCCEEDED:
 		mission_cleared.emit()
+		mission_finished.emit(true)
+	elif objective.phase == Hearing.Phase.FAILED:
+		mission_finished.emit(false)
 
 
 func _fill_report(report: Hearing.VenueReport, layout: VenueLayout, hero: Vector3, delta: float) -> void:
