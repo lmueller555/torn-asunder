@@ -16,7 +16,7 @@ from tools.report_deployment_art import (
     CUT_KIT, CUT_ORIGINAL_RECEIPT_SHA256, DEVELOPMENT, GREYHOLLOW_RESCUE, HEADLAND_RECEIPT, KITS, QUAY_BASE, QUAY_DEPLOYMENT,
     QUAY_MISSION, QUAY_RECEIPT, QUAY_WRAPPER, STOREHOUSE_FIELD, STOREHOUSE_RECEIPT, VAULT_BASE, VAULT_DEPLOYMENT, VAULT_MISSION, VAULT_RECEIPT,
     VAULT_STOCK_DEPLOYMENTS, VAULT_WRAPPER, WHEEL_BATTLEFIELD, WHEEL_DEPLOYMENT,
-    WHEEL_MISSION, WHEEL_RECEIPT,
+    WHEEL_MISSION, WHEEL_RECEIPT, PerimeterReview, _check_opening_inventory, _perimeter, _verify_perimeters,
     _battlefield, _deployments, _verify_custody_case, _verify_greyhollow_rescue, _verify_ilyra_beach_stand, _verify_ilyra_headland_relay, _verify_kit,
     _verify_mara_north_bridge, _verify_mara_quay_threshold, _verify_mara_storehouse, _verify_raska_spillway_wheel,
     _verify_sova_vault_jambs, build_report, main,
@@ -33,6 +33,7 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertEqual(report["deployment_count"], 18)
         self.assertEqual(len(rows), 18)
         self.assertTrue(all(row["art_status"] == DEVELOPMENT for row in rows.values()))
+        self.assertTrue(all(row["battlefield_perimeter"] is None for row in rows.values()))
         self.assertEqual(
             {mission for mission, row in rows.items() if row["verified_kit_receipts"]},
             {"mara_mine_escort", "orc_mine_witness", "sova_mine_tunnels", "neris_greyhollow", "neris_cairnspine_survey", "sereth_voices_at_the_cut", "orc_well_road", "sereth_pass_writ", WHEEL_MISSION, BEACH_MISSION, QUAY_MISSION, BRIDGE_MISSION, VAULT_MISSION},
@@ -90,6 +91,89 @@ class DeploymentArtReportTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "original Mine field"):
             _verify_mara_storehouse(ROOT, {CASE_MISSION: CASE_DEPLOYMENT},
                                     {CASE_MISSION: STOREHOUSE_FIELD + ".other"})
+
+    def test_active_perimeter_requires_an_exact_pinned_independent_review(self):
+        mission = "sample"
+        deployment = "game/battlefield/sample_deployment.tscn"
+        field = "game/battlefields/sample_field.tscn"
+        perimeter = "game/battlefields/sample_perimeter.tscn"
+        dependency = "assets/example.dat"
+        review_file = "docs/audits/sample-perimeter.json"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+
+            def put(path, content):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content)
+
+            put(deployment, '[gd_scene format=3]\n\n'
+                f'[ext_resource type="PackedScene" path="res://{perimeter}" id="1_p"]\n\n'
+                '[node name="Sample" type="Node3D"]\n'
+                'battlefield_perimeter = ExtResource("1_p")\n')
+            self.assertRaisesRegex(ValueError, "missing perimeter", _perimeter, root, deployment)
+            for path in (field, perimeter, dependency):
+                put(path, path)
+            self.assertEqual(_perimeter(root, deployment), perimeter)
+            params = ({mission: deployment}, {mission: field}, {mission: perimeter})
+            with self.assertRaisesRegex(ValueError, "no pinned independent"):
+                _verify_perimeters(root, *params)
+            record = {
+                "schema_version": 1, "scope": "synthetic fixture only", "author": "Fixture Author",
+                "reviewer": "Fixture Reviewer", "reviewed_on": "2020-01-01", "result": "PASS",
+                "evidence": dict.fromkeys(("godot_context", "close_up", "reproduction", "measurements", "motion"),
+                                          "unit test fixture"),
+                "checks": {key: {"result": "PASS"} for key in (
+                    "shape_and_craft", "materials_and_lighting", "readability_in_play", "motion_and_effects",
+                    "integration_and_cost",
+                )},
+                "files": {path: hashlib.sha256((root / path).read_bytes()).hexdigest()
+                          for path in (deployment, field, perimeter, dependency)},
+            }
+            put(review_file, json.dumps(record))
+            review = PerimeterReview("Sample", deployment, field, perimeter, review_file,
+                                     hashlib.sha256((root / review_file).read_bytes()).hexdigest(), 4)
+            with patch("tools.report_deployment_art.PERIMETER_REVIEWS", {mission: review}):
+                result = _verify_perimeters(root, *params)[mission]
+                self.assertEqual(result["placement_scope"], "mission_perimeter")
+                self.assertEqual(result["verified_files"], 4)
+                for wrong in (None, field):
+                    with self.assertRaisesRegex(ValueError, "binding does not match"):
+                        _verify_perimeters(root, *params[:2], {mission: wrong})
+                put(dependency, "changed")
+                with self.assertRaisesRegex(ValueError, "SHA-256 differs"):
+                    _verify_perimeters(root, *params)
+                put(review_file, json.dumps(record, indent=2))
+                with self.assertRaisesRegex(ValueError, "pinned review"):
+                    _verify_perimeters(root, *params)
+
+    def test_perimeter_binding_must_be_on_root_and_packed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            scene = root / "example.tscn"
+            scene.write_text('[node name="Root" type="Node3D"]\nbattlefield_perimeter = null\n')
+            self.assertIsNone(_perimeter(root, scene.name))
+            scene.write_text('[node name="Root" type="Node3D"]\n'
+                             '[node name="Child" type="Node3D" parent="."]\nbattlefield_perimeter = null\n')
+            self.assertRaisesRegex(ValueError, "deployment root", _perimeter, root, scene.name)
+            scene.write_text('[node name="Root" type="Node3D"]\nbattlefield_perimeter = SubResource("perimeter")\n')
+            self.assertRaisesRegex(ValueError, "PackedScene perimeter", _perimeter, root, scene.name)
+
+    def test_opening_inventory_must_match_every_declared_perimeter(self):
+        rows = [{"mission_id": "a", "battlefield_perimeter": None},
+                {"mission_id": "b", "battlefield_perimeter": "game/battlefields/b_extra.tscn"}]
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "opening.json"
+            path.write_text(json.dumps({"deployments": rows}))
+            _check_opening_inventory({"deployments": rows}, path)
+            for invalid, message in [
+                ([rows[0]], "missing missions: b"),
+                ([rows[0], rows[0]], "duplicate mission"),
+                ([rows[0], {"mission_id": "b"}], "declared and opened perimeter differ"),
+                ([rows[0], {"mission_id": "b", "battlefield_perimeter": None}], "declared and opened perimeter differ"),
+            ]:
+                path.write_text(json.dumps({"deployments": invalid}))
+                self.assertRaisesRegex(ValueError, message, _check_opening_inventory, {"deployments": rows}, path)
 
     def test_greyhollow_cannot_inherit_the_case(self):
         with tempfile.TemporaryDirectory() as temp:

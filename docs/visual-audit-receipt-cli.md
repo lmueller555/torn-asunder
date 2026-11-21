@@ -43,6 +43,10 @@ Every current deployment is recorded as **still uses development art**. The five
 
 For a campaign release preflight, run `python3 -B -m tools.report_deployment_art --require-release-ready`. The command exits 2 and lists every deployment that lacks full visual approval (currently all 18); invalid inventory or receipt data exits 1. A verified prop or terrain kit is not a map-wide approval. The check is limited to registered campaign deployments: overworld, menus, and other modes still require their own audits. Use this check before packaging; it does not modify editor or development playtests or the Godot export command.
 
+### Battlefield perimeter attachments
+
+A registered deployment must declare its optional `battlefield_perimeter` as a root-level PackedScene reference. A non-null attachment must have an independent PASS pinned to that mission in `PERIMETER_REVIEWS`. Include the exact deployment scene, original shared battlefield, perimeter scene, and every reviewed source, visual and binding dependency in that receipt. Removing or replacing an active binding also invalidates its existing pin. This attests to the perimeter only; an otherwise unreviewed deployment still uses development art.
+
 ## Inventory existing visuals in the live opening scene
 
 After importing the project, generate an opening inventory with Godot:
@@ -53,6 +57,8 @@ godot --headless --no-header --script tools/inventory_deployment_visuals.gd -- i
 ```
 
 The command instantiates each registered mission without advancing its gameplay. It lists existing renderable nodes at deployment, including meshes and labels made by startup scripts and hidden originals that remain beside a replacement. Each row gives the node path within the mission, nearest containing scene/import, scene ownership, inherited visibility, shadow-only status, and known direct resource paths. A blank resource list can mean procedural art, not “no art.” Engine-generated names can vary between runs.
+
+For an attached perimeter, the census confirms the configured scene appears once directly under the actual opened battlefield. The Godot smoke workflow runs the full census with `--no-header` and passes its JSON to `tools.report_deployment_art --opening-inventory <path>` to reject disagreements with the static report. Use the full census for this cross-check, not a one-mission export.
 
 This is a starting list, not a list of unique assets, a screenshot audit, or an approval decision. Tree visibility does not mean the camera draws the node. Later spawns, effects and state changes, optional rosters, the overworld, menus, and rendering details outside the reported node types require separate review. For approval, follow the [visual inventory](visual-audit-inventory.md) and inspect the required gameplay states in Godot. The release preflight remains separate.
 
