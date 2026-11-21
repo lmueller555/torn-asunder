@@ -5,6 +5,7 @@ extends "res://game/battlefield/mara_mine_escort.gd"
 enum Rescue { RALLY, ESCORT, SUCCEEDED, FAILED }
 enum Miner { WAITING, FOLLOWING, SAFE, LOST }
 
+const CharacterArt := preload("res://game/battlefield/mara_campaign_character_art.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const RALLY_PATH := ^"Markers/Routes/TunnelEntrance"
 const SAFETY_PATH := ^"Markers/Objectives/MinerEvacuation"
@@ -35,6 +36,11 @@ var rescue_phase := Rescue.RALLY
 var _crew: Array[CrewMember] = []
 var _escape_route := PackedVector2Array()
 var _dryad_released := false
+
+
+func _ready() -> void:
+	super._ready()
+	CharacterArt.attach(self)
 
 
 func _bind_objective() -> void:

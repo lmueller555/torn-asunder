@@ -3,6 +3,7 @@ extends "res://game/battlefield/command_harness.gd"
 
 signal mission_finished(won: bool)
 
+const CharacterArt := preload("res://game/battlefield/mara_campaign_character_art.gd")
 const Levy := preload("res://game/battlefield/moonwash_levy_patrol.gd")
 const Patrol := preload("res://game/battlefield/patrol_detection_policy.gd")
 const Quay := preload("res://game/battlefield/mara_moonwash_quay.gd")
@@ -65,6 +66,7 @@ func _ready() -> void:
 	objective.lower_quay_closed.connect(func() -> void: _set_gate_closed(true))
 	_restart.pressed.connect(restart_mission)
 	_refresh_withdrawal()
+	CharacterArt.attach(self)
 
 
 func _physics_process(delta: float) -> void:
