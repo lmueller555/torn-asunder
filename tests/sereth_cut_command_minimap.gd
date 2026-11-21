@@ -7,6 +7,7 @@ const Profile := preload("res://game/profile_store.gd")
 const Registry := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/sereth_cut_playtest.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
 const DT := 1.0 / 60.0
@@ -131,6 +132,7 @@ func _run() -> void:
 	_check(not _mission.command_view and not _map.is_visible_in_tree() and not _mission._raider.visible
 		and _mission.objective.outcome == Cut.Outcome.ACTIVE, "Options restarts cleanly in hero stance.")
 	await _controller_draft()
+	await _waypoint_queue()
 	print("Cut minimap: viewport %s / panel %s / current camera %s / %d failures." %[
 		root.get_visible_rect().size, _mission._command_minimap.get_global_rect(), root.get_camera_3d().name, _failures])
 	_mission.queue_free()
@@ -226,6 +228,136 @@ func _controller_draft() -> void:
 	_mission.restart_mission()
 
 
+func _waypoint_queue() -> void:
+	var hud := _mission._command_minimap
+	var guard := _mission.battle.formations[0]
+	var first := _point("Routes/ApproachRoadWest")
+	var second := first + Vector2(3, 0)
+	var roof := _point("Routes/RecordRoomInside")
+	_orders.clear()
+	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_key(KEY_G)
+	_check(_route_is(0, []) and _orders.is_empty(), "Hero R1/G cannot queue a command.")
+	_key_event(KEY_SHIFT, true)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
+	_key(KEY_G)
+	_key_event(KEY_SHIFT, false)
+	_check(_route_is(0, [first]) and _orders == [0] and guard.destination.is_equal_approx(first),
+		"Shift + G sends the first tactical waypoint for the selected guard.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
+	_tap(JOY_BUTTON_DPAD_UP)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(_route_is(0, [first, second]) and _orders == [0] and guard.destination.is_equal_approx(first)
+		and hud._draft_battle != null and _mission.cursor.is_equal_approx(first),
+		"Focused R1 appends without replacing the underway leg, moving the world cursor or closing aim.")
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(_route_is(0, [first, second]) and hud._hint.text.contains("Already on"), "Duplicate route points do not issue orders.")
+	await _capture_image("controller-map-queued-route")
+	_tap(JOY_BUTTON_B)
+	_check(hud._draft_battle == null and _route_is(0, [first, second]) and _route_drawn(guard, first),
+		"Circle discards the reticle, not the accepted route or its active leg.")
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_check(not hud._route_overlay.visible and _route_is(1, []) and _route_is(0, [first, second]),
+		"The other guard has its own queue and cannot see the first guard's plan.")
+	_tap(JOY_BUTTON_DPAD_LEFT)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(roof))
+	_tap(JOY_BUTTON_DPAD_UP)
+	_key(KEY_G)
+	_check(_route_is(0, [first, second]) and _orders == [0] and hud._draft_battle != null
+		and hud._hint.text.contains("Not a walkable"), "The record room roof cannot append through the map.")
+	root.propagate_notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	_check(not _mission.command_view and hud._draft_battle == null and _route_is(0, [first, second])
+		and not hud._route_overlay.visible and hud._route_overlay.waypoint_pixels().is_empty(),
+		"Focus loss cancels the unsent draft and hides the drawing without canceling the accepted march.")
+
+	for leg in [first, second]:
+		for _frame in 340:
+			if guard.position.is_equal_approx(leg) or guard.order == Battle.Order.BLOCKED:
+				break
+			_tick()
+		_check(guard.position.is_equal_approx(leg), "The selected guard physically navigates to queued road point %s." % leg)
+		if leg == first:
+			_check(_route_is(0, [second]) and guard.destination.is_equal_approx(second) and _orders == [0, 0],
+				"Only arrival at the first point promotes the accepted second leg.")
+	_check(guard.order == Battle.Order.HOLD and _route_is(0, []), "After both legs, the selected guard holds.")
+
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_tap(JOY_BUTTON_DPAD_UP)
+	for _step in Queue.MAX_WAYPOINTS - 1:
+		_tap(JOY_BUTTON_DPAD_RIGHT)
+		_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	var full := hud.pending_waypoints(0)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_tap(JOY_BUTTON_RIGHT_SHOULDER)
+	_check(full.size() == Queue.MAX_WAYPOINTS and hud.pending_waypoints(0) == full
+		and hud._hint.text.contains("Route full"), "The live Cut rejects a ninth unvisited point, counting the active leg.")
+	_tap(JOY_BUTTON_B)
+	_mouse_map(MOUSE_BUTTON_RIGHT, _map.project(roof))
+	_mouse_map(MOUSE_BUTTON_RIGHT, Vector2(2, 2))
+	_check(hud.pending_waypoints(0) == full, "Rejected single moves do not discard accepted route points.")
+	_tap(JOY_BUTTON_X)
+	_check(_route_is(0, []) and guard.destination.is_equal_approx(first) and not hud._route_overlay.visible,
+		"Ordinary Move to even the same destination replaces the entire route.")
+	_key(KEY_G)
+	_tap(JOY_BUTTON_DPAD_UP)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_tap(JOY_BUTTON_A)
+	_check(_route_is(0, []) and guard.destination.is_equal_approx(second) and hud._draft_battle == null,
+		"Direct Cross in minimap aim also replaces the accepted route with one Move.")
+	_key(KEY_G)
+	_tap(JOY_BUTTON_A)
+	_check(_route_is(0, []) and guard.order == Battle.Order.HOLD and not _mission._interact,
+		"Normal command Hold clears the queue without interacting with the mission.")
+	_key(KEY_G)
+	var ending := Cut.Observation.new()
+	ending.sereth_fell = true
+	_mission.objective.advance(ending)
+	_mission._sync_view()
+	_check(_route_is(0, []) and not hud._route_overlay.visible, "Terminal mission cleanup discards queued points.")
+	var old_battle := _mission.battle
+	_tap(JOY_BUTTON_START)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
+	_key(KEY_G)
+	old_battle.order_hold(0)
+	_check(_mission.battle != old_battle and _route_is(0, [first]), "A restarted Cut has a fresh queue and ignores stale battle signals.")
+	_mission.restart_mission()
+
+
+func _route_is(index: int, expected: Array) -> bool:
+	var pending := _mission._command_minimap.pending_waypoints(index)
+	if pending.size() != expected.size():
+		return false
+	for i in expected.size():
+		if not pending[i].is_equal_approx(expected[i]):
+			return false
+	return true
+
+
+func _route_drawn(guard: Battle.Formation, first: Vector2) -> bool:
+	var overlay := _mission._command_minimap._route_overlay
+	var active := overlay.active_leg_pixels()
+	return overlay.is_visible_in_tree() and overlay.waypoint_pixels().size() == 2 and active.size() == 2 \
+		and active[0].is_equal_approx(_map.project(guard.position)) and active[1].is_equal_approx(_map.project(first))
+
+
+func _key(code: Key) -> void:
+	_key_event(code, true)
+	_key_event(code, false)
+
+
+func _key_event(code: Key, pressed: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = code
+	event.pressed = pressed
+	root.push_input(event, true)
+
+
 func _draft_tick(count: int) -> void:
 	for _i in range(count):
 		_mission._command_minimap._physics_process(DT)
@@ -293,9 +425,13 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	var panel_rect := _mission._command_minimap.get_global_rect()
 	_check(not panel_rect.intersects(button_rect) and root.get_visible_rect().encloses(button_rect),
 		"The minimap must not cover the shell's Return to Campaign Map button.")
+	var road := _point("Routes/ApproachRoadWest")
+	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(road))
+	_key(KEY_G)
 	_tap(JOY_BUTTON_DPAD_UP)
-	_check(_mission._command_minimap._aim.is_visible_in_tree(),
-		"Return must also be available while an unsent controller draft is open.")
+	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_check(_mission._command_minimap._aim.is_visible_in_tree() and _route_is(0, [road]),
+		"Return must be available even with an accepted route and a separate unsent aim.")
 	await _capture_image("campaign-command-return-visible")
 	_click(MOUSE_BUTTON_LEFT, button_rect.get_center())
 	await process_frame

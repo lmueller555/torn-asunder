@@ -130,6 +130,8 @@ func _after_battle_step(delta: float) -> void:
 	_refresh_readout()
 	if objective.outcome != Cut.Outcome.ACTIVE:
 		mission_finished.emit(objective.outcome == Cut.Outcome.SUCCEEDED)
+	elif enable_command_minimap:
+		_command_minimap.advance_routes()
 
 
 func _interaction_at(hero: Vector3) -> Cut.Interaction:
