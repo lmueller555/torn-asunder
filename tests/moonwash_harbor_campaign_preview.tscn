@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/battlefields/moonwash_harbor_campaign.tscn" id="1_moonwash"]
+
+[sub_resource type="Environment" id="Environment_coast"]
+background_mode = 1
+background_color = Color(0.55, 0.68, 0.72, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.82, 0.88, 0.97, 1)
+ambient_light_energy = 0.74
+
+[node name="MoonwashCampaignPreview" type="Node3D"]
+
+[node name="MoonwashHarbor" parent="." instance=ExtResource("1_moonwash")]
+
+[node name="Lighting" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_coast")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-49, -36, 0)
+light_color = Color(1, 0.92, 0.79, 1)
+light_energy = 1.1
+shadow_enabled = true
+directional_shadow_max_distance = 550.0
+
+[node name="Overview" type="Camera3D" parent="."]
+position = Vector3(0, 280, 215)
+rotation_degrees = Vector3(-55, 0, 0)
+projection = 1
+size = 285.0
+far = 760.0
+current = true
+
+[node name="HumanQuayView" type="Camera3D" parent="."]
+position = Vector3(20, 7.3, 12)
+rotation_degrees = Vector3(-3.2, 39.7, 0)
+fov = 67.0
+
+[node name="ElvenDeckView" type="Camera3D" parent="."]
+position = Vector3(27, 5.6, 103)
+rotation_degrees = Vector3(-1.6, 4.4, 0)
+fov = 67.0
+
+[node name="UpperExitLabel" type="Label3D" parent="."]
+position = Vector3(105, 20.3, -85)
+text = "UPPER QUAY EXIT"
+billboard = 1
+modulate = Color(1, 0.83, 0.58, 1)
+pixel_size = 0.14
+
+[node name="BypassLabel" type="Label3D" parent="."]
+position = Vector3(-77, 14, -52)
+text = "PERMANENT INLAND BYPASS"
+billboard = 1
+modulate = Color(1, 0.83, 0.58, 1)
+pixel_size = 0.14
+
+[node name="StairsLabel" type="Label3D" parent="."]
+position = Vector3(-11.9, 14, -35)
+text = "FLAGGED STAIR"
+billboard = 1
+modulate = Color(1, 0.83, 0.58, 1)
+pixel_size = 0.14
+
+[node name="AftLabel" type="Label3D" parent="."]
+position = Vector3(-58.3, 13, 78)
+text = "AFT RIGGING GAP"
+billboard = 1
+modulate = Color(0.64, 0.98, 0.94, 1)
+pixel_size = 0.14
+
+[node name="ForwardLabel" type="Label3D" parent="."]
+position = Vector3(21.2, 13, 78)
+text = "FORWARD RIGGING GAP"
+billboard = 1
+modulate = Color(1, 0.89, 0.58, 1)
+pixel_size = 0.14
