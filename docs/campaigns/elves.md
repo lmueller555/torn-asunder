@@ -44,6 +44,8 @@ These IDs belong to campaign `ilyra`, not particular scene files. Defeat retries
 
 **Result and ending.** Ilyra carries the households out. The ports that ordered pursuit withdraw their pledges after the launches are clear. A departing captain asks who will take their place in the fleet. Ilyra asks him to take one family farther downriver before he goes. The debrief can show an Elven witness remaining for Mara's later handover to Sova, but does not promise that the Elves have won custody or that Ilyra has ceased to want her coast back.
 
+**Standalone playtest:** Run `godot game/battlefield/ilyra_spanwater_playtest.tscn` on the shared campaign terrain. Use **Cross / Space** beside either household group. Hold Marines at the marked landing approach to push back the patrol. Boarding occurs at the sole berth; a launch can wait for the current to ease, and only crossing the boat exit saves its passengers. The rising steps visibly warn before boarding closes. **Options / Backspace** restarts. Existing unapproved graybox/debug visuals are reused for development with text actor markers; no new art, naval combat, fluid simulation, or campaign deployment is included.
+
 ## Shared maps and implementation handoff
 
 - **Moonwash:** One post-rise layout for this mission and the [Human High Quay withdrawal](humans.md#3-the-high-quay). Reuse the exposed walls, moorings, stairs, and upper exit. The Elven receiving deck is on the water-level rescue lane already visible in the Human view. The Humans leave by the upper exit independently of rescue success. Do not require either campaign to fight or wait for the other.
