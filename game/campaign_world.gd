@@ -31,16 +31,26 @@ const _MAPS := {
 	},
 }
 
+var _campaign_id: String
 var _map: Dictionary
 var _current_id := ""
 var _visited := PackedStringArray()
 
 
-func _init(campaign_id: String) -> void:
+func _init(campaign_id: String, saved_waypoint_id := "", completed_ids := PackedStringArray()) -> void:
+	_campaign_id = campaign_id
 	_map = _MAPS.get(campaign_id, {})
 	if not _map.is_empty():
 		_current_id = _map.start
 		_visited.append(_current_id)
+		if saved_waypoint_id != _current_id and is_waypoint_reachable(saved_waypoint_id, completed_ids):
+			_current_id = saved_waypoint_id
+			# Restoration knows the saved location, not how the party travelled there.
+			_visited.append(_current_id)
+
+
+func campaign_id() -> String:
+	return _campaign_id
 
 
 func current_waypoint_id() -> String:
@@ -78,14 +88,37 @@ func mission_at_current_waypoint() -> String:
 	return waypoint(_current_id).get("mission_id", "")
 
 
+## Check a saved destination without travelling or adding intermediate visits.
+func is_waypoint_reachable(waypoint_id: String, completed_ids: PackedStringArray) -> bool:
+	if _map.is_empty() or not _map.waypoints.has(waypoint_id):
+		return false
+	var seen := {}
+	var pending: Array[String] = [_map.start]
+	while not pending.is_empty():
+		var point: String = pending.pop_front()
+		if point == waypoint_id:
+			return true
+		if seen.has(point):
+			continue
+		seen[point] = true
+		for option in _routes_from(point, completed_ids):
+			if option.is_open and not seen.has(option.waypoint_id):
+				pending.append(option.waypoint_id)
+	return false
+
+
 ## Includes locked adjacent routes so the map can display the blocked connection.
 func route_options(completed_ids: PackedStringArray) -> Array[Dictionary]:
+	return _routes_from(_current_id, completed_ids)
+
+
+func _routes_from(point: String, completed_ids: PackedStringArray) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for edge: Dictionary in _map.get("routes", []):
 		var other_id: String
-		if edge.from_id == _current_id:
+		if edge.from_id == point:
 			other_id = edge.to_id
-		elif edge.to_id == _current_id:
+		elif edge.to_id == point:
 			other_id = edge.from_id
 		else:
 			continue
