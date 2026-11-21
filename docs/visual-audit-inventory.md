@@ -45,6 +45,18 @@ Reviewed 1280 × 720 Godot 4.7.2 hero and command views, using the [Cut preview]
 | [Boundary Post shelter, low walls and posts](../game/battlefields/cairnspine_boundary_post.tscn) | Rework | The plain roof slab, bare wall volumes and posts give the handover place no identity without its debug label and ring. |
 | [Boundary Post small lookout/rally props](../game/battlefields/cairnspine_boundary_post.tscn) | Blocked | Separate hero-scale checks are needed for the lookout sign and rally marker. |
 
+## Inspected: Marches Crossing
+
+Reviewed from the live [Grain on Credit deployment](../game/battlefield/mara_grain_crossing_playtest.tscn) on both crossings, in hero view, local tactical view and full overview.
+
+| Existing asset or family | Status | What blocks a pass |
+|---|---|---|
+| [North timber bridge and footings](../game/battlefields/marches_crossing.tscn) | Rework | The repeating square parts and uniform deck read as placeholders at hero height. Preserve the actual walked deck, solid rails and exposed sightline. |
+| [South ford shallows and crossing stones](../game/battlefields/marches_crossing.tscn) | Rework | A flat pale band marks the walkable lane but reads as a glowing tile rather than a shallow river bed. Preserve the supported shelf, slower cart crossing, deep-channel barriers and screened approach. |
+| [Channel edges and adjacent valley landform](../game/battlefields/marches_crossing.tscn) | Rework | The angular blue strip, sharp bank seams, disconnected-looking roads and stacked perimeter walls read as a diagram at tactical distance. Keep the open bridge route distinct from the covered ford. |
+
+The rival reserve can physically block either lane. Preserve that route choice, cart clearance and the named crossing and reserve cues; the current oversized floating labels can obscure the hero’s approach. Roadside props and outlying buildings still need their own review.
+
 ## Inspected: water routes and upland approaches
 
 These rework decisions cover the families visible in the linked Godot previews at representative camera distances. They are not a sign-off on unobserved surfaces, motion, or hardware cost.
@@ -73,7 +85,7 @@ Use one audit per shared asset or kit, with every distinct gameplay use recorded
 | Scope | Status | Start here |
 |---|---|---|
 | Remaining Mine props, other artifact depictions, guard and alternate hero / unit visuals | Unapproved | [Both Mine layouts](../game/battlefields/) and [escort visual code](../game/battlefield/mara_mine_escort.gd). Review remaining artifact depictions at their actual in-game placements and check each non-benchmark character silhouette. |
-| Marches crossing and remaining Red Basin assets | Unapproved | [Crossing](../game/battlefields/marches_crossing.tscn) and [well road](../game/battlefields/red_basin_well_road.tscn). Inspect the crossing and its bridge/ford; confirm the Red Basin carts, well hardware and outlying buildings in actual missions. |
+| Remaining Marches and Red Basin assets | Unapproved | [Crossing](../game/battlefields/marches_crossing.tscn) and [well road](../game/battlefields/red_basin_well_road.tscn). Inspect carts, well hardware, roadside props and outlying buildings in actual missions. |
 | Remaining Moonwash harbor and survey shore families | Unapproved | [Harbor](../game/battlefields/moonwash_harbor_campaign.tscn) and [survey shore](../game/battlefields/moonwash_survey_shore.tscn). Review water, shoreline, quays, rigs, boats, signals and character visuals independently. |
 | Remaining Spanwater Lock and nursery families | Unapproved | [Lock](../game/battlefields/spanwater_lock_campaign.tscn) and [grove](../game/battlefields/isolated_grove_nursery.tscn). Review both lock layouts, water channels and control props, then the nursery, sled, tree and supporting figures. |
 | Remaining Cairnspine Vault Road and Cut/Boundary families | Unapproved | [Vault Road](../game/battlefields/cairnspine_vault_road.tscn). Review its settlement and route materials, landmarks, and uninspected non-benchmark character art across the three locations. |
