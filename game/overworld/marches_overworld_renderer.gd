@@ -5,7 +5,8 @@ signal presentation_camera_changed
 const World := preload("res://game/campaign_world.gd")
 const ASSETS := "res://assets/overworld/marches/"
 const ROUTE := Color("#e2c58d")
-const SITES := ["marches_camp", "year_one_mine", "marches_road"]
+const CampSite := preload("res://game/overworld/marches_camp_site.gd")
+const SITES := ["marches_camp", "year_one_mine", "marches_road", CampSite.CAMP_ID]
 const GROVE_PLACES := [
 	Vector3(-286,170,3), Vector3(-261,148,3), Vector3(-208,153,5), Vector3(-176,146,9),
 	Vector3(-160,49,2), Vector3(5,-34,4), Vector3(26,-22,2), Vector3(69,-21,7),
@@ -27,6 +28,7 @@ var _missing := PackedStringArray()
 var _tree_materials: Dictionary = {}
 var _ground: MeshInstance3D
 var _groves: Array[Array] = []
+var _camp_views: Node3D
 var camera: Camera3D
 var _party: Node3D
 var _look := Vector3(-20,13,42)
@@ -43,6 +45,7 @@ func _ready() -> void:
 	_mount("marches-corridor.glb", Vector3.ZERO)
 	_mount("marches-camp.glb", anchors["marches_camp"])
 	_mount("greyhollow-mine.glb", anchors["year_one_mine"])
+	_add_forward_camp_art()
 	_build_routes()
 	_refresh_links()
 	_build_party()
@@ -138,6 +141,38 @@ func _read_contract() -> void:
 				route_keys.append(Vector2i(SITES.find(start_id),SITES.find(end_id)))
 				if not start_id.is_empty() and not end_id.is_empty():
 					_insert_curve(start_id,end_id,line)
+
+func _add_forward_camp_art() -> void:
+	if _world==null or _world.waypoint(CampSite.CAMP_ID).is_empty():
+		return
+	var pts := CampSite.route()
+	if pts.size()<2:
+		return
+	var near := load(CampSite.ASSETS+"marches-road-camp-fit.glb") as PackedScene
+	var far := load(CampSite.ASSETS+"marches-road-camp-fit-regional.glb") as PackedScene
+	if near==null or far==null:
+		return
+	anchored_camp(pts,near,far)
+
+
+func anchored_camp(pts: PackedVector3Array, near: PackedScene, far: PackedScene) -> void:
+	anchors[CampSite.CAMP_ID]=pts[-1]
+	route_points.append(pts)
+	route_keys.append(Vector2i(SITES.find(CampSite.ROAD_ID),SITES.find(CampSite.CAMP_ID)))
+	var shell:=Node3D.new()
+	shell.name="MarchesRoadCampArt"
+	add_child(shell)
+	shell.position=CampSite.MOUNT
+	shell.rotation.y=PI
+	var detail := near.instantiate() as Node3D
+	var distant := far.instantiate() as Node3D
+	shell.add_child(detail)
+	shell.add_child(distant)
+	_enable_vegetation_pigment(detail)
+	_enable_vegetation_pigment(distant)
+	_camp_views=shell
+	_groves.append([shell,detail,distant])
+
 
 func _insert_curve(start_id: String, end_id: String, points: PackedVector3Array) -> void:
 	var curve := Curve3D.new()
@@ -312,7 +347,7 @@ func _build_routes() -> void:
 				continue
 			while remaining <= len:
 				var point := start.lerp(finish, remaining/len)
-				if SITES.all(func(id: String) -> bool: return point.distance_to(anchors[id]) > 6.0):
+				if SITES.all(func(id: String) -> bool: return not anchors.has(id) or point.distance_to(anchors[id]) > 6.0):
 					visible_points.append(point + Vector3.UP*1.25)
 				remaining += 7.7
 			remaining -= len

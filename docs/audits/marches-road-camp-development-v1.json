@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-21",
+  "scope": "Exact Marches Road Camp site and gated services in the opt-in Mara 3D development playtest only. Not default boot, platform performance, optional XP, other campaigns, or next map sector.",
+  "author": "Torn Asunder site-fit artist and title integration authors",
+  "reviewer": "Independent Marches Road Camp placement and actual in-title visual review",
+  "evidence": {
+    "godot_context": "Normal Godot 4.7.2 Compatibility import, 1280\u00d7720. Unchanged Marches V3 terrain SHA-256 12bf57ce790f488b0314a0220073a958aadd90fb1e836f3fd77fa4f790609110. Actual title: regional map, routed mid-spur approach, arrived landmark zoom, and separate camp operations.",
+    "close_up": "Grounded stockade and individually fitted supports, upright mast/tent and open north gate. Far and near views make the lower stockade distinct from starting Marches Camp and show the separate camp label, lead-in and arrival ring.",
+    "motion": "47-point 48 m authored spur. Each imported tier passed 283 sampled 1.8 m clearance checks with zero hits; peak 23.14% local grade and max 0.01618 m ground interpolation deviation. Actual campaign validates explore, explicit service confirmation, return and persisted story gate, with sampled in-flight graphics.",
+    "reproduction": "After normal Godot import, run tests/marches_road_camp_authored.gd. In the 3D debug playtest choose Mara, finish Get Them Out and acknowledge the reveal. March to Road into the Marches, choose Marches Road Camp and enter Operations. Returning to the map keeps the camp in-session and reloading restores the original Road waypoint.",
+    "measurements": "Actual Mesa software renderer, visible submissions: regional 78 draws / 236,540 triangles, spur approach 46 / 152,247, arrival zoom 67 / 186,963. No device frame timing or general release certification."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Fitted ground contact follows exact slope without a platform or tilting the tent, mast or posts. Authored gate and route preserve room for the party."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Source roof/palisade/banner tiers retain readable color and silhouette in actual unchanged Marches light and near/sector views."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Distinct Road and Camp markers at regional, travel and arrived views. Separate Operations screen displays camp name and existing services."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Exact spur footprint and gate path verified for both tiers, sampled in-flight and arrival title framing, no automatic service action before explicit selection."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Genuine reveal gate and save path passed in exact Godot title test, no route bypass, no asset changes to first corridor and no default map change. Render counts measured above."
+    }
+  },
+  "files": {
+    "assets/overworld/marches/camp/marches-road-camp-fit-regional.glb": "d24b10dddcbdab66c44893aac2364516961b96e33aaa53a6c302d1dd48a8da4a",
+    "assets/overworld/marches/camp/marches-road-camp-fit-regional.glb.import": "68ffb4cdfeec70c6697b496d104c3abdc0cc3517642e9171bff58c447c19592a",
+    "assets/overworld/marches/camp/marches-road-camp-fit.glb": "af50c6209737eeee818e37230127f98119e1a90b7c27f0c21ced2309d58b83a4",
+    "assets/overworld/marches/camp/marches-road-camp-fit.glb.import": "96b9278a9a06a5d76acbab6ad1df68e7d6764f19662e128e906065097232f604",
+    "assets/overworld/marches/camp/spur.json": "07d57803f87f0936d673a82d52d08fee9c67235c8942d86aea42ede77b104b93",
+    "assets/source/overworld/marches/marches-road-camp-fit.blend": "e42659732a74d39fa9cb7bbe0cb43ebe00b7c187d58075a5e1a8541f5c54b181",
+    "game/campaign_overworld_3d.gd": "2597f2ce45fa49a79b648041b9d6f149944d8c6afca8e6a2c7381cbe91348453",
+    "game/overworld/forward_campaign_camp.gd": "442bbf8a7da867c6eac4a293dff199115895816229bad59f56da0b5b8f6d16cc",
+    "game/overworld/marches_camp_site.gd": "f52bcbecf82108f3e4dea9c120e3c8f2308fdaa3de84e186c8466198555b624e",
+    "game/overworld/marches_overworld_renderer.gd": "4ba972eee858b87ebf2398d15eac1833855488441bdb7fad02c7b6dc9a15bc3f",
+    "game/overworld/marches_overworld_view.gd": "566db17cf6960b25fff1f924fc1ac5943b0cfc1cee6ee9d55180387ccaecf25a",
+    "game/profile_store.gd": "ddd94f25a2a9b9be0ee2743fc796045e3dd94baad6adb1310ba6c32f7e531b15",
+    "game/title_screen.gd": "128f05d41b7bf34fbbe51379c87353f197cd0103cc22284dbd235e0ff74ae0b7"
+  }
+}

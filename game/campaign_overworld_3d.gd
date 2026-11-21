@@ -4,10 +4,12 @@ extends Control
 signal waypoint_arrived(waypoint_id: String)
 signal briefing_requested(mission_id: String)
 signal camp_operations_requested
+signal forward_camp_operations_requested(camp_id: String)
 signal return_requested
 
 const World := preload("res://game/campaign_world.gd")
 const Navigation := preload("res://game/campaign_overworld_navigation.gd")
+const ForwardCamp := preload("res://game/overworld/forward_campaign_camp.gd")
 const PICK_RADIUS := 30.0
 
 ## UI and viewport nodes are supplied by the caller's composition.
@@ -27,6 +29,9 @@ var _navigation: Navigation
 var _world: World
 var _reduced_motion := false
 var _confirmed := PackedStringArray()
+var _forward_camp: ForwardCamp.Definition
+var _forward_camp_resume := ""
+var _travel_origin_id := ""
 
 
 static func route_key(origin_id: String, target_id: String) -> String:
@@ -70,10 +75,31 @@ func can_present(world: World) -> bool:
 	return is_instance_valid(_renderer) and world != null and _points.has(world.current_waypoint_id())
 
 
+## The camp is visible to navigation only with a valid authored spur in this renderer.
+func configure_forward_camp(camp: ForwardCamp.Definition, resume_camp_id := "") -> void:
+	_forward_camp = null
+	_forward_camp_resume = ""
+	if camp and _curve_for(camp.junction_id, camp.id):
+		_forward_camp = camp
+		_forward_camp_resume = resume_camp_id
+
+
+func active_forward_camp() -> ForwardCamp.Definition:
+	return _forward_camp
+
+
+func is_at_forward_camp(camp_id: String) -> bool:
+	return _forward_camp != null and _forward_camp.id == camp_id and _navigation != null \
+		and not _navigation.is_travelling() and _world.current_waypoint_id() == camp_id
+
+
 func configure(world: World, completed_ids: PackedStringArray, reduced_motion: bool) -> void:
 	_world = world
+	if _forward_camp:
+		_world = ForwardCamp.MapWorld.new(world, _forward_camp, _forward_camp_resume == _forward_camp.id)
+	_forward_camp_resume = ""
 	_confirmed = completed_ids.duplicate()
-	_navigation = Navigation.new(world, completed_ids)
+	_navigation = Navigation.new(_world, completed_ids)
 	_navigation.waypoint_arrived.connect(_on_arrived)
 	_reduced_motion = reduced_motion
 	_refresh()
@@ -111,13 +137,17 @@ func confirm_selection() -> void:
 				return
 			var duration := curve.get_baked_length() / _pace
 			if _navigation.start_travel(duration):
+				_travel_origin_id = origin
 				_refresh()
 				if _reduced_motion:
 					_navigation.advance(duration)
 		Navigation.Action.BRIEFING:
 			briefing_requested.emit(_world.mission_at_current_waypoint())
 		Navigation.Action.CAMP:
-			camp_operations_requested.emit()
+			if _forward_camp and _world.current_waypoint_id() == _forward_camp.id:
+				forward_camp_operations_requested.emit(_forward_camp.id)
+			else:
+				camp_operations_requested.emit()
 
 
 func _process(delta: float) -> void:
@@ -134,6 +164,8 @@ func _process(delta: float) -> void:
 
 func _on_arrived(id: String) -> void:
 	_refresh()
+	if _forward_camp and (id == _forward_camp.id or _travel_origin_id == _forward_camp.id):
+		return
 	waypoint_arrived.emit(id)
 
 

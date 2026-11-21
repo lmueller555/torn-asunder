@@ -8,6 +8,7 @@ const CampaignDeployments := preload("res://game/campaign_deployments.gd")
 const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const DevelopmentOverworld := preload("res://game/campaign_overworld_3d.gd")
+const ForwardCamp := preload("res://game/overworld/forward_campaign_camp.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
@@ -96,6 +97,7 @@ var _selection_summary: Label
 var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
 var _development_overworld_factory: Callable
+var _forward_camp_return: ForwardCamp.Definition
 var _campaign_warning := ""
 var _campaign_battle: Node3D
 var _pause_menu: PauseMenu
@@ -299,6 +301,7 @@ func _begin_selected() -> void:
 
 
 func _open_campaign(campaign: Dictionary) -> void:
+	_forward_camp_return = null
 	_active_campaign = campaign
 	var result := _profile.mark_played(campaign.id)
 	_campaign_world = null
@@ -326,6 +329,7 @@ func _show_world_map() -> void:
 	if _add_development_overworld():
 		_show_campaign_warning()
 		return
+	_forward_camp_return = null
 	var map: CampaignMap = CAMPAIGN_MAP_SCENE.instantiate()
 	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
 	map.return_requested.connect(_show_title)
@@ -345,13 +349,44 @@ func _add_development_overworld() -> bool:
 	if not map.can_present(_campaign_world):
 		map.free()
 		return false
-	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
+	var clears := _profile.completed_missions(_campaign_world.campaign_id())
+	var reduced := _profile.setting("reduced_motion")
+	var camp := ForwardCamp.available_for(_campaign_world.campaign_id(), clears, _profile.greyhollow_reveal_completed())
+	map.configure_forward_camp(camp, _forward_camp_return.id if _forward_camp_return else "")
+	map.configure(_campaign_world, clears, reduced)
+	_forward_camp_return = null
+	map.forward_camp_operations_requested.connect(_open_forward_camp.bind(map))
 	map.return_requested.connect(_show_title)
 	map.camp_operations_requested.connect(_show_briefing)
 	map.waypoint_arrived.connect(_on_waypoint_arrived)
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
 	return true
+
+
+func _open_forward_camp(camp_id: String, map: DevelopmentOverworld) -> void:
+	if _page != Page.WORLD_MAP or map.get_parent() != _stage or not map.is_at_forward_camp(camp_id):
+		return
+	var camp := map.active_forward_camp()
+	if _campaign_world.current_waypoint_id() != camp.junction_id:
+		return
+	_forward_camp_return = camp
+	_show_forward_camp_operations(camp)
+
+
+func _show_forward_camp_operations(camp: ForwardCamp.Definition) -> void:
+	_open_page(Page.BRIEFING)
+	var back := _heading(camp.label, "Camp Operations")
+	var services: Array[Button] = []
+	for service in camp.services:
+		var action := _show_drills if service == ForwardCamp.Service.COMBAT_DRILLS else _show_unit_progression
+		var label := "Combat Drills" if service == ForwardCamp.Service.COMBAT_DRILLS else "Unit Progression"
+		var button := _button(label, Rect2(76 + services.size() * 310, 265, 286, 58), action)
+		_link_focus(button, SIDE_TOP, back)
+		services.append(button)
+	_link_focus(back, SIDE_BOTTOM, services[0])
+	_link_cycle(services, SIDE_LEFT, SIDE_RIGHT)
+	back.grab_focus()
 
 
 func _on_waypoint_arrived(_id: String) -> void:
@@ -591,6 +626,9 @@ func _show_campaign_warning() -> void:
 
 
 func _show_briefing() -> void:
+	if _forward_camp_return:
+		_show_forward_camp_operations(_forward_camp_return)
+		return
 	var campaign := _active_campaign
 	_open_page(Page.BRIEFING)
 	var back := _heading("Camp Operations" if _campaign_world else "Campaign Briefing", campaign.opening)
