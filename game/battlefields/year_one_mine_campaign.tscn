@@ -1771,6 +1771,11 @@ position = Vector3(-111, 0, -33)
 rotation = Vector3(0, 0, 0)
 gizmo_extents = 1.0
 
+[node name="MaraRoadGuard" type="Marker3D" parent="Markers/Spawns"]
+position = Vector3(91, 0, -13.7736)
+rotation = Vector3(0, 1.81132, 0)
+gizmo_extents = 1.0
+
 [node name="OrcIntercept" type="Marker3D" parent="Markers/Spawns"]
 position = Vector3(144, 0, -57)
 rotation = Vector3(0, 2.35619, 0)
