@@ -17,6 +17,12 @@ const BRACE_GATE_RADIUS := 2.5
 # that even a front wagon turning away does not clip the held follower.
 const SALT_REAR_DISTANCE := 9.0
 const SALT_FRONT_RELEASE := 10.0
+const CART_CAPTION_HEIGHT := 2.8
+const CART_CAPTION_PIXEL_SIZE := 0.028
+const CLOSE_STAGE_CAPTION_DISTANCE := 14.0
+# Clear the existing Salt Road marker's title and keep both parked names legible.
+const CLOSE_STAGE_CAPTION_HEIGHT := 3.60
+const CLOSE_STAGE_CAPTION_PIXEL_SIZE := 0.012
 const CART_SPEED := 7.5
 const HOUSEHOLD_SPEED := 3.0
 const BOARDING_REACH := 2.8
@@ -532,11 +538,15 @@ func _refresh() -> void:
 	_salt.disabled = not active or not _route_admitted(selected_cart)
 	_wash.disabled = _salt.disabled
 	var labels: Array[String] = []
+	var close_stage := _close_salt_stage_captions()
 	for cart in range(_carts.size()):
 		var state := _cart_status(cart)
 		labels.append("%s: %s" % [CART_NAMES[cart], state])
-		_carts[cart].banner.text = ("%s: " % CART_NAMES[cart]) + state
-		_carts[cart].banner.modulate = CART_COLORS[cart] if cart == selected_cart else Color.WHITE
+		var caption := _carts[cart].banner
+		caption.text = CART_NAMES[cart] + (" · Selected" if cart == selected_cart else "") if close_stage else labels[-1]
+		caption.pixel_size = CLOSE_STAGE_CAPTION_PIXEL_SIZE if close_stage else CART_CAPTION_PIXEL_SIZE
+		caption.position.y = CLOSE_STAGE_CAPTION_HEIGHT if close_stage else CART_CAPTION_HEIGHT
+		caption.modulate = CART_COLORS[cart] if cart == selected_cart else Color.WHITE
 		_carts[cart].wagon.visible = objective.cart_state(cart) != WellRoad.CartState.LOST
 	_status.text = "  ·  ".join(labels)
 	_instructions.text = "At the lower storehouse, return to Raska and press Cross / Space to board households."
@@ -556,6 +566,21 @@ func _refresh() -> void:
 			_goal.text = "Raska was incapacitated" if objective.failure == WellRoad.Failure.RASKA_INCAPACITATED else "A required well cart was lost"
 			_cue.text = "Restart to try a new escort plan."
 			_instructions.text = ""
+
+
+## In the close hero shot only, the two full salt-wait labels cover
+## each other. Keep their names and selection in-world; keep both full
+## wait reasons in the original HUD. Do not retune other field labels.
+func _close_salt_stage_captions() -> bool:
+	if command_view or _salt_stage_front < 0:
+		return false
+	var ahead := _carts[_salt_stage_front]
+	var behind := _carts[1 - _salt_stage_front]
+	if ahead.waiting_on != "Mounted pass" or behind.waiting_on != "Cart ahead":
+		return false
+	var hero := hero_world_position()
+	return hero.distance_to(ahead.wagon.global_position) <= CLOSE_STAGE_CAPTION_DISTANCE \
+		and hero.distance_to(behind.wagon.global_position) <= CLOSE_STAGE_CAPTION_DISTANCE
 
 
 func _cart_status(cart: WellRoad.Cart) -> String:
@@ -624,7 +649,7 @@ func _make_cart(cart: WellRoad.Cart) -> Convoy:
 	for x in [-0.93, 0.93]:
 		for z in [-0.56, 0.56]:
 			_mesh(wagon, _box(Vector3(0.16, 0.65, 0.65)), iron, Vector3(x, 0.35, z))
-	data.banner = _sign(wagon, CART_NAMES[cart], CART_COLORS[cart], 2.8)
+	data.banner = _sign(wagon, CART_NAMES[cart], CART_COLORS[cart], CART_CAPTION_HEIGHT)
 	return data
 
 
