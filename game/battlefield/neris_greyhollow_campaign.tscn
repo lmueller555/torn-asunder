@@ -57,4 +57,4 @@ autowrap_mode = 2
 
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
 focus_mode = 0
-text = "Restart [Backspace / Options]"
+text = "Restart"

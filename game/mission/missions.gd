@@ -143,7 +143,6 @@ static func _mara_1() -> Dictionary:
 				["say", "aldric", "The miners are gone, Majesty. Only the thing they used is left."],
 				["say", "mara", "Then it leaves under my seal. Fetch it, and keep the road open."],
 			]},
-			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Order the shields to hold the narrows and the archers to the ridge."]]},
 			{"if": {"done": "pickup"}, "do": [
 				["objective", "exit"], ["order", "redwater", {"kind": "assault", "to": "narrows"}], ["spawn", "slingers"],
 				["say", "aldric", "Orc company in the dry riverbed, moving on the narrows."],
@@ -312,7 +311,6 @@ static func _raska_1() -> Dictionary:
 				["say", "durga", "Then who can, Marshal?"],
 				["say", "raska", "Whoever was in that camp. Saltwell pins the rearguard at the narrows. Redwater, down the lower path to the outlet."],
 			]},
-			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Order one company to the narrows and the other to the outlet approach."]]},
 			{"if": {"time": 40.0}, "do": [
 				["spawn", "detachment"],
 				["say", "durga", "Human detachment slipping past the narrows. They're heading for the outlet."],
@@ -517,7 +515,6 @@ static func _sova_1() -> Dictionary:
 				["say", "bryn", "Both groups are in tunnel cover, First Listener. The first is at the mouth; the second waits at the bend, screened from the ridge."],
 				["say", "sova", "Then we release them in stages. Nothing moves until we know the approach is clear."],
 			]},
-			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Select a work group and order it to the Druid trail when the approach is clear."]]},
 			{"if": {"time": 22.0}, "do": [
 				["spawn", "detachment"],
 				["say", "bryn", "Halden rear detachment coming down from the pass. They want the outlet approach."],

@@ -1,5 +1,7 @@
 extends Node3D
 
+const GameplayBindings := preload("res://game/settings/control_bindings.gd")
+
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const MarchRoutes := preload("res://game/battlefield/command_platoon_routes.gd")
 const MarchQueue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
@@ -107,7 +109,7 @@ func _ready() -> void:
 	if device >= 0:
 		_input_device = device
 		for axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_TRIGGER_LEFT]:
-			_axes[axis] = Input.get_joy_axis(_input_device, axis)
+			_axes[axis] = GameplayBindings.axis(_input_device, axis)
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
 	battle.lead_platoon_enabled = lead_platoon_enabled
 	routes.reset(battle)
@@ -352,6 +354,7 @@ func _movement_check() -> Callable:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and not event.echo:
 		var code: int = event.physical_keycode
 		if code in [KEY_SHIFT, KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_R, KEY_F]:
@@ -398,7 +401,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED] and is_node_ready():
 		_mouse_cursor_active = false
 		_keys.clear()
 		_axes.clear()

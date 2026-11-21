@@ -5,6 +5,8 @@ extends Node3D
 ## cursor picks a destination or an enemy platoon for the selected unit. Every rule
 ## lives in MissionBattle; this node renders it and turns input into orders.
 
+const GameplayBindings := preload("res://game/settings/control_bindings.gd")
+
 signal mission_finished(won: bool)
 
 const Battle := preload("res://game/mission/mission_battle.gd")
@@ -472,9 +474,10 @@ func _enemy_squad_near(point: Vector2, radius: float) -> Battle.Squad:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventMouseMotion:
 		_mouse_moved = true
-		if Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
+		if GameplayBindings.mouse(MOUSE_BUTTON_MIDDLE):
 			_yaw -= event.relative.x * 0.006
 			_pitch = clampf(_pitch - event.relative.y * 0.004, -1.2, -0.15)
 	elif event is InputEventMouseButton and event.pressed:
@@ -509,21 +512,21 @@ func _handle_input(delta: float) -> void:
 	var look := Vector2.ZERO
 	var trigger := 0.0
 	if device >= 0:
-		stick = Vector2(Input.get_joy_axis(device, JOY_AXIS_LEFT_X), Input.get_joy_axis(device, JOY_AXIS_LEFT_Y))
-		look = Vector2(Input.get_joy_axis(device, JOY_AXIS_RIGHT_X), Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y))
-		trigger = Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT)
+		stick = Vector2(GameplayBindings.axis(device, JOY_AXIS_LEFT_X), GameplayBindings.axis(device, JOY_AXIS_LEFT_Y))
+		look = Vector2(GameplayBindings.axis(device, JOY_AXIS_RIGHT_X), GameplayBindings.axis(device, JOY_AXIS_RIGHT_Y))
+		trigger = GameplayBindings.axis(device, JOY_AXIS_TRIGGER_LEFT)
 		if stick.length() < 0.18:
 			stick = Vector2.ZERO
 		if look.length() < 0.18:
 			look = Vector2.ZERO
 	var keys := Vector2(
-		float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A)),
-		float(Input.is_physical_key_pressed(KEY_S)) - float(Input.is_physical_key_pressed(KEY_W))
+		float(GameplayBindings.key(KEY_D)) - float(GameplayBindings.key(KEY_A)),
+		float(GameplayBindings.key(KEY_S)) - float(GameplayBindings.key(KEY_W))
 	)
 	var move := stick if stick != Vector2.ZERO else keys.limit_length(1.0)
-	var joy := func(button: JoyButton) -> bool: return device >= 0 and Input.is_joy_button_pressed(device, button)
-	var key := func(code: Key) -> bool: return Input.is_physical_key_pressed(code)
-	var mouse := func(button: MouseButton) -> bool: return Input.is_mouse_button_pressed(button)
+	var joy := func(button: JoyButton) -> bool: return device >= 0 and GameplayBindings.button(device, button)
+	var key := func(code: Key) -> bool: return GameplayBindings.key(code)
+	var mouse := func(button: MouseButton) -> bool: return GameplayBindings.mouse(button)
 	look.x += float(key.call(KEY_RIGHT)) - float(key.call(KEY_LEFT))
 	look.y += float(key.call(KEY_DOWN)) - float(key.call(KEY_UP))
 	_yaw -= look.x * 2.4 * delta

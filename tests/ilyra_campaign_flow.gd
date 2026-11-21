@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -125,6 +126,8 @@ func _flow() -> bool:
 		return _fail("Confirmed deployment did not instantiate Ilyra's campaign rescue.")
 	var arrived := FileAccess.get_file_as_string(_profile_path)
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(HARBOR) or FileAccess.get_file_as_string(_profile_path) != arrived:
 		return _fail("An abandoned attempt wrote a clear, result or waypoint.")
 
@@ -187,17 +190,17 @@ func _survey_flow() -> bool:
 	var before_abort := FileAccess.get_file_as_string(_profile_path)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	await process_frame
-	var back := _title._stage.get_node_or_null(^"ReturnToMap") as Button
+	var back := _title._stage.get_node_or_null(^"PauseBattle") as Button
 	if not back or not survey._minimap.is_visible_in_tree() \
 			or back.get_global_rect().intersects(survey._minimap_panel.get_global_rect()):
-		return _fail("The passive map does not fit beside the campaign Return button in active command.")
+		return _fail("The passive map does not fit beside the campaign Pause button in active command.")
 	for pressed in [true, false]:
 		var click := InputEventMouseButton.new()
 		click.button_index = MOUSE_BUTTON_LEFT
 		click.position = back.get_global_rect().get_center()
 		click.pressed = pressed
 		root.push_input(click, true)
-	if not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
+	if not PauseTest.confirm_leave(_title._pause_menu) or not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
 		return _fail("Aborting an incomplete survey wrote campaign progress.")
 	_map().select_waypoint(SPANWATER)
 	if not _map()._confirm_button.disabled or not _map()._detail.text.contains("Two Shorelines"):
@@ -252,6 +255,8 @@ func _spanwater_flow() -> bool:
 	if evacuation.objective.group_status(BoatRescue.Group.NEAR) != BoatRescue.GroupStatus.APPROACHING:
 		return _fail("The abort fixture never physically called the near households.")
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(SPANWATER) or FileAccess.get_file_as_string(_profile_path) != arrived:
 		return _fail("Aborting a partial evacuation wrote a save.")
 	if not _press("ConfirmTravel") or not _on_briefing(EVACUATION) or not _press("Confirm Deployment"):

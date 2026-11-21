@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -84,6 +85,8 @@ func _flow() -> bool:
 		return _fail("Cancel did not leave an arrived Mine waypoint that could reopen briefing.")
 	var at_mine := FileAccess.get_file_as_string(_profile_path)
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(MINE) or FileAccess.get_file_as_string(_profile_path) != at_mine:
 		return _fail("Abandoning the Druid attempt changed its clear or waypoint.")
 
@@ -139,6 +142,8 @@ func _flow() -> bool:
 		return _fail("The dispatch did not return to an explicitly deployable hearing briefing.")
 	var assembly_save := FileAccess.get_file_as_string(_profile_path)
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(ASSEMBLY) or FileAccess.get_file_as_string(_profile_path) != assembly_save:
 		return _fail("Abandoning a hearing attempt changed progress.")
 	_map().select_waypoint(VAULT_ROAD)
@@ -207,6 +212,8 @@ func _flow() -> bool:
 	if vault.objective.phase != Vault.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != arrived_save:
 		return _fail("A confirmed carrier fall counted as a clear or changed the arrived waypoint.")
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(VAULT_SITE) or not _reopen_vault():
 		return _fail("Defeat did not leave the campaign at the re-deployable Vault.")
 

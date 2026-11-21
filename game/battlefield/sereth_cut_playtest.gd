@@ -266,6 +266,7 @@ func _sync_bundle(hero: Vector3) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE:
 			restart_mission()
@@ -292,7 +293,7 @@ func _sync_view() -> void:
 
 func _notification(what: int) -> void:
 	super._notification(what)
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED]:
 		_interact = false
 
 

@@ -240,12 +240,12 @@ func _draw_hero(battle: Battle) -> void:
 	var cost_mark := x + 310.0 * battle.ability_cost / maxf(1.0, float(points.capacity))
 	draw_line(Vector2(cost_mark, rect.position.y + 82), Vector2(cost_mark, rect.position.y + 96), IVORY, 1.5)
 	var ready := battle.ability_ready()
-	_text(Vector2(x, rect.position.y + 114), "R1 / Q  %s  ·  %d BP%s" % [battle.hero_ability_name, battle.ability_cost, "  READY" if ready else ""], 16, GOLD if ready else MUTED)
+	_text(Vector2(x, rect.position.y + 114), "%s  ·  %d BP%s" % [battle.hero_ability_name, battle.ability_cost, "  READY" if ready else ""], 16, GOLD if ready else MUTED)
 	if battle.interact_target >= 0:
 		var item: Dictionary = battle.interactables[battle.interact_target]
 		var center := Vector2(size.x * 0.5, size.y - 70)
 		var available := battle.interact_available(item)
-		var prompt := "Hold Cross / E   %s" % item.label
+		var prompt: String = item.label
 		if not available:
 			prompt = "%s — clear the area first" % item.label
 		_text(center + Vector2(-260, 0), prompt, 22, IVORY if available else Color("#e0a08a"), BODY, 520, HORIZONTAL_ALIGNMENT_CENTER)
@@ -260,7 +260,7 @@ func _draw_units(battle: Battle) -> void:
 	var row := 46.0
 	var rect := Rect2(size.x - 404, size.y - 24 - row * entries.size() - 30, 380, row * entries.size() + 30)
 	_panel(rect)
-	_text(rect.position + Vector2(14, 22), "UNITS  ·  D-pad / 1–9", 15, MUTED)
+	_text(rect.position + Vector2(14, 22), "UNITS", 15, MUTED)
 	for i in range(entries.size()):
 		var entry := entries[i]
 		var y := rect.position.y + 30 + i * row
@@ -322,7 +322,6 @@ func _wrap(text: String, width: float, font_size: int) -> PackedStringArray:
 func _draw_command(battle: Battle) -> void:
 	draw_rect(Rect2(0, 0, size.x, 6), Color(0.9, 0.75, 0.45, 0.6))
 	_text(Vector2(size.x * 0.5 - 300, 44), "COMMAND VIEW", 26, GOLD, DISPLAY, 600, HORIZONTAL_ALIGNMENT_CENTER)
-	_text(Vector2(size.x * 0.5 - 420, 74), "Square / J / click: move or attack at cursor   Triangle / K: attack nearest enemy   Cross / Space: hold   Circle / F: follow · turn cart back", 15, IVORY, BODY, 840, HORIZONTAL_ALIGNMENT_CENTER)
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return

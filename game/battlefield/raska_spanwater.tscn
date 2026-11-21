@@ -49,7 +49,7 @@ theme_override_font_sizes/font_size = 20
 [node name="Goal" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
 theme_override_font_sizes/font_size = 20
 
-[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_colors/font_color = Color(0.83, 0.89, 0.93, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 2
@@ -60,7 +60,7 @@ theme_override_font_sizes/font_size = 16
 
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
-text = "Restart · Options / Backspace"
+text = "Restart"
 
 [node name="SpillwayWheelVisualBinding" type="Node" parent="."]
 script = ExtResource("4_wheel_binding")

@@ -44,7 +44,7 @@ theme_override_font_sizes/font_size = 20
 [node name="Goal" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
 theme_override_font_sizes/font_size = 21
 
-[node name="Detail" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
+[node name="Detail" type="Label" parent="VaultHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_font_sizes/font_size = 17
 
 [node name="Reserve" type="Label" parent="VaultHUD/Panel/Margin/Readout"]
@@ -60,4 +60,4 @@ show_percentage = false
 [node name="Restart" type="Button" parent="VaultHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 focus_mode = 0
-text = "Restart  [Backspace / Options]"
+text = "Restart"

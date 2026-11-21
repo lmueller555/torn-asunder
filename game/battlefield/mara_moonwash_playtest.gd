@@ -139,6 +139,7 @@ func _restore_levy_follow() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if _follow_shift == Vector3.ZERO:
 		return
 	if event is InputEventMouse or event is InputEventKey:
@@ -163,7 +164,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED] and is_node_ready():
 		_restore_levy_follow()
 	super._notification(what)
 
@@ -282,6 +283,7 @@ func _name_platoons() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_BACKSPACE:
 		restart_mission()
 		return

@@ -206,6 +206,7 @@ func _move_along(actor: Node3D, path: PackedVector3Array, next: int, budget: flo
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE:
 			restart_mission()

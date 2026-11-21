@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -93,7 +94,7 @@ func _exercise() -> bool:
 			or not _read_dialogue(Beats.NERIS_FAILING_GROVE_DISPATCH) or not _on_briefing():
 		return _fail("Continue or the dispatch bypassed Neris's explicit deployment.")
 	var at_grove := FileAccess.get_file_as_string(_path)
-	if not _press("Confirm Deployment") or not _press("ReturnToMap") or not _on_map(NURSERY) \
+	if not _press("Confirm Deployment") or not PauseTest.leave_battle(_title) or not _on_map(NURSERY) \
 			or FileAccess.get_file_as_string(_path) != at_grove or not _press("ConfirmTravel") \
 			or not _press("Confirm Deployment"):
 		return _fail("Aborting a deployment changed progress or prevented redeployment.")
@@ -121,7 +122,7 @@ func _exercise() -> bool:
 	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):
 		return _fail("The completed grove could not be replayed.")
 	var replay := _title._campaign_battle as Mission
-	if not replay or replay.objective.phase != Grove.Phase.AWAITING_ENVOY or not _press("ReturnToMap"):
+	if not replay or replay.objective.phase != Grove.Phase.AWAITING_ENVOY or not PauseTest.leave_battle(_title):
 		return _fail("The completed grove replay did not begin with a fresh objective.")
 	return await _run_survey()
 
@@ -201,7 +202,7 @@ func _run_finale() -> bool:
 		return _fail("The actual survey did not unlock the Year Three Greyhollow dispatch.")
 	var at_mine := FileAccess.get_file_as_string(_path)
 	if not _press("Confirm Deployment") or not _title._campaign_battle is Finale \
-			or not _press("ReturnToMap") or not _on_map(MINE) or not _save_unchanged(at_mine) \
+			or not PauseTest.leave_battle(_title) or not _on_map(MINE) or not _save_unchanged(at_mine) \
 			or _map()._heading.text == "Campaign Complete" or not _press("ConfirmTravel") \
 			or not _on_briefing(FINALE_CLEAR) or not _press("Confirm Deployment"):
 		return _fail("An abandoned strike wrote a clear or prevented legitimate redeployment.")
@@ -232,7 +233,7 @@ func _run_finale() -> bool:
 		return _fail("The completed finale could not be replayed.")
 	var replay := _title._campaign_battle as Finale
 	if not replay or replay.phase != Finale.Phase.APPROACH or replay.miners_beyond_reach \
-			or not _press("ReturnToMap") or not _on_map(MINE) or not _save_unchanged(completed):
+			or not PauseTest.leave_battle(_title) or not _on_map(MINE) or not _save_unchanged(completed):
 		return _fail("Replaying the finale did not start fresh or changed the completed save.")
 	_joy(JOY_BUTTON_B)
 	return (_press("Continue") and _on_map(MINE) \

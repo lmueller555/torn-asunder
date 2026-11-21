@@ -107,6 +107,7 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	# Grain uses R1/G and T for cart orders. Give the hero marker separate
 	# append/clear shortcuts; D-pad Up already clears via the harness.
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -269,7 +270,7 @@ func _check_crossing_cue() -> void:
 func _refresh_objective() -> void:
 	var active := objective.outcome == Grain.Outcome.ACTIVE
 	var selected_state := objective.cart_state(selected_cart)
-	_select_button.text = "Select: %s  [C / L1]" % CART_NAMES[selected_cart]
+	_select_button.text = "Select: %s" % CART_NAMES[selected_cart]
 	_select_button.disabled = not active
 	_dispatch_button.disabled = not active or selected_state != Grain.CartState.STAGED
 	_withdraw_button.disabled = not active or selected_state not in [Grain.CartState.STAGED, Grain.CartState.EN_ROUTE]

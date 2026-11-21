@@ -59,7 +59,7 @@ theme_override_colors/font_color = Color(1, 0.78, 0.62, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 2
 
-[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+[node name="Instructions" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_colors/font_color = Color(0.81, 0.90, 0.91, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 2
@@ -72,12 +72,12 @@ focus_mode = 0
 
 [node name="Salt" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Salt road  [G / R1]"
+text = "Salt road"
 
 [node name="Wash" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Wash  [T / Triangle]"
+text = "Wash"
 
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Restart  [Backspace / Options]"
+text = "Restart"

@@ -215,6 +215,7 @@ func _ford_depth(point: Vector2) -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE:
 			restart_mission()
@@ -353,11 +354,11 @@ func _refresh_readout() -> void:
 	match phase:
 		Feeder.Phase.CLEAR_INLET, Feeder.Phase.CLEAR_DEBRIS:
 			_goal.text = "Clear fresh debris at the rack" if phase == Feeder.Phase.CLEAR_DEBRIS else "Clear the feeder inlet rack"
-			_status.text = "Cross / Space at the inlet rack. Keep to the raised maintenance path."
+			_status.text = "Clear the inlet rack."
 			if _contested:
 				_status.text = "The patrol is at the rack. Put a platoon on the marked screen before trying again."
 			elif command_view:
-				_status.text = "Release L2 / Shift to clear the rack as Neris."
+				_status.text = "Neris must clear the rack."
 		Feeder.Phase.FIT_BOARDS:
 			_goal.text = "Protect the town board crew  ·  %d%%" % floori(objective.board_progress * 100.0)
 			if _contested:

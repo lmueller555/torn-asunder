@@ -51,7 +51,7 @@ autowrap_mode = 2
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 2
 
-[node name="Cue" type="Label" parent="SurveyHUD/Panel/Margin/Readout"]
+[node name="Cue" type="Label" parent="SurveyHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_colors/font_color = Color(1, 0.76, 0.62, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 2
@@ -59,4 +59,4 @@ autowrap_mode = 2
 [node name="Restart" type="Button" parent="SurveyHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 focus_mode = 0
-text = "Restart [Backspace / Options]"
+text = "Restart"

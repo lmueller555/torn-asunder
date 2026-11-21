@@ -121,7 +121,7 @@ func _ready() -> void:
 	_apply_infantry_loadout()
 	super._ready()
 	if sundering_strike_enabled and _input_device >= 0:
-		_special_pad_down = Input.get_joy_axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
+		_special_pad_down = GameplayBindings.axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
 	_bind_objective()
 	_restart_button.pressed.connect(restart_mission)
 	_build_combat_visuals()
@@ -264,6 +264,7 @@ func _sync_infantry_animation(reset := false) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if sundering_strike_enabled and event is InputEventJoypadMotion \
 		and event.axis == JOY_AXIS_TRIGGER_RIGHT and _uses_joypad(event.device):
 		var was_down := _special_pad_down
@@ -608,7 +609,7 @@ func _refresh_combat_view() -> void:
 		elif targets_archers:
 			_combat_tell.text = "%s winding up at Archers! Pull back." % _enemy_title()
 		else:
-			_combat_tell.text = "%s winding up!  Face it and guard, or dodge." % _enemy_title()
+			_combat_tell.text = "%s winding up!" % _enemy_title()
 	elif not encounter.active_feedback().is_empty():
 		_combat_tell.text = encounter.active_feedback()
 	elif encounter.enemy_phase == Encounter.EnemyPhase.INTERCEPTING:
@@ -620,8 +621,6 @@ func _refresh_combat_view() -> void:
 			_combat_tell.text = "Mara winding up Sundering Strike"
 		else:
 			_combat_tell.text = "Mara winding up a %s attack" % ("light" if encounter.defense.attack_kind == Attack.Attack.LIGHT else "heavy")
-	elif target_selected:
-		_combat_tell.text = "Triangle / K: order %s to attack" % selected.title
 	elif archers.order == Battle.Order.ATTACK and encounter.archer_attack.volley.phase == Archer.Phase.IDLE:
 		_combat_tell.text = "Archers need distance. Move them away from the %s." % _enemy_title().to_lower().trim_prefix("road ")
 	elif infantry.order == Battle.Order.ATTACK:

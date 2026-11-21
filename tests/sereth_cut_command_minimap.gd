@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const CampaignMap := preload("res://game/campaign_map.gd")
@@ -594,7 +595,7 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tick()
 	await process_frame
-	var back := title._stage.get_node_or_null("ReturnToMap") as Button
+	var back := title._stage.get_node_or_null("PauseBattle") as Button
 	_check(_mission.command_view and _map.is_visible_in_tree() and _hud_fits() and back != null,
 		"Test button access in active command rather than before opening the map.")
 	if not back:
@@ -602,7 +603,7 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	var button_rect := back.get_global_rect()
 	var panel_rect := _mission._command_minimap.get_global_rect()
 	_check(not panel_rect.intersects(button_rect) and root.get_visible_rect().encloses(button_rect),
-		"The minimap must not cover the shell's Return to Campaign Map button.")
+		"The minimap must not cover the shell's Pause button.")
 	var road := _point("Routes/ApproachRoadWest")
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(road))
 	_key(KEY_G)
@@ -610,8 +611,10 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	_tap(JOY_BUTTON_DPAD_RIGHT)
 	_check(_mission._command_minimap._aim.is_visible_in_tree() and _route_is(0, [road]),
 		"Return must be available even with an accepted route and a separate unsent aim.")
-	await _capture_image("campaign-command-return-visible")
+	await _capture_image("campaign-command-pause-visible")
 	_click(MOUSE_BUTTON_LEFT, button_rect.get_center())
+	await process_frame
+	_check(paused and PauseTest.confirm_leave(title._pause_menu), "Pause must freeze the battle and allow leaving after confirmation.")
 	await process_frame
 	_check(title._page == Title.Page.WORLD_MAP and title._campaign_battle == null
 		and title._campaign_world.current_waypoint_id() == "still_kingdom_cut"

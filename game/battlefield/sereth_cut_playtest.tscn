@@ -55,14 +55,14 @@ theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.96, 0.71, 0.54, 1)
 theme_override_font_sizes/font_size = 16
 
-[node name="Hint" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout"]
+[node name="Hint" type="Label" parent="ObjectiveHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
 theme_override_font_sizes/font_size = 15
 
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 focus_mode = 0
-text = "Restart  [Backspace / Options]"
+text = "Restart"
 
 
 [node name="CommandMinimap" type="PanelContainer" parent="ObjectiveHUD"]
@@ -103,7 +103,7 @@ size_flags_vertical = 3
 mouse_filter = 2
 script = ExtResource("5_map")
 
-[node name="Hint" type="Label" parent="ObjectiveHUD/CommandMinimap/Margin/Readout"]
+[node name="Hint" type="Label" parent="ObjectiveHUD/CommandMinimap/Margin/Readout" groups=["gameplay_tutorial"]]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)

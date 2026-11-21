@@ -260,6 +260,7 @@ func _fail(reason: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_BACKSPACE:
 		restart_mission()
 	elif event is InputEventJoypadButton and event.pressed and _uses_joypad(event.device) and event.button_index == JOY_BUTTON_START:

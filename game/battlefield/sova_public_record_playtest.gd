@@ -93,6 +93,7 @@ func _fill_report(report: Hearing.VenueReport, layout: VenueLayout, hero: Vector
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE and event.pressed:
 			restart_mission()
@@ -115,7 +116,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED]:
 		_key_read = false
 		_button_read = false
 		_choose_requested = false

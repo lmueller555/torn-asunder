@@ -51,10 +51,10 @@ theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(1, 0.77, 0.67, 1)
 theme_override_font_sizes/font_size = 15
 
-[node name="Hint" type="Label" parent="PlaytestHUD/Panel/Margin/Readout"]
+[node name="Hint" type="Label" parent="PlaytestHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 theme_override_font_sizes/font_size = 15
 
 [node name="Restart" type="Button" parent="PlaytestHUD/Panel/Margin/Readout"]
 size_flags_horizontal = 0
 focus_mode = 0
-text = "Restart  [Backspace / Options]"
+text = "Restart"

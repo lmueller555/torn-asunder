@@ -68,7 +68,7 @@ size_flags_vertical = 3
 mouse_filter = 2
 script = ExtResource("4_widget")
 
-[node name="Key" type="Label" parent="MinimapHUD/Panel/Margin/Readout"]
+[node name="Key" type="Label" parent="MinimapHUD/Panel/Margin/Readout" groups=["gameplay_tutorial"]]
 mouse_filter = 2
 text = "▲ Mara    ■ Formation    ◆ Pickup    ⊓ Exit"
 theme_override_colors/font_color = Color(0.76, 0.84, 0.85, 1)

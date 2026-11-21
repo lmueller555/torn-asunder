@@ -49,7 +49,7 @@ func _run_flow() -> bool:
 	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 2 or amber.stat_points != 0 or view.battle.soldiers[0].unit.level != 1:
 		return _fail("The menu applied one platoon's edits to another.")
 	blue.receive_damage(blue.max_hp)
-	if not _press_all(["Pause", "Restart"]):
+	if not _press_all(["Pause", "ResumeGame", "Restart"]):
 		return false
 	var restarted := view.battle.soldiers[n].unit
 	if view.paused or restarted == blue or restarted.hp != restarted.max_hp or restarted.level != 12:

@@ -82,12 +82,12 @@ focus_mode = 0
 
 [node name="Dispatch" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Dispatch  [G / R1]"
+text = "Dispatch"
 
 [node name="Withdraw" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Turn back  [T / Triangle]"
+text = "Turn back"
 
 [node name="Restart" type="Button" parent="ObjectiveHUD/Panel/Margin/Readout/Actions"]
 focus_mode = 0
-text = "Restart  [Backspace / Options]"
+text = "Restart"

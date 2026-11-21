@@ -186,6 +186,7 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_BACKSPACE:
@@ -554,7 +555,7 @@ func _reset_convoy() -> void:
 
 func _refresh() -> void:
 	var active := objective.outcome == WellRoad.Outcome.ACTIVE
-	_select.text = "Select: %s  [C / L1]" % CART_NAMES[selected_cart]
+	_select.text = "Select: %s" % CART_NAMES[selected_cart]
 	_select.disabled = not active
 	_salt.disabled = not active or not _route_admitted(selected_cart)
 	_wash.disabled = _salt.disabled

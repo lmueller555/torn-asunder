@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -104,10 +105,21 @@ func _flow() -> bool:
 
 	if not _press("Confirm Deployment") or not _title._campaign_battle:
 		return _fail("Explicit deployment did not start the actual mission scene.")
+	var tutorial_labels := _title._campaign_battle.find_children("*", "Label", true, false)
+	var tutorial_count := 0
+	for label in tutorial_labels:
+		if label.is_in_group("gameplay_tutorial"):
+			tutorial_count += 1
+			if label.is_visible_in_tree():
+				return _fail("Deployment left a gameplay tutorial visible.")
+	if tutorial_count == 0:
+		return _fail("Deployment did not exercise the tutorial HUD filter.")
 	_joy(JOY_BUTTON_B)
 	if not _title._campaign_battle:
 		return _fail("Title intercepted combat Circle as a return.")
 	_key(KEY_ESCAPE)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Escape did not open the battle pause menu.")
 	if not _on_map(MINE) or FileAccess.get_file_as_string(_profile_path) != at_mine:
 		return _fail("Abandoning the battle changed the clear or arrived location.")
 
@@ -224,6 +236,8 @@ func _check_earned_mine_melee() -> bool:
 	if not _mine_lead_melee_build(mission, 2, false) or FileAccess.get_file_as_string(_profile_path) != bad_save:
 		return _fail("Retry changed the launch build, troop choice, BP or saved file.")
 	_key(KEY_ESCAPE)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Escape did not open the battle pause menu.")
 	if not _on_map(MINE) or not _press("ConfirmTravel") or not _press("Replay with Heavy Infantry"):
 		return false
 	mission = _title._campaign_battle as Mission
@@ -234,6 +248,8 @@ func _check_earned_mine_melee() -> bool:
 			or FileAccess.get_file_as_string(_profile_path) != bad_save:
 		return _fail("An invalid lead marker must not affect the independently trained Heavy deployment.")
 	_key(KEY_ESCAPE)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Escape did not open the battle pause menu.")
 	var restored := FileAccess.open(_profile_path, FileAccess.WRITE)
 	if not restored:
 		return _fail("Could not restore the genuine campaign profile.")

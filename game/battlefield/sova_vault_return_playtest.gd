@@ -94,6 +94,7 @@ func _after_battle_step(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if event is InputEventKey and not event.echo:
 		if event.physical_keycode == KEY_BACKSPACE and event.pressed:
 			restart_mission()
@@ -116,7 +117,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED]:
 		_return_pressed = false
 		_key_held = false
 		_cross_held = false

@@ -2,6 +2,8 @@ extends PanelContainer
 ## Campaign Mara HUD adapter only. Interception reports are coordinates on the
 ## road; actual unit icons are separately gated by a friendly's clear sight.
 
+const GameplayBindings := preload("res://game/settings/control_bindings.gd")
+
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
@@ -101,6 +103,7 @@ func _move_from_map(point: Vector2) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if not _mission.is_node_ready():
 		return
 	_bind_route_battle()
@@ -404,7 +407,7 @@ func _refresh_controller_overlay() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED] and is_node_ready():
 		_reset_capture()
 
 

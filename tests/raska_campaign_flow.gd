@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -136,7 +137,7 @@ func _flow() -> bool:
 	if not _press("Read Dispatch") or not _read_dialogue(Beats.RASKA_WELL_ROAD_DISPATCH) \
 			or not _on_briefing(WELL_CLEAR) or not _press("Confirm Deployment"):
 		return _fail("The authored Well Road dispatch did not return to deployment.")
-	if not _press("ReturnToMap") or not _on_map(WELL_ROAD) or _saved_clears() != well_route \
+	if not PauseTest.leave_battle(_title) or not _on_map(WELL_ROAD) or _saved_clears() != well_route \
 			or not _press("ConfirmTravel") or not _on_briefing(WELL_CLEAR) or not _press("Confirm Deployment"):
 		return _fail("Leaving the battle early saved a clear or lost the return waypoint.")
 

@@ -1,5 +1,7 @@
 extends Control
 
+const GameplayBindings := preload("res://game/settings/control_bindings.gd")
+const PauseMenu := preload("res://game/settings/pause_menu.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const CampaignMissions := preload("res://game/campaign_missions.gd")
 const CampaignDeployments := preload("res://game/campaign_deployments.gd")
@@ -94,6 +96,7 @@ var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
 var _campaign_warning := ""
 var _campaign_battle: Node3D
+var _pause_menu: PauseMenu
 var _victory_pending := false
 var _drill_index := 0
 var _drill_rank := Platoon.MAX_RANK
@@ -122,6 +125,9 @@ var _skirmish_setup := SkirmishSetup.new()
 
 
 func _ready() -> void:
+	_pause_menu = PauseMenu.new()
+	_pause_menu.leave_requested.connect(_leave_paused_game)
+	add_child(_pause_menu)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_body_face.base_font = UI_FACE
 	var weight_axis := TextServerManager.get_primary_interface().name_to_tag("wght")
@@ -143,14 +149,16 @@ func _map_controller_button(action: StringName, button: JoyButton) -> void:
 func _input(event: InputEvent) -> void:
 	if _page == Page.WORLD_MAP or _page == Page.CAMPAIGN_DIALOGUE:
 		return # These scenes own navigation, including Back.
-	if _page == Page.CAMPAIGN_BATTLE:
-		var key_back := event is InputEventKey and event.is_action_pressed("ui_cancel")
-		var pad_back: bool = event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_BACK
-		# Circle belongs to the hero's dodge; keyboard Escape and controller Create return.
-		if key_back or pad_back:
+	if _page in [Page.CAMPAIGN_BATTLE, Page.SKIRMISH]:
+		var logical := GameplayBindings.translate(event)
+		var alternate: bool = logical is InputEventJoypadButton and logical.pressed and logical.button_index == JOY_BUTTON_BACK
+		if PauseMenu.is_pause_press(event) or (_page == Page.CAMPAIGN_BATTLE and alternate):
 			get_viewport().set_input_as_handled()
-			_return_from_campaign_battle()
-		return
+			_pause_game()
+			return
+		if _page == Page.CAMPAIGN_BATTLE:
+			return
+
 	var controller_button := event is InputEventJoypadButton and event.is_pressed()
 	var controller_stick: bool = event is InputEventJoypadMotion and absf(event.axis_value) > 0.65
 	if controller_button or controller_stick:
@@ -437,10 +445,12 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	else:
 		mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
-	var back := _button("Return to Campaign Map", Rect2(1079, 735, 330, 48), _return_from_campaign_battle)
-	back.name = "ReturnToMap"
-	back.focus_mode = Control.FOCUS_NONE
-	back.tooltip_text = "Escape or DualSense Create"
+	var pause := _button("Pause", Rect2(1079, 735, 330, 48), _pause_game)
+	pause.name = "PauseBattle"
+	pause.focus_mode = Control.FOCUS_NONE
+	for hint in mission.find_children("*", "Label", true, false):
+		if hint.is_in_group("gameplay_tutorial"):
+			hint.hide()
 
 
 func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: String, mission_id: String) -> void:
@@ -500,6 +510,29 @@ func _finish_greyhollow_reveal() -> void:
 func _return_from_campaign_debrief() -> void:
 	if not _show_waypoint_intermission():
 		_show_world_map()
+
+
+func _pause_game() -> void:
+	if not is_instance_valid(_pause_menu):
+		return
+	if _page == Page.SKIRMISH:
+		var view := _stage.find_child("InfantrySkirmish", true, false) as SkirmishView
+		if view:
+			_pause_menu.open("Return to Skirmish Setup", view.restart)
+	elif _page == Page.CAMPAIGN_BATTLE and not _victory_pending and is_instance_valid(_campaign_battle):
+		var restart := Callable()
+		for method in [&"restart_mission", &"restart"]:
+			if _campaign_battle.has_method(method):
+				restart = Callable(_campaign_battle, method)
+				break
+		_pause_menu.open("Return to Campaign Map", restart)
+
+
+func _leave_paused_game() -> void:
+	if _page == Page.SKIRMISH:
+		_show_skirmish_setup()
+	else:
+		_return_from_campaign_battle()
 
 
 func _return_from_campaign_battle() -> void:
@@ -1032,10 +1065,7 @@ func _show_skirmish() -> void:
 		counts.text = "%d hits   ·   %d blocks   ·   %d waiting for a slot" % [battle.hits, battle.blocks, battle.waiting_count()]
 	view.updated.connect(update)
 	update.call()
-	playback.pressed.connect(func() -> void:
-		view.paused = not view.paused
-		playback.text = "Resume" if view.paused else "Pause"
-	)
+	playback.pressed.connect(_pause_game)
 	restart.pressed.connect(func() -> void:
 		view.restart()
 		playback.text = "Pause"
@@ -1282,6 +1312,8 @@ func _show_quit() -> void:
 
 
 func _replace_stage(page: Page) -> void:
+	if is_instance_valid(_pause_menu):
+		_pause_menu.close(false)
 	_page = page
 	_hint = null
 	_notice = null

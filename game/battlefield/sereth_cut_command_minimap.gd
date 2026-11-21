@@ -2,6 +2,8 @@ extends PanelContainer
 ## Cut-only adapter for the existing minimap and command harness. It has
 ## no raider awareness and uses the same physical Move as the world cursor.
 
+const GameplayBindings := preload("res://game/settings/control_bindings.gd")
+
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
@@ -207,6 +209,7 @@ func advance_routes() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	event = GameplayBindings.translate(event)
 	if not _field or (not visible and not _draft_battle and _until_neutral.is_empty() and _claimed_buttons.is_empty()):
 		return
 	if event is InputEventKey:
@@ -400,7 +403,7 @@ func _sync_draft() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PAUSED] and is_node_ready():
 		# A held axis must still return to neutral after regaining focus.
 		_close_draft()
 		# Button releases may happen outside the app; unlike axes they do not

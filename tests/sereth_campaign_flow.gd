@@ -1,5 +1,6 @@
 extends SceneTree
 
+const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Map := preload("res://game/campaign_map.gd")
@@ -149,6 +150,8 @@ func _play_and_retry() -> bool:
 			or _title._page != Title.Page.CAMPAIGN_BATTLE or FileAccess.get_file_as_string(_path) != before:
 		return _fail("A real enemy extraction advanced Sereth or wrote a clear.")
 	_joy(JOY_BUTTON_START)
+	if not PauseTest.confirm_restart(_title._pause_menu):
+		return _fail("Controller Start did not offer a restart through Pause.")
 	if _mission.objective.outcome != Cut.Outcome.ACTIVE or _mission.objective.account_status != Account.UNHEARD \
 			or _mission.objective.bundle_status != Bundle.EXPOSED or FileAccess.get_file_as_string(_path) != before:
 		return _fail("Retry retained or saved a lost attempt.")
@@ -189,6 +192,8 @@ func _play_boundary_route() -> bool:
 	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):
 		return _fail("A cleared Cut was not replayable from its own waypoint.")
 	_joy(JOY_BUTTON_BACK)
+	if not PauseTest.confirm_leave(_title._pause_menu):
+		return _fail("Controller Back did not open the battle pause menu.")
 	if not _on_map(VILLAGE) or FileAccess.get_file_as_string(_path) != saved:
 		return _fail("Abandoning a replay changed the saved clear.")
 	_map().select_waypoint(POST)
@@ -234,7 +239,7 @@ func _play_boundary_route() -> bool:
 		return _fail("The cleared writ could not be replayed.")
 	var replay := _title._campaign_battle as WritScene
 	if not replay or replay.objective.phase != Writ.Phase.CARRYING_WRIT or replay.objective.audience_granted \
-			or not _press("ReturnToMap") or not _on_map(POST) or FileAccess.get_file_as_string(_path) != completed_writ:
+			or not PauseTest.leave_battle(_title) or not _on_map(POST) or FileAccess.get_file_as_string(_path) != completed_writ:
 		return _fail("The replay did not start fresh or changed the existing writ clear.")
 	if not _map().select_waypoint(ASSEMBLY) or not _press("ConfirmTravel") or not _on_briefing(FINALE_CLEAR):
 		return _fail("The writ did not open a distinct briefing at the shared Valley Assembly.")
@@ -269,6 +274,8 @@ func _play_finale_route() -> bool:
 			or _title._page != Title.Page.CAMPAIGN_BATTLE or FileAccess.get_file_as_string(_path) != at_assembly:
 		return _fail("Actual custody crossing did not produce a local defeat without saving.")
 	_joy(JOY_BUTTON_START)
+	if not PauseTest.confirm_restart(_title._pause_menu):
+		return _fail("Controller Start did not offer a restart through Pause.")
 	if finale.objective.phase != Finale.Phase.AT_ASSEMBLY or finale._speaker.marker.visible \
 			or FileAccess.get_file_as_string(_path) != at_assembly:
 		return _fail("Retry did not reset the assembly or preserve its unfinished save.")
@@ -411,6 +418,8 @@ func _play_writ_and_retry(post: WritScene, at_post: String) -> bool:
 			or FileAccess.get_file_as_string(_path) != at_post or _title._page != Title.Page.CAMPAIGN_BATTLE:
 		return _fail("A real patrol occupation did not cause a defeat without saving.")
 	_joy(JOY_BUTTON_START)
+	if not PauseTest.confirm_restart(_title._pause_menu):
+		return _fail("Controller Start did not offer a restart through Pause.")
 	if post.objective.phase != Writ.Phase.CARRYING_WRIT or not post._keeper.visible \
 			or post.objective.reserve != Writ.Reserve.UNALERTED or not _walk(TRACK_IN, post) \
 			or post.objective.reserve != Writ.Reserve.UNALERTED or post.hero_world_position().y > -3.9:
