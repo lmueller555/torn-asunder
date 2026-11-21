@@ -86,13 +86,38 @@ func is_travelling() -> bool:
 	return not _destination.is_empty()
 
 
-func start_travel() -> bool:
+## Endpoints are available for path sampling while a trip is active.
+func travel_origin_id() -> String:
+	return _travel_origin if is_travelling() else ""
+
+
+func travel_target_id() -> String:
+	return _destination
+
+
+## Ranges from 0 to 1 for an active trip and returns 0 when idle.
+func travel_progress() -> float:
+	return _elapsed / _duration if is_travelling() else 0.0
+
+
+## Pass the duration in seconds for an authored path. Null uses normalized map timing.
+func start_travel(duration_seconds: Variant = null) -> bool:
 	if action() != Action.TRAVEL:
 		return false
-	_travel_origin = _world.current_waypoint_id()
+	var origin := _world.current_waypoint_id()
+	var duration: float
+	if duration_seconds == null:
+		duration = clampf(_point(origin).distance_to(_point(_selected_id)) / 0.55, 0.35, 1.4)
+	else:
+		if typeof(duration_seconds) not in [TYPE_FLOAT, TYPE_INT]:
+			return false
+		duration = float(duration_seconds)
+		if not is_finite(duration) or duration <= 0.0:
+			return false
+	_travel_origin = origin
 	_destination = _selected_id
 	_elapsed = 0.0
-	_duration = clampf(_point(_travel_origin).distance_to(_point(_destination)) / 0.55, 0.35, 1.4)
+	_duration = duration
 	return true
 
 
@@ -105,9 +130,9 @@ func cancel_travel() -> bool:
 
 ## Commits at most one edge. The arrival callback observes the committed world and idle travel.
 func advance(delta: float) -> void:
-	if not is_travelling():
+	if not is_travelling() or not is_finite(delta) or delta <= 0.0:
 		return
-	_elapsed += maxf(delta, 0.0)
+	_elapsed = minf(_elapsed + delta, _duration)
 	if _elapsed < _duration:
 		return
 	var destination := _destination
@@ -120,7 +145,7 @@ func advance(delta: float) -> void:
 func token_map_position() -> Vector2:
 	if not is_travelling():
 		return _point(_world.current_waypoint_id())
-	return _point(_travel_origin).lerp(_point(_destination), _elapsed / _duration)
+	return _point(_travel_origin).lerp(_point(_destination), travel_progress())
 
 
 func _point(waypoint_id: String) -> Vector2:

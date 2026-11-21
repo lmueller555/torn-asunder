@@ -10,9 +10,9 @@ const CLEAR := "mara_mine_escort"
 
 
 func _initialize() -> void:
-	var passed := _check_travel() and _check_gates() and _check_direction()
+	var passed := _check_travel() and _check_authored_timing() and _check_gates() and _check_direction()
 	if passed:
-		print("Overworld navigation: one open edge, arrival callback, cancel/reset, route gates, and spatial selection passed.")
+		print("Overworld navigation: one open edge, arrival callback, authored timing, cancel/reset, route gates, and spatial selection passed.")
 	quit(0 if passed else 1)
 
 
@@ -33,7 +33,10 @@ func _check_travel() -> bool:
 	var mine_position: Vector2 = world.waypoint(MINE).map_position
 	if nav.action() != Navigation.Action.CAMP or not nav.select(MINE) or not nav.start_travel():
 		return _fail("Expected departure from camp on its open edge.")
-	nav.advance(0.2)
+	var default_duration := clampf(camp_position.distance_to(mine_position) / 0.55, 0.35, 1.4)
+	nav.advance(default_duration * 0.25)
+	if not is_equal_approx(nav.travel_progress(), 0.25):
+		return _fail("Omitted duration must retain the normalized map timing.")
 	var midpoint := nav.token_map_position()
 	if not nav.is_travelling() or nav.select(ROAD) or nav.start_travel() or not arrivals.is_empty() \
 			or world.current_waypoint_id() != CAMP or midpoint.is_equal_approx(camp_position) \
@@ -58,6 +61,48 @@ func _check_travel() -> bool:
 			or nav.start_travel() or world.mission_at_current_waypoint() != CLEAR:
 		return _fail("Exactly one arrival must precede any shell-owned mission action.")
 	return true
+
+
+func _check_authored_timing() -> bool:
+	var world := World.new("mara")
+	var nav := Navigation.new(world, PackedStringArray())
+	var arrivals: Array[String] = []
+	nav.waypoint_arrived.connect(func(id: String) -> void: arrivals.append(id))
+	if not nav.select(MINE):
+		return _fail("Expected a valid destination for authored timing.")
+	for invalid: Variant in [0.0, -1.0, INF, -INF, NAN, "4.0"]:
+		if nav.start_travel(invalid) or nav.is_travelling():
+			return _fail("Invalid authored timing must leave navigation idle.")
+	nav.advance(9.0)
+	if not arrivals.is_empty() or world.current_waypoint_id() != CAMP or not nav.start_travel(4.0):
+		return _fail("Invalid start must not commit and a valid route duration must be accepted.")
+	if nav.travel_origin_id() != CAMP or nav.travel_target_id() != MINE or nav.travel_progress() != 0.0:
+		return _fail("An active trip must expose its endpoints and zero initial progress.")
+	nav.advance(1.0)
+	for invalid_delta: float in [0.0, -3.0, INF, -INF, NAN]:
+		nav.advance(invalid_delta)
+	if nav.start_travel(0.0) or nav.start_travel(1.0) or nav.travel_progress() != 0.25 \
+			or nav.travel_origin_id() != CAMP or nav.travel_target_id() != MINE or not arrivals.is_empty():
+		return _fail("Invalid deltas and repeated starts must leave active travel untouched.")
+	nav.advance(2.0)
+	if nav.travel_progress() != 0.75 or world.current_waypoint_id() != CAMP:
+		return _fail("Progress must follow authored duration beyond the normalized default.")
+	if not nav.cancel_travel() or not _travel_is_idle(nav):
+		return _fail("Cancel must clear the renderer's active travel state.")
+	if not nav.start_travel(2.0) or nav.travel_progress() != 0.0:
+		return _fail("Retry must begin a fresh trip.")
+	nav.advance(1.0)
+	if nav.travel_progress() != 0.5 or not arrivals.is_empty():
+		return _fail("Retry must not inherit elapsed time.")
+	nav.advance(1.0)
+	if arrivals != [MINE] or world.current_waypoint_id() != MINE or not _travel_is_idle(nav):
+		return _fail("Authored travel must commit once at its duration and clear renderer state.")
+	return true
+
+
+func _travel_is_idle(nav: Navigation) -> bool:
+	return not nav.is_travelling() and nav.travel_origin_id().is_empty() \
+		and nav.travel_target_id().is_empty() and nav.travel_progress() == 0.0
 
 
 func _check_gates() -> bool:
