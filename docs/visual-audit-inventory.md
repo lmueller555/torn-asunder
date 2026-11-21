@@ -70,6 +70,19 @@ These rework decisions cover the families visible in the linked Godot previews a
 | [Moonwash Survey Shore beach, shoal and signal structure](../tests/moonwash_survey_shore_preview.tscn) | Rework | Hard-edged bands and angular surf stripes read as depth markers. The plain post and ramp do not distinguish a working signal station at hero height. Keep the two headland occlusions and beach/high route distinction in later art. |
 | [Spanwater main channel, spillway and wheel stand](../tests/spanwater_lock_campaign_preview.tscn) | Rework | The channel and spilling water are solid color planes and square masses. The wheel is recognizable but its block stand, gates and banks lack construction or believable joins. Moving water cues and the two layouts still need separate in-game checks. |
 
+## Inspected: Ilyra’s live Moonwash rescue
+
+Reviewed in hero, local tactical and overview views of [Hulls on Stone](../game/battlefield/ilyra_moonwash_rescue_campaign.tscn), not just the [shared harbor preview](../tests/moonwash_harbor_campaign_preview.tscn). The two transfer decks share the battlefield scene with Mara’s High Quay; this does not audit her view of the quay or every surrounding hull.
+
+| Existing asset or family | Status | What blocks a pass |
+|---|---|---|
+| [Receiving and stranded ships](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | The two hulls read as long colored slabs. Flat deck fills and bare cross-shaped masts lack built planking, rail joins, bulwarks or visible working rigging. Preserve each vessel’s distinct deck elevation and the two independent receiving positions. |
+| [Pier and boarding gangways](../game/battlefields/moonwash_harbor_campaign.tscn) | Rework | Broad stepped blocks lack timber joints and look like incidental terrain rather than a supported access route. Keep the actual receiving gangway, pier turns, open mooring and climb to the stranded deck fully traversable. |
+| [Fore and aft transfer visuals](../game/battlefield/ilyra_moonwash_rescue_campaign.gd) | Rework | The placed spans are plain strips with thin colored lines; their attachment and safe walkway are difficult to see from Ilyra’s rig view, where large labels dominate. Keep state-dependent visibility, both route positions, independent rigging and clear fore-contested versus aft-open feedback. |
+| [Crews and shore salvagers](../game/battlefield/ilyra_moonwash_rescue_campaign.gd) | Rework | Unanimated grouped box figures and floating names do not read as crews walking a rescue span. Preserve each party’s boarding order, independent position, and the visible actual salvager approach. |
+
+Both decks were reached on the authored pier route. Rigging the fore transfer brought the salvagers to the mooring and paused the fore party. The aft crew landed independently; a Shore Marine Hold then allowed the fore crew to land. The optional cargo visual and the alternate approach contexts still need their own review.
+
 ## Inspected: Vareth overworld
 
 | Existing asset or family | Status | What blocks a pass |
