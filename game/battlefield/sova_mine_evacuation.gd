@@ -1,5 +1,8 @@
 extends "res://game/battlefield/command_harness.gd"
 
+## Emitted once when an attempt reaches a terminal result.
+signal mission_finished(won: bool)
+
 const Evacuation := preload("res://game/battlefield/sova_mine_tunnels.gd")
 const ROUTE_NAMES := ["TunnelEntrance", "TunnelMidpoint", "TunnelExit", "EvacuationTrail", "MinerEvacuation"]
 const EXIT_WAYPOINT := 2
@@ -70,6 +73,8 @@ func _physics_process(delta: float) -> void:
 	frame.witness_waiting_under_truce = _witness_at_truce
 	objective.advance(frame)
 	_refresh_view()
+	if objective.outcome != Evacuation.Outcome.ACTIVE:
+		mission_finished.emit(objective.outcome == Evacuation.Outcome.SUCCEEDED)
 
 
 func _unhandled_input(event: InputEvent) -> void:

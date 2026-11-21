@@ -29,6 +29,27 @@ const _MAPS := {
 			{"from_id": "year_one_mine", "to_id": "marches_road", "required_clear_id": "mara_mine_escort"},
 		],
 	},
+	"sova": {
+		"start": "cairnspine_camp",
+		"waypoints": {
+			"cairnspine_camp": {
+				"id": "cairnspine_camp", "label": "Cairnspine Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.2, 0.49),
+			},
+			"year_one_mine": {
+				"id": "year_one_mine", "label": "The Mine", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.49, 0.34), "mission_id": "sova_mine_tunnels",
+			},
+			"cairnspine_assembly": {
+				"id": "cairnspine_assembly", "label": "Cairnspine Assembly", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.78, 0.55),
+			},
+		},
+		"routes": [
+			{"from_id": "cairnspine_camp", "to_id": "year_one_mine"},
+			{"from_id": "year_one_mine", "to_id": "cairnspine_assembly", "required_clear_id": "sova_mine_tunnels"},
+		],
+	},
 }
 
 var _campaign_id: String

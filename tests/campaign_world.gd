@@ -79,7 +79,7 @@ func _check_travel() -> bool:
 
 
 func _check_isolation() -> bool:
-	var unknown := World.new("sova")
+	var unknown := World.new("raska")
 	var no_clears := PackedStringArray()
 	if not unknown.current_waypoint_id().is_empty() or not unknown.visited_waypoint_ids().is_empty() \
 			or not unknown.waypoints().is_empty() or not unknown.routes().is_empty() \

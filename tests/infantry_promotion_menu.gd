@@ -115,7 +115,7 @@ func _run_flow() -> bool:
 	if before != FileAccess.get_file_as_bytes(_profile_path):
 		return _fail("Promotion practice changed the existing campaign save.")
 
-	if not _press_all(["Back", "Back", "Back", "New Game", "sova", "Unit Progression"]):
+	if not _press_all(["Back", "Back", "Back", "New Game", "sova", "ConfirmTravel", "Unit Progression"]):
 		return false
 	if _button("Promote to Heavy Infantry") or _button("Inspect 3D Model"):
 		return _fail("The Infantry branch appeared in an unrelated campaign's practice session.")

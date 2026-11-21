@@ -90,7 +90,8 @@ func _draw_terrain() -> void:
 		var y := 0.76 + (i * 13 % 10) / 100.0 + 0.02 * sin(i * 4.0)
 		if absf(x - 0.24) > 0.075:
 			_draw_tree(point_at(Vector2(x, y)), 6.0 + (i % 5) * 2.0)
-	draw_string(TYPE, Vector2(26, 30), "VARETH  /  WESTERN MARCHES", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 15, QUIET)
+	var area := "CAIRNSPINE APPROACH" if world and world.campaign_id() == "sova" else "WESTERN MARCHES"
+	draw_string(TYPE, Vector2(26, 30), "VARETH  /  " + area, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 15, QUIET)
 	var compass := Vector2(size.x - 45.0, 44.0)
 	draw_line(compass - Vector2(0, 17), compass + Vector2(0, 15), QUIET, 1.0, true)
 	draw_line(compass - Vector2(9, 3), compass + Vector2(9, -3), QUIET, 1.0, true)

@@ -15,9 +15,11 @@ Use a mouse, the arrow keys and Enter, or the DualSense D-pad and Cross to navig
 
 New Game opens the Campaign Vault and its six leader portraits. Choose Mara to enter the campaign map at Marches Camp. Confirm the current camp to enter **Camp Operations**, where **Read Dispatch** opens the command-post conversation. Select the linked **Mine** and confirm travel to see its briefing; choose **Confirm Deployment** there to start the campaign-scale graybox escort. Delivery records a clear and shows the debrief. Back on the map, the road into the Marches is now open. Use Escape or DualSense Create to abandon an unfinished attempt without recording a clear. Circle is for dodging.
 
-Continue and Load restore Mara's last arrived waypoint. Other leaders still open their briefing and practice screens; no other story mission can be deployed through the campaign menu. Settings saves fullscreen and reduced-motion preferences.
+Sova also starts on the campaign map, at Cairnspine Camp. Read his dispatch in **Camp Operations**, travel to the same **Mine**, then confirm deployment for the campaign-scale graybox evacuation. Once both work groups reach safety and the witness is waiting at the outlet, the debrief returns you to the map with the route to Cairnspine Assembly open. The Assembly is a waypoint, not a deployable mission.
 
-Open **Combat Drills** from any briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
+Continue and Load restore the last arrived waypoint for Mara and Sova independently. The other leaders still open their briefing and practice screens. Settings saves fullscreen and reduced-motion preferences.
+
+Open **Combat Drills** from Camp Operations or a leader's practice briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 
 Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
 
