@@ -68,3 +68,9 @@ The standalone selection policy keeps three contexts distinct. An unengaged sele
 Try the policy in the isolated development preview: `godot game/battlefield/engagement_camera_playtest.tscn`. Move Shield Infantry toward the **Practice patrol**: on contact, the camera follows the selected platoon and Square/right-click still issues Move. Cycle to the Hero Platoon and move it toward the **Sparring opponent**: on contact, the stick moves the hero and Square attacks. L1 guards and Circle dodges. Cycle to an unengaged platoon or leave contact to return to the saved tactical cursor. The opponents and formations use existing debug visuals; this tests controls, not final art or enemy combat AI.
 
 Live missions still hold **L2** for command. After importing, verify the policy with `godot --headless --script tests/engagement_camera_policy.gd` and the preview inputs with `godot --headless --script tests/engagement_camera_playtest.gd`.
+
+## Mixed formation drill
+
+Launch `godot game/battlefield/mixed_formation_drill.tscn`. Hold **L2 / Shift** for command, select Archers with **D-pad / Z X**, aim at the guard marker, and press **Triangle / K**. At the starting distance, the guard can close and pin the bow line before it releases. Use **Square / right-click** to fall back, then re-order the attack once the archers are clear and reloaded.
+
+Reset with **Options / Backspace**. Move the archers farther back before issuing any attacks. Send Shield Infantry in first using the same attack command, then order the archers to fire while the guard is occupied. The same guard, melee, ranged and shared BP rules run in both attempts. The flat Command Harness is reused as-is for this opt-in development test; there is no new art or campaign entry. Verify with `godot --headless --script tests/mixed_formation_drill.gd`.
