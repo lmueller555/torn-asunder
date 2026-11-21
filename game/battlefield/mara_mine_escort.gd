@@ -6,6 +6,8 @@ signal mission_finished(won: bool)
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
+const Catalog := preload("res://game/combat/unit_catalog.gd")
+const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
 const Archer := preload("res://game/combat/human_archer_volley.gd")
 const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
@@ -22,8 +24,11 @@ const EXIT_LIGHT := Color("#8de5d1")
 const SUNDERING_COST: int = Attack.PROFILES[Attack.Attack.SUNDERING_STRIKE]["bp_cost"]
 const SPECIAL_PRESS := 0.52
 const SPECIAL_RELEASE := 0.32
+const INFANTRY_IDLE := &"Idle"
+const INFANTRY_RUN := &"Run"
 
 @export var opposition_enabled := true
+@export var render_shield_infantry := false
 @export var sundering_strike_enabled := false
 @export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
 @export var interception_approach: NodePath
@@ -51,6 +56,7 @@ var _enemy_target_ring: MeshInstance3D
 var _enemy_status: Label3D
 var _hero_weapon: MeshInstance3D
 var _hero_guard: MeshInstance3D
+var _infantry_animators: Array[AnimationPlayer] = []
 
 @onready var _goal_label: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
 @onready var _instructions_label: Label = $ObjectiveHUD/Panel/Margin/Readout/Instructions
@@ -129,6 +135,57 @@ func _after_battle_step(delta: float) -> void:
 		encounter.advance(delta, battle, _terrain.clear_melee_contact, _terrain.can_move)
 		if not encounter.hero.is_alive():
 			report_hero_incapacitated()
+	_sync_infantry_animation()
+
+
+func _add_formation_member_visual(member: Node3D, formation_index: int) -> bool:
+	if not render_shield_infantry or formation_index != InfantryAttack.INFANTRY_INDEX:
+		return false
+	var scene := _infantry_model_scene()
+	if not scene or not scene.can_instantiate():
+		return false
+	var instance := scene.instantiate()
+	var model := instance as Node3D
+	if not model:
+		instance.free()
+		return false
+	model.name = "HumanInfantryModel"
+	# The imported skirmish model faces +Z. The battlefield feet anchor faces
+	# -Z; turn the art once and keep its authored meter scale and zero foot offset.
+	model.rotate_y(PI)
+	member.add_child(model)
+	var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	if player and player.has_animation(INFANTRY_IDLE):
+		_infantry_animators.append(player)
+		player.play(INFANTRY_IDLE)
+	return true
+
+
+func _infantry_model_scene() -> PackedScene:
+	var definition: Dictionary = Catalog.TYPES.get(Catalog.HUMAN_INFANTRY, {})
+	return definition.get("model") as PackedScene
+
+
+func _sync_infantry_animation(reset := false) -> void:
+	if _infantry_animators.is_empty():
+		return
+	var index := InfantryAttack.INFANTRY_INDEX
+	var infantry := battle.formations[index]
+	# The member anchors still follow the shared harness. This measures actual
+	# movement this tick, including attack approach, not merely a requested order.
+	var previous := _formation_models[index].position
+	var moving := not Vector2(previous.x, previous.z).is_equal_approx(infantry.position)
+	for player in _infantry_animators:
+		if not infantry.can_receive_orders():
+			if player.is_playing():
+				player.pause()
+			continue
+		if reset:
+			player.stop()
+		var clip := INFANTRY_RUN if moving and not reset and player.has_animation(INFANTRY_RUN) else INFANTRY_IDLE
+		if player.current_animation != clip or not player.is_playing():
+			var speed := Battle.FORMATION_SPEED / Skirmish.RUN_SPEED if clip == INFANTRY_RUN else 1.0
+			player.play(clip, 0.0 if reset else 0.10, speed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -268,6 +325,7 @@ func restart_mission() -> void:
 	_interact_requested = false
 	_restart_button.release_focus()
 	restart_battle()
+	_sync_infantry_animation(true)
 	_reset_encounter()
 	_refresh_objective_view(hero_world_position())
 
