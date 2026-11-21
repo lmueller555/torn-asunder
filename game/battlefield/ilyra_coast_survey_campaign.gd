@@ -5,12 +5,15 @@ extends "res://game/battlefield/command_harness.gd"
 signal mission_cleared(result: StringName)
 
 const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
+const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const CHART_CIRCULATED := &"chart_circulated"
 const BEACH := Survey.SignalSite.BEACH
 const HEADLAND := Survey.SignalSite.HEADLAND
 const SITE_NAMES := ["Beach", "Headland"]
 const READING_MARKERS := ["AncestralStone", "FishingInlet"]
 const SIGNAL_MARKERS := ["BeachSignal", "HeadlandSignal"]
+const READING_PINS: Array[StringName] = [&"ancestral_stone", &"fishing_inlet"]
+const RELAY_PINS: Array[StringName] = [&"beach_relay", &"headland_relay"]
 const INTERACT_RADIUS := 2.6
 const HIDE_BEACH_BILLBOARDS_WITHIN := 7.5
 const SHOW_BEACH_BILLBOARDS_BEYOND := 13.0
@@ -68,6 +71,8 @@ var _headland_billboard_opacity := -1.0
 @onready var _shore: Label = $ObjectiveHUD/Panel/Margin/Readout/Shore
 @onready var _hint: Label = $ObjectiveHUD/Panel/Margin/Readout/Hint
 @onready var _restart: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
+@onready var _minimap_panel: PanelContainer = get_node_or_null(^"ObjectiveHUD/TacticalMinimap")
+@onready var _minimap: Minimap = get_node_or_null(^"ObjectiveHUD/TacticalMinimap/Margin/Readout/Map")
 
 
 func _ready() -> void:
@@ -149,6 +154,58 @@ func _update_mode() -> void:
 	super._update_mode()
 	_refresh_beach_billboards()
 	_refresh_headland_billboards()
+
+
+func _sync_view() -> void:
+	super._sync_view()
+	if not _minimap:
+		return # The registered scene opts in with a passive HUD node.
+	var active := command_view and objective.phase not in [Survey.Phase.SUCCEEDED, Survey.Phase.FAILED]
+	if _minimap_panel.visible != active:
+		_minimap_panel.visible = active
+		if not active:
+			_minimap.show_frame(null)
+	if not active:
+		return
+	_minimap.set_field_bounds(battle.bounds)
+	var frame := Minimap.Frame.new()
+	frame.hero = Minimap.Marker.new(&"ilyra", battle.hero_position, battle.hero_heading)
+	var detachment := battle.formations[0]
+	if detachment.can_receive_orders():
+		frame.allies.append(Minimap.Marker.new(&"shore_detachment", detachment.position, detachment.heading))
+		frame.selected_ally = &"shore_detachment"
+	for index in _reading_points.size():
+		if objective.has_reading((index + 1) as Survey.Reading):
+			_add_map_pin(frame, READING_PINS[index], _reading_points[index], Minimap.ObjectiveKind.PICKUP)
+	# Both sites are chart options once the readings are ready. The map never
+	# infers a current cutter contact, a hostile crew, or a usable signal window.
+	if objective.phase in [Survey.Phase.WAITING_TO_SIGNAL, Survey.Phase.SIGNALING]:
+		for index in _signal_points.size():
+			_add_map_pin(frame, RELAY_PINS[index], _signal_points[index], Minimap.ObjectiveKind.EXIT)
+	frame.camera_footprint = _minimap_footprint()
+	_minimap.show_frame(frame)
+
+
+func _add_map_pin(frame: Minimap.Frame, key: StringName, world_point: Vector3, kind: Minimap.ObjectiveKind) -> void:
+	var at := to_local(world_point)
+	frame.objectives.append(Minimap.Marker.new(key, Vector2(at.x, at.z), Vector2.UP, kind))
+
+
+func _minimap_footprint() -> PackedVector2Array:
+	var viewport := get_viewport().get_visible_rect()
+	if get_viewport().get_camera_3d() != _command_camera or not viewport.has_area():
+		return PackedVector2Array()
+	var world_to_field := global_transform.affine_inverse()
+	var corners := PackedVector2Array()
+	for pixel in [viewport.position, Vector2(viewport.end.x, viewport.position.y),
+			viewport.end, Vector2(viewport.position.x, viewport.end.y)]:
+		var origin := world_to_field * _command_camera.project_ray_origin(pixel)
+		var direction := world_to_field.basis * _command_camera.project_ray_normal(pixel)
+		var hit: Variant = FLOOR.intersects_ray(origin, direction)
+		if hit == null:
+			return PackedVector2Array()
+		corners.append(Vector2(hit.x, hit.z))
+	return corners
 
 
 func _after_battle_step(delta: float) -> void:

@@ -184,7 +184,18 @@ func _survey_flow() -> bool:
 	if not survey.objective.has_reading(Survey.Reading.ANCESTRAL_STONE):
 		return _fail("Abort fixture did not reach actual incomplete mission progress.")
 	var before_abort := FileAccess.get_file_as_string(_profile_path)
-	_joy(JOY_BUTTON_BACK)
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	await process_frame
+	var back := _title._stage.get_node_or_null(^"ReturnToMap") as Button
+	if not back or not survey._minimap.is_visible_in_tree() \
+			or back.get_global_rect().intersects(survey._minimap_panel.get_global_rect()):
+		return _fail("The passive map does not fit beside the campaign Return button in active command.")
+	for pressed in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.position = back.get_global_rect().get_center()
+		click.pressed = pressed
+		root.push_input(click, true)
 	if not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
 		return _fail("Aborting an incomplete survey wrote campaign progress.")
 	_map().select_waypoint(SPANWATER)
