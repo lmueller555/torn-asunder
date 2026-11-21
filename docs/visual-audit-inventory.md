@@ -75,7 +75,7 @@ These rework decisions cover the families visible in the linked Godot previews a
 
 | Existing asset or family | Status | What blocks a pass |
 |---|---|---|
-| [Lower storehouse exterior](../game/battlefields/red_basin_well_road.tscn) | Rework | At the actual exterior interaction ring in [The Second Bucket](../game/battlefield/raska_well_road_playtest.tscn), a plain wall box, untrimmed roof and blank slab cannot identify a working storehouse without the floating label. The roof also reads as a generic rectangle in command view. |
+| [Lower storehouse exterior](audits/red-basin-storehouse-v12.json) | Pass | Exact V1.2 closed shutter, walls, stone base and roof in [The Second Bucket](../game/battlefield/raska_well_road_playtest.tscn). Native hero and tactical views, the exterior action point and real cart arrival were checked. This is a single-placement approval with scene-relative rendering measurements. |
 
 The hero starts boarding at the exterior storehouse ring, not at either well. Keep the building solid and closed, its roof blocked to command targeting, and the cart’s separate approach to the yard clear. After the cart arrives, the three households must physically reach it before the cart is ready. The building review does not cover the wells, bench, wagons, households or cliffs.
 

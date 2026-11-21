@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/environment/basin_storehouse.glb" id="1_storehouse_art"]
 [sub_resource type="StandardMaterial3D" id="Mat_basin"]
 albedo_color = Color(0.4, 0.36, 0.3, 1)
 
@@ -680,6 +681,7 @@ shape = SubResource("Shape_4p3_0p42_4p0")
 position = Vector3(-150, -1.65, 39)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/BoardingStorehouse"]
+cast_shadow = 3
 mesh = SubResource("Mesh_8p0_4p7_9p0")
 material_override = SubResource("Mat_wood")
 
@@ -690,6 +692,7 @@ shape = SubResource("Shape_8p0_4p7_9p0")
 position = Vector3(-150, 0.89, 39)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/StorehouseRoof"]
+cast_shadow = 3
 mesh = SubResource("Mesh_9p25_0p65_10p3")
 material_override = SubResource("Mat_stock")
 
@@ -700,6 +703,7 @@ shape = SubResource("Shape_9p25_0p65_10p3")
 position = Vector3(-145.8, -1.84, 39)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Wells/StorehouseLintel"]
+cast_shadow = 3
 mesh = SubResource("Mesh_0p55_2p55_3p2")
 material_override = SubResource("Mat_stock")
 
@@ -1338,6 +1342,19 @@ material_override = SubResource("Mat_crag")
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Bounds/BasinWall24"]
 shape = SubResource("Shape_BasinWall24")
 
+[node name="BasinStorehouseVisual" parent="Geometry/Wells" instance=ExtResource("1_storehouse_art")]
+position = Vector3(-150, -4, 39)
+
+[node name="STOREHOUSE_HERO" parent="Geometry/Wells/BasinStorehouseVisual" index="0"]
+cast_shadow = 0
+custom_aabb = AABB(-4.625, 0, -5.15, 9.25, 5.215, 10.3)
+visibility_parent = NodePath("../STOREHOUSE_TACTICAL")
+
+[node name="STOREHOUSE_TACTICAL" parent="Geometry/Wells/BasinStorehouseVisual" index="1"]
+cast_shadow = 0
+custom_aabb = AABB(-4.625, 0, -5.15, 9.25, 5.215, 10.3)
+visibility_range_begin = 48.0
+
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="Spawns" type="Node3D" parent="Markers"]
@@ -1547,3 +1564,5 @@ metadata/box_size = Vector3(10, 9, 31)
 position = Vector3(157, 1.5, -13)
 gizmo_extents = 1.5
 metadata/box_size = Vector3(8, 3, 16)
+
+[editable path="Geometry/Wells/BasinStorehouseVisual"]
