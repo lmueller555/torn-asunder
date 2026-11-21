@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "scope": "V7 S3TC Still Kingdom Cut cemetery stair, retaining sides and footing in the existing Sereth cemetery placement only",
+  "author": "Torn Asunder terrain asset author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "S3TC exact native production hero foot, crest/back, east/west and sector/overview captures, with 30 measured distance samples.",
+    "close_up": "Exact native production close-mortar and 3.05 s gameplay frame.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, 1280×720. On the Sereth Cut playtest approach the stairs from the lower path near XZ (-82.72, 66.65), turn to inspect both walls, ascend to the crest, then use Shift/Home and M to inspect tactical sector and full overview. Fixed-camera ABBA toggles only cemetery art and old render mesh visibility, 8 warm and 42 timed renders per block.",
+    "measurements": "Production gate and serial ABBA: 3,844,832 compressed texture bytes with mips; 929/461 hero/tactical triangles including footing; +689/+257/+233 displayed primitives and -18/-15/-17 draws; software only."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Actual hero approach, stair crest/back, both retaining sides and landing: the prior tread holes are repaired; footing integrates with the lower path and the stair stays legible."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Matched native game lighting and exact V7 S3TC import; prior buried-ramp bands are gone, with crest, flank and mortar close-ups checked under the intended map lighting."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "30 measured native perspective/orthographic samples, one LOD each time, near below 60 m and tactical at and above 60 m. Actual command samples 79.25 m (sector) and 448.34 m (overview). Footing remains."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Clean import, no unrelated scene or collision/marker edits, and five native gameplay/terrain/camera tests. Measured software scene cost remains within the narrow accepted kit budget; no hardware claim."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Static environment kit, no animation or effects; native physical hero ascent and camera transitions were independently reviewed as integration evidence."
+    }
+  },
+  "files": {
+    "assets/models/environment/cut_cemetery_stair.glb": "ad1e3b4209a37c786519c272d1a464f0c9ea6378e8d94f8b04125923d7a42442",
+    "assets/models/environment/cut_cemetery_stair.glb.import": "aeea3d0f85826fa3e10d6a04c96840dc041514c5679b332e28a0f80f0ddbb4b8",
+    "assets/models/environment/cut_cemetery_stair_import.gd": "ef33d923e711b374df1117e3d3289274aafb30ab7d4b7af540196d978552449b",
+    "assets/models/environment/cut_cemetery_stair_import.gd.uid": "ebe012341d93c24515966ccea5bb18858ae7e444332c30f771d95e61da460d9e",
+    "assets/source/still_kingdom_cut/cut_cemetery_stair.blend": "620b4b5bf723bd6b6ee50fbaae09ea019bff5d2e2b9fc8679d39832bfbb0d1c7",
+    "game/battlefields/still_kingdom_cut.tscn": "78261ad566959d1d663b7d39560573a0d30d51264de6b4ec097107489b1b19e4"
+  },
+  "review_manifest_sha256": "209d4492241ec7bf140d87744d2328bd84a00fb25edc57612a427e2b79bee896",
+  "offline_evidence_sha256": {
+    "production-hero-foot.png": "e61aeb8ffbf1ca2a7b509dcbedf315e634a15c97d201c24047dab32cf9006c83",
+    "production-hero-crest-backs.png": "42f59b8d3f3fa3d1ab2eb44e11c1e33d1f0422ae636b242b6e5d8c1c46ba927f",
+    "production-hero-west-exterior.png": "c1a7456375e9e79d7f674004e210ef221a9818abf11ae157a6d143e119903fb2",
+    "production-hero-east-exterior.png": "c44eb43fe0926f3ff1b27b2e51cf0ea73c03c67a2d1da43233e22e47b5f6c553",
+    "production-close-mortar.png": "5253b0d80b3643a347ebfad7195081bfb655ab67be8faa0793d6b74f53cc312c",
+    "production-command-sector.png": "2f9ea892ac243fd68953eeb42810a691d59feb1a59aeed46547613cb8148960a",
+    "production-command-overview.png": "6a4b4173de248d9e2b09e8a3873e30b341f8d94c880e82566e0ea098bcbd569f",
+    "production-motion.mp4": "e0aeb816b8eab63f2763f2d4e30c6b447b16a07caf8bfe144a54f37cde02714d",
+    "production-gate.txt": "b03f5e40a2ddfd551ab1936785a607e8bcd8606fb57b7f81632b499315b2ce32",
+    "profile-abba-repeat.txt": "89ecbfb7ea8590d7d78c315aa4a7fbed0470bd141ce5f7901966fa9e7582335d",
+    "integration-tests.txt": "88b1408b6b01d9d33dc4bb0c97a3757f1adad6efa654ed2dd566a67eda195121"
+  },
+  "measurements": {
+    "release_triangles": {
+      "hero_w_footing": 929,
+      "tactical_w_footing": 461
+    },
+    "compressed_mipped_texture_bytes": 3844832,
+    "unique_textures": 3,
+    "review_limits": {
+      "single_placement_texture_cap_mib": 4,
+      "additional_displayed_primitives_hero_sector_overview": [
+        1000,
+        300,
+        300
+      ],
+      "additional_draw_calls_max": 0
+    },
+    "software_comparison": {
+      "backend": "Godot 4.7.2 GL Compatibility / Mesa llvmpipe, four threads, 1280×720",
+      "hero": {
+        "primitives_delta": 689,
+        "draw_calls_delta": -18,
+        "baseline_medians_ms": [
+          67.95,
+          60.84
+        ],
+        "candidate_medians_ms": [
+          75.98,
+          65.56
+        ]
+      },
+      "sector": {
+        "primitives_delta": 257,
+        "draw_calls_delta": -15,
+        "baseline_medians_ms": [
+          57.97,
+          61.21
+        ],
+        "candidate_medians_ms": [
+          59.31,
+          59.76
+        ]
+      },
+      "overview": {
+        "primitives_delta": 233,
+        "draw_calls_delta": -17,
+        "baseline_medians_ms": [
+          29.25,
+          26.75
+        ],
+        "candidate_medians_ms": [
+          28.32,
+          26.82
+        ]
+      },
+      "no_hardware_performance_claim": true
+    }
+  },
+  "tests": [
+    "Clean headless editor import",
+    "still_kingdom_cut.gd",
+    "sereth_cut_playtest.gd",
+    "sereth_voices_at_the_cut.gd",
+    "sector_camera.gd",
+    "sereth_campaign_flow.gd",
+    "Actual W/Q/E ascent and Shift/Home/M camera input",
+    "30 native render distance probes across both lenses"
+  ]
+}

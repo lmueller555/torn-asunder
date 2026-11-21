@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/environment/cut_cemetery_stair.glb" id="1_stair"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_banklow"]
 albedo_color = Color(0.35, 0.32, 0.29, 1)
 
@@ -590,6 +592,7 @@ rotation = Vector3(0.176709, 0, 0)
 collision_layer = 3
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Cemetery/CemeteryCleftStair"]
+visible = false
 mesh = SubResource("Mesh_4p65_1p6_28p442925306655784")
 material_override = SubResource("Mat_stair")
 
@@ -1015,6 +1018,7 @@ shape = SubResource("Shape_0p44_0p53_1p48")
 position = Vector3(-86.35, -1.67, 50.2)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Cemetery/StairWallWest"]
+cast_shadow = 3
 mesh = SubResource("Mesh_2p1_6p66_23")
 material_override = SubResource("Mat_grave")
 
@@ -1025,6 +1029,7 @@ shape = SubResource("Shape_2p1_6p66_23")
 position = Vector3(-79.65, -1.62, 50.2)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Cemetery/StairWallEast"]
+cast_shadow = 3
 mesh = SubResource("Mesh_2p1_6p76_23")
 material_override = SubResource("Mat_stone")
 
@@ -1164,6 +1169,7 @@ material_override = SubResource("Mat_tomb")
 shape = SubResource("Shape_0p68_1p66_0p37")
 
 [node name="VisibleCleftTread00" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -0.146571, 38)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1171,6 +1177,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread01" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -0.503714, 40)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1178,6 +1185,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread02" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -0.860857, 42)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1185,6 +1193,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread03" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -1.218, 44)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1192,6 +1201,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread04" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -1.57514, 46)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1199,6 +1209,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread05" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -1.93229, 48)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1206,6 +1217,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread06" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -2.28943, 50)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1213,6 +1225,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread07" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -2.64657, 52)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1220,6 +1233,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread08" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -3.00371, 54)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1227,6 +1241,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread09" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -3.36086, 56)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1234,6 +1249,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread10" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -3.718, 58)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1241,6 +1257,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread11" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -4.07514, 60)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1248,6 +1265,7 @@ material_override = SubResource("Mat_grave")
 cast_shadow = 0
 
 [node name="VisibleCleftTread12" type="MeshInstance3D" parent="Geometry/Cemetery"]
+visible = false
 position = Vector3(-83, -4.43229, 62)
 rotation = Vector3(0.176709, 0, 0)
 mesh = SubResource("Mesh_4p52_0p035_0p17")
@@ -1690,6 +1708,22 @@ material_override = SubResource("Mat_signal")
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Road/RoadThresholdEastSouth"]
 shape = SubResource("Shape_0p74_2p66_0p8")
 
+[node name="CemeteryCutVisual" parent="Geometry/Cemetery" instance=ExtResource("1_stair")]
+position = Vector3(-83, 0, 51)
+
+[node name="HERO_BAKED_MASONRY" parent="Geometry/Cemetery/CemeteryCutVisual" index="0"]
+cast_shadow = 0
+custom_aabb = AABB(-4.45, -5.30, -15.40, 8.90, 7.12, 31.80)
+visibility_parent = NodePath("../TACTICAL_LOD")
+
+[node name="TACTICAL_LOD" parent="Geometry/Cemetery/CemeteryCutVisual" index="1"]
+cast_shadow = 0
+custom_aabb = AABB(-4.45, -5.30, -15.40, 8.90, 7.12, 31.80)
+visibility_range_begin = 60.0
+
+[node name="FOOTING_SILT_LOD_ANY" parent="Geometry/Cemetery/CemeteryCutVisual" index="2"]
+cast_shadow = 0
+
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="Spawns" type="Node3D" parent="Markers"]
@@ -1934,3 +1968,5 @@ metadata/box_size = Vector3(8, 3, 9)
 position = Vector3(8, 1.5, -14)
 gizmo_extents = 1.5
 metadata/box_size = Vector3(221, 3, 16)
+
+[editable path="Geometry/Cemetery/CemeteryCutVisual"]
