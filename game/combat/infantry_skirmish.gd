@@ -75,6 +75,9 @@ const DISPLACEMENTS := {
 
 class Soldier:
 	var unit: Unit
+	var unit_type: StringName
+	var basic_attack: Dictionary
+	var run_speed: float
 	var team: int
 	var platoon_index: int
 	var roster_index: int
@@ -100,8 +103,12 @@ class Soldier:
 	var victory_cheers := 0
 	var victory_in := 0.0
 
-	func _init(model: Unit, side: int, platoon: int, index: int, spawn: Vector2) -> void:
+	func _init(model: Unit, side: int, platoon: int, index: int, spawn: Vector2, type: StringName) -> void:
 		unit = model
+		unit_type = type
+		var definition: Dictionary = Catalog.TYPES[type]
+		basic_attack = definition.basic_attack
+		run_speed = RUN_SPEED * float(definition.movement_scale)
 		team = side
 		platoon_index = platoon
 		roster_index = index
@@ -129,7 +136,6 @@ var _body_cells: Dictionary[Vector2i, Array] = {}
 var _random := RandomNumberGenerator.new()
 var _cheer_random := RandomNumberGenerator.new()
 var _retarget_random := RandomNumberGenerator.new()
-var _attack: Dictionary
 var _battle_engaged := false
 var _clear_time := 0.0
 var _celebrating := false
@@ -141,7 +147,6 @@ func _init(seed_value: int = 8, setup: Setup = null, troop_hit_award: int = 0) -
 	_cheer_random.seed = seed_value ^ 0x494E46
 	_retarget_random.seed = seed_value ^ 0x524554
 	var infantry: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
-	_attack = infantry.basic_attack
 	if setup == null:
 		setup = Setup.new()
 	_first_amber_platoon = setup.sides[0].size()
@@ -169,7 +174,7 @@ func _spawn_platoon(team: int, center: float, build: Setup.PlatoonBuild, trainin
 		var rank_offset := -0.23 if row % 2 == 0 else 0.23
 		var spawn := Vector2(center + column * 1.55 + rank_offset, side * (4.6 + row * 1.36))
 		spawn += Vector2(_random.randf_range(-0.12, 0.12), _random.randf_range(-0.10, 0.10))
-		var soldier := Soldier.new(unit, team, platoons.size(), index, spawn)
+		var soldier := Soldier.new(unit, team, platoons.size(), index, spawn, build.unit_type)
 		soldier.ready_in = _random.randf_range(0.05, 0.50)
 		soldier.cheer_in = _cheer_random.randf_range(2.0, 5.0)
 		soldiers.append(soldier)
@@ -714,7 +719,7 @@ func _run_toward(soldier: Soldier, offset: Vector2, delta: float) -> void:
 		_place_body(blocker, blocker.position + shove)
 		direction = (direction * (1.0 - 0.7 * squeeze) + sideways * side * squeeze).normalized()
 		offset = direction * offset.length() * (1.0 - 0.42 * squeeze)
-	_place_body(soldier, soldier.position + direction * minf(RUN_SPEED * delta, offset.length()))
+	_place_body(soldier, soldier.position + direction * minf(soldier.run_speed * delta, offset.length()))
 	soldier.facing = soldier.facing.slerp(direction, minf(12.0 * delta, 1.0)).normalized()
 
 
@@ -750,7 +755,7 @@ func _resolve_contacts(contacts: Array[int]) -> void:
 			reactions[defender_index] = maxi(reactions[defender_index], State.BLOCKED)
 			continue
 		hits += 1
-		var hit_damage := defender.unit.damage_from(attacker.unit, _attack)
+		var hit_damage := defender.unit.damage_from(attacker.unit, attacker.basic_attack)
 		damage[defender_index] += hit_damage
 		if hit_damage > 0.0:
 			_team_battle_points[attacker.team].award_confirmed_hit(_troop_hit_award)
