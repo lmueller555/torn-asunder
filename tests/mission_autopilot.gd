@@ -19,6 +19,7 @@ func drive() -> void:
 	if not hero.is_alive():
 		battle.set_hero_input(input)
 		return
+	_command()
 	var goal := _goal()
 	var interact_here := battle.active_interactable()
 	var nearest := _nearest_enemy(hero.position, 30.0)
@@ -46,6 +47,19 @@ func drive() -> void:
 	battle.set_hero_input(input)
 
 
+## Orders carts forward and squads along, the way a player would from the command view.
+func _command() -> void:
+	for cart in battle.commandable_structures():
+		if not cart.moving or cart.halted:
+			battle.command_structure(cart.structure_id, "advance", Vector2.INF)
+	for item in battle.objectives:
+		if item.status == "active" and item.type == "extract":
+			for who: String in item.squads:
+				var squad := battle.squad(who)
+				if squad and squad.order.get("kind") != "move":
+					battle.command(squad.index, {"kind": "move", "to": item.zone})
+
+
 func _steer(from: Vector2, to: Vector2) -> Vector2:
 	var path := battle.find_path(from, to)
 	if path.is_empty():
@@ -57,6 +71,23 @@ func _steer(from: Vector2, to: Vector2) -> Vector2:
 
 
 func _goal() -> Vector2:
+	# Escorted civilians only move while the hero is close, so stay with them first.
+	for squad in battle.squads:
+		if not squad.spawned or squad.departed or squad.team != Battle.PLAYER_TEAM:
+			continue
+		if squad.order.get("kind") == "path" and squad.order.get("wait_for_hero", 0.0) > 0.0 and squad.alive_count(battle) > 0:
+			var at := squad.centroid(battle)
+			if squad.path_index < squad.path.size():
+				return at + (squad.path[squad.path_index] - at).normalized() * 3.0
+	for item in battle.objectives:
+		if item.status == "active" and item.type == "interact" and not item.get("optional", false):
+			var best := Vector2.INF
+			for entry in battle.interactables:
+				if entry.active and not entry.done and (item.who is Array and item.who.has(entry.id) or entry.id == item.who):
+					if best == Vector2.INF or entry.pos.distance_to(battle.hero.position) < best.distance_to(battle.hero.position):
+						best = entry.pos
+			if best != Vector2.INF:
+				return best
 	for item in battle.objectives:
 		if item.status != "active":
 			continue
@@ -85,6 +116,20 @@ func _goal() -> Vector2:
 					var squad := battle.squad(who)
 					if squad and squad.spawned and squad.alive_count(battle) > 0:
 						return squad.centroid(battle)
+			"extract":
+				var waiting := false
+				for who: String in item.squads:
+					var squad := battle.squad(who)
+					if squad and squad.alive_count(battle) > 0:
+						waiting = true
+				if not waiting:
+					return battle.zones[item.zone].pos
+				return battle.zones[item.zone].pos.lerp(battle.hero.position, 0.0) if battle.hero.position.distance_to(battle.zones[item.zone].pos) > 30.0 else battle.zones[item.zone].pos + Vector2(-12, 0)
+			"deliveries":
+				for cart_id: String in item.carts:
+					var cart: Battle.Fighter = battle.fighters[battle.structures[cart_id]]
+					if cart.is_alive() and not cart.delivered and not cart.turned_back:
+						return cart.position
 			"hold":
 				if item.has("zone"):
 					return battle.zones[item.zone].pos

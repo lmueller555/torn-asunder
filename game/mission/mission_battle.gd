@@ -14,8 +14,14 @@ enum Kind { SOLDIER, HERO, STRUCTURE }
 enum Attack { LIGHT, HEAVY, RANGED, ABILITY }
 enum Outcome { LIVE, VICTORY, DEFEAT }
 
+const Points := preload("res://game/combat/battle_points.gd")
+
 const PLAYER_TEAM := 0
 const ENEMY_TEAM := 1
+## Neutral forces share the field but neither side targets them.
+const NEUTRAL_TEAM := 2
+const HERO_HIT_POINTS := 28
+const TROOP_HIT_POINTS := 2
 ## Missions resolve hits faster than drills so a battle plays out in minutes.
 const DAMAGE_SCALE := 2.6
 const MELEE_REACH := 1.42
@@ -104,6 +110,16 @@ class Fighter:
 	var route_index := 0
 	var escort_radius := 12.0
 	var moving := false
+	var routes: Array[PackedVector2Array] = []
+	var commandable := false
+	var halted := false
+	var turned_back := false
+	var delivered := false
+	var invulnerable := false
+	var stop_when_threatened := true
+	var waits: Dictionary = {}
+	var wait_until := 0.0
+	var loop := false
 
 	func is_alive() -> bool:
 		return not removed and unit.is_alive()
@@ -142,6 +158,7 @@ class Squad:
 	var last_engaged := -100.0
 	var kills := 0
 	var persist := ""
+	var departed := false
 	var follow_slot := 0
 	var definition: Dictionary
 
@@ -189,6 +206,11 @@ var outcome := Outcome.LIVE
 var outcome_reason := ""
 var player_losses := 0
 var enemy_losses := 0
+var points: Points
+var ability_cost := 300
+var hazards: Array[Dictionary] = []
+var flags: Dictionary = {}
+var extracted: Dictionary = {}
 
 var _input := {}
 var _random := RandomNumberGenerator.new()
@@ -199,7 +221,7 @@ var _pending: Array[Dictionary] = []
 var _done_at: Dictionary = {}
 var _cells: Dictionary = {}
 var _attackers := PackedInt32Array()
-var _team_alive: Array = [[], []]
+var _team_alive: Array = [[], [], []]
 var _overrun: Dictionary = {}
 
 
@@ -224,7 +246,8 @@ func _init(definition: Dictionary, hero_id: StringName, hero_level: int, levels:
 	hero.facing = hero_start.get("facing", Vector2.UP)
 	hero_ability = hero_info.get("ability", &"")
 	hero_ability_name = hero_info.get("ability_name", "")
-	ability_cooldown = hero_info.get("ability_cooldown", 20.0)
+	ability_cost = hero_info.get("ability_cost", 300)
+	points = Points.new(hero_level)
 
 	for entry: Dictionary in definition.get("structures", []):
 		_add_structure(entry)
@@ -286,8 +309,19 @@ func _add_structure(entry: Dictionary) -> void:
 	fighter.speed = entry.get("speed", 1.7)
 	fighter.escort_radius = entry.get("escort_radius", 12.0)
 	fighter.moving = entry.get("moving", false)
-	for point in entry.get("path", []):
-		fighter.route.append(_point(point))
+	fighter.commandable = entry.get("commandable", false)
+	fighter.halted = entry.get("halted", false)
+	fighter.stop_when_threatened = entry.get("stop_when_threatened", true)
+	fighter.waits = entry.get("waits", {})
+	fighter.loop = entry.get("loop", false)
+	var route_list: Array = entry.get("routes", [entry.get("path", [])])
+	for points_list: Array in route_list:
+		var route := PackedVector2Array()
+		for point in points_list:
+			route.append(_point(point))
+		fighter.routes.append(route)
+	if not fighter.routes.is_empty():
+		fighter.route = fighter.routes[0]
 	fighters.append(fighter)
 	_attackers.append(0)
 	structures[entry.id] = fighter.index
@@ -474,7 +508,11 @@ func commandable_squads() -> Array[Squad]:
 
 
 func ability_remaining() -> float:
-	return maxf(0.0, ability_ready_at - elapsed)
+	return 0.0 if ability_ready() else 1.0
+
+
+func ability_ready() -> bool:
+	return hero_ability != &"" and points.can_afford(ability_cost)
 
 
 func active_interactable() -> int:
@@ -506,6 +544,8 @@ func step(delta: float) -> void:
 	_index_bodies()
 	_separate(delta)
 	_regenerate(delta)
+	_update_hazards(delta)
+	_update_extraction()
 	_update_interaction(delta)
 	_update_objectives(delta)
 	_run_events()
@@ -532,10 +572,22 @@ func _advance_animation_clocks(delta: float) -> void:
 
 
 func _refresh_team_lists() -> void:
-	_team_alive = [[], []]
+	_team_alive = [[], [], []]
 	for fighter in fighters:
 		if fighter.is_alive():
 			_team_alive[fighter.team].append(fighter.index)
+
+
+func _foes(team: int) -> Array:
+	if team == PLAYER_TEAM:
+		return _team_alive[ENEMY_TEAM]
+	if team == ENEMY_TEAM:
+		return _team_alive[PLAYER_TEAM]
+	return []
+
+
+func team_alive(team: int) -> Array:
+	return _team_alive[team]
 
 
 func _count_attackers() -> void:
@@ -665,7 +717,8 @@ func _update_hero_input(delta: float) -> void:
 				hero.facing = hero.knockback if move.length() > 0.2 else hero.facing
 				hero.protected_until = elapsed + DODGE_TIME + 0.05
 				_set_state(hero, State.DODGE)
-			elif _input.get("ability", false) and ability_remaining() <= 0.0 and hero_ability != &"":
+			elif _input.get("ability", false) and ability_ready():
+				points.try_spend(ability_cost, true)
 				_start_ability(hero)
 			elif _input.get("light", false):
 				hero.combo = 0
@@ -725,14 +778,13 @@ func _start_ability(fighter: Fighter) -> void:
 	fighter.resolved = false
 	fighter.action_duration = 1.0
 	fighter.contact_time = 0.45
-	ability_ready_at = elapsed + ability_cooldown
 	_set_state(fighter, State.CAST)
 
 
 func _soft_lock(fighter: Fighter, reach: float) -> int:
 	var best := -1
 	var best_score := INF
-	for index in _team_alive[1 - fighter.team]:
+	for index in _foes(fighter.team):
 		var other := fighters[index]
 		var offset := other.position - fighter.position
 		var distance := offset.length()
@@ -795,6 +847,8 @@ func _apply_damage(attacker: Fighter, defender: Fighter, amount: float) -> void:
 	else:
 		defender.unit.receive_damage(amount)
 	defender.last_hurt = elapsed
+	if attacker.team == PLAYER_TEAM and defender.kind != Kind.STRUCTURE and attacker.kind != Kind.STRUCTURE:
+		points.award_confirmed_hit(HERO_HIT_POINTS if attacker.controlled else TROOP_HIT_POINTS)
 	if attacker.platoon >= 0:
 		squads[attacker.platoon].last_engaged = elapsed
 	if not defender.unit.is_alive():
@@ -830,7 +884,7 @@ func _react(defender: Fighter, attacker: Fighter, reaction: State) -> void:
 
 
 func _can_hit(defender: Fighter) -> bool:
-	return defender.is_alive() and not (defender.is_recovering() or elapsed < defender.protected_until)
+	return defender.is_alive() and not defender.invulnerable and not (defender.is_recovering() or elapsed < defender.protected_until)
 
 
 func _blocks(defender: Fighter, attacker: Fighter) -> bool:
@@ -878,7 +932,7 @@ func _hero_cleave(fighter: Fighter) -> void:
 		multiplier *= 0.85
 	var limit := 6 if heavy else 4
 	var struck: Array[Fighter] = []
-	for index in _team_alive[1 - fighter.team]:
+	for index in _foes(fighter.team):
 		var defender := fighters[index]
 		if not _can_hit(defender):
 			continue
@@ -1021,7 +1075,7 @@ func _heal(fighter: Fighter, amount: float) -> void:
 
 func _enemies_near(fighter: Fighter, radius: float) -> Array[Fighter]:
 	var result: Array[Fighter] = []
-	for index in _team_alive[1 - fighter.team]:
+	for index in _foes(fighter.team):
 		var other := fighters[index]
 		if other.kind != Kind.STRUCTURE and _can_hit(other) and other.position.distance_to(fighter.position) <= radius + other.radius:
 			result.append(other)
@@ -1151,6 +1205,10 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 		var wait: float = squad.order.get("wait_for_hero", 0.0)
 		if wait > 0.0 and hero.is_alive() and hero.position.distance_to(squad.anchor) > wait:
 			return
+		# Civilians wait while their destination is contested.
+		var pause_zone: String = squad.order.get("pause_zone", "")
+		if pause_zone != "" and _team_in_zone(ENEMY_TEAM, pause_zone) > 0:
+			return
 	# Wait for stragglers so the formation arrives together.
 	var lag := 0.0
 	var counted := 0
@@ -1173,6 +1231,10 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 		squad.anchor = waypoint
 		squad.path_index += 1
 		if squad.path_index >= squad.path.size() and squad.order.kind == "move":
+			if squad.order.get("despawn", false):
+				squad.departed = true
+				for member in squad.members:
+					fighters[member].removed = true
 			squad.order = {"kind": "hold"}
 		elif squad.path_index >= squad.path.size() and squad.order.kind == "path":
 			squad.order = {"kind": "hold", "arrived": true}
@@ -1196,7 +1258,7 @@ func _entity_position(who: String) -> Vector2:
 func _nearest_enemy(team: int, from: Vector2, include_structures: bool, limit: float = INF) -> int:
 	var best := -1
 	var best_distance := limit
-	for index in _team_alive[1 - team]:
+	for index in _foes(team):
 		var other := fighters[index]
 		var distance := other.position.distance_to(from)
 		if other.kind == Kind.STRUCTURE:
@@ -1308,7 +1370,7 @@ func _scan(fighter: Fighter, squad: Squad) -> void:
 	var best := -1
 	var best_score := INF
 	var leash := _leash(squad)
-	for index in _team_alive[1 - fighter.team]:
+	for index in _foes(fighter.team):
 		var other := fighters[index]
 		var distance := other.position.distance_to(fighter.position) - other.radius
 		var preferred_target := preferred >= 0 and other.platoon == preferred
@@ -1476,27 +1538,89 @@ func _regenerate(delta: float) -> void:
 func _update_structures(delta: float) -> void:
 	for id in structures:
 		var fighter := fighters[structures[id]]
-		if not fighter.is_alive() or not fighter.moving or fighter.route_index >= fighter.route.size():
+		if not fighter.is_alive() or not fighter.moving or fighter.halted or fighter.route_index >= fighter.route.size():
 			continue
-		if not hero.is_alive() or hero.position.distance_to(fighter.position) > fighter.escort_radius:
+		if fighter.wait_until > elapsed:
 			continue
-		var threatened := false
-		for index in _team_alive[ENEMY_TEAM]:
-			var enemy := fighters[index]
-			if enemy.kind != Kind.STRUCTURE and enemy.position.distance_to(fighter.position) < 5.5:
-				threatened = true
-				break
-		if threatened:
+		if fighter.escort_radius > 0.0 and (not hero.is_alive() or hero.position.distance_to(fighter.position) > fighter.escort_radius):
+			continue
+		if fighter.stop_when_threatened and not fighter.turned_back and structure_threatened(id):
 			continue
 		var waypoint := fighter.route[fighter.route_index]
 		var offset := waypoint - fighter.position
 		var travel := fighter.speed * delta
 		if offset.length() <= travel:
 			fighter.position = waypoint
+			if fighter.waits.has(fighter.route_index) and not fighter.turned_back:
+				fighter.wait_until = elapsed + float(fighter.waits[fighter.route_index])
 			fighter.route_index += 1
+			if fighter.loop and fighter.route_index >= fighter.route.size():
+				fighter.route_index = 0
 		else:
 			fighter.facing = fighter.facing.slerp(offset.normalized(), minf(1.0, 3.0 * delta)).normalized()
 			fighter.position += offset.normalized() * travel
+
+
+## Orders for carts and other commandable structures: "advance", "halt" or "turn_back".
+func command_structure(id: String, order: String, point: Vector2 = Vector2.INF) -> void:
+	if not structures.has(id):
+		return
+	var cart := fighters[structures[id]]
+	if not cart.commandable or not cart.is_alive() or cart.delivered or cart.turned_back:
+		return
+	match order:
+		"advance":
+			if cart.route_index == 0 and cart.routes.size() > 1 and point != Vector2.INF:
+				# Take the route that passes closest to the ordered point.
+				var best := 0
+				var nearest := INF
+				for i in range(cart.routes.size()):
+					for waypoint in cart.routes[i]:
+						var distance := waypoint.distance_to(point)
+						if distance < nearest:
+							nearest = distance
+							best = i
+				cart.route = cart.routes[best]
+			cart.moving = true
+			cart.halted = false
+		"halt":
+			cart.halted = true
+		"turn_back":
+			var back := PackedVector2Array()
+			for i in range(cart.route_index - 1, -1, -1):
+				back.append(cart.route[i])
+			back.append(cart.routes[0][0] if cart.route_index == 0 else cart.route[0])
+			cart.route = back
+			cart.route_index = 0
+			cart.turned_back = true
+			cart.moving = true
+			cart.halted = false
+			cart.invulnerable = true
+
+
+func commandable_structures() -> Array[Fighter]:
+	var result: Array[Fighter] = []
+	for id in structures:
+		var fighter := fighters[structures[id]]
+		if fighter.commandable:
+			result.append(fighter)
+	return result
+
+
+func cart_status(fighter: Fighter) -> String:
+	if not fighter.is_alive():
+		return "Destroyed"
+	if fighter.delivered:
+		return "Delivered"
+	if fighter.turned_back:
+		return "Turned back"
+	if not fighter.moving or fighter.halted:
+		return "Waiting for orders" if fighter.route_index == 0 else "Halted"
+	if fighter.wait_until > elapsed:
+		return "Holding for the current"
+	if fighter.stop_when_threatened and structure_threatened(fighter.structure_id):
+		return "Under attack"
+	return "Moving"
 
 
 func structure_threatened(id: String) -> bool:
@@ -1513,6 +1637,53 @@ func structure_threatened(id: String) -> bool:
 # ---------------------------------------------------------------- objectives and events
 
 
+func _update_hazards(delta: float) -> void:
+	for i in range(hazards.size() - 1, -1, -1):
+		var hazard := hazards[i]
+		if elapsed >= hazard.end:
+			hazards.remove_at(i)
+			continue
+		if elapsed < hazard.warn_until:
+			continue
+		for fighter in fighters:
+			if fighter.kind == Kind.STRUCTURE or not fighter.is_alive():
+				continue
+			if fighter.position.distance_to(hazard.pos) <= hazard.radius:
+				var amount: float = fighter.unit.max_hp * hazard.dps * delta
+				if fighter.platoon >= 0:
+					var owner := squads[fighter.platoon]
+					owner.combat.apply_damage(owner.members.find(fighter.index), amount)
+				else:
+					fighter.unit.receive_damage(amount)
+				fighter.last_hurt = elapsed
+				if not fighter.unit.is_alive():
+					_set_state(fighter, State.DEAD)
+					if fighter.team == PLAYER_TEAM:
+						player_losses += 1
+
+
+func _update_extraction() -> void:
+	for item in objectives:
+		if item.type != "extract" or item.status != "active":
+			continue
+		var zone: Dictionary = zones.get(item.zone, {})
+		for who: String in item.squads:
+			var other := squad(who)
+			if other == null or not other.spawned:
+				continue
+			for member in other.members:
+				var fighter := fighters[member]
+				if fighter.is_alive() and fighter.position.distance_to(zone.pos) <= zone.get("radius", 8.0):
+					fighter.removed = true
+					fighter.target = -1
+					extracted[who] = extracted.get(who, 0) + 1
+
+
+func hazard_phase(hazard: Dictionary) -> String:
+	return "warning" if elapsed < hazard.warn_until else "active"
+
+
+
 func _update_interaction(delta: float) -> void:
 	interact_target = active_interactable()
 	if interact_target < 0 or not hero.is_alive():
@@ -1520,6 +1691,10 @@ func _update_interaction(delta: float) -> void:
 		return
 	var item := interactables[interact_target]
 	var holding: bool = _input.get("interact", false) and hero.state in [State.IDLE, State.WALK, State.CHEER]
+	if holding and not interact_available(item):
+		holding = false
+	if not holding and item.get("reset", false):
+		item.progress = 0.0
 	if holding:
 		item.progress += delta
 		if item.progress >= item.get("duration", 3.0):
@@ -1527,6 +1702,17 @@ func _update_interaction(delta: float) -> void:
 			item.active = false
 			_effect("ring", item.pos, 4.0, Color("#f4e8d5"))
 	interact_progress = item.progress / float(item.get("duration", 3.0))
+
+
+## Some interactions only work while another object is in place, such as a ship in view.
+func interact_available(item: Dictionary) -> bool:
+	var needs: Dictionary = item.get("requires", {})
+	if needs.is_empty():
+		return true
+	if not structures.has(needs.structure):
+		return false
+	var fighter := fighters[structures[needs.structure]]
+	return fighter.is_alive() and fighter.position.distance_to(_point(needs.at)) <= float(needs.get("radius", 10.0))
 
 
 func _in_zone(who: String, zone_id: String) -> bool:
@@ -1552,7 +1738,7 @@ func _entity_dead(who: String) -> bool:
 	if structures.has(who):
 		return not fighters[structures[who]].is_alive()
 	var other := squad(who)
-	return other != null and other.spawned and other.alive_count(self) == 0
+	return other != null and other.spawned and not other.departed and other.alive_count(self) == 0
 
 
 func _team_in_zone(team: int, zone_id: String) -> int:
@@ -1620,8 +1806,54 @@ func _update_objectives(delta: float) -> void:
 							all_done = false
 				if all_done:
 					_set_objective(item.id, "done")
+			"deliveries":
+				var delivered := 0
+				var pending := 0
+				for cart_id: String in item.carts:
+					var cart := fighters[structures[cart_id]]
+					if not cart.delivered and cart.is_alive() and not cart.turned_back and _in_zone(cart_id, item.carts[cart_id]):
+						cart.delivered = true
+						cart.invulnerable = true
+						cart.moving = false
+						flags["%s_delivered" % cart_id] = true
+					if cart.delivered:
+						delivered += 1
+					elif cart.is_alive() and not cart.turned_back:
+						pending += 1
+				var need: int = item.get("need", item.carts.size())
+				if pending == 0 and delivered >= need:
+					_set_objective(item.id, "done")
+				elif delivered + pending < need:
+					_set_objective(item.id, "failed")
+			"extract":
+				var complete: bool = not item.get("hero", true) or _in_zone("hero", item.zone)
+				for who: String in item.squads:
+					var other := squad(who)
+					if other == null or not other.spawned:
+						complete = false
+						continue
+					var saved: int = extracted.get(who, 0)
+					if other.alive_count(self) > 0:
+						complete = false
+					elif saved == 0:
+						_set_objective(item.id, "failed")
+						break
+				if complete and item.status == "active":
+					_set_objective(item.id, "done")
 			"hold":
-				if elapsed - item.started >= item.seconds:
+				if item.get("contest", false):
+					var foes := _team_in_zone(ENEMY_TEAM, item.zone)
+					var friends := _team_in_zone(PLAYER_TEAM, item.zone)
+					if foes == 0:
+						item.progress = item.get("progress", 0.0) + delta
+						_overrun[item.id] = 0.0
+					elif friends == 0:
+						_overrun[item.id] = _overrun.get(item.id, 0.0) + delta
+						if _overrun[item.id] >= float(item.get("overrun_time", OVERRUN_TIME)):
+							_set_objective(item.id, "failed")
+					if item.get("progress", 0.0) >= item.get("seconds", INF):
+						_set_objective(item.id, "done")
+				elif elapsed - item.started >= item.get("seconds", INF):
 					_set_objective(item.id, "done")
 				elif item.has("zone"):
 					var enemies := _team_in_zone(ENEMY_TEAM, item.zone)
@@ -1636,10 +1868,27 @@ func _update_objectives(delta: float) -> void:
 
 func objective_progress(item: Dictionary) -> String:
 	match item.type:
+		"deliveries":
+			var parts: Array[String] = []
+			for cart_id: String in item.carts:
+				var cart := fighters[structures[cart_id]]
+				parts.append("%s: %s" % [cart.name, cart_status(cart)])
+			return "   ".join(parts)
+		"extract":
+			var parts: Array[String] = []
+			for who: String in item.squads:
+				var other := squad(who)
+				if other:
+					parts.append("%s %d out" % [other.name, extracted.get(who, 0)])
+			return "   ".join(parts)
 		"hold":
-			var remaining := maxf(0.0, item.seconds - (elapsed - item.started))
-			if item.status != "active":
+			if item.status != "active" or item.get("seconds", INF) == INF:
 				return ""
+			var remaining := maxf(0.0, item.seconds - (elapsed - item.started))
+			if item.get("contest", false):
+				remaining = maxf(0.0, item.seconds - item.get("progress", 0.0))
+				if _overrun.get(item.id, 0.0) > 0.0:
+					return "Contested! %d:%02d" % [floori(remaining / 60.0), int(remaining) % 60]
 			return "%d:%02d" % [floori(remaining / 60.0), int(remaining) % 60]
 		"interact":
 			var total := 0
@@ -1709,6 +1958,15 @@ func _check(condition: Dictionary) -> bool:
 						return false
 			"event":
 				if not _fired.has(value):
+					return false
+			"flag":
+				if not flags.has(value):
+					return false
+			"no_flag":
+				if flags.has(value):
+					return false
+			"extracted":
+				if extracted.get(value[0], 0) < int(value[1]):
 					return false
 			"near":
 				# Any enemy of the player within a radius of a point or entity.
@@ -1815,6 +2073,7 @@ func _perform(actions: Array) -> void:
 			"despawn":
 				var target := squad(action[1])
 				if target and target.spawned:
+					target.departed = true
 					for member in target.members:
 						fighters[member].removed = true
 						fighters[member].target = -1
@@ -1827,6 +2086,57 @@ func _perform(actions: Array) -> void:
 					for fighter in fighters:
 						if fighter.is_alive() and fighter.kind != Kind.STRUCTURE:
 							fighter.position = _push_out(fighter.position, fighter.radius)
+			"flag":
+				flags[action[1]] = true
+			"hazard":
+				var zone: Dictionary = zones.get(action[1], {})
+				if not zone.is_empty():
+					hazards.append({
+						"zone": action[1], "pos": zone.pos, "radius": zone.get("radius", 6.0),
+						"warn_until": elapsed + float(action[2]), "end": elapsed + float(action[2]) + float(action[3]),
+						"dps": float(action[4]) if action.size() > 4 else 0.08,
+					})
+			"teleport":
+				var at := _point(action[2])
+				if action[1] == "hero":
+					hero.position = _free_point(at)
+				else:
+					var target := squad(action[1])
+					if target:
+						var shift := at - target.anchor
+						target.anchor = at
+						target.path = PackedVector2Array()
+						for member in target.members:
+							fighters[member].position = _free_point(fighters[member].position + shift)
+			"route":
+				if structures.has(action[1]):
+					var cart := fighters[structures[action[1]]]
+					cart.route = PackedVector2Array()
+					for point in action[2]:
+						cart.route.append(_point(point))
+					cart.route_index = 0
+					cart.moving = true
+					cart.halted = false
+			"leave":
+				var target := squad(action[1])
+				if target and target.spawned:
+					target.commandable = false
+					target.aggro = 0.0
+					_apply_order(target, {"kind": "move", "to": action[2], "despawn": true})
+			"release":
+				var target := squad(action[1])
+				if target:
+					target.commandable = false
+			"commandable":
+				var target := squad(action[1])
+				if target:
+					target.commandable = true
+			"cart_commandable":
+				if structures.has(action[1]):
+					fighters[structures[action[1]]].commandable = true
+			"protect_structure":
+				if structures.has(action[1]):
+					fighters[structures[action[1]]].invulnerable = true
 			"move_structure":
 				if structures.has(action[1]):
 					fighters[structures[action[1]]].moving = action[2]

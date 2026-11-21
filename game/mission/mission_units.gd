@@ -64,6 +64,32 @@ const TYPES: Dictionary = {
 		"heavy_chance": 0.36,
 		"tint": Color(0.92, 0.58, 0.42), "scale": 1.14, "speed": 2.8,
 	},
+	&"march_riders": {
+		"name": "March Riders", "faction": "Humans", "role": Role.MELEE,
+		"hp_scale": 1.15, "attack": {D.MELEE: 40.0}, "primary": [D.MELEE],
+		"heavy_chance": 0.5, "tint": Color(0.86, 0.80, 1.0), "scale": 1.04, "speed": 4.6,
+	},
+	&"march_levy": {
+		"name": "March Levy", "faction": "Humans", "role": Role.MELEE,
+		"hp_scale": 0.95, "attack": {D.MELEE: 35.0}, "primary": [D.MELEE],
+		"tint": Color(0.70, 0.76, 0.92), "scale": 1.0, "speed": 2.7,
+	},
+	&"march_bows": {
+		"name": "March Bowmen", "faction": "Humans", "role": Role.RANGED,
+		"hp_scale": 0.8, "attack": {D.RANGED: 30.0}, "melee": {D.MELEE: 18.0},
+		"primary": [D.RANGED], "range": 17.0, "reload": 2.7,
+		"projectile": Color("#e1dccb"), "tint": Color(0.62, 0.68, 0.84), "scale": 0.98, "speed": 2.7,
+	},
+	&"salvagers": {
+		"name": "Salvage Crew", "faction": "Humans", "role": Role.MELEE,
+		"hp_scale": 0.85, "attack": {D.MELEE: 32.0}, "primary": [D.MELEE],
+		"tint": Color(0.66, 0.60, 0.54), "scale": 0.98, "speed": 2.8,
+	},
+	&"households": {
+		"name": "Households", "faction": "Humans", "role": Role.CIVILIAN,
+		"hp_scale": 0.7, "attack": {}, "primary": [D.MELEE],
+		"tint": Color(0.84, 0.76, 0.62), "scale": 0.94, "speed": 2.5,
+	},
 	&"well_keeper": {
 		"name": "Well-keeper", "faction": "Orcs", "role": Role.CIVILIAN,
 		"hp_scale": 0.9, "attack": {}, "primary": [D.MELEE],
@@ -101,6 +127,16 @@ const TYPES: Dictionary = {
 		"primary": [D.RANGED, D.ICE], "range": 19.0, "reload": 2.4,
 		"projectile": Color("#bff3ff"), "tint": Color(0.66, 0.84, 0.92), "scale": 1.02, "speed": 3.0,
 	},
+	&"moonwash_levy": {
+		"name": "Moonwash Levy", "faction": "Elves", "role": Role.MELEE,
+		"hp_scale": 0.95, "attack": {D.MELEE: 30.0}, "primary": [D.MELEE],
+		"tint": Color(0.86, 0.86, 0.80), "scale": 1.0, "speed": 2.8,
+	},
+	&"port_crews": {
+		"name": "Port Crews", "faction": "Elves", "role": Role.MELEE,
+		"hp_scale": 0.95, "attack": {D.MELEE: 31.0, D.ICE: 6.0}, "primary": [D.MELEE],
+		"tint": Color(0.94, 0.80, 0.70), "scale": 1.02, "speed": 3.0,
+	},
 	&"pilots": {
 		"name": "Brineholt Pilots", "faction": "Elves", "role": Role.CIVILIAN,
 		"hp_scale": 0.6, "attack": {}, "primary": [D.MELEE],
@@ -132,6 +168,11 @@ const TYPES: Dictionary = {
 		"primary": [D.CURSE], "range": 16.0, "reload": 2.8,
 		"projectile": Color("#c79bff"), "tint": Color(0.55, 0.50, 0.66), "scale": 1.0, "speed": 2.55,
 	},
+	&"court_guard": {
+		"name": "Court Guard", "faction": "Undead", "role": Role.MELEE,
+		"hp_scale": 1.2, "attack": {D.MELEE: 28.0, D.CURSE: 12.0}, "primary": [D.MELEE, D.CURSE],
+		"base": {D.CURSE: 20}, "tint": Color(0.50, 0.46, 0.56), "scale": 1.02, "speed": 2.55,
+	},
 	&"restless_dead": {
 		"name": "Restless Dead", "faction": "Undead", "role": Role.MELEE,
 		"hp_scale": 0.8, "attack": {D.MELEE: 22.0, D.CURSE: 12.0}, "primary": [D.CURSE, D.MELEE],
@@ -146,90 +187,61 @@ const HEROES: Dictionary = {
 		"name": "Sova Cairn", "faction": "Druids", "role": Role.HERO, "hp_scale": 7.0,
 		"attack": {D.MELEE: 44.0, D.NATURE: 30.0}, "primary": [D.NATURE, D.MELEE, D.LIGHTNING],
 		"base": {D.NATURE: 15}, "tint": Color(0.70, 0.72, 0.66), "scale": 1.12, "speed": 4.4,
-		"ability": &"stone_ward", "ability_name": "Stone Ward", "ability_cooldown": 20.0,
+		"ability": &"stone_ward", "ability_name": "Stone Ward", "ability_cost": 300,
 	},
 	&"ilyra": {
 		"name": "Ilyra Venn", "faction": "Elves", "role": Role.HERO, "hp_scale": 6.5,
 		"attack": {D.MELEE: 52.0, D.ICE: 24.0}, "primary": [D.MELEE, D.ICE],
 		"base": {D.ICE: 15}, "tint": Color(0.82, 0.93, 1.0), "scale": 1.1, "speed": 4.8,
 		"slash_speed": 2.2,
-		"ability": &"tidal_surge", "ability_name": "Tidal Surge", "ability_cooldown": 18.0,
+		"ability": &"tidal_surge", "ability_name": "Tidal Surge", "ability_cost": 300,
 	},
 	&"mara": {
 		"name": "Mara Halden", "faction": "Humans", "role": Role.HERO, "hp_scale": 7.0,
 		"attack": {D.MELEE: 62.0, D.HOLY: 14.0}, "primary": [D.MELEE, D.HOLY],
 		"base": {D.MELEE: 5}, "tint": Color(1.0, 0.86, 0.66), "scale": 1.12, "speed": 4.5,
-		"ability": &"royal_rally", "ability_name": "Royal Rally", "ability_cooldown": 24.0,
+		"ability": &"royal_rally", "ability_name": "Royal Rally", "ability_cost": 300,
 	},
 	&"raska": {
 		"name": "Raska Vennor", "faction": "Orcs", "role": Role.HERO, "hp_scale": 8.0,
 		"attack": {D.MELEE: 66.0, D.FIRE: 12.0}, "primary": [D.MELEE, D.FIRE],
 		"base": {D.MELEE: 8}, "tint": Color(0.66, 0.86, 0.50), "scale": 1.26, "speed": 4.3,
-		"ability": &"well_keepers_roar", "ability_name": "Well-keeper's Roar", "ability_cooldown": 18.0,
+		"ability": &"well_keepers_roar", "ability_name": "Well-keeper's Roar", "ability_cost": 300,
 	},
 	&"neris": {
 		"name": "Neris Alder", "faction": "Dryads", "role": Role.HERO, "hp_scale": 7.5,
 		"attack": {D.MELEE: 40.0, D.NATURE: 34.0}, "primary": [D.NATURE, D.MELEE],
 		"base": {D.NATURE: 20}, "tint": Color(0.68, 0.82, 0.50), "scale": 1.12, "speed": 4.4,
-		"ability": &"rootbind", "ability_name": "Rootbind", "ability_cooldown": 20.0,
+		"ability": &"rootbind", "ability_name": "Rootbind", "ability_cost": 300,
 	},
 	&"sereth": {
 		"name": "Sereth Vale", "faction": "Undead", "role": Role.HERO, "hp_scale": 6.5,
 		"attack": {D.MELEE: 42.0, D.CURSE: 34.0}, "primary": [D.CURSE, D.MELEE],
 		"base": {D.CURSE: 20}, "tint": Color(0.74, 0.66, 0.84), "scale": 1.12, "speed": 4.4,
-		"ability": &"grave_toll", "ability_name": "Grave Toll", "ability_cooldown": 20.0,
+		"ability": &"grave_toll", "ability_name": "Grave Toll", "ability_cost": 300,
 	},
-	# Enemy and allied officers.
-	&"durga": {
-		"name": "Durga Ashtusk", "faction": "Orcs", "role": Role.HERO, "hp_scale": 4.0,
-		"attack": {D.MELEE: 54.0}, "primary": [D.MELEE], "tint": Color(0.74, 0.86, 0.50), "scale": 1.24, "speed": 3.6,
-	},
+	# Officers who appear beside or against the leaders.
 	&"aldric": {
 		"name": "Ser Aldric Thorne", "faction": "Humans", "role": Role.HERO, "hp_scale": 4.0,
 		"attack": {D.MELEE: 54.0}, "primary": [D.MELEE], "tint": Color(1.0, 0.92, 0.78), "scale": 1.1, "speed": 3.6,
 	},
-	&"brannoc": {
-		"name": "Ser Brannoc Hale", "faction": "Humans", "role": Role.HERO, "hp_scale": 4.5,
-		"attack": {D.MELEE: 56.0}, "primary": [D.MELEE], "base": {D.MELEE: 10},
-		"tint": Color(0.58, 0.68, 1.0), "scale": 1.12, "speed": 3.6,
+	&"hadrik": {
+		"name": "Lord Hadrik of Westmarch", "faction": "Humans", "role": Role.HERO, "hp_scale": 4.5,
+		"attack": {D.MELEE: 56.0}, "primary": [D.MELEE], "base": {D.MELEE: 8},
+		"tint": Color(0.62, 0.72, 1.0), "scale": 1.12, "speed": 3.6,
 	},
-	&"orla": {
-		"name": "Keeper Orla Thane", "faction": "Druids", "role": Role.HERO, "hp_scale": 4.2,
-		"attack": {D.MELEE: 40.0, D.NATURE: 18.0}, "primary": [D.NATURE, D.MELEE], "base": {D.NATURE: 15},
-		"tint": Color(0.86, 0.72, 0.62), "scale": 1.08, "speed": 3.6,
+	&"vasha": {
+		"name": "Captain Vasha Grem", "faction": "Orcs", "role": Role.HERO, "hp_scale": 4.0,
+		"attack": {D.MELEE: 52.0}, "primary": [D.MELEE], "tint": Color(0.80, 0.84, 0.52), "scale": 1.2, "speed": 3.6,
 	},
-	&"rook": {
-		"name": "Captain Wystan Rook", "faction": "Humans", "role": Role.HERO, "hp_scale": 4.2,
-		"attack": {D.MELEE: 54.0}, "primary": [D.MELEE], "tint": Color(0.50, 0.56, 0.80), "scale": 1.1, "speed": 3.7,
+	&"pyre": {
+		"name": "Speaker Aldous Pyre", "faction": "Undead", "role": Role.HERO, "hp_scale": 5.0,
+		"attack": {D.MELEE: 34.0, D.CURSE: 30.0}, "primary": [D.CURSE, D.MELEE], "base": {D.CURSE: 25},
+		"tint": Color(0.55, 0.48, 0.66), "scale": 1.12, "speed": 3.4,
 	},
-	&"corvin": {
-		"name": "Corvin Ashe", "faction": "Humans", "role": Role.HERO, "hp_scale": 4.5,
-		"attack": {D.MELEE: 34.0, D.LIGHTNING: 26.0}, "primary": [D.LIGHTNING, D.MELEE],
-		"tint": Color(0.52, 0.46, 0.62), "scale": 1.06, "speed": 3.6,
-	},
-	&"drowned_choir": {
-		"name": "The Drowned Choir", "faction": "Undead", "role": Role.HERO, "hp_scale": 5.0,
-		"attack": {D.MELEE: 36.0, D.CURSE: 28.0}, "primary": [D.CURSE, D.MELEE], "base": {D.CURSE: 25},
-		"tint": Color(0.40, 0.56, 0.58), "scale": 1.3, "speed": 3.4,
-	},
-	&"skarn": {
-		"name": "Skarn Emberhand", "faction": "Orcs", "role": Role.HERO, "hp_scale": 4.2,
-		"attack": {D.MELEE: 46.0, D.FIRE: 18.0}, "primary": [D.MELEE, D.FIRE],
-		"tint": Color(0.96, 0.56, 0.38), "scale": 1.2, "speed": 3.7,
-	},
-	&"gorrum": {
-		"name": "Gorrum Saltjaw", "faction": "Orcs", "role": Role.HERO, "hp_scale": 6.0,
-		"attack": {D.MELEE: 60.0, D.FIRE: 16.0}, "primary": [D.MELEE, D.FIRE], "base": {D.MELEE: 10},
-		"tint": Color(0.98, 0.62, 0.44), "scale": 1.32, "speed": 3.6,
-	},
-	&"isolde": {
-		"name": "Queen Isolde Varr", "faction": "Humans", "role": Role.HERO, "hp_scale": 6.5,
-		"attack": {D.MELEE: 58.0, D.HOLY: 16.0}, "primary": [D.MELEE, D.HOLY], "base": {D.MELEE: 12},
-		"tint": Color(0.70, 0.78, 1.0), "scale": 1.14, "speed": 3.8,
-	},
-	&"edrin": {
-		"name": "Edrin Coll", "faction": "Humans", "role": Role.CIVILIAN, "hp_scale": 6.0,
-		"attack": {}, "primary": [D.MELEE], "tint": Color(0.72, 0.62, 0.52), "scale": 1.0, "speed": 2.6,
+	&"witness": {
+		"name": "Marit Holm", "faction": "Humans", "role": Role.CIVILIAN, "hp_scale": 6.0,
+		"attack": {}, "primary": [D.MELEE], "tint": Color(0.72, 0.62, 0.52), "scale": 0.98, "speed": 2.7,
 	},
 }
 
@@ -243,6 +255,11 @@ const STRUCTURES: Dictionary = {
 	&"signal_fire": {"name": "Signal fire", "hp": 24000.0, "radius": 1.3},
 	&"root_bridge": {"name": "Bridge root", "hp": 32000.0, "radius": 1.8},
 	&"gate": {"name": "Vault door", "hp": 50000.0, "radius": 3.2},
+	&"cart": {"name": "Cart", "hp": 24000.0, "radius": 1.5},
+	&"launch": {"name": "Launch", "hp": 26000.0, "radius": 2.0},
+	&"cutter": {"name": "Survey cutter", "hp": 34000.0, "radius": 2.6},
+	&"headgate": {"name": "Feeder headgate", "hp": 36000.0, "radius": 1.8},
+	&"wheel": {"name": "Spillway wheel", "hp": 999999.0, "radius": 1.2},
 }
 
 

@@ -1,13 +1,15 @@
 extends RefCounted
 ## The eighteen campaign missions of the five-year war.
 ##
-## Six campaigns of three missions each tell one story. Several battles are fought
-## from more than one side: the Greyhollow Mine (Mara, Raska, Sova), the Kingswell
-## moot (Mara, Raska) and the Drowned Road (Ilyra, Sereth). Every campaign ends at
-## the Vault of the First Command in Year Five, on a different part of the field.
-## See docs/story.md for the full timeline.
+## Mara, Raska and Ilyra follow their specifications in docs/campaigns. Sova, Neris and
+## Sereth follow their windows in docs/war-timeline.md and the specifications written
+## alongside these missions. Shared battlefields keep one layout; only starts, orders and
+## objectives differ by campaign.
 
 const Maps := preload("res://game/mission/maps.gd")
+
+## Battlefields are authored compactly and played at this scale.
+const MAP_SCALE := 1.7
 
 const SPEAKERS := {
 	"narrator": "",
@@ -19,21 +21,20 @@ const SPEAKERS := {
 	"sereth": "Sereth Vale",
 	"aldric": "Ser Aldric Thorne",
 	"durga": "Durga Ashtusk",
-	"edrin": "Edrin Coll",
+	"marit": "Marit Holm",
 	"bryn": "Keeper Bryn Hollin",
-	"orla": "Keeper Orla Thane",
-	"brannoc": "Ser Brannoc Hale",
-	"maren": "Maren Tull",
-	"rook": "Captain Wystan Rook",
-	"corvin": "Corvin Ashe",
+	"vasha": "Captain Vasha Grem",
+	"hadrik": "Lord Hadrik of Westmarch",
+	"pilot": "Senna Ruel, pilot",
+	"captain": "Port captain",
+	"judge": "Judge Tamsin Orle",
+	"ally": "Lord Ferran of Ashmarch",
 	"aurel": "Advocate Aurel Mott",
-	"choir": "The Drowned Choir",
-	"hollis": "Reeve Hollis Bram",
-	"skarn": "Skarn Emberhand",
-	"gorrum": "Gorrum Saltjaw",
-	"isolde": "Queen Isolde Varr",
-	"ashgrove": "Ashgrove",
-	"voice": "A voice in the stones",
+	"reeve": "Reeve Hollis Bram",
+	"pyre": "Speaker Aldous Pyre",
+	"grove": "The grove",
+	"voice": "A voice from the bank",
+	"levy": "Moonwash levy captain",
 	"miner": "A Greyhollow miner",
 }
 
@@ -42,7 +43,7 @@ static var _cache: Dictionary = {}
 
 static func for_campaign(id: String) -> Array:
 	if _cache.is_empty():
-		_cache = {
+		var raw := {
 			"mara": [_mara_1(), _mara_2(), _mara_3()],
 			"raska": [_raska_1(), _raska_2(), _raska_3()],
 			"sova": [_sova_1(), _sova_2(), _sova_3()],
@@ -50,7 +51,47 @@ static func for_campaign(id: String) -> Array:
 			"sereth": [_sereth_1(), _sereth_2(), _sereth_3()],
 			"neris": [_neris_1(), _neris_2(), _neris_3()],
 		}
+		for campaign in raw:
+			var scaled := []
+			for mission: Dictionary in raw[campaign]:
+				scaled.append(_scale(mission, MAP_SCALE))
+			_cache[campaign] = scaled
 	return _cache.get(id, [])
+
+
+static func find(mission_id: String) -> Dictionary:
+	for campaign in ["mara", "raska", "sova", "ilyra", "sereth", "neris"]:
+		for mission: Dictionary in for_campaign(campaign):
+			if mission.id == mission_id:
+				return mission
+	return {}
+
+
+## Scales every position, route, rectangle and obstacle in a mission. Directions and radii do not scale.
+static func _scale(value: Variant, k: float, key: String = "") -> Variant:
+	if key == "facing":
+		return value
+	if key == "radius" and (value is float or value is int):
+		return value * sqrt(k)
+	if (key == "aggro" or key == "wait_for_hero") and (value is float or value is int):
+		return value * k
+	if value is Vector2:
+		return value * k
+	if value is Rect2:
+		return Rect2(value.position * k, value.size * k)
+	if value is Vector3 and key == "circle":
+		return value * k
+	if value is Dictionary:
+		var result := {}
+		for item_key in value:
+			result[item_key] = _scale(value[item_key], k, str(item_key))
+		return result
+	if value is Array:
+		var result := []
+		for item in value:
+			result.append(_scale(item, k, key))
+		return result
+	return value
 
 
 static func _p(id: String, type: StringName, team: int, count: int, level: int, pos: Variant, extra: Dictionary = {}) -> Dictionary:
@@ -65,58 +106,55 @@ static func _hero(id: String, type: StringName, team: int, level: int, pos: Vari
 
 const ALLY := 0
 const FOE := 1
-const LAST_COMMAND := "In the Listening Chamber, six leaders who had spent five years at war spoke one command together, each in their own tongue, each naming who would bear its cost.\n\n“Sleep, Orrun. Sleep, and hear no one.”\n\nThe Godbridle went cold. The rivers stayed where they ran, the coast stayed drowned, the groves stayed scattered, and the dead stayed silent. Everything the god had made would now have to be shared by treaty, at wells and harbors and tables, by people who would have to keep asking one another."
+const NEUTRAL := 2
 
 
 # ======================================================================= MARA
+# Humans · Years One–Two · docs/campaigns/humans.md
 
 
 static func _mara_1() -> Dictionary:
 	return {
-		"id": "mara_1",
-		"title": "The Greyhollow Pass",
-		"year": "Year One · Spring",
-		"briefing": "The miners asked the Godbridle for water, and a river a hundred miles away ran dry. Mara has taken the artifact under his royal seal. Escort the bridle wagon down the pass before the Orc companies following their dead river can cut the road.",
-		"epilogue": "The wagon reached the Marches road with its seal unbroken. Behind it, the Orcs carried off the foreman, Edrin Coll, and the rest of the miners vanished into tunnels no Human map recorded. Mara rode home with the most powerful object in Vareth and no one left who could tell him how it had been used.",
+		"id": "mara_mine_escort",
+		"title": "The Pass Below the Mine",
+		"year": "Year One",
+		"briefing": "The Basin has lost its river, and an Orc company is already moving toward the road. Mara puts the Godbridle under his seal and orders the escort to bring it through the pass. Take possession of the bridle at the mine, then carry it to the Marches road. Shield infantry can hold the narrows; archers can cover it from the ridge.",
+		"debrief": "The royal seal reached the Marches on the artifact, not on the workers. Somewhere under the Cairnspine the miners walked out through tunnels no Human map recorded, and one of them left willingly with the Orc War Marshal.\n\nWeeks later a copy of her account reached Mara’s table. The spring at Greyhollow and the dry river in the Basin dated to the same night.",
 		"map": Maps.greyhollow(),
-		"hero": {"pos": Vector2(4, -56), "facing": Vector2(0, 1)},
+		"hero": {"pos": Vector2(4, -56), "facing": Vector2(0, -1)},
 		"hero_level": 5,
-		"structures": [
-			{"id": "wagon", "kind": &"wagon", "team": ALLY, "pos": Vector2(0, -60), "moving": true, "speed": 1.7, "escort_radius": 14.0,
-				"path": [Vector2(0, -40), Vector2(0, -30), Vector2(-2, 0), Vector2(0, 30), Vector2(0, 64)]},
-		],
 		"platoons": [
-			_p("shields", &"marcher_infantry", ALLY, 20, 3, Vector2(-5, -50), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "follow"}}),
-			_p("archers", &"marcher_archers", ALLY, 12, 3, Vector2(8, -51), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "follow"}}),
-			_p("scouts", &"basin_slingers", FOE, 10, 2, Vector2(36, -46), {"name": "Basin Scouts", "aggro": 20.0}),
-			_p("redwater", &"basin_warriors", FOE, 18, 3, Vector2(48, -8), {"name": "Redwater Company", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "attack", "target": "hero"}}),
-			_p("redwater_slings", &"basin_slingers", FOE, 10, 3, Vector2(50, -6), {"name": "Redwater Slingers", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "hunt"}}),
-			_hero("durga", &"durga", FOE, 6, Vector2(34, 44), {"name": "Durga Ashtusk", "hidden": true, "order": {"kind": "hunt"}}),
-			_p("saltwell", &"basin_warriors", FOE, 18, 4, Vector2(36, 36), {"name": "Saltwell Company", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": "lower_pass"}}),
+			_p("shields", &"marcher_infantry", ALLY, 20, 3, Vector2(-5, -52), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "follow"}, "facing": Vector2(0, 1)}),
+			_p("archers", &"marcher_archers", ALLY, 12, 3, Vector2(9, -52), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "follow"}, "facing": Vector2(0, 1)}),
+			_p("redwater", &"basin_warriors", FOE, 18, 3, Vector2(50, -8), {"name": "Redwater Company", "facing": Vector2(-1, 0), "order": {"kind": "hold"}, "aggro": 12.0}),
+			_p("slingers", &"basin_slingers", FOE, 10, 3, Vector2(52, -5), {"name": "Basin Slingers", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "move", "to": Vector2(24, -8)}, "aggro": 18.0}),
+			_hero("durga", &"durga", FOE, 6, Vector2(52, -10), {"name": "Durga Ashtusk", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("saltwell", &"basin_warriors", FOE, 16, 4, Vector2(50, -12), {"name": "Saltwell Company", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "attack", "target": "hero"}}),
+		],
+		"interactables": [
+			{"id": "pickup", "pos": Vector2(2, -63), "label": "Take the Godbridle under seal", "duration": 2.5},
 		],
 		"objectives": [
-			{"id": "escort", "text": "Escort the bridle wagon to the Marches road", "type": "reach", "who": "wagon", "zone": "pass_mouth"},
-			{"id": "wagon", "text": "The wagon must survive", "type": "protect", "who": ["wagon"], "fail_text": "The Orcs seized the Godbridle."},
-			{"id": "durga", "text": "Defeat Durga Ashtusk", "type": "defeat", "who": ["durga"], "hidden": true, "optional": true},
+			{"id": "pickup", "text": "Take possession of the Godbridle", "type": "interact", "who": "pickup"},
+			{"id": "exit", "text": "Carry the Godbridle to the Marches road", "type": "reach", "who": "hero", "zone": "exit", "hidden": true},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "mara", "The wagon moves when I am close. Shields, keep to me. Archers, watch the eastern ridge."],
-				["say", "aldric", "Orc scouts on the plateau, Majesty. They have been following the riverbed for days."],
+				["say", "aldric", "The miners are gone, Majesty. Only the thing they used is left."],
+				["say", "mara", "Then it leaves under my seal. Fetch it, and keep the road open."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Mara."]]},
-			{"if": {"zone": ["wagon", "pass_top"]}, "do": [
-				["spawn", "redwater"], ["spawn", "redwater_slings"],
-				["say", "raska", "Halden! You carry what drank our river. Give me the ones who used it, or give me that wagon."],
-				["say", "mara", "The wagon stops while they are on it. Clear the riverbed."],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Order the shields to hold the narrows and the archers to the ridge."]]},
+			{"if": {"done": "pickup"}, "do": [
+				["objective", "exit"], ["order", "redwater", {"kind": "assault", "to": "narrows"}], ["spawn", "slingers"],
+				["say", "aldric", "Orc company in the dry riverbed, moving on the narrows."],
+				["say", "mara", "Shields to the narrows. Archers to the ridge. I carry it through myself."],
 			]},
-			{"if": {"zone": ["wagon", "lower_pass"]}, "do": [
-				["spawn", "saltwell"], ["spawn", "durga"], ["objective", "durga"],
-				["say", "durga", "The Marshal wants the miners. I want the wagon. Saltwell, with me!"],
+			{"if": {"after": ["pickup", 20.0]}, "do": [
+				["spawn", "durga"], ["spawn", "saltwell"],
+				["say", "durga", "The Marshal wants a witness. I want the thing that stole our river. Break the escort!"],
 			]},
-			{"if": {"dead": "durga"}, "do": [["say", "aldric", "Ashtusk is down. The road is open."]]},
-			{"if": {"done": "escort"}, "do": [
-				["say", "mara", "Seal the wagon. Not one hand touches it before we reach Haldenford."],
+			{"if": {"done": "exit"}, "do": [
+				["say", "mara", "The Marches road. Seal the case. No one opens it but me."],
 				["victory", "The Godbridle reached the Seven Marches."],
 			]},
 		],
@@ -125,69 +163,61 @@ static func _mara_1() -> Dictionary:
 
 static func _mara_2() -> Dictionary:
 	return {
-		"id": "mara_2",
-		"title": "The Kingswell Moot",
-		"year": "Year Two · Summer",
-		"briefing": "Mara has called the seven crowns to Kingswell to bargain for the bridle’s water. War Marshal Raska answers under a parley flag, bringing the foreman Edrin Coll to testify. Keep the crowns’ pavilions standing and the witness alive. Not every crown wants this moot to end in peace.",
-		"epilogue": "Edrin testified at the well-stone: the spring at Greyhollow had been the Red Basin’s river. By Marcher law, a ruler’s first duty is to the people downstream. Mara swore on the well to return the water. Three crowns walked out. That night his chancellor, Corvin Ashe, rode north with a sealed letter for Queen Isolde of the Lowmarch.",
-		"map": Maps.kingswell(),
-		"hero": {"pos": Vector2(0, 10), "facing": Vector2(0, -1)},
+		"id": "mara_grain_crossing",
+		"title": "Grain on Credit",
+		"year": "Year Two",
+		"briefing": "Grain bought from an allied crown waits on the far bank. Rival levies mean to impound it before it reaches Mara’s towns, and the allied crown is threatening to recall its grain and troops unless Mara makes good on water. Two loads can get through: seed grain to the mill yard by the bridge, and bread grain to the town store above the lower ford. Order each cart forward in the command view, and keep a reserve for the second lane.",
+		"debrief": "The council heard the petitions read. Even full carts could not carry the Marches through a second failed harvest.\n\nWith his allies threatening to leave, Mara went to the Godbridle and asked Orrun to return water to the dry headwater channels. Judge Tamsin Orle asked whose water could fill them. Mara believed his wording would spare the neighbors.",
+		"debrief_flags": {
+			"seed_cart_delivered": "Seed grain reached the mill yard. A planting can go ahead.",
+			"bread_cart_delivered": "Bread grain reached the town store. The town keeps its ovens open this week.",
+			"!seed_cart_delivered": "The seed grain never reached the mill yard. The petition read to Mara asks how anyone is to plant.",
+			"!bread_cart_delivered": "The bread grain never reached the town store. The petition read to Mara asks why the ovens are cold.",
+		},
+		"map": Maps.marches_crossing(),
+		"hero": {"pos": Vector2(0, -42), "facing": Vector2(0, 1)},
 		"hero_level": 11,
 		"structures": [
-			{"id": "pavilion_west", "kind": &"pavilion", "team": ALLY, "pos": Vector2(-14, -10), "name": "Westmarch pavilion"},
-			{"id": "pavilion_east", "kind": &"pavilion", "team": ALLY, "pos": Vector2(14, -10), "name": "Rivergate pavilion"},
-			{"id": "pavilion_south", "kind": &"pavilion", "team": ALLY, "pos": Vector2(-2, 15), "name": "Halden pavilion"},
+			{"id": "seed_cart", "kind": &"cart", "team": ALLY, "name": "Seed cart", "pos": Vector2(4, -50), "speed": 1.8,
+				"commandable": true, "halted": true, "escort_radius": 0.0,
+				"path": [Vector2(0, -32), Vector2(22, -22), Vector2(22, -4), Vector2(24, 22)]},
+			{"id": "bread_cart", "kind": &"cart", "team": ALLY, "name": "Bread cart", "pos": Vector2(-4, -50), "speed": 1.6,
+				"commandable": true, "halted": true, "escort_radius": 0.0,
+				"path": [Vector2(0, -32), Vector2(-28, -22), Vector2(-28, -4), Vector2(-30, 34)]},
 		],
 		"platoons": [
-			_p("shields", &"marcher_infantry", ALLY, 20, 8, Vector2(-6, 4), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "follow"}}),
-			_p("archers", &"marcher_archers", ALLY, 12, 8, Vector2(6, 4), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "follow"}}),
-			_p("rivergate", &"marcher_infantry", ALLY, 18, 7, Vector2(0, -16), {"name": "Rivergate Infantry", "persist": "rivergate", "order": {"kind": "hold"}}),
-			_hero("raska", &"raska", ALLY, 10, Vector2(34, 46), {"name": "Raska Vennor", "hidden": true, "commandable": false, "order": {"kind": "move", "to": Vector2(14, 20)}}),
-			_p("raska_escort", &"basin_warriors", ALLY, 14, 8, Vector2(38, 50), {"name": "Raska's Escort", "hidden": true, "commandable": false, "order": {"kind": "move", "to": Vector2(18, 24)}}),
-			_hero("edrin", &"edrin", ALLY, 6, Vector2(36, 48), {"name": "Edrin Coll", "hidden": true, "commandable": false, "order": {"kind": "move", "to": Vector2(16, 24)}}),
-			_p("knights_west", &"lowmarch_knights", FOE, 18, 9, Vector2(-10, -52), {"name": "Unmarked Riders", "hidden": true, "order": {"kind": "assault", "to": Vector2(-14, -10)}}),
-			_p("knights_east", &"lowmarch_knights", FOE, 18, 9, Vector2(22, -52), {"name": "Unmarked Riders", "hidden": true, "order": {"kind": "assault", "to": Vector2(14, -10)}}),
-			_p("crossbows", &"lowmarch_crossbows", FOE, 12, 9, Vector2(6, -50), {"name": "Lowmarch Crossbows", "hidden": true, "order": {"kind": "move", "to": Vector2(6, -44)}, "aggro": 18.0}),
-			_hero("brannoc", &"brannoc", FOE, 12, Vector2(-48, 0), {"name": "Ser Brannoc Hale", "hidden": true, "order": {"kind": "attack", "target": "edrin"}}),
-			_p("knights_woods", &"lowmarch_knights", FOE, 18, 10, Vector2(-46, 8), {"name": "Lowmarch Knights", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "attack", "target": "edrin"}}),
+			_p("shields", &"marcher_infantry", ALLY, 20, 8, Vector2(-6, -44), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "follow"}, "facing": Vector2(0, 1)}),
+			_p("archers", &"marcher_archers", ALLY, 12, 8, Vector2(8, -44), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "follow"}, "facing": Vector2(0, 1)}),
+			_p("reserve", &"marcher_infantry", ALLY, 18, 7, Vector2(0, -28), {"name": "Rivergate Reserve", "persist": "reserve", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
+			_p("far_bows", &"march_bows", FOE, 12, 8, Vector2(38, -26), {"name": "Far-bank Bowmen", "aggro": 20.0, "facing": Vector2(-1, 0)}),
+			_p("east_levy", &"march_levy", FOE, 18, 8, Vector2(52, 12), {"name": "Westmarch Levy", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "move", "to": Vector2(26, 8)}, "aggro": 14.0}),
+			_p("west_levy", &"march_levy", FOE, 18, 8, Vector2(-52, 24), {"name": "Westmarch Levy", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "move", "to": Vector2(-28, 8)}, "aggro": 14.0}),
+			_p("riders", &"march_riders", FOE, 12, 9, Vector2(52, 4), {"name": "Westmarch Riders", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "hunt"}}),
 		],
 		"objectives": [
-			{"id": "pavilions", "text": "Keep the crowns' pavilions standing", "type": "protect", "who": ["pavilion_west", "pavilion_east", "pavilion_south"], "fail_text": "A crown's pavilion burned. The moot collapsed into war."},
-			{"id": "riders", "text": "Drive off the unmarked riders", "type": "defeat", "who": ["knights_west", "knights_east", "crossbows"], "hidden": true},
-			{"id": "edrin", "text": "Edrin Coll must survive", "type": "protect", "who": ["edrin"], "hidden": true, "fail_text": "The witness was killed before he could testify."},
-			{"id": "brannoc", "text": "Defeat Ser Brannoc Hale", "type": "defeat", "who": ["brannoc"], "hidden": true},
-			{"id": "testify", "text": "Let Edrin reach the Kingswell", "type": "reach", "who": "edrin", "zone": "well", "hidden": true},
+			{"id": "deliver", "text": "Get at least one grain cart to its receiving yard", "type": "deliveries", "carts": {"seed_cart": "mill_yard", "bread_cart": "town_store"}, "need": 1, "fail_text": "Both grain loads were lost before either arrived."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "mara", "Seven crowns, one well. Whatever is said here, no blade is drawn inside the moot."],
-				["say", "narrator", "War Marshal Raska approaches along the Basin road under a parley flag."],
-				["spawn", "raska"], ["spawn", "raska_escort"], ["spawn", "edrin"],
+				["say", "aldric", "Two carts, two roads. The bridge is short, but their bowmen on the rise can see every plank. The ford is slow and screened."],
+				["say", "mara", "Then we choose which load matters more today. Hold the reserve at the fork."],
 			]},
-			{"if": {"time": 10.0}, "do": [
-				["say", "raska", "I bring the man who asked your bridle for water. Let him speak at your well, King of Halden."],
-				["say", "edrin", "I only wanted the camp to drink. I didn't know what it would take from them."],
+			{"if": {"time": 5.0}, "do": [["say", "narrator", "In the command view, select a cart and order it to move. Circle (or F) turns an exposed cart back."]]},
+			{"if": {"time": 25.0}, "do": [
+				["spawn", "east_levy"],
+				["say", "aldric", "Levy on the east road, moving toward the bridge lane."],
 			]},
-			{"if": {"time": 20.0}, "do": [
-				["spawn", "knights_west"], ["spawn", "knights_east"], ["spawn", "crossbows"],
-				["objective", "riders"], ["objective", "edrin"],
-				["say", "aldric", "Riders at the fords! No colors, but those are Lowmarch horses."],
-				["say", "mara", "Protect the pavilions. Whoever sent them wants the crowns to blame the Orcs."],
+			{"if": {"time": 70.0}, "do": [
+				["spawn", "west_levy"],
+				["say", "aldric", "A second levy on the west road. They're making for the ford."],
 			]},
-			{"if": {"time": 24.0}, "do": [["say", "raska", "My escort will fight beside yours, Halden. Keep this war between us honest."]]},
-			{"if": {"any": [{"done": "riders"}, {"time": 150.0}]}, "do": [
-				["spawn", "brannoc"], ["spawn", "knights_woods"], ["objective", "brannoc"],
-				["say", "brannoc", "The witness dies here. Queen Isolde sends her regards to the moot."],
-				["say", "mara", "Isolde. Then the Lowmarch has already chosen war. Guard Edrin!"],
+			{"if": {"time": 110.0}, "do": [
+				["spawn", "riders"],
+				["say", "hadrik", "Impound the carts in the name of Westmarch. Halden can pay his debts in water."],
 			]},
-			{"if": {"done": "brannoc"}, "do": [
-				["objective", "testify"], ["order", "edrin", {"kind": "move", "to": "well"}],
-				["say", "edrin", "Then I'll say it where everyone can hear."],
-			]},
-			{"if": {"done": "testify"}, "delay": 2.0, "do": [
-				["say", "edrin", "The spring came up through our camp. The same night, the Basin's river died. I asked for it. I'm sorry."],
-				["say", "mara", "By the oath of the wells, the downstream comes first. The water goes back to the Basin."],
-				["victory", "The crowns heard the testimony at the Kingswell."],
+			{"if": {"done": "deliver"}, "do": [
+				["say", "mara", "Count what reached the yards. Then tell me what it buys us."],
+				["victory", "The grain crossing is resolved."],
 			]},
 		],
 	}
@@ -195,120 +225,117 @@ static func _mara_2() -> Dictionary:
 
 static func _mara_3() -> Dictionary:
 	return {
-		"id": "mara_3",
-		"title": "The King’s Causeway",
-		"year": "Year Five · The Last Command",
-		"briefing": "Five years on, the six peoples have gathered at the Vault of the First Command to decide what to tell Orrun. Queen Isolde of the Lowmarch leads her host up the southern causeway to take the vault before they can agree. Mara holds the causeway: the crown he promised water to now marches against him.",
-		"epilogue": "Isolde fell on the causeway with her banner still in her hand. When Mara climbed to the Listening Chamber, he broke his royal seal over the Godbridle in front of the other five. “I promised water I had no right to give,” he said. “I will not give a command I have no right to speak alone.”",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(0, 30), "facing": Vector2(0, 1)},
-		"hero_level": 18,
+		"id": "mara_moonwash_quay",
+		"title": "The High Quay",
+		"year": "Year Two",
+		"briefing": "Mara sends his detachment to Moonwash to find where the reversed current began and to warn the harbor pilots. They arrive as buried walls push up beneath moored ships. The lower quay is fracturing, the upper stairs are still passable, and the Tide Speaker’s pilots are rigging lines to crews stranded on stone. Your orders are to pull back, not to claim the harbor or fight the fleet. Get the hero and both royal platoons through the upper-quay exit.",
+		"debrief": "The detachment came home with firsthand testimony and left the waterline to the Tide Speaker, who stayed with her rescue rather than pursue the bridle.\n\nMara laid two reports side by side. Ships were still stranded on stone at Moonwash. Water had reached some Marches and missed others he had pledged it to. Lord Ferran of Ashmarch asked him to speak to Orrun again.\n\nMara left his seal on the case and ordered it shut.",
+		"map": Maps.moonwash(),
+		"hero": {"pos": Vector2(-22, -4), "facing": Vector2(1, 0)},
+		"hero_level": 13,
 		"platoons": [
-			_p("shields", &"marcher_infantry", ALLY, 20, 16, Vector2(-5, 36), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("archers", &"marcher_archers", ALLY, 12, 16, Vector2(0, 26), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("rivergate", &"marcher_infantry", ALLY, 18, 15, Vector2(6, 36), {"name": "Rivergate Infantry", "persist": "rivergate", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("vanguard", &"lowmarch_knights", FOE, 18, 16, Vector2(-3, 80), {"name": "Lowmarch Vanguard", "order": {"kind": "assault", "to": "causeway"}, "facing": Vector2(0, -1)}),
-			_p("crossbows", &"lowmarch_crossbows", FOE, 12, 16, Vector2(4, 82), {"name": "Lowmarch Crossbows", "order": {"kind": "move", "to": Vector2(0, 62)}, "aggro": 18.0, "facing": Vector2(0, -1)}),
-			_p("wave_two", &"lowmarch_knights", FOE, 18, 17, Vector2(0, 82), {"name": "Lowmarch Knights", "hidden": true, "order": {"kind": "assault", "to": "causeway"}, "facing": Vector2(0, -1)}),
-			_p("wave_two_b", &"saltjaw_raiders", FOE, 16, 16, Vector2(6, 80), {"name": "Saltjaw Raiders", "hidden": true, "order": {"kind": "assault", "to": "causeway"}, "facing": Vector2(0, -1)}),
-			_hero("raska", &"raska", ALLY, 18, Vector2(40, 10), {"name": "Raska Vennor", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
-			_p("raska_company", &"basin_warriors", ALLY, 16, 16, Vector2(44, 14), {"name": "Saltwell Company", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
-			_hero("isolde", &"isolde", FOE, 20, Vector2(0, 82), {"name": "Queen Isolde Varr", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("guard", &"lowmarch_knights", FOE, 16, 18, Vector2(-4, 84), {"name": "Queen's Guard", "hidden": true, "order": {"kind": "assault", "to": "causeway"}, "facing": Vector2(0, -1)}),
+			_p("shields", &"marcher_infantry", ALLY, 20, 11, Vector2(-24, 6), {"name": "Halden Shields", "persist": "shields", "order": {"kind": "hold"}, "facing": Vector2(1, 0)}),
+			_p("archers", &"marcher_archers", ALLY, 12, 11, Vector2(-20, -10), {"name": "Ridge Archers", "persist": "archers", "order": {"kind": "hold"}, "facing": Vector2(1, 0)}),
+			_hero("ilyra", &"ilyra", NEUTRAL, 10, Vector2(-38, -6), {"name": "Ilyra Venn", "commandable": false}),
+			_p("rescuers", &"wavecutters", NEUTRAL, 14, 8, Vector2(-40, 6), {"name": "Elven rescue crews", "commandable": false}),
+			_p("levy_north", &"moonwash_levy", FOE, 18, 10, Vector2(-24, -30), {"name": "Moonwash Levy", "order": {"kind": "path", "points": [Vector2(-22, -18), Vector2(-16, -8), Vector2(-8, -2)]}, "aggro": 9.0}),
+			_p("levy_south", &"moonwash_levy", FOE, 18, 10, Vector2(-24, 34), {"name": "Moonwash Levy", "hidden": true, "order": {"kind": "path", "points": [Vector2(-24, 30), Vector2(-20, 12), Vector2(-12, 2)]}, "aggro": 9.0}),
+			_p("levy_upper", &"moonwash_levy", FOE, 14, 11, Vector2(10, -40), {"name": "Quay Watch", "hidden": true, "order": {"kind": "path", "points": [Vector2(14, -20), Vector2(14, -6)]}, "aggro": 8.0}),
 		],
 		"objectives": [
-			{"id": "hold", "text": "Hold the King's causeway", "type": "hold", "seconds": 150.0, "zone": "causeway", "overrun": 12, "fail_text": "The Lowmarch host broke through to the vault."},
-			{"id": "isolde", "text": "Defeat Queen Isolde Varr", "type": "defeat", "who": ["isolde"], "hidden": true},
+			{"id": "withdraw", "text": "Bring Mara and both royal platoons through the upper-quay exit", "type": "extract", "zone": "upper_exit", "squads": ["shields", "archers"], "hero": true, "fail_text": "A royal platoon was wiped out before it reached the exit."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "mara", "The other five are at the vault. Nothing crosses this causeway until they have spoken."],
-				["say", "isolde", "Halden! You promised the Marches water and gave it to the Orcs. The Lowmarch will take what you would not use."],
+				["say", "aldric", "The quay is breaking up under us. Those are the Tide Speaker's people at the waterline, Majesty."],
+				["say", "mara", "Then the waterline is theirs. We are here to warn, not to take. Up the stairs."],
 			]},
-			{"if": {"time": 45.0}, "do": [
-				["spawn", "wave_two"], ["spawn", "wave_two_b"],
-				["say", "aldric", "Saltjaw's raiders march under Isolde's banner. Second wave on the causeway!"],
+			{"if": {"time": 5.0}, "do": [["say", "narrator", "One platoon holds the narrow stair while the other climbs to the landing and turns to cover."]]},
+			{"if": {"time": 14.0}, "do": [
+				["say", "levy", "Armed outsiders off the lower stair! It is for the townspeople."],
+				["hazard", "slab_north", 6.0, 14.0, 0.07],
+				["say", "aldric", "The slab to the north is cracking. Move off it!"],
 			]},
-			{"if": {"time": 80.0}, "do": [
-				["spawn", "raska"], ["spawn", "raska_company"],
-				["say", "raska", "You kept your oath at the well, Halden. The Basin keeps its own."],
+			{"if": {"time": 26.0}, "do": [
+				["spawn", "levy_south"], ["hazard", "slab_south", 6.0, 14.0, 0.07],
+				["say", "aldric", "More levy from the south quay, and the southern slab is going."],
 			]},
-			{"if": {"done": "hold"}, "do": [
-				["spawn", "isolde"], ["spawn", "guard"], ["objective", "isolde"],
-				["say", "isolde", "Then I will take the vault myself."],
-				["say", "mara", "Face me, Isolde. Whatever happens to the bridle, it will not be decided by one crown."],
+			{"if": {"time": 40.0}, "do": [
+				["hazard", "slab_stair", 6.0, 16.0, 0.07],
+				["spawn", "levy_upper"],
+				["say", "mara", "The stair foot is buckling. Rear guard, come up now."],
 			]},
-			{"if": {"done": "isolde"}, "delay": 1.5, "do": [
-				["say", "isolde", "You will give it away… to all of them…"],
-				["say", "mara", "Not give. Share. Shields, form on the road. We climb to the chamber."],
-				["victory", "The King's causeway held."],
+			{"if": {"done": "withdraw"}, "do": [
+				["say", "mara", "Count who came up, and write down what we saw. Every ship."],
+				["victory", "The detachment withdrew from Moonwash."],
 			]},
 		],
-		"ending": LAST_COMMAND,
 	}
 
 
 # ====================================================================== RASKA
+# Orcs · Years One–Four · docs/campaigns/orcs.md
 
 
 static func _raska_1() -> Dictionary:
 	return {
-		"id": "raska_1",
-		"title": "Dry River, Full Mine",
-		"year": "Year One · Spring",
-		"briefing": "The Red Basin’s river has run dry. The Orc assembly elected Raska to restore it, and the trail of dead water leads to a Human mine in the Cairnspine. The bridle is already leaving under escort. Break the rearguard at the miners’ camp and find whoever spoke the command.",
-		"epilogue": "Edrin Coll walked out of the Cairnspine under Orc guard, still apologizing. Raska had his witness and lost the wagon. The other miners were gone, led into the mountain by grey-skinned Druids who left no tracks. For the first time, the War Marshal began to wonder who else had known about the bridle.",
+		"id": "orc_mine_witness",
+		"title": "One Person to Ask",
+		"year": "Year One",
+		"briefing": "Capture someone who can account for the spring at the mine and the dry river in the Basin. The Godbridle is not the objective. Pin the Human rearguard where the pass narrows with one company, and send the other down the lower path behind the rock shoulder to hold the tunnel outlet approach.",
+		"debrief": "Raska gave up the pursuit with the bridle still in sight. Marit Holm walked beside him all the way down into the Basin and told her story twice before they reached the first well.\n\nAt the assembly her account was set beside the survey the Druids sent after her. The spring and the loss of the river fell on the same night.",
 		"map": Maps.greyhollow(),
-		"hero": {"pos": Vector2(44, -60), "facing": Vector2(-1, 0)},
+		"hero": {"pos": Vector2(46, -8), "facing": Vector2(-1, 0)},
 		"hero_level": 5,
 		"platoons": [
-			_p("saltwell", &"basin_warriors", ALLY, 18, 3, Vector2(40, -52), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
-			_p("redwater", &"basin_warriors", ALLY, 18, 3, Vector2(46, -48), {"name": "Redwater Company", "persist": "redwater", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
-			_p("slingers", &"basin_slingers", ALLY, 12, 3, Vector2(48, -56), {"name": "Basin Slingers", "persist": "slingers", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
-			_p("rearguard", &"marcher_infantry", FOE, 18, 3, Vector2(-6, -48), {"name": "Halden Rearguard", "aggro": 18.0, "facing": Vector2(1, 0)}),
-			_p("camp_archers", &"marcher_archers", FOE, 12, 3, Vector2(-12, -58), {"name": "Camp Archers", "aggro": 20.0, "facing": Vector2(1, 0)}),
-			_p("tent_guard", &"marcher_infantry", FOE, 14, 3, Vector2(-26, -50), {"name": "Tent Guard", "aggro": 14.0, "facing": Vector2(1, 0)}),
-			_hero("edrin", &"edrin", ALLY, 4, Vector2(-27, -56), {"name": "Edrin Coll", "hidden": true, "commandable": false, "order": {"kind": "follow"}}),
-			_hero("aldric", &"aldric", FOE, 6, Vector2(0, -24), {"name": "Ser Aldric Thorne", "hidden": true, "order": {"kind": "attack", "target": "edrin"}}),
-			_p("returning", &"marcher_infantry", FOE, 18, 4, Vector2(-2, -22), {"name": "Halden Shields", "hidden": true, "order": {"kind": "attack", "target": "edrin"}}),
-			_p("returning_archers", &"marcher_archers", FOE, 10, 4, Vector2(6, -24), {"name": "Ridge Archers", "hidden": true, "order": {"kind": "hunt"}}),
+			_p("saltwell", &"basin_warriors", ALLY, 18, 3, Vector2(42, -4), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_p("redwater", &"basin_warriors", ALLY, 18, 3, Vector2(44, -12), {"name": "Redwater Company", "persist": "redwater", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_p("rearguard", &"marcher_infantry", FOE, 18, 3, Vector2(0, -18), {"name": "Halden Rearguard", "aggro": 14.0, "facing": Vector2(0, 1)}),
+			_p("ridge_archers", &"marcher_archers", FOE, 12, 3, Vector2(24, -40), {"name": "Ridge Archers", "aggro": 20.0, "facing": Vector2(0, 1)}),
+			_p("detachment", &"marcher_infantry", FOE, 14, 3, Vector2(-2, -4), {"name": "Halden Detachment", "hidden": true, "order": {"kind": "move", "to": "outlet_approach"}, "aggro": 8.0}),
+			_p("miners", &"miners", NEUTRAL, 12, 2, Vector2(-50, 26), {"name": "Greyhollow Miners", "hidden": true, "commandable": false, "order": {"kind": "hold"}}),
+			_p("wardens", &"cairn_wardens", NEUTRAL, 10, 3, Vector2(-46, 30), {"name": "Cairn Wardens", "hidden": true, "commandable": false, "order": {"kind": "hold"}}),
+			_hero("marit", &"witness", NEUTRAL, 4, Vector2(-44, 32), {"name": "Marit Holm", "hidden": true, "commandable": false, "order": {"kind": "hold"}}),
 		],
 		"interactables": [
-			{"id": "foreman", "pos": Vector2(-27, -55), "label": "Search the foreman's tent", "duration": 3.0, "hidden": true},
+			{"id": "terms", "pos": Vector2(-44, 34), "label": "Accept her terms", "duration": 2.5, "hidden": true},
 		],
 		"objectives": [
-			{"id": "rearguard", "text": "Break the Human rearguard at the camp", "type": "defeat", "who": ["rearguard", "camp_archers", "tent_guard"]},
-			{"id": "find", "text": "Search the foreman's tent", "type": "interact", "who": "foreman", "hidden": true},
-			{"id": "extract", "text": "Bring Edrin Coll to the east ridge", "type": "reach", "who": "edrin", "zone": "east_ridge", "hidden": true},
-			{"id": "edrin", "text": "Edrin Coll must survive", "type": "protect", "who": ["edrin"], "hidden": true, "fail_text": "The only witness to the command was killed."},
+			{"id": "approach", "text": "Hold the outlet approach", "type": "hold", "zone": "outlet_approach", "contest": true, "seconds": INF, "overrun_time": 15.0, "fail_text": "The Human detachment sealed the outlet approach before the workers escaped."},
+			{"id": "terms", "text": "Speak with the miner at the outlet", "type": "interact", "who": "terms", "hidden": true},
+			{"id": "escort", "text": "Escort Marit Holm to the Orc rally point", "type": "reach", "who": "marit", "zone": "orc_rally", "hidden": true},
+			{"id": "witness", "text": "Marit Holm must survive", "type": "protect", "who": ["marit"], "hidden": true, "fail_text": "The witness was killed."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "raska", "The wagon is gone down the pass. Let it go. A wagon cannot tell me what happened to our river."],
-				["say", "durga", "Ashtusk's band is chasing it anyway, Marshal. She never listens."],
-				["say", "raska", "Then we take the camp. Someone there spoke the command."],
+				["say", "raska", "The bridle is leaving by the road. Let it. A box cannot tell the assembly what happened to our river."],
+				["say", "durga", "Then who can, Marshal?"],
+				["say", "raska", "Whoever was in that camp. Saltwell pins the rearguard at the narrows. Redwater, down the lower path to the outlet."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your companies. Release to return to Raska."]]},
-			{"if": {"near": ["camp", 30.0], "zone": ["hero", "camp"]}, "do": [
-				["say", "raska", "Where are the miners? There should be fifty people in this camp."],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Order one company to the narrows and the other to the outlet approach."]]},
+			{"if": {"time": 40.0}, "do": [
+				["spawn", "detachment"],
+				["say", "durga", "Human detachment slipping past the narrows. They're heading for the outlet."],
 			]},
-			{"if": {"done": "rearguard"}, "do": [
-				["reveal", "foreman"], ["objective", "find"],
-				["say", "raska", "Check the foreman's tent. The one who gives orders keeps records."],
+			{"if": {"time": 55.0}, "do": [
+				["spawn", "miners"], ["spawn", "wardens"], ["spawn", "marit"], ["reveal", "terms"], ["objective", "terms"],
+				["say", "narrator", "Workers stream out of the tunnel outlet behind grey-skinned Druid wardens. One woman stops and waits."],
+				["say", "marit", "You want someone who saw it. I saw it. I'll tell your assembly everything, if the rest of them can go."],
 			]},
-			{"if": {"done": "find"}, "do": [
-				["spawn", "edrin"], ["objective", "extract"], ["objective", "edrin"],
-				["say", "edrin", "Don't — please. I'm Edrin Coll. I asked it for water. Just water."],
-				["say", "raska", "Then you will tell my assembly that, word for word. Walk with me."],
-				["say", "edrin", "The others went with the grey ones. The Druids. Into the old tunnels."],
+			{"if": {"done": "terms"}, "do": [
+				["say", "raska", "Agreed. No one touches the others."],
+				["order", "miners", {"kind": "path", "points": [Vector2(-46, 44), Vector2(-50, 68)]}],
+				["order", "wardens", {"kind": "path", "points": [Vector2(-46, 46), Vector2(-50, 70)]}],
 			]},
-			{"if": {"after": ["find", 12.0]}, "do": [
-				["spawn", "aldric"], ["spawn", "returning"], ["spawn", "returning_archers"],
-				["say", "aldric", "The Orcs have the foreman! The King wants no witnesses in Basin hands. Take him back!"],
+			{"if": {"all": [{"done": "terms"}, {"zone": ["miners", "druid_trail"]}]}, "do": [
+				["despawn", "miners"], ["despawn", "wardens"], ["complete", "approach"],
+				["defect", "marit"], ["order", "marit", {"kind": "follow"}],
+				["objective", "escort"], ["objective", "witness"],
+				["say", "marit", "They're clear. I'm Marit Holm. Walk slowly, Marshal. I've been underground for a day."],
 			]},
-			{"if": {"done": "extract"}, "do": [
-				["say", "raska", "Our river died for a camp's drinking water. Halden will answer for this at a well, in front of everyone."],
-				["victory", "Raska has the witness."],
+			{"if": {"done": "escort"}, "do": [
+				["say", "raska", "Durga, pull Saltwell back. We have what we came for."],
+				["victory", "Raska has a witness the assembly will believe."],
 			]},
 		],
 	}
@@ -316,57 +343,69 @@ static func _raska_1() -> Dictionary:
 
 static func _raska_2() -> Dictionary:
 	return {
-		"id": "raska_2",
-		"title": "Testimony at Kingswell",
-		"year": "Year Two · Summer",
-		"briefing": "King Mara has called the seven crowns to Kingswell. Raska brings Edrin Coll under a parley flag so the Humans hear, at their own sacred well, what the bridle took from the Basin. The lower towns would rather Raska came with an army. Get Edrin to the well-stone alive.",
-		"epilogue": "Halden swore on the well to return the river, and three crowns walked out rather than hear it. Raska rode home with an oath instead of water. The lower towns did not want an oath. Their leader, Gorrum Saltjaw, wanted the whole inland sea, and the assembly’s own town sat on its old shoreline.",
-		"map": Maps.kingswell(),
-		"hero": {"pos": Vector2(36, 48), "facing": Vector2(-0.5, -1).normalized()},
-		"hero_level": 11,
+		"id": "orc_well_road",
+		"title": "The Second Bucket",
+		"year": "Year Three",
+		"briefing": "Reports say Mara moved the water again. The new cut has left the Basin’s well road carrying the traffic its river used to serve, and a rival March company is coming for the well carts after its own supply failed. Open the lower well’s storehouse to the households without a well right, then get both carts to the Basin exit. The salt road is short but gives riders a charge lane; the crooked wash breaks a charge, but its single ramp is a choke point.",
+		"debrief": "Captain Vasha Grem lent her lower-town company for the escort and counted the last barrels onto the cart herself. When the carts were through, she asked Raska what his restored river would give the towns beyond its banks.\n\nHe could promise a river. He could not promise a sea.",
+		"map": Maps.well_road(),
+		"hero": {"pos": Vector2(2, -52), "facing": Vector2(0, 1)},
+		"hero_level": 10,
+		"structures": [
+			{"id": "upper_cart", "kind": &"cart", "team": ALLY, "name": "Upper-well cart", "pos": Vector2(-20, -50), "speed": 1.8,
+				"commandable": true, "halted": true, "escort_radius": 0.0, "routes": [
+					[Vector2(0, -40), Vector2(14, -30), Vector2(28, 0), Vector2(28, 30), Vector2(10, 50), Vector2(0, 62)],
+					[Vector2(-13, -30), Vector2(-13, -8), Vector2(-44, 0), Vector2(-44, 16), Vector2(-40, 26), Vector2(-40, 36), Vector2(-20, 46), Vector2(0, 62)],
+				]},
+			{"id": "lower_cart", "kind": &"cart", "team": ALLY, "name": "Lower-well cart", "pos": Vector2(18, -46), "speed": 1.7,
+				"commandable": false, "halted": true, "escort_radius": 0.0, "routes": [
+					[Vector2(14, -30), Vector2(28, 0), Vector2(28, 30), Vector2(10, 50), Vector2(0, 62)],
+					[Vector2(0, -40), Vector2(-13, -30), Vector2(-13, -8), Vector2(-44, 0), Vector2(-44, 16), Vector2(-40, 26), Vector2(-40, 36), Vector2(-20, 46), Vector2(0, 62)],
+				]},
+		],
 		"platoons": [
-			_p("saltwell", &"basin_warriors", ALLY, 18, 8, Vector2(40, 52), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}}),
-			_p("slingers", &"basin_slingers", ALLY, 12, 8, Vector2(32, 54), {"name": "Basin Slingers", "persist": "slingers", "order": {"kind": "follow"}}),
-			_hero("edrin", &"edrin", ALLY, 6, Vector2(38, 50), {"name": "Edrin Coll", "commandable": false, "order": {"kind": "follow"}}),
-			_hero("mara", &"mara", ALLY, 10, Vector2(0, 6), {"name": "Mara Halden", "commandable": false, "order": {"kind": "hold"}}),
-			_p("halden", &"marcher_infantry", ALLY, 18, 8, Vector2(-4, 10), {"name": "Halden Shields", "commandable": false, "order": {"kind": "hold"}}),
-			_p("ambush_west", &"lowmarch_knights", FOE, 18, 9, Vector2(-46, 4), {"name": "Lowmarch Knights", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "attack", "target": "edrin"}}),
-			_p("ambush_north", &"lowmarch_knights", FOE, 18, 9, Vector2(22, -50), {"name": "Unmarked Riders", "hidden": true, "order": {"kind": "attack", "target": "edrin"}}),
-			_p("ambush_bows", &"lowmarch_crossbows", FOE, 12, 9, Vector2(-8, -50), {"name": "Lowmarch Crossbows", "hidden": true, "order": {"kind": "move", "to": Vector2(-6, -30)}, "aggro": 20.0}),
-			_hero("brannoc", &"brannoc", FOE, 12, Vector2(-48, -6), {"name": "Ser Brannoc Hale", "hidden": true, "order": {"kind": "attack", "target": "edrin"}}),
+			_p("saltwell", &"basin_warriors", ALLY, 18, 8, Vector2(-4, -48), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}}),
+			_p("redwater", &"basin_warriors", ALLY, 18, 8, Vector2(8, -48), {"name": "Redwater Company", "persist": "redwater", "order": {"kind": "follow"}}),
+			_p("slingers", &"basin_slingers", ALLY, 12, 8, Vector2(2, -58), {"name": "Basin Slingers", "persist": "slingers", "order": {"kind": "follow"}}),
+			_p("lowshore", &"basin_warriors", ALLY, 16, 7, Vector2(26, -48), {"name": "Lowshore Company", "order": {"kind": "hold"}}),
+			_p("households", &"households", ALLY, 10, 3, Vector2(32, -52), {"name": "Households without a well", "commandable": false, "order": {"kind": "hold"}}),
+			_p("riders", &"march_riders", FOE, 14, 9, Vector2(46, -16), {"name": "March Riders", "order": {"kind": "hold"}, "facing": Vector2(-1, 0)}),
+			_p("riders_two", &"march_riders", FOE, 12, 9, Vector2(48, 20), {"name": "March Riders", "hidden": true, "order": {"kind": "hunt"}, "facing": Vector2(-1, 0)}),
+			_p("wash_levy", &"march_levy", FOE, 16, 8, Vector2(-46, -40), {"name": "March Levy", "hidden": true, "order": {"kind": "move", "to": "ramp"}, "aggro": 12.0}),
+			_p("bows", &"march_bows", FOE, 12, 8, Vector2(42, 34), {"name": "March Bowmen", "hidden": true, "order": {"kind": "move", "to": Vector2(34, 30)}, "aggro": 20.0}),
+		],
+		"interactables": [
+			{"id": "storehouse", "pos": Vector2(31, -56), "label": "Open the storehouse", "duration": 2.5},
 		],
 		"objectives": [
-			{"id": "approach", "text": "Escort Edrin to the moot", "type": "reach", "who": "edrin", "zone": "approach"},
-			{"id": "edrin", "text": "Edrin Coll must survive", "type": "protect", "who": ["edrin"], "fail_text": "Edrin Coll was killed before he could testify."},
-			{"id": "ambush", "text": "Break the Lowmarch ambush", "type": "defeat", "who": ["ambush_west", "ambush_north", "ambush_bows"], "hidden": true},
-			{"id": "brannoc", "text": "Defeat Ser Brannoc Hale", "type": "defeat", "who": ["brannoc"], "hidden": true},
-			{"id": "testify", "text": "Bring Edrin to the Kingswell", "type": "reach", "who": "edrin", "zone": "well", "hidden": true},
+			{"id": "storehouse", "text": "Open the lower well's storehouse", "type": "interact", "who": "storehouse"},
+			{"id": "carts", "text": "Get both well carts to the Basin exit", "type": "deliveries", "carts": {"upper_cart": "exit", "lower_cart": "exit"}, "need": 2, "fail_text": "A well cart was destroyed on the road."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "raska", "Parley flag high. We walk in slowly, and nobody draws unless they draw first."],
-				["say", "edrin", "They'll hang me for this, won't they?"],
-				["say", "raska", "Not while you walk beside me."],
+				["say", "vasha", "My company is yours for the road, Marshal. The barrels are another matter. Those are counted."],
+				["say", "raska", "The upper cart can leave now. Watch the riders before you commit it."],
 			]},
-			{"if": {"done": "approach"}, "do": [
-				["say", "mara", "War Marshal. You have my word as host. Bring your witness to the well."],
-				["spawn", "ambush_west"], ["spawn", "ambush_north"], ["spawn", "ambush_bows"], ["objective", "ambush"],
-				["say", "raska", "Riders! Is this your word, Halden?"],
-				["say", "mara", "Those are not mine. Shields, to the Marshal's side!"],
+			{"if": {"time": 5.0}, "do": [["say", "narrator", "Order a cart forward in the command view. Point the cursor at the salt road or the wash to choose its route."]]},
+			{"if": {"done": "storehouse"}, "do": [
+				["order", "households", {"kind": "move", "to": Vector2(20, -50)}],
+				["say", "raska", "Everyone without a well right rides on the lower cart. March refugees too."],
+				["say", "vasha", "Even the Humans? …Fine. Get them aboard."],
 			]},
-			{"if": {"any": [{"done": "ambush"}, {"after": ["approach", 120.0]}]}, "do": [
-				["spawn", "brannoc"], ["objective", "brannoc"],
-				["say", "brannoc", "Queen Isolde would prefer the Orcs and Halden kill each other. Since you won't, I'll take the witness."],
+			{"if": {"all": [{"done": "storehouse"}, {"zone": ["households", "lower_well"]}]}, "delay": 3.0, "do": [
+				["despawn", "households"], ["cart_commandable", "lower_cart"],
+				["say", "vasha", "They're aboard. The lower cart is ready to roll."],
 			]},
-			{"if": {"done": "brannoc"}, "do": [
-				["objective", "testify"], ["order", "edrin", {"kind": "move", "to": "well"}],
-				["say", "raska", "Go on, Edrin. Say it where they keep their oaths."],
+			{"if": {"time": 40.0}, "do": [
+				["order", "riders", {"kind": "hunt"}],
+				["say", "durga", "Riders turning on the salt road! Brace, or take the wash."],
 			]},
-			{"if": {"done": "testify"}, "delay": 2.0, "do": [
-				["say", "edrin", "I asked the bridle for water. By morning we had a spring and the Basin had no river."],
-				["say", "mara", "Then by the oath of the wells, the water goes back downstream. I swear it here."],
-				["say", "raska", "An oath at a well. My grandmother would have accepted that. My lower towns will not."],
-				["victory", "Edrin testified at the Kingswell."],
+			{"if": {"time": 60.0}, "do": [["spawn", "wash_levy"], ["say", "durga", "Levy moving into the wash. They want the ramp."]]},
+			{"if": {"time": 95.0}, "do": [["spawn", "riders_two"], ["spawn", "bows"], ["say", "durga", "Second rider wave forming up, bowmen behind them."]]},
+			{"if": {"done": ["storehouse", "carts"]}, "do": [
+				["say", "vasha", "Every barrel through. Now tell me, Marshal. What does your river give a town that isn't on its banks?"],
+				["say", "raska", "A river. Not a sea."],
+				["victory", "Both well carts reached the Basin exit."],
 			]},
 		],
 	}
@@ -374,123 +413,134 @@ static func _raska_2() -> Dictionary:
 
 static func _raska_3() -> Dictionary:
 	return {
-		"id": "raska_3",
-		"title": "The Salt Host",
-		"year": "Year Five · The Last Command",
-		"briefing": "Gorrum Saltjaw broke from the assembly and marched the lower-town companies to the Vault beside Queen Isolde, promising them the inland sea. Those are still Raska’s people. Plant the assembly’s recall banners in their camps along the dry spillway, and those companies remember whose wells they drank from. Then face Gorrum.",
-		"epilogue": "Gorrum died believing the sea was worth any town. The companies he led carried his body home, and they marched back under the assembly’s banner. At the Listening Chamber, Raska named the wells he had kept open through two failed rains and asked the others to name theirs. Then he asked the god to stop listening.",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(40, -8), "facing": Vector2(1, 0)},
-		"hero_level": 18,
+		"id": "orc_spanwater_release",
+		"title": "River, Not Sea",
+		"year": "Year Four",
+		"briefing": "The breach at Spanwater Lock lets the Basin take back some of the diverted water without the Godbridle. The spillway feeds the old Basin riverbed. The sea gate would fill the old seabed and drown the assembly town. Cross the service causeway, clear the spillway wheel, start the release, and hold the wheel until the river reaches its stage. The release will cut the low crossing.",
+		"debrief": "The Basin got its river back, not its sea. The lower-town standards went home up the approach road, still friendly and no longer Raska’s, and the Marches lost part of their diverted water.\n\nOn the high bank, Raska watched King Mara hand the Godbridle to the First Listener in front of Orc and Elven witnesses. No one asked the War Marshal to take it, and he did not offer.",
+		"map": Maps.spanwater(),
+		"hero": {"pos": Vector2(62, -24), "facing": Vector2(-1, 0)},
+		"hero_level": 15,
 		"platoons": [
-			_p("saltwell", &"basin_warriors", ALLY, 18, 16, Vector2(34, -12), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}}),
-			_p("redwater", &"basin_warriors", ALLY, 18, 16, Vector2(34, -2), {"name": "Redwater Company", "persist": "redwater", "order": {"kind": "follow"}}),
-			_p("slingers", &"basin_slingers", ALLY, 12, 16, Vector2(28, -8), {"name": "Basin Slingers", "persist": "slingers", "order": {"kind": "follow"}}),
-			_p("camp_n", &"saltjaw_raiders", FOE, 16, 16, Vector2(64, -2), {"name": "Brackwater Company", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_p("camp_s", &"saltjaw_raiders", FOE, 16, 16, Vector2(64, 30), {"name": "Lowshore Company", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_p("camp_f", &"basin_slingers", FOE, 12, 16, Vector2(68, 58), {"name": "Saltpan Slingers", "aggro": 18.0, "facing": Vector2(-1, 0)}),
-			_p("lowmarch", &"lowmarch_knights", FOE, 18, 17, Vector2(50, 18), {"name": "Lowmarch Knights", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_hero("gorrum", &"gorrum", FOE, 20, Vector2(60, 18), {"name": "Gorrum Saltjaw", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("gorrum_guard", &"saltjaw_raiders", FOE, 16, 18, Vector2(64, 20), {"name": "Saltjaw's Own", "hidden": true, "order": {"kind": "hunt"}}),
+			_p("saltwell", &"basin_warriors", ALLY, 18, 13, Vector2(64, -18), {"name": "Saltwell Company", "persist": "saltwell", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_p("redwater", &"basin_warriors", ALLY, 18, 13, Vector2(66, -30), {"name": "Redwater Company", "persist": "redwater", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_p("slingers", &"basin_slingers", ALLY, 12, 13, Vector2(68, -24), {"name": "Basin Slingers", "persist": "slingers", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_p("lowshore", &"basin_warriors", ALLY, 16, 12, Vector2(60, -14), {"name": "Lowshore Company", "order": {"kind": "follow"}, "facing": Vector2(-1, 0)}),
+			_hero("vasha", &"vasha", ALLY, 12, Vector2(58, -18), {"name": "Captain Vasha Grem", "commandable": false, "order": {"kind": "follow"}}),
+			_p("apron_levy", &"march_levy", FOE, 18, 13, Vector2(22, -14), {"name": "Lock Defenders", "aggro": 16.0, "facing": Vector2(1, 0)}),
+			_p("wheel_guard", &"march_levy", FOE, 16, 13, Vector2(-6, -22), {"name": "Wheel Guard", "aggro": 12.0, "facing": Vector2(1, 0)}),
+			_p("lock_bows", &"march_bows", FOE, 12, 13, Vector2(4, -22), {"name": "Lock Bowmen", "aggro": 18.0, "facing": Vector2(1, 0)}),
+			_p("counter_one", &"march_levy", FOE, 18, 13, Vector2(18, 60), {"name": "March Counterattack", "hidden": true, "order": {"kind": "assault", "to": "wheel"}}),
+			_p("counter_riders", &"march_riders", FOE, 12, 13, Vector2(22, 62), {"name": "March Riders", "hidden": true, "order": {"kind": "assault", "to": "wheel"}}),
+			_p("counter_two", &"march_levy", FOE, 18, 14, Vector2(60, -20), {"name": "March Counterattack", "hidden": true, "order": {"kind": "assault", "to": "wheel"}}),
+			_p("feeder_kin", &"thornkin", NEUTRAL, 12, 10, Vector2(-26, -26), {"name": "Dryads at the feeder", "commandable": false}),
 		],
 		"interactables": [
-			{"id": "banner_n", "pos": Vector2(64, -6), "label": "Plant the recall banner", "duration": 3.0},
-			{"id": "banner_s", "pos": Vector2(66, 34), "label": "Plant the recall banner", "duration": 3.0},
-			{"id": "banner_f", "pos": Vector2(70, 62), "label": "Plant the recall banner", "duration": 3.0},
+			{"id": "release", "pos": Vector2(-8, -28), "label": "Turn the spillway wheel", "duration": 3.5, "hidden": true},
 		],
 		"objectives": [
-			{"id": "banners", "text": "Plant recall banners in the lower-town camps", "type": "interact", "who": ["banner_n", "banner_s", "banner_f"]},
-			{"id": "gorrum", "text": "Defeat Gorrum Saltjaw", "type": "defeat", "who": ["gorrum"], "hidden": true},
+			{"id": "clear", "text": "Clear the spillway wheel", "type": "defeat", "who": ["wheel_guard", "lock_bows"]},
+			{"id": "release", "text": "Start the release at the spillway wheel", "type": "interact", "who": "release", "hidden": true},
+			{"id": "stage", "text": "Hold the spillway clear until the river reaches its stage", "type": "hold", "zone": "wheel", "contest": true, "seconds": 90.0, "overrun_time": 12.0, "hidden": true, "fail_text": "March defenders shut the spillway before the river reached its stage."},
+			{"id": "bank", "text": "Bring Raska to the high bank", "type": "reach", "who": "hero", "zone": "high_bank", "hidden": true},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "raska", "Those camps are Basin towns. I will not cut through my own people to reach Gorrum."],
-				["say", "durga", "Then plant the banners, Marshal. Let them choose."],
+				["say", "raska", "Two controls on that lock. The spillway gives the Basin its river. The sea gate gives the lower towns their sea, and drowns the assembly town doing it."],
+				["say", "vasha", "My companies came for both, Marshal. You know that."],
 			]},
-			{"if": {"interact": "banner_n"}, "do": [
-				["defect", "camp_n"],
-				["say", "raska", "Brackwater! Your wells are on the assembly's rolls. Come home."],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "The lock stairs give infantry cover. The apron is open ground where defenders mass."]]},
+			{"if": {"done": "clear"}, "do": [
+				["reveal", "release"], ["objective", "release"],
+				["say", "raska", "The wheel is ours. Spillway only."],
 			]},
-			{"if": {"interact": "banner_s"}, "do": [
-				["defect", "camp_s"],
-				["say", "raska", "Lowshore. Gorrum's sea would drown your own market. Stand with the assembly."],
+			{"if": {"done": "release"}, "do": [
+				["objective", "stage"],
+				["say", "vasha", "And the sea gate, Marshal?"],
+				["say", "raska", "Stays shut. I was elected to bring back a river."],
+				["say", "vasha", "Then the lower towns go home. No hard feelings. No more companies."],
+				["leave", "lowshore", "upstream"], ["leave", "vasha", "upstream"],
+				["spawn", "counter_one"], ["spawn", "counter_riders"],
+				["say", "durga", "Counterattack from the south road!"],
 			]},
-			{"if": {"interact": "banner_f"}, "do": [
-				["defect", "camp_f"],
-				["say", "raska", "Saltpan, the Basin needs your slings, not his sea."],
+			{"if": {"after": ["release", 20.0]}, "do": [
+				["say", "narrator", "The release floods the low crossing in fifteen seconds. Use the high bank."],
 			]},
-			{"if": {"done": "banners"}, "do": [
-				["spawn", "gorrum"], ["spawn", "gorrum_guard"], ["objective", "gorrum"],
-				["say", "gorrum", "You give them back their wells and take away their sea! Then I take away your mandate, Vennor."],
-				["say", "raska", "The assembly gave it. Only the assembly takes it."],
+			{"if": {"after": ["release", 35.0]}, "do": [
+				["raise", "flood"],
+				["say", "raska", "There it goes. The old riverbed is a river again."],
 			]},
-			{"if": {"done": "gorrum"}, "delay": 1.5, "do": [
-				["say", "raska", "Carry him home. He kept wells too, once."],
-				["victory", "The lower towns returned to the assembly."],
+			{"if": {"after": ["release", 50.0]}, "do": [["spawn", "counter_two"], ["say", "durga", "More of them on the causeway. Without Lowshore we're thin."]]},
+			{"if": {"done": "stage"}, "do": [
+				["objective", "bank"],
+				["say", "raska", "River stage. Now to the high bank. I want to see it run."],
+			]},
+			{"if": {"done": "bank"}, "do": [
+				["victory", "The Basin has its river, and the sea gate stays shut."],
 			]},
 		],
-		"ending": LAST_COMMAND,
 	}
 
 
 # ======================================================================= SOVA
+# Druids · Years One–Five · docs/campaigns/druids.md
 
 
 static func _sova_1() -> Dictionary:
 	return {
-		"id": "sova_1",
-		"title": "The Tunnels Beneath Greyhollow",
-		"year": "Year One · Spring",
-		"briefing": "The Druids hear Orrun stir and know what the miners did. Human soldiers hold the mine, and an Orc warband is coming down the dry riverbed. Get the miners out through the old listening tunnels before either army claims them, then seal the way behind you.",
-		"epilogue": "Forty-one miners walked out under the Cairnspine. The foreman was not among them: Orc soldiers had already taken him. Sova sealed the tunnel with a word, and in the dark he decided that the record his predecessors had kept under seal could stay sealed no longer.",
+		"id": "sova_tunnel_evacuation",
+		"title": "The Listening Tunnels",
+		"year": "Year One",
+		"briefing": "The Druids heard Orrun stir and knew what the miners had asked for. Halden soldiers are securing the camp, and an Orc delegation is coming for anyone who can explain the dry river. Lead the workers into the old listening tunnels, then bring them out of the outlet and down the Druid trail.",
+		"debrief": "The workers walked out under the Cairnspine. At the outlet, one of them, Marit Holm, chose to go with the Orc War Marshal, on the condition that he let the others leave. Sova let her choose.\n\nAt home he dated the change in Orrun’s dreams from the stones. It matched the night of the miners’ request, and it matched the oldest sealed record in the Cairnspine.",
 		"map": Maps.greyhollow(),
-		"hero": {"pos": Vector2(-44, -38), "facing": Vector2(1, 0)},
+		"hero": {"pos": Vector2(-44, -48), "facing": Vector2(1, 0)},
 		"hero_level": 5,
 		"platoons": [
 			_p("wardens", &"cairn_wardens", ALLY, 16, 3, Vector2(-40, -44), {"name": "Cairn Wardens", "persist": "wardens", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("callers", &"stonecallers", ALLY, 10, 3, Vector2(-46, -46), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("miners", &"miners", ALLY, 10, 2, Vector2(-17, -54), {"name": "Greyhollow Miners", "commandable": false, "order": {"kind": "hold"}}),
-			_p("camp_guard", &"marcher_infantry", FOE, 16, 3, Vector2(-6, -44), {"name": "Halden Rearguard", "aggro": 15.0, "facing": Vector2(-1, 0)}),
-			_p("orc_band", &"basin_warriors", FOE, 16, 3, Vector2(24, -50), {"name": "Redwater Company", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_p("orc_wave", &"basin_warriors", FOE, 16, 4, Vector2(0, -60), {"name": "Saltwell Company", "hidden": true, "order": {"kind": "assault", "to": "tunnel_mouth"}}),
-			_p("human_wave", &"marcher_infantry", FOE, 16, 4, Vector2(-14, -28), {"name": "Halden Shields", "hidden": true, "order": {"kind": "assault", "to": "tunnel_mouth"}}),
-			_p("slings_wave", &"basin_slingers", FOE, 10, 4, Vector2(-4, -58), {"name": "Basin Slingers", "hidden": true, "order": {"kind": "assault", "to": "tunnel_mouth"}}),
-		],
-		"interactables": [
-			{"id": "seal", "pos": Vector2(-44, -34), "label": "Speak the sealing word", "duration": 4.0, "hidden": true},
+			_p("callers", &"stonecallers", ALLY, 10, 3, Vector2(-46, -54), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
+			_p("miners", &"miners", ALLY, 12, 2, Vector2(-20, -54), {"name": "Greyhollow Miners", "commandable": false, "order": {"kind": "hold"}}),
+			_p("camp_guard", &"marcher_infantry", FOE, 14, 3, Vector2(-8, -46), {"name": "Halden Camp Guard", "aggro": 13.0, "facing": Vector2(-1, 0)}),
+			_p("miners_out", &"miners", ALLY, 12, 2, Vector2(-50, 28), {"name": "Greyhollow Miners", "hidden": true, "commandable": false, "order": {"kind": "hold"}}),
+			_p("detachment", &"marcher_infantry", FOE, 16, 3, Vector2(-6, 34), {"name": "Halden Detachment", "hidden": true, "order": {"kind": "attack", "target": "miners_out"}}),
+			_hero("raska", &"raska", NEUTRAL, 6, Vector2(-30, 46), {"name": "Raska Vennor", "hidden": true, "commandable": false}),
+			_p("redwater", &"basin_warriors", NEUTRAL, 16, 3, Vector2(-26, 50), {"name": "Redwater Company", "hidden": true, "commandable": false}),
 		],
 		"objectives": [
 			{"id": "camp", "text": "Reach the miners' camp", "type": "reach", "who": "hero", "zone": "camp"},
-			{"id": "tunnel", "text": "Lead the miners to the tunnel mouth", "type": "reach", "who": "miners", "zone": "tunnel_mouth", "hidden": true},
-			{"id": "miners", "text": "The miners must survive", "type": "protect", "who": ["miners"], "fail_text": "The miners were cut down before they reached the tunnels."},
-			{"id": "hold", "text": "Hold the tunnel mouth while they pass", "type": "hold", "seconds": 60.0, "zone": "tunnel_mouth", "overrun": 10, "hidden": true},
-			{"id": "seal", "text": "Seal the tunnel at the standing stone", "type": "interact", "who": "seal", "hidden": true},
+			{"id": "tunnel", "text": "Lead the miners into the tunnel entrance", "type": "reach", "who": "miners", "zone": "tunnel", "hidden": true},
+			{"id": "trail", "text": "Bring the miners from the outlet to the Druid trail", "type": "reach", "who": "miners_out", "zone": "druid_trail", "hidden": true},
+			{"id": "safe", "text": "The miners must survive", "type": "protect", "who": ["miners", "miners_out"], "fail_text": "The miners were cut down before they reached safety."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "sova", "Orrun is restless. It heard them ask for water, and it answered. We get the miners out before the armies decide what they are worth."],
-				["say", "bryn", "Halden's rearguard holds the camp. The Orcs are coming down from the plateau."],
+				["say", "sova", "Orrun heard them ask for water, and it answered. Now the armies will decide what the miners are worth. We decide first."],
+				["say", "bryn", "Halden's men hold the camp. They're more interested in the mine than the people."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Sova."]]},
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command your platoons. Release to return to Sova."]]},
 			{"if": {"done": "camp"}, "do": [
 				["objective", "tunnel"],
-				["order", "miners", {"kind": "path", "points": [Vector2(-26, -48), Vector2(-36, -44), Vector2(-46, -40)], "wait_for_hero": 14.0}],
-				["say", "sova", "We are Listeners from the Cairnspine. Follow me, and stay close. The tunnels know the way out."],
-				["say", "miner", "The Orcs took Edrin. Our foreman. We couldn't stop them."],
+				["order", "miners", {"kind": "path", "points": [Vector2(-30, -52), Vector2(-42, -50), Vector2(-50, -50)], "wait_for_hero": 14.0}],
+				["say", "sova", "We are Listeners from the Cairnspine. Stay close. The tunnels know the way out."],
+				["say", "miner", "Out where? Everyone up here wants us for something."],
 			]},
-			{"if": {"done": "tunnel"}, "do": [
-				["objective", "hold"], ["spawn", "orc_wave"], ["spawn", "human_wave"], ["spawn", "slings_wave"],
-				["order", "miners", {"kind": "move", "to": Vector2(-52, -40)}],
-				["say", "bryn", "Both armies are coming for the tunnel. They've noticed the camp is empty."],
-				["say", "sova", "Then we hold the mouth. Every miner through before the stone is sealed."],
-			]},
-			{"if": {"done": "hold"}, "do": [
-				["reveal", "seal"], ["objective", "seal"],
-				["say", "sova", "They are through. Now the stone."],
-			]},
-			{"if": {"done": "seal"}, "do": [
+			{"if": {"done": "tunnel"}, "delay": 1.0, "do": [
 				["despawn", "miners"],
-				["say", "sova", "The way is closed. They will find nothing but rock."],
+				["say", "narrator", "Through the listening tunnels, under the pass, to the outlet below the rock shoulder…"],
+				["teleport", "hero", Vector2(-44, 30)], ["teleport", "wardens", Vector2(-42, 38)], ["teleport", "callers", Vector2(-46, 20)],
+				["spawn", "miners_out"], ["spawn", "raska"], ["spawn", "redwater"], ["spawn", "detachment"],
+				["objective", "trail"],
+				["order", "miners_out", {"kind": "path", "points": [Vector2(-46, 44), Vector2(-50, 68)], "wait_for_hero": 16.0}],
+			]},
+			{"if": {"after": ["tunnel", 3.0]}, "do": [
+				["say", "raska", "Listener. I am not here for your workers. I need one person who will tell my assembly what happened to our river."],
+				["say", "marit", "I'll go. If he lets the rest of us leave."],
+				["say", "sova", "Then it is her choice, War Marshal, not mine. Keep your word."],
+				["say", "bryn", "Halden detachment coming round the shoulder!"],
+			]},
+			{"if": {"done": "trail"}, "do": [
+				["despawn", "miners_out"],
+				["say", "sova", "They are on the trail. No army follows a Druid trail for long."],
 				["victory", "The miners escaped through the listening tunnels."],
 			]},
 		],
@@ -499,70 +549,56 @@ static func _sova_1() -> Dictionary:
 
 static func _sova_2() -> Dictionary:
 	return {
-		"id": "sova_2",
-		"title": "The Reading at Hollow Stones",
-		"year": "Year Two · Midsummer",
-		"briefing": "Sova has called the Keepers to Hollow Stones to read the sealed record of the first command aloud. Keeper Orla Thane would rather burn it than let the other peoples learn who drowned the Elven coast. Protect the three listening stones until the reading is finished.",
-		"epilogue": "The record was read in full. Long ago, Sova’s ancestors told Orrun to make the mountains hold. The Cairnspine rose, the Elven coast sank, and the Red Basin lost its sea. At the end of the reading, a stranger stepped into the circle: Tide Speaker Ilyra Venn, who had come with a chart from the risen ruins of Seliath. “You drowned my city,” she said, “and kept the receipt.” Sova gave her a copy.",
-		"map": Maps.hollow_stones(),
-		"hero": {"pos": Vector2(0, 6), "facing": Vector2(0, -1)},
+		"id": "sova_spanwater_handover",
+		"title": "Custody, Not Ownership",
+		"year": "Year Four",
+		"briefing": "Two years ago Sova read the sealed record aloud: the Druids’ first command raised the Cairnspine, drowned the Moonwash coast and helped drain the Red Basin. Several Keepers walked out. Now, at Spanwater, King Mara has refused to give Orrun another order and offers the Godbridle into Sova’s keeping in front of Orc and Elven witnesses. Receive it on the high bank and carry it to the Cairnspine road. The rival crowns would rather it never got there.",
+		"debrief": "The handover changed custody, not ownership by treaty. Orc and Elven witnesses saw King Mara give the Godbridle to the First Listener, and saw him carry it away without speaking a word to Orrun.\n\nThe rival crowns, and the Still Kingdom, still meant to claim it before it reached the vault.",
+		"map": Maps.spanwater(),
+		"hero": {"pos": Vector2(20, 58), "facing": Vector2(0, -1)},
 		"hero_level": 11,
-		"structures": [
-			{"id": "stone_west", "kind": &"stone", "team": ALLY, "pos": Vector2(-9, 6), "name": "Western listening stone"},
-			{"id": "stone_east", "kind": &"stone", "team": ALLY, "pos": Vector2(9, 6), "name": "Eastern listening stone"},
-			{"id": "stone_north", "kind": &"stone", "team": ALLY, "pos": Vector2(0, -10), "name": "Northern listening stone"},
-		],
 		"platoons": [
-			_p("wardens", &"cairn_wardens", ALLY, 16, 8, Vector2(-6, -2), {"name": "Cairn Wardens", "persist": "wardens", "order": {"kind": "hold"}}),
-			_p("callers", &"stonecallers", ALLY, 10, 8, Vector2(4, 2), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "hold"}}),
-			_p("valley_guard", &"cairn_wardens", ALLY, 14, 7, Vector2(6, -4), {"name": "Valley Guard", "persist": "valley", "order": {"kind": "follow"}}),
-			_p("north_band", &"dissenting_wardens", FOE, 16, 8, Vector2(0, -44), {"name": "Thane's Wardens", "order": {"kind": "assault", "to": Vector2(0, -10)}}),
-			_p("west_band", &"dissenting_wardens", FOE, 16, 8, Vector2(-44, 0), {"name": "Moorland Wardens", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "assault", "to": Vector2(-9, 6)}}),
-			_p("east_callers", &"stonecallers", FOE, 10, 8, Vector2(44, -4), {"name": "Dissenting Callers", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": Vector2(9, 6)}}),
-			_p("east_band", &"dissenting_wardens", FOE, 16, 9, Vector2(46, 2), {"name": "Eastvale Wardens", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": Vector2(9, 6)}}),
-			_hero("orla", &"orla", FOE, 12, Vector2(0, -44), {"name": "Keeper Orla Thane", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("orla_guard", &"dissenting_wardens", FOE, 16, 10, Vector2(4, -46), {"name": "Thane's Hearthguard", "hidden": true, "order": {"kind": "assault", "to": Vector2(0, -10)}}),
-			_hero("ilyra", &"ilyra", ALLY, 10, Vector2(0, 46), {"name": "Ilyra Venn", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
-			_p("ilyra_archers", &"tide_archers", ALLY, 10, 9, Vector2(4, 46), {"name": "Tide Archers", "hidden": true, "commandable": false, "order": {"kind": "move", "to": Vector2(0, 22)}}),
+			_p("wardens", &"cairn_wardens", ALLY, 16, 9, Vector2(14, 60), {"name": "Cairn Wardens", "persist": "wardens", "order": {"kind": "follow"}, "facing": Vector2(0, -1)}),
+			_p("callers", &"stonecallers", ALLY, 10, 9, Vector2(26, 60), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "follow"}, "facing": Vector2(0, -1)}),
+			_p("valley", &"cairn_wardens", ALLY, 14, 8, Vector2(20, 64), {"name": "Valley Guard", "persist": "valley", "order": {"kind": "follow"}, "facing": Vector2(0, -1)}),
+			_hero("mara", &"mara", NEUTRAL, 13, Vector2(-30, -8), {"name": "Mara Halden", "commandable": false}),
+			_p("halden", &"marcher_infantry", NEUTRAL, 16, 11, Vector2(-26, -14), {"name": "Halden Shields", "commandable": false}),
+			_hero("raska", &"raska", NEUTRAL, 15, Vector2(-38, -16), {"name": "Raska Vennor", "commandable": false}),
+			_hero("ilyra", &"ilyra", NEUTRAL, 13, Vector2(-38, 4), {"name": "Ilyra Venn", "commandable": false}),
+			_hero("hadrik", &"hadrik", FOE, 13, Vector2(-56, 30), {"name": "Lord Hadrik of Westmarch", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("west_levy", &"march_levy", FOE, 18, 10, Vector2(-54, 8), {"name": "Westmarch Levy", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("west_riders", &"march_riders", FOE, 12, 10, Vector2(-40, 58), {"name": "Westmarch Riders", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("west_bows", &"march_bows", FOE, 12, 10, Vector2(-60, 22), {"name": "Westmarch Bowmen", "hidden": true, "order": {"kind": "hold"}, "aggro": 18.0}),
+		],
+		"interactables": [
+			{"id": "receive", "pos": Vector2(-32, -2), "label": "Receive the Godbridle", "duration": 3.0},
 		],
 		"objectives": [
-			{"id": "stones", "text": "Protect the three listening stones", "type": "protect", "who": ["stone_west", "stone_east", "stone_north"], "fail_text": "A listening stone fell. The reading was broken."},
-			{"id": "reading", "text": "Complete the reading", "type": "hold", "seconds": 200.0},
-			{"id": "orla", "text": "Defeat Keeper Orla Thane", "type": "defeat", "who": ["orla"], "hidden": true},
+			{"id": "receive", "text": "Receive the Godbridle on the high bank", "type": "interact", "who": "receive"},
+			{"id": "road", "text": "Carry the Godbridle to the Cairnspine road", "type": "reach", "who": "hero", "zone": "cairnspine_road", "hidden": true},
+			{"id": "hadrik", "text": "Optional: drive off Lord Hadrik of Westmarch", "type": "defeat", "who": ["hadrik"], "hidden": true, "optional": true},
 		],
 		"events": [
+			{"if": {"time": 0.1}, "do": [["raise", "flood"]]},
 			{"if": {"time": 1.0}, "do": [
-				["say", "sova", "Keepers, witnesses. This record was sealed by Listeners before me. Today it is read aloud, all of it."],
-				["say", "orla", "Some debts should stay buried, First Listener. If you will not stop, my wardens will stop you."],
+				["say", "bryn", "The release has already run, and the old riverbed is full. Cross on the lock top. King Halden waits on the high bank with the War Marshal and the Tide Speaker."],
+				["say", "sova", "Witnesses on every side. Good. That is what this needs."],
 			]},
-			{"if": {"time": 30.0}, "do": [
-				["spawn", "west_band"],
-				["say", "bryn", "Wardens on the west moor. Orla brought more valleys than we thought."],
+			{"if": {"done": "receive"}, "do": [
+				["objective", "road"], ["objective", "hadrik"],
+				["say", "mara", "I promised water I had no right to give. I won't give a second order to fix the first. Take it, Listener. Keep it from all of us."],
+				["say", "sova", "Into my keeping, not my ownership. The Cairnspine has done enough with this already."],
+				["say", "raska", "The Basin witnesses it."],
+				["say", "ilyra", "So does the coast."],
+				["spawn", "hadrik"], ["spawn", "west_levy"], ["spawn", "west_riders"], ["spawn", "west_bows"],
+				["say", "hadrik", "Halden gives away what the Marches paid for? Westmarch will take it back on the road."],
+				["defect", "halden"],
+				["say", "mara", "Shields, cover the Listener. Whatever else I've done, this I will see through."],
 			]},
-			{"if": {"time": 60.0}, "do": [
-				["say", "voice", "“…and the Listener said to the sleeper: make the mountains hold…”"],
-			]},
-			{"if": {"time": 75.0}, "do": [
-				["spawn", "east_band"], ["spawn", "east_callers"],
-				["say", "sova", "Eastvale too. Hold the stones. The record is half read."],
-			]},
-			{"if": {"time": 110.0}, "do": [
-				["spawn", "orla"], ["spawn", "orla_guard"], ["objective", "orla"],
-				["say", "voice", "“…the coast went under the sea, and the inland water fled the Basin…”"],
-				["say", "orla", "Enough! The other peoples will hang us with our own words!"],
-			]},
-			{"if": {"time": 150.0}, "do": [
-				["spawn", "ilyra"], ["spawn", "ilyra_archers"],
-				["say", "ilyra", "Keep reading, Druid. I crossed half of Vareth to hear the end of that sentence."],
-			]},
-			{"if": {"dead": "orla"}, "do": [
-				["say", "orla", "I yield. I only wanted to keep the valleys whole."],
-				["say", "sova", "So do I. That is why they must know what we owe."],
-			]},
-			{"if": {"done": ["reading", "orla"]}, "delay": 1.5, "do": [
-				["say", "ilyra", "You drowned my city and kept the receipt. I want a copy."],
-				["say", "sova", "You shall have one. And a place beside me, when the time comes to answer for it."],
-				["victory", "The sealed record was read aloud."],
+			{"if": {"dead": "hadrik"}, "do": [["say", "hadrik", "Fall back… This isn't over at the vault."]]},
+			{"if": {"done": "road"}, "do": [
+				["say", "sova", "The road home. Every valley will hear how this came to us."],
+				["victory", "The Godbridle is in the First Listener's keeping."],
 			]},
 		],
 	}
@@ -570,121 +606,126 @@ static func _sova_2() -> Dictionary:
 
 static func _sova_3() -> Dictionary:
 	return {
-		"id": "sova_3",
-		"title": "The Listening Chamber",
-		"year": "Year Five · The Last Command",
-		"briefing": "The six leaders have reached the Vault where Sova’s ancestors spoke the first command. While the armies hold the approaches, Sova must wake the four ward stones of the Listening Chamber so that the command can be spoken together. Isolde’s knights and the restless dead are already inside the outer court.",
-		"epilogue": "Sova woke the last ward stone and stepped aside. He did not speak first. When the others had named what they would lose, he named what the Druids had already taken, and only then did he add his voice. Keeper Orla Thane stood witness, as the oath ceremonies require, and named who would bear the cost: everyone.",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(0, -46), "facing": Vector2(0, -1)},
-		"hero_level": 18,
-		"structures": [
-			{"id": "gate", "kind": &"gate", "team": ALLY, "pos": Vector2(0, -67), "name": "Vault door"},
-		],
+		"id": "sova_vault_return",
+		"title": "The Vault Closes",
+		"year": "Year Five",
+		"briefing": "Sova needed the valleys’ consent to guard the road to the vault. He won enough Keepers by reading the full record of Druid responsibility into the terms of custody, so that no First Listener can seal it away again. Now carry the Godbridle up the Cairnspine road while rival claimants make their last attempt, and close it in the vault before Orc, Elven and Human witnesses.",
+		"debrief": "The Godbridle went back into the vault without a new command. Orc, Elven and Human witnesses attested that the First Listener closed it without claiming the right to use it.\n\nThe rival crowns lost their last chance at a quick seizure, and the Still Kingdom’s court recalled its remaining forces rather than send them alone against the Keepers. Orrun was still carrying out Mara’s order. The Basin had its river but not its sea, and the harbor at Moonwash stayed raised. That was the end of the war over the bridle, not of what it had done.",
+		"map": Maps.cairnspine_road(),
+		"hero": {"pos": Vector2(0, 72), "facing": Vector2(0, -1)},
+		"hero_level": 17,
 		"platoons": [
-			_p("wardens", &"cairn_wardens", ALLY, 18, 16, Vector2(-8, -50), {"name": "Cairn Wardens", "persist": "wardens", "order": {"kind": "follow"}}),
-			_p("callers", &"stonecallers", ALLY, 12, 16, Vector2(8, -50), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "follow"}}),
-			_p("valley_guard", &"cairn_wardens", ALLY, 16, 15, Vector2(0, -60), {"name": "Valley Guard", "persist": "valley", "order": {"kind": "hold"}}),
-			_hero("orla", &"orla", ALLY, 16, Vector2(-4, -60), {"name": "Keeper Orla Thane", "commandable": false, "order": {"kind": "guard", "who": "gate"}}),
-			_p("knights_east", &"lowmarch_knights", FOE, 18, 17, Vector2(24, -36), {"name": "Lowmarch Knights", "order": {"kind": "assault", "to": "vault_gate"}}),
-			_p("restless_west", &"restless_dead", FOE, 16, 15, Vector2(-24, -36), {"name": "Restless Dead", "order": {"kind": "assault", "to": "vault_gate"}}),
-			_p("wave_bows", &"lowmarch_crossbows", FOE, 12, 17, Vector2(0, -24), {"name": "Lowmarch Crossbows", "hidden": true, "order": {"kind": "assault", "to": "chamber"}}),
-			_p("wave_restless", &"restless_dead", FOE, 16, 16, Vector2(-22, -30), {"name": "Restless Dead", "hidden": true, "order": {"kind": "assault", "to": "vault_gate"}}),
-			_p("wave_knights", &"lowmarch_knights", FOE, 16, 16, Vector2(22, -30), {"name": "Lowmarch Knights", "hidden": true, "order": {"kind": "assault", "to": "vault_gate"}}),
-			_p("last_restless", &"restless_dead", FOE, 18, 16, Vector2(0, -26), {"name": "Restless Dead", "hidden": true, "order": {"kind": "assault", "to": "vault_gate"}}),
+			_p("wardens", &"cairn_wardens", ALLY, 18, 15, Vector2(-6, 76), {"name": "Cairn Wardens", "persist": "wardens", "order": {"kind": "follow"}}),
+			_p("callers", &"stonecallers", ALLY, 12, 15, Vector2(6, 78), {"name": "Stonecallers", "persist": "callers", "order": {"kind": "follow"}}),
+			_p("valley", &"cairn_wardens", ALLY, 16, 14, Vector2(0, 82), {"name": "Valley Guard", "persist": "valley", "order": {"kind": "follow"}}),
+			_p("witness_orcs", &"well_keeper", NEUTRAL, 6, 8, Vector2(-8, -36), {"name": "Orc witnesses", "commandable": false}),
+			_p("witness_elves", &"pilots", NEUTRAL, 6, 8, Vector2(8, -36), {"name": "Elven witnesses", "commandable": false}),
+			_p("witness_humans", &"villagers", NEUTRAL, 6, 8, Vector2(0, -32), {"name": "Human witnesses", "commandable": false}),
+			_p("switch_levy", &"march_levy", FOE, 18, 15, Vector2(-22, 22), {"name": "Claimant Levy", "aggro": 16.0}),
+			_p("east_riders", &"march_riders", FOE, 14, 15, Vector2(66, 4), {"name": "Claimant Riders", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("road_bows", &"march_bows", FOE, 12, 15, Vector2(6, -8), {"name": "Claimant Bowmen", "aggro": 20.0}),
+			_hero("hadrik", &"hadrik", FOE, 17, Vector2(-58, 4), {"name": "Lord Hadrik of Westmarch", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("hadrik_guard", &"march_levy", FOE, 18, 16, Vector2(-62, 8), {"name": "Westmarch Guard", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
 		],
 		"interactables": [
-			{"id": "ward_nw", "pos": Vector2(-14, -58), "label": "Wake the ward stone", "duration": 3.5},
-			{"id": "ward_ne", "pos": Vector2(14, -58), "label": "Wake the ward stone", "duration": 3.5},
-			{"id": "ward_sw", "pos": Vector2(-14, -44), "label": "Wake the ward stone", "duration": 3.5},
-			{"id": "ward_se", "pos": Vector2(14, -44), "label": "Wake the ward stone", "duration": 3.5},
+			{"id": "close", "pos": Vector2(0, -64), "label": "Close the Godbridle in the vault", "duration": 5.0, "hidden": true},
 		],
 		"objectives": [
-			{"id": "wards", "text": "Wake the four ward stones", "type": "interact", "who": ["ward_nw", "ward_ne", "ward_sw", "ward_se"]},
-			{"id": "gate", "text": "The vault door must hold", "type": "protect", "who": ["gate"], "fail_text": "The vault door was breached."},
-			{"id": "hold", "text": "Hold the chamber while the six prepare", "type": "hold", "seconds": 60.0, "zone": "chamber", "overrun": 14, "hidden": true},
+			{"id": "gate", "text": "Carry the Godbridle to the vault door", "type": "reach", "who": "hero", "zone": "vault_gate"},
+			{"id": "close", "text": "Close the vault before the witnesses", "type": "interact", "who": "close", "hidden": true},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "sova", "Four stones, four words. When they wake, the chamber will carry six voices to Orrun at once."],
-				["say", "orla", "I will stand at the door, First Listener. Someone has to witness this."],
+				["say", "bryn", "The valleys consented, First Listener. Not all of them gladly."],
+				["say", "sova", "Gladly was never the price. The record is public now. That was the price."],
 			]},
-			{"if": {"interact": "ward_nw"}, "do": [["say", "voice", "“…make the mountains hold…”"]]},
-			{"if": {"interact": "ward_ne"}, "do": [["spawn", "wave_bows"], ["say", "bryn", "Crossbows in the court!"]]},
-			{"if": {"interact": "ward_sw"}, "do": [["spawn", "wave_restless"], ["say", "sova", "The dead hear the stones waking. They want to be remembered too."]]},
-			{"if": {"done": "wards"}, "do": [
-				["objective", "hold"], ["spawn", "wave_knights"], ["spawn", "last_restless"],
-				["say", "sova", "The chamber is awake. Hold until the six are inside."],
-				["say", "mara", "Halden holds the causeway. Raska's companies are coming up the spillway."],
+			{"if": {"zone": ["hero", "switchback"]}, "do": [
+				["spawn", "east_riders"],
+				["say", "bryn", "Riders on the east track! The crowns are making their last try."],
 			]},
-			{"if": {"done": "hold"}, "delay": 1.0, "do": [
-				["say", "ilyra", "We are all here, Sova. Say the first word."],
-				["say", "sova", "No. The first word was ours five hundred years ago. This time we speak last."],
-				["victory", "The Listening Chamber woke."],
+			{"if": {"zone": ["hero", "upper_road"]}, "do": [
+				["spawn", "hadrik"], ["spawn", "hadrik_guard"],
+				["say", "hadrik", "Westmarch paid for that water, Druid. Give me the bridle and the crowns will make you rich."],
+				["say", "sova", "The crowns already made me a witness. That is enough."],
+			]},
+			{"if": {"done": "gate"}, "do": [
+				["reveal", "close"], ["objective", "close"],
+				["say", "sova", "Witnesses. Watch what I do, and watch what I do not do."],
+			]},
+			{"if": {"done": "close"}, "delay": 1.0, "do": [
+				["say", "sova", "Closed. No new command. The old one is still running, and every people here knows whose it was."],
+				["victory", "The Godbridle is back in the vault."],
 			]},
 		],
-		"ending": LAST_COMMAND,
 	}
 
 
 # ====================================================================== ILYRA
+# Elves · Years Two–Four · docs/campaigns/elves.md
 
 
 static func _ilyra_1() -> Dictionary:
 	return {
-		"id": "ilyra_1",
-		"title": "Low Tide at Seliath",
-		"year": "Year Two · Spring",
-		"briefing": "Overnight the sea drew back from Old Seliath, the harbor district that sank before Ilyra was grown. Two league ships are stranded on the risen streets. Lowmarch privateers have come to loot the ruins, and the pilots of Brineholt, whose village just lost its harbor, are watching to see whom the Tide Speaker protects.",
-		"epilogue": "The chart Ilyra pulled from the drowned archive was older than the city. It marked a vault high in the Cairnspine and a single line in old Elvish: “Here the coast was spoken under.” Maren Tull, the pilot from Brineholt, read it over her shoulder. “Raise Seliath,” she said, “and you sink us.” Ilyra did not answer. She went to find the Druids.",
-		"map": Maps.seliath(),
-		"hero": {"pos": Vector2(-24, 0), "facing": Vector2(1, 0)},
+		"id": "ilyra_moonwash_rescue",
+		"title": "Hulls on Stone",
+		"year": "Year Two",
+		"briefing": "Masts pitch as old walls rise beneath moored ships. Ilyra recognizes the corner of her childhood street beneath a stranded hull. One port signals that the pledged ships should pursue the artifact while the Marches are distracted. Ilyra keeps them in harbor. Rig lines at the forward and aft transfer points, in either order, and bring both stranded crews across to the receiving deck.",
+		"debrief": "The fleet saved its crews. From a copy of Sova’s public account, Ilyra learned why the old coast had drowned. Her memories told her where to look. What she had seen at the harbor told her to count the people living there now.",
+		"debrief_flags": {
+			"cargo_loaded": "Recovered cargo keeps a few boats supplied for the coming survey.",
+			"!cargo_loaded": "With the cargo left on the quay, the boats will borrow stores from the fishing villages.",
+		},
+		"map": Maps.moonwash(),
+		"hero": {"pos": Vector2(-38, 0), "facing": Vector2(1, 0)},
 		"hero_level": 5,
-		"structures": [
-			{"id": "ship_north", "kind": &"ship", "team": ALLY, "pos": Vector2(-33, -22), "name": "The Gull's Reckoning"},
-			{"id": "ship_south", "kind": &"ship", "team": ALLY, "pos": Vector2(-33, 20), "name": "The Moonwash"},
-		],
 		"platoons": [
-			_p("wavecutters", &"wavecutters", ALLY, 18, 3, Vector2(-24, -6), {"name": "Seliath Wavecutters", "persist": "wavecutters", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("archers", &"tide_archers", ALLY, 12, 3, Vector2(-26, 6), {"name": "Tide Archers", "persist": "tide_archers", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("looters_n", &"lowmarch_knights", FOE, 14, 3, Vector2(10, -28), {"name": "Rook's Boarders", "aggro": 16.0}),
-			_p("looters_s", &"marcher_infantry", FOE, 16, 3, Vector2(4, 28), {"name": "Privateer Crew", "order": {"kind": "assault", "to": "ship_south"}}),
-			_p("bows", &"lowmarch_crossbows", FOE, 10, 3, Vector2(18, 4), {"name": "Privateer Crossbows", "aggro": 18.0}),
-			_p("wave_n", &"marcher_infantry", FOE, 16, 4, Vector2(28, -46), {"name": "Privateer Crew", "hidden": true, "order": {"kind": "assault", "to": "ship_north"}}),
-			_p("wave_s", &"marcher_infantry", FOE, 16, 4, Vector2(-8, 50), {"name": "Privateer Crew", "hidden": true, "order": {"kind": "assault", "to": "ship_south"}}),
-			_hero("rook", &"rook", FOE, 6, Vector2(24, -46), {"name": "Captain Wystan Rook", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("rook_crew", &"lowmarch_knights", FOE, 14, 5, Vector2(28, -44), {"name": "Rook's Boarders", "hidden": true, "order": {"kind": "hunt"}}),
-			_p("pilots", &"pilots", ALLY, 10, 3, Vector2(44, 2), {"name": "Brineholt Pilots", "hidden": true, "commandable": false, "order": {"kind": "move", "to": Vector2(-20, 0)}}),
+			_p("marines", &"wavecutters", ALLY, 18, 3, Vector2(-30, 4), {"name": "Moonwash Marines", "persist": "marines", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
+			_p("archers", &"tide_archers", ALLY, 12, 3, Vector2(-42, -4), {"name": "Shipboard Archers", "persist": "archers", "order": {"kind": "hold"}, "facing": Vector2(1, 0)}),
+			_p("crew_forward", &"pilots", ALLY, 8, 3, Vector2(-38, -27), {"name": "Forward crew", "commandable": false, "order": {"kind": "hold"}}),
+			_p("crew_aft", &"pilots", ALLY, 8, 3, Vector2(-38, 29), {"name": "Aft crew", "commandable": false, "order": {"kind": "hold"}}),
+			_p("salvage_north", &"salvagers", FOE, 14, 3, Vector2(-24, -54), {"name": "Salvage Crew", "order": {"kind": "assault", "to": Vector2(-24, -40)}}),
+			_p("salvage_south", &"salvagers", FOE, 14, 3, Vector2(-24, 54), {"name": "Salvage Crew", "hidden": true, "order": {"kind": "assault", "to": Vector2(-24, 40)}}),
+			_p("salvage_more", &"salvagers", FOE, 14, 4, Vector2(2, -46), {"name": "Salvage Crew", "hidden": true, "order": {"kind": "assault", "to": "forward"}}),
+			_p("detachment", &"marcher_infantry", NEUTRAL, 16, 10, Vector2(-14, 2), {"name": "Human detachment", "commandable": false, "order": {"kind": "path", "points": [Vector2(-8, 0), Vector2(10, -2), Vector2(26, -4), Vector2(58, -4)]}}),
 		],
 		"interactables": [
-			{"id": "chart", "pos": Vector2(6, -38), "label": "Search the drowned archive", "duration": 4.0},
+			{"id": "rig_forward", "pos": Vector2(-33, -21), "label": "Rig the forward line", "duration": 3.0},
+			{"id": "rig_aft", "pos": Vector2(-33, 23), "label": "Rig the aft line", "duration": 3.0},
+			{"id": "cargo_north", "pos": Vector2(-24, -40), "label": "Load the cargo bundle", "duration": 2.5},
+			{"id": "cargo_south", "pos": Vector2(-24, 40), "label": "Load the cargo bundle", "duration": 2.5},
 		],
 		"objectives": [
-			{"id": "ships", "text": "Protect the stranded ships", "type": "protect", "who": ["ship_north", "ship_south"], "fail_text": "A league ship was burned on the seabed."},
-			{"id": "looters", "text": "Drive the privateers from the ruins", "type": "defeat", "who": ["looters_n", "looters_s", "bows", "wave_n", "wave_s"]},
-			{"id": "chart", "text": "Recover the chart from the drowned archive", "type": "interact", "who": "chart"},
-			{"id": "rook", "text": "Defeat Captain Wystan Rook", "type": "defeat", "who": ["rook"], "hidden": true},
+			{"id": "rig_forward", "text": "Rig a line at the forward transfer point", "type": "interact", "who": "rig_forward"},
+			{"id": "rig_aft", "text": "Rig a line at the aft transfer point", "type": "interact", "who": "rig_aft"},
+			{"id": "forward", "text": "Bring the forward crew to the receiving deck", "type": "reach", "who": "crew_forward", "zone": "deck"},
+			{"id": "aft", "text": "Bring the aft crew to the receiving deck", "type": "reach", "who": "crew_aft", "zone": "deck"},
+			{"id": "crews", "text": "Both crews must survive", "type": "protect", "who": ["crew_forward", "crew_aft"], "fail_text": "A stranded crew was lost before it reached the deck."},
+			{"id": "cargo", "text": "Optional: load cargo bundles", "type": "interact", "who": ["cargo_north", "cargo_south"], "optional": true},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "ilyra", "I walked these streets when I was a child. Now there are Lowmarch boots on them."],
-				["say", "maren", "Tide Speaker! Privateers are going for the Moonwash. Brineholt can't lose another ship."],
+				["say", "captain", "Tide Speaker, the Marches are distracted. Send the pledged ships after the artifact!"],
+				["say", "ilyra", "The ships stay. Their crews are on that stone. Rig the lines."],
+				["say", "pilot", "Forward and aft transfer points, Speaker. You'll have to rig each one yourself."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Ilyra."]]},
-			{"if": {"time": 40.0}, "do": [
-				["spawn", "wave_s"],
-				["say", "maren", "More crew coming up the south beach!"],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Shipboard archers cover the moorings but can't see past the risen wall. Put marines on the landward approach."]]},
+			{"if": {"interact": "rig_forward"}, "do": [
+				["order", "crew_forward", {"kind": "path", "points": [Vector2(-38, -14), Vector2(-42, -2)], "pause_zone": "deck"}],
+				["say", "pilot", "Forward line is fast! They're coming across."],
 			]},
-			{"if": {"time": 75.0}, "do": [["spawn", "wave_n"], ["say", "ilyra", "They came for the archive. Whatever is in there is worth a war to someone."]]},
-			{"if": {"done": "chart"}, "do": [
-				["spawn", "rook"], ["spawn", "rook_crew"], ["objective", "rook"],
-				["say", "rook", "That chart belongs to Queen Isolde, Elf. She paid for it before your sea gave it back."],
-				["say", "ilyra", "Then she paid a thief. Wavecutters, with me."],
+			{"if": {"interact": "rig_aft"}, "do": [
+				["order", "crew_aft", {"kind": "path", "points": [Vector2(-38, 14), Vector2(-42, 2)], "pause_zone": "deck"}],
+				["say", "pilot", "Aft line holding. Bring them in."],
 			]},
-			{"if": {"done": ["looters", "chart", "rook"]}, "do": [
-				["spawn", "pilots"],
-				["say", "maren", "Brineholt saw what you did. We'll pilot for you, Tide Speaker. For now."],
-				["victory", "Old Seliath was cleared of privateers."],
+			{"if": {"time": 35.0}, "do": [["spawn", "salvage_south"], ["say", "pilot", "Salvagers on the south quay, after the cargo."]]},
+			{"if": {"time": 80.0}, "do": [["spawn", "salvage_more"], ["say", "ilyra", "More of them over the wall. Keep them off the crews."]]},
+			{"if": {"done": "forward"}, "do": [["despawn", "crew_forward"]]},
+			{"if": {"done": "aft"}, "do": [["despawn", "crew_aft"]]},
+			{"if": {"interact": "cargo_north"}, "do": [["flag", "cargo_loaded"]]},
+			{"if": {"interact": "cargo_south"}, "do": [["flag", "cargo_loaded"]]},
+			{"if": {"done": ["forward", "aft"]}, "do": [
+				["say", "ilyra", "Every crew aboard. Mark where the old wall came up. I knew that corner."],
+				["victory", "Both stranded crews reached the receiving deck."],
 			]},
 		],
 	}
@@ -692,58 +733,59 @@ static func _ilyra_1() -> Dictionary:
 
 static func _ilyra_2() -> Dictionary:
 	return {
-		"id": "ilyra_2",
-		"title": "The Drowned Road",
-		"year": "Year Three · Autumn",
-		"briefing": "Corvin Ashe betrayed King Mara and carried the Godbridle to Queen Isolde. Her column now drives it along the coast road toward the Lowmarch shore, where she means to call the sea back to her lands. The sea will come through Brineholt first. Get the pilots to their boats, and stop the column.",
-		"epilogue": "Sereth Vale took the bridle from Corvin’s wagon before Ilyra could reach it. For a long moment, Elves and Undead stood on the coast road with their weapons drawn. Then Ilyra spoke: “Swear you will bring it to all six peoples. Not to your court. Not to me.” The High Executor swore by the empty chair at his sister’s table. Brineholt kept its harbor.",
-		"map": Maps.drowned_road(),
-		"hero": {"pos": Vector2(-44, -2), "facing": Vector2(1, 0)},
-		"hero_level": 11,
+		"id": "ilyra_coast_survey",
+		"title": "Two Shorelines",
+		"year": "Year Three",
+		"briefing": "The ports want a chart that proves the old coast can be raised. Ilyra insists it mark both the drowned streets and the working harbors that would lose their water. Take readings at the ancestral stone and the fishing inlet, then relay both to the survey cutter from a signal point while it is in view. One port has sent armed crews to seize the chart.",
+		"debrief": "Ilyra circulated the complete chart, drowned streets and living harbors on the same sheet, instead of a map that left out the working villages.\n\nThe ports still expected her to use the fleet to claim the Godbridle when a chance came. The pilots had seen her put their testimony on the record, and they volunteered to guide the shallow-draft boats up the new channel to Spanwater.",
+		"map": Maps.coast_survey(),
+		"hero": {"pos": Vector2(-8, 18), "facing": Vector2(0, -1)},
+		"hero_level": 10,
+		"structures": [
+			{"id": "cutter", "kind": &"cutter", "team": ALLY, "name": "Survey cutter", "pos": Vector2(-60, -40), "moving": true, "speed": 3.2,
+				"escort_radius": 0.0, "stop_when_threatened": false, "loop": true, "waits": {1: 16.0, 2: 16.0},
+				"path": [Vector2(-60, -40), Vector2(-24, -38), Vector2(36, -38), Vector2(62, -42), Vector2(62, -47), Vector2(-62, -47)]},
+		],
 		"platoons": [
-			_p("wavecutters", &"wavecutters", ALLY, 18, 8, Vector2(-40, 4), {"name": "Seliath Wavecutters", "persist": "wavecutters", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("archers", &"tide_archers", ALLY, 12, 8, Vector2(-46, 8), {"name": "Tide Archers", "persist": "tide_archers", "order": {"kind": "follow"}, "facing": Vector2(1, 0)}),
-			_p("harbor_guard", &"wavecutters", ALLY, 16, 7, Vector2(-50, -12), {"name": "Harbor Guard", "persist": "harbor_guard", "order": {"kind": "hold"}, "facing": Vector2(1, 0)}),
-			_p("pilots", &"pilots", ALLY, 10, 5, Vector2(-52, 2), {"name": "Brineholt Pilots", "commandable": false, "order": {"kind": "hold"}}),
-			_p("vanguard", &"lowmarch_knights", FOE, 18, 9, Vector2(-6, 0), {"name": "Lowmarch Vanguard", "order": {"kind": "assault", "to": "brineholt"}, "facing": Vector2(-1, 0)}),
-			_p("vanguard_bows", &"lowmarch_crossbows", FOE, 12, 9, Vector2(4, -4), {"name": "Lowmarch Crossbows", "order": {"kind": "move", "to": Vector2(-18, -2)}, "aggro": 18.0, "facing": Vector2(-1, 0)}),
-			_p("column", &"lowmarch_knights", FOE, 18, 10, Vector2(28, 2), {"name": "Column Guard", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_p("column_bows", &"lowmarch_crossbows", FOE, 12, 10, Vector2(42, -8), {"name": "Column Crossbows", "aggro": 18.0, "facing": Vector2(-1, 0)}),
-			_hero("corvin", &"corvin", FOE, 12, Vector2(38, -2), {"name": "Corvin Ashe", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_hero("sereth", &"sereth", ALLY, 11, Vector2(0, 44), {"name": "Sereth Vale", "hidden": true, "commandable": false, "order": {"kind": "assault", "to": "wagon"}}),
-			_p("ossuary", &"ossuary_guard", ALLY, 16, 9, Vector2(4, 46), {"name": "Ossuary Guard", "hidden": true, "commandable": false, "order": {"kind": "assault", "to": "wagon"}}),
+			_p("marines", &"wavecutters", ALLY, 18, 8, Vector2(-14, 22), {"name": "Moonwash Marines", "persist": "marines", "order": {"kind": "follow"}}),
+			_p("archers", &"tide_archers", ALLY, 12, 8, Vector2(-2, 24), {"name": "Shipboard Archers", "persist": "archers", "order": {"kind": "follow"}}),
+			_p("pilots", &"pilots", NEUTRAL, 8, 6, Vector2(2, 38), {"name": "Pilot village", "commandable": false}),
+			_p("crews_one", &"port_crews", FOE, 16, 8, Vector2(-46, -26), {"name": "Port Crews", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+			_p("crews_archers", &"tide_archers", FOE, 10, 8, Vector2(-50, -24), {"name": "Port Archers", "hidden": true, "order": {"kind": "move", "to": Vector2(-30, -20)}, "aggro": 18.0}),
+			_p("crews_two", &"port_crews", FOE, 16, 9, Vector2(56, -22), {"name": "Port Crews", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
+		],
+		"interactables": [
+			{"id": "reading_stone", "pos": Vector2(-44, 12), "label": "Take a reading at the ancestral stone", "duration": 3.0},
+			{"id": "reading_inlet", "pos": Vector2(33, 10), "label": "Take a reading at the fishing inlet", "duration": 3.0},
+			{"id": "signal_beach", "pos": Vector2(-24, -22), "label": "Signal the cutter", "duration": 6.0, "hidden": true, "reset": true,
+				"requires": {"structure": "cutter", "at": "beach_stop", "radius": 9.0}},
+			{"id": "signal_headland", "pos": Vector2(30, -22), "label": "Signal the cutter", "duration": 6.0, "hidden": true, "reset": true,
+				"requires": {"structure": "cutter", "at": "headland_stop", "radius": 9.0}},
 		],
 		"objectives": [
-			{"id": "docks", "text": "Lead the Brineholt pilots to the docks", "type": "reach", "who": "pilots", "zone": "docks"},
-			{"id": "pilots", "text": "The pilots must survive", "type": "protect", "who": ["pilots"], "fail_text": "The Brineholt pilots were cut down in their own village."},
-			{"id": "vanguard", "text": "Break the Lowmarch vanguard", "type": "defeat", "who": ["vanguard", "vanguard_bows"]},
-			{"id": "corvin", "text": "Defeat Corvin Ashe at the bridle wagon", "type": "defeat", "who": ["corvin"], "hidden": true},
+			{"id": "readings", "text": "Take readings at the ancestral stone and the fishing inlet", "type": "interact", "who": ["reading_stone", "reading_inlet"]},
+			{"id": "signal", "text": "Signal both readings to the cutter while it is in view", "type": "manual", "hidden": true},
+			{"id": "cutter", "text": "The survey cutter must stay afloat", "type": "protect", "who": ["cutter"], "fail_text": "The survey cutter was disabled."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "maren", "Isolde's column is on the coast road. If she calls the sea, it comes through here first."],
-				["say", "ilyra", "Then Brineholt goes to its boats. Pilots, follow me to the docks."],
-				["order", "pilots", {"kind": "path", "points": [Vector2(-52, -10), Vector2(-56, -20), Vector2(-56, -27)], "wait_for_hero": 14.0}],
+				["say", "pilot", "The ports want the drowned streets. Put our soundings on the same chart and we'll help you, Speaker."],
+				["say", "ilyra", "Both shorelines, on one sheet. That is the only chart I will sign."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Ilyra."]]},
-			{"if": {"done": "docks"}, "do": [
-				["say", "maren", "The boats are full. Go, Tide Speaker. Stop that wagon."],
-				["order", "pilots", {"kind": "hold"}],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "The headland blocks signals. The cutter pauses off the beach and off the headland on each pass."]]},
+			{"if": {"time": 30.0}, "do": [
+				["spawn", "crews_one"], ["spawn", "crews_archers"],
+				["say", "captain", "That chart belongs to the ports' delegation, Speaker. Hand it over."],
 			]},
-			{"if": {"done": ["docks", "vanguard"]}, "do": [
-				["spawn", "corvin"], ["objective", "corvin"],
-				["say", "corvin", "Mara would have wasted it on an oath. Isolde will use it. Turn back, Elf."],
+			{"if": {"time": 75.0}, "do": [["spawn", "crews_two"], ["say", "pilot", "Another boat landing past the headland!"]]},
+			{"if": {"done": "readings"}, "do": [
+				["reveal", "signal_beach"], ["reveal", "signal_headland"], ["objective", "signal"],
+				["say", "ilyra", "Both readings. Now the cutter has to see them."],
 			]},
-			{"if": {"after": ["vanguard", 10.0]}, "do": [
-				["spawn", "sereth"], ["spawn", "ossuary"],
-				["say", "sereth", "The Still Kingdom has a claim on that wagon, Tide Speaker. Our dead woke when Isolde last used it."],
-				["say", "ilyra", "Then help me take it, and we will argue about whose it is afterward."],
-			]},
-			{"if": {"done": "corvin"}, "delay": 1.5, "do": [
-				["say", "sereth", "The bridle is in my hands. My court will want it brought home."],
-				["say", "ilyra", "Swear you will bring it before all six peoples. Not your court. Not me."],
-				["say", "sereth", "I swear it by the empty chair at my sister's table."],
-				["victory", "The Lowmarch column was broken on the Drowned Road."],
+			{"if": {"any": [{"interact": "signal_beach"}, {"interact": "signal_headland"}]}, "do": [
+				["complete", "signal"],
+				["say", "pilot", "Acknowledged from the cutter! Both readings!"],
+				["victory", "The survey carries both shorelines."],
 			]},
 		],
 	}
@@ -751,288 +793,143 @@ static func _ilyra_2() -> Dictionary:
 
 static func _ilyra_3() -> Dictionary:
 	return {
-		"id": "ilyra_3",
-		"title": "The Tide Stair",
-		"year": "Year Five · The Last Command",
-		"briefing": "Captain Rook leads Isolde’s marines up the Tide Stair on the Vault’s western cliffs. If they take the stair, they flank the Listening Chamber. Brineholt’s pilots have answered Ilyra’s call. Keep their signal fire burning so the ships offshore know where to land their crews, and hold the stair.",
-		"epilogue": "Rook went over the cliff with the signal fire still burning behind him. In the Listening Chamber, Ilyra named every street of Old Seliath she remembered, so they would be recorded somewhere. Then she named Brineholt, and its harbor, and Maren Tull. She did not ask the god for her coast back.",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(-56, 8), "facing": Vector2(0, 1)},
-		"hero_level": 18,
+		"id": "ilyra_spanwater_evacuation",
+		"title": "Last Boat at Spanwater",
+		"year": "Year Four",
+		"briefing": "Households caught on the low bank can reach the river landing but cannot cross the fighting on the causeway. Raska is moving to open the spillway into the old Basin riverbed. Two launches can use the landing, one at a time. Bring each household group down when a launch is docked, and get both loaded launches through the boat exit. The far group must cross the low crossing before the release floods it.",
+		"debrief": "Ilyra carried the households out. Once the launches were clear, the ports that had ordered a pursuit withdrew their pledges.\n\nA departing captain asked who would take their place in the fleet. Ilyra asked him to take one family farther downriver before he went. An Elven witness stayed behind at Spanwater, and saw King Mara hand the Godbridle to the First Listener.",
+		"map": Maps.spanwater(),
+		"hero": {"pos": Vector2(18, 34), "facing": Vector2(-1, 0)},
+		"hero_level": 15,
 		"structures": [
-			{"id": "signal", "kind": &"signal_fire", "team": ALLY, "pos": Vector2(-58, 0), "name": "Signal fire"},
+			{"id": "launch_a", "kind": &"launch", "team": ALLY, "name": "First launch", "pos": Vector2(68, 58), "speed": 3.0,
+				"escort_radius": 0.0, "stop_when_threatened": false, "moving": true, "path": [Vector2(52, 52), Vector2(32, 48)]},
+			{"id": "launch_b", "kind": &"launch", "team": ALLY, "name": "Second launch", "pos": Vector2(69, 62), "speed": 3.0,
+				"escort_radius": 0.0, "stop_when_threatened": false, "moving": false, "path": [Vector2(52, 54), Vector2(32, 48)]},
 		],
 		"platoons": [
-			_p("wavecutters", &"wavecutters", ALLY, 18, 16, Vector2(-60, 12), {"name": "Seliath Wavecutters", "persist": "wavecutters", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("archers", &"tide_archers", ALLY, 12, 16, Vector2(-54, 4), {"name": "Tide Archers", "persist": "tide_archers", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("harbor_guard", &"wavecutters", ALLY, 16, 15, Vector2(-66, 8), {"name": "Harbor Guard", "persist": "harbor_guard", "order": {"kind": "hold"}, "facing": Vector2(0, 1)}),
-			_p("marines_a", &"lowmarch_knights", FOE, 18, 16, Vector2(-62, 64), {"name": "Lowmarch Marines", "order": {"kind": "assault", "to": "stair"}}),
-			_p("marines_bows", &"lowmarch_crossbows", FOE, 12, 16, Vector2(-56, 66), {"name": "Marine Crossbows", "order": {"kind": "assault", "to": "stair"}}),
-			_p("marines_b", &"marcher_infantry", FOE, 20, 17, Vector2(-66, 70), {"name": "Lowmarch Levies", "hidden": true, "order": {"kind": "assault", "to": Vector2(-58, 0)}}),
-			_p("marines_c", &"lowmarch_knights", FOE, 18, 17, Vector2(-40, 64), {"name": "Lowmarch Marines", "hidden": true, "order": {"kind": "assault", "to": "stair"}}),
-			_hero("rook", &"rook", FOE, 19, Vector2(-62, 72), {"name": "Captain Wystan Rook", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("rook_guard", &"lowmarch_knights", FOE, 16, 18, Vector2(-58, 74), {"name": "Rook's Boarders", "hidden": true, "order": {"kind": "hunt"}}),
-			_p("pilots", &"wavecutters", ALLY, 16, 14, Vector2(-74, 18), {"name": "Brineholt Crews", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
+			_p("marines", &"wavecutters", ALLY, 18, 13, Vector2(14, 28), {"name": "Moonwash Marines", "persist": "marines", "order": {"kind": "follow"}}),
+			_p("archers", &"tide_archers", ALLY, 12, 13, Vector2(26, 30), {"name": "Shipboard Archers", "persist": "archers", "order": {"kind": "hold"}}),
+			_p("harbor_guard", &"wavecutters", ALLY, 16, 12, Vector2(-26, 38), {"name": "Harbor Guard", "persist": "harbor_guard", "order": {"kind": "hold"}}),
+			_p("near", &"households", ALLY, 10, 4, Vector2(12, 32), {"name": "Near households", "commandable": false, "order": {"kind": "hold"}}),
+			_p("far", &"households", ALLY, 10, 4, Vector2(-34, 42), {"name": "Far households", "commandable": false, "order": {"kind": "hold"}}),
+			_p("raiders_south", &"march_levy", FOE, 16, 13, Vector2(20, 64), {"name": "March Stragglers", "hidden": true, "order": {"kind": "assault", "to": "landing"}}),
+			_p("raiders_west", &"march_levy", FOE, 16, 13, Vector2(-46, 62), {"name": "March Stragglers", "hidden": true, "order": {"kind": "attack", "target": "far"}}),
+			_p("raiders_apron", &"march_riders", FOE, 12, 14, Vector2(30, -10), {"name": "March Riders", "hidden": true, "order": {"kind": "assault", "to": "landing"}}),
+			_hero("raska", &"raska", NEUTRAL, 15, Vector2(-8, -22), {"name": "Raska Vennor", "commandable": false}),
 		],
 		"objectives": [
-			{"id": "signal", "text": "Keep the signal fire burning", "type": "protect", "who": ["signal"], "fail_text": "The signal fire went out. The ships could not land."},
-			{"id": "hold", "text": "Hold the Tide Stair", "type": "hold", "seconds": 140.0, "zone": "stair", "overrun": 12, "fail_text": "The marines took the stair and flanked the chamber."},
-			{"id": "rook", "text": "Defeat Captain Wystan Rook", "type": "defeat", "who": ["rook"], "hidden": true},
+			{"id": "near", "text": "Embark the near households", "type": "manual"},
+			{"id": "far", "text": "Embark the far households", "type": "manual"},
+			{"id": "a_safe", "text": "First launch through the boat exit", "type": "reach", "who": "launch_a", "zone": "boat_exit", "hidden": true},
+			{"id": "b_safe", "text": "Second launch through the boat exit", "type": "reach", "who": "launch_b", "zone": "boat_exit", "hidden": true},
+			{"id": "people", "text": "The households and launches must survive", "type": "protect", "who": ["near", "far", "launch_a", "launch_b"], "fail_text": "A household group or a loaded launch was lost."},
+			{"id": "boarding", "text": "Boarding closes", "type": "hold", "seconds": 240.0},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "ilyra", "The chamber is above us. Nothing climbs this stair while the six are speaking."],
-				["say", "maren", "We see your fire, Tide Speaker! Keep it lit and we'll find the beach."],
+				["say", "pilot", "Two launches coming up the channel. Only one fits the landing at a time."],
+				["say", "captain", "Speaker, the ports signal: break off and pursue the convoy."],
+				["say", "ilyra", "The launches stay until every household is clear. Tell them that."],
 			]},
-			{"if": {"time": 40.0}, "do": [["spawn", "marines_b"], ["say", "ilyra", "Levies on the lower steps. They are going for the fire."]]},
-			{"if": {"time": 70.0}, "do": [["spawn", "pilots"], ["say", "maren", "Brineholt is ashore! Where do you want us?"], ["say", "ilyra", "Anywhere there is a Lowmarch shield."]]},
-			{"if": {"time": 95.0}, "do": [["spawn", "marines_c"]]},
-			{"if": {"done": "hold"}, "do": [
-				["spawn", "rook"], ["spawn", "rook_guard"], ["objective", "rook"],
-				["say", "rook", "Seliath stole my prize. I'll take the stair for Isolde and then the chart back."],
+			{"if": {"time": 4.0}, "do": [
+				["order", "near", {"kind": "path", "points": [Vector2(18, 34), Vector2(24, 38)]}],
+				["order", "far", {"kind": "path", "points": [Vector2(-22, 32), Vector2(-9, 22), Vector2(8, 30), Vector2(22, 38)], "wait_for_hero": 16.0}],
+				["say", "narrator", "The far households move only while Ilyra is with them. The low crossing floods when the release begins."],
 			]},
-			{"if": {"done": "rook"}, "delay": 1.5, "do": [
-				["say", "ilyra", "The stair is ours. Maren, keep the fire lit. I have somewhere to be."],
-				["victory", "The Tide Stair held."],
+			{"if": {"zone": ["launch_a", "dock"]}, "do": [["flag", "a_docked"], ["say", "pilot", "First launch at the landing!"]]},
+			{"if": {"all": [{"flag": "a_docked"}, {"zone": ["near", "landing"]}, {"no_flag": "a_loaded"}]}, "do": [
+				["despawn", "near"], ["complete", "near"], ["flag", "a_loaded"], ["flag", "near_aboard"],
+				["route", "launch_a", [Vector2(52, 52), Vector2(66, 56)]], ["objective", "a_safe"],
 			]},
-		],
-		"ending": LAST_COMMAND,
-	}
-
-
-# ===================================================================== SERETH
-
-
-static func _sereth_1() -> Dictionary:
-	return {
-		"id": "sereth_1",
-		"title": "The Voices of Marrowfen",
-		"year": "Year Three · Spring",
-		"briefing": "Somewhere in Vareth, someone gave Orrun a new command, and the low fens of Marrowfen flooded overnight. Now the village hears its unburied dead calling from the water. Those dead never received the rites, and they are angry. Protect the villagers, and perform the rites at the three grave cairns.",
-		"epilogue": "The restless were older than the Still Kingdom. They had drowned when the coast went under, five centuries ago, and the water had carried their bones inland. In the third cairn, Sereth found a scrap of paper in a hand he had not seen in two hundred years: “If they ever call me back, ask Sereth first. He will know.” It ended there. The court’s orders arrived the next morning: secure the Godbridle, whoever holds it.",
-		"map": Maps.marrowfen(),
-		"hero": {"pos": Vector2(0, 14), "facing": Vector2(0, -1)},
-		"hero_level": 5,
-		"platoons": [
-			_p("ossuary", &"ossuary_guard", ALLY, 18, 3, Vector2(-6, 8), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
-			_p("casters", &"vigil_casters", ALLY, 12, 3, Vector2(6, 8), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
-			_p("villagers", &"villagers", ALLY, 10, 4, Vector2(0, 26), {"name": "Marrowfen Villagers", "commandable": false, "order": {"kind": "hold"}}),
-			_p("restless_w", &"restless_dead", FOE, 18, 3, Vector2(-30, -20), {"name": "Restless Dead", "aggro": 14.0}),
-			_p("restless_e", &"restless_dead", FOE, 18, 3, Vector2(28, -24), {"name": "Restless Dead", "aggro": 14.0}),
-			_p("restless_n", &"restless_dead", FOE, 18, 4, Vector2(0, -40), {"name": "Restless Dead", "aggro": 14.0}),
-			_p("drift_w", &"restless_dead", FOE, 16, 3, Vector2(-48, -10), {"name": "Drifting Dead", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "assault", "to": "village"}}),
-			_p("drift_e", &"restless_dead", FOE, 16, 3, Vector2(48, -6), {"name": "Drifting Dead", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": "village"}}),
-			_hero("choir", &"drowned_choir", FOE, 6, Vector2(0, -48), {"name": "The Drowned Choir", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("choir_dead", &"restless_dead", FOE, 18, 5, Vector2(4, -50), {"name": "Choir of the Drowned", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-		],
-		"interactables": [
-			{"id": "cairn_w", "pos": Vector2(-30, -25), "label": "Perform the rites", "duration": 4.0},
-			{"id": "cairn_e", "pos": Vector2(28, -30), "label": "Perform the rites", "duration": 4.0},
-			{"id": "cairn_n", "pos": Vector2(0, -46), "label": "Perform the rites", "duration": 4.0},
-		],
-		"objectives": [
-			{"id": "villagers", "text": "The villagers must survive", "type": "protect", "who": ["villagers"], "fail_text": "The restless dead overran Marrowfen."},
-			{"id": "rites", "text": "Perform the rites at the three grave cairns", "type": "interact", "who": ["cairn_w", "cairn_e", "cairn_n"]},
-			{"id": "choir", "text": "Lay the Drowned Choir to rest", "type": "defeat", "who": ["choir"], "hidden": true},
-		],
-		"events": [
-			{"if": {"time": 1.0}, "do": [
-				["say", "aurel", "The villagers say the voices started the night the fen flooded. They are calling for family, High Executor."],
-				["say", "sereth", "Then they never had the rites. We will give them what they were owed. Guard the village."],
+			{"if": {"all": [{"flag": "a_docked"}, {"zone": ["far", "landing"]}, {"no_flag": "a_loaded"}]}, "do": [
+				["despawn", "far"], ["complete", "far"], ["flag", "a_loaded"], ["flag", "far_aboard"],
+				["route", "launch_a", [Vector2(52, 52), Vector2(66, 56)]], ["objective", "a_safe"],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Sereth."]]},
-			{"if": {"time": 35.0}, "do": [["spawn", "drift_w"], ["say", "aurel", "More of them drifting in from the west fen!"]]},
-			{"if": {"time": 80.0}, "do": [["spawn", "drift_e"], ["say", "aurel", "And the east! They're drawn to the living."]]},
-			{"if": {"interact": "cairn_w"}, "do": [
-				["kill", "restless_w"],
-				["say", "sereth", "Rest. Your names will be written, even if we must guess them."],
+			{"if": {"flag": "a_loaded"}, "delay": 9.0, "do": [
+				["move_structure", "launch_b", true],
+				["say", "pilot", "Second launch coming in."],
 			]},
-			{"if": {"interact": "cairn_e"}, "do": [
-				["kill", "restless_e"],
-				["say", "voice", "“…the water came over the walls… the Listener said the mountains must hold…”"],
+			{"if": {"all": [{"flag": "a_loaded"}, {"zone": ["launch_b", "dock"]}]}, "do": [["flag", "b_docked"]]},
+			{"if": {"all": [{"flag": "b_docked"}, {"zone": ["near", "landing"]}, {"no_flag": "near_aboard"}]}, "do": [
+				["despawn", "near"], ["complete", "near"], ["flag", "near_aboard"],
+				["route", "launch_b", [Vector2(52, 54), Vector2(66, 56)]], ["objective", "b_safe"],
 			]},
-			{"if": {"interact": "cairn_n"}, "do": [
-				["kill", "restless_n"],
-				["say", "sereth", "There is a letter in this cairn. That handwriting… Liesl?"],
+			{"if": {"all": [{"flag": "b_docked"}, {"zone": ["far", "landing"]}, {"no_flag": "far_aboard"}]}, "do": [
+				["despawn", "far"], ["complete", "far"], ["flag", "far_aboard"],
+				["route", "launch_b", [Vector2(52, 54), Vector2(66, 56)]], ["objective", "b_safe"],
 			]},
-			{"if": {"done": "rites"}, "do": [
-				["spawn", "choir"], ["spawn", "choir_dead"], ["objective", "choir"],
-				["say", "choir", "WE WERE NOT ASKED. WE WERE NEVER ASKED."],
-				["say", "sereth", "I know. That is the whole of my life's work. Let me finish it."],
+			{"if": {"time": 30.0}, "do": [["spawn", "raiders_west"], ["say", "pilot", "Stragglers on the far bank, near the households!"]]},
+			{"if": {"time": 70.0}, "do": [["say", "narrator", "The spillway is opening. The low crossing floods in twenty seconds."]]},
+			{"if": {"time": 90.0}, "do": [
+				["raise", "flood"], ["spawn", "raiders_south"],
+				["say", "raska", "(far off) Spillway only! Keep the sea gate shut!"],
+				["say", "pilot", "The river's in the old bed. Launches will have to hold for the current on the way out."],
 			]},
-			{"if": {"done": "choir"}, "delay": 1.5, "do": [
-				["say", "sereth", "“If they ever call me back, ask Sereth first.” She wrote that before the rites existed."],
-				["say", "aurel", "A rider from the court, High Executor. They want the Godbridle secured. Whoever holds it."],
-				["victory", "The dead of Marrowfen were laid to rest."],
+			{"if": {"time": 130.0}, "do": [["spawn", "raiders_apron"]]},
+			{"if": {"time": 200.0}, "do": [["say", "pilot", "The landing steps are going under. Last boat soon, Speaker!"]]},
+			{"if": {"all": [{"done": "boarding"}, {"any": [{"no_flag": "near_aboard"}, {"no_flag": "far_aboard"}]}]}, "do": [
+				["defeat", "Boarding closed with households still ashore."],
+			]},
+			{"if": {"done": ["a_safe", "b_safe"]}, "do": [
+				["say", "ilyra", "Both launches clear. Now the ports can withdraw, if they still want to."],
+				["victory", "Every household got out by water."],
 			]},
 		],
-	}
-
-
-static func _sereth_2() -> Dictionary:
-	return {
-		"id": "sereth_2",
-		"title": "The Drowned Road",
-		"year": "Year Three · Autumn",
-		"briefing": "The Godbridle is in a Lowmarch wagon on the coast road, guarded by the traitor Corvin Ashe. The court has ordered Sereth to seize it. Elven ships have been seen off Brineholt, and the Tide Speaker will not let that wagon pass her village either. Break the column and take the bridle before anyone else can.",
-		"epilogue": "Sereth lifted the Godbridle from Corvin’s wagon and felt the god turn in its sleep, listening. The court wanted it brought home. The Tide Speaker wanted it nowhere at all. Sereth thought of a letter that ended in the middle of a sentence and gave Ilyra his oath: the bridle would go before all six peoples, and no one would speak to Orrun alone.",
-		"map": Maps.drowned_road(),
-		"hero": {"pos": Vector2(0, 38), "facing": Vector2(0, -1)},
-		"hero_level": 11,
-		"platoons": [
-			_p("ossuary", &"ossuary_guard", ALLY, 18, 8, Vector2(-6, 42), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
-			_p("casters", &"vigil_casters", ALLY, 12, 8, Vector2(6, 42), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
-			_p("pallbearers", &"ossuary_guard", ALLY, 16, 7, Vector2(0, 46), {"name": "Pallbearers", "persist": "pallbearers", "order": {"kind": "follow"}}),
-			_p("road_guard", &"lowmarch_knights", FOE, 18, 9, Vector2(4, 4), {"name": "Road Guard", "aggro": 18.0}),
-			_p("road_bows", &"lowmarch_crossbows", FOE, 12, 9, Vector2(14, -6), {"name": "Lowmarch Crossbows", "aggro": 20.0}),
-			_p("column", &"lowmarch_knights", FOE, 18, 10, Vector2(30, 0), {"name": "Column Guard", "aggro": 16.0, "facing": Vector2(-1, 0)}),
-			_p("column_bows", &"lowmarch_crossbows", FOE, 12, 10, Vector2(44, -8), {"name": "Column Crossbows", "aggro": 18.0, "facing": Vector2(-1, 0)}),
-			_p("rear", &"lowmarch_knights", FOE, 18, 10, Vector2(62, 2), {"name": "Column Rearguard", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "hunt"}}),
-			_hero("corvin", &"corvin", FOE, 12, Vector2(38, -3), {"name": "Corvin Ashe", "order": {"kind": "hold"}, "aggro": 12.0}),
-			_hero("ilyra", &"ilyra", ALLY, 11, Vector2(-50, -4), {"name": "Ilyra Venn", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
-			_p("wavecutters", &"wavecutters", ALLY, 16, 9, Vector2(-46, 2), {"name": "Seliath Wavecutters", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
-		],
-		"interactables": [
-			{"id": "bridle", "pos": Vector2(36, -1), "label": "Take the Godbridle", "duration": 3.0, "hidden": true},
-		],
-		"objectives": [
-			{"id": "guard", "text": "Break the road guard", "type": "defeat", "who": ["road_guard", "road_bows"]},
-			{"id": "corvin", "text": "Defeat Corvin Ashe", "type": "defeat", "who": ["corvin"]},
-			{"id": "bridle", "text": "Take the Godbridle from the wagon", "type": "interact", "who": "bridle", "hidden": true},
-		],
-		"events": [
-			{"if": {"time": 1.0}, "do": [
-				["say", "sereth", "The court wants it home. I want it out of Isolde's hands. Today those are the same thing."],
-				["say", "aurel", "Elven ships off Brineholt, High Executor. The Tide Speaker is here."],
-			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Sereth."]]},
-			{"if": {"done": "guard"}, "do": [
-				["spawn", "ilyra"], ["spawn", "wavecutters"], ["spawn", "rear"],
-				["say", "ilyra", "Undead on the coast road. If you are here for the wagon, Executor, you will have to share the fight."],
-				["say", "sereth", "Gladly. Arguments can wait for the living."],
-				["say", "corvin", "Rearguard, forward! Nobody touches the wagon."],
-			]},
-			{"if": {"done": "corvin"}, "do": [
-				["reveal", "bridle"], ["objective", "bridle"],
-				["say", "corvin", "Isolde… will only send more…"],
-			]},
-			{"if": {"done": "bridle"}, "delay": 1.0, "do": [
-				["say", "sereth", "It is listening. I can feel the god turn toward my hand."],
-				["say", "ilyra", "Swear you will bring it before all six peoples. Not to your court. Not to me."],
-				["say", "sereth", "By the empty chair at my sister's table, I swear it."],
-				["victory", "The Godbridle was taken from the Lowmarch column."],
-			]},
-		],
-	}
-
-
-static func _sereth_3() -> Dictionary:
-	return {
-		"id": "sereth_3",
-		"title": "The Empty Chair",
-		"year": "Year Five · The Last Command",
-		"briefing": "Sereth has kept his oath for two years. Now he carries the Godbridle up the eastern road to the Vault, while Isolde’s attack wakes the drowned dead along the way. They are drawn to the bridle in his hands. Reach the vault door, and lay down whatever stands in the road.",
-		"epilogue": "At the vault door the stones spoke in a voice Sereth had not heard in two hundred years. “Leave my chair empty,” his sister said. “But keep setting the table.” In the Listening Chamber, he placed the Godbridle in the center of the six and stepped back. He asked Orrun for nothing. He only added his voice to theirs.",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(70, -62), "facing": Vector2(-1, 0)},
-		"hero_level": 18,
-		"platoons": [
-			_p("ossuary", &"ossuary_guard", ALLY, 18, 16, Vector2(72, -56), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
-			_p("casters", &"vigil_casters", ALLY, 12, 16, Vector2(74, -66), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
-			_p("pallbearers", &"ossuary_guard", ALLY, 16, 15, Vector2(76, -60), {"name": "Pallbearers", "persist": "pallbearers", "order": {"kind": "follow"}}),
-			_p("restless_a", &"restless_dead", FOE, 22, 16, Vector2(50, -46), {"name": "Restless Dead", "aggro": 18.0}),
-			_p("restless_b", &"restless_dead", FOE, 22, 16, Vector2(30, -44), {"name": "Restless Dead", "aggro": 18.0}),
-			_p("knights", &"lowmarch_knights", FOE, 18, 17, Vector2(36, -30), {"name": "Lowmarch Knights", "aggro": 20.0}),
-			_p("restless_c", &"restless_dead", FOE, 22, 17, Vector2(14, -52), {"name": "Restless Dead", "aggro": 16.0}),
-			_p("drift", &"restless_dead", FOE, 20, 16, Vector2(60, -30), {"name": "Drifting Dead", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_hero("choir", &"drowned_choir", FOE, 20, Vector2(6, -56), {"name": "The Drowned Choir", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("choir_dead", &"restless_dead", FOE, 22, 18, Vector2(-6, -54), {"name": "Choir of the Drowned", "hidden": true, "order": {"kind": "hunt"}}),
-		],
-		"objectives": [
-			{"id": "road", "text": "Carry the Godbridle up the restless road", "type": "reach", "who": "hero", "zone": "restless_road"},
-			{"id": "gate", "text": "Reach the vault door", "type": "reach", "who": "hero", "zone": "vault_gate", "hidden": true},
-			{"id": "choir", "text": "Lay the Drowned Choir to rest", "type": "defeat", "who": ["choir"], "hidden": true},
-		],
-		"events": [
-			{"if": {"time": 1.0}, "do": [
-				["say", "sereth", "Two years I have carried it. I will carry it a little further."],
-				["say", "aurel", "The dead are rising all along the road, High Executor. They follow the bridle."],
-			]},
-			{"if": {"done": "road"}, "do": [
-				["objective", "gate"], ["spawn", "drift"],
-				["say", "sereth", "They do not want to harm it. They want to be heard by it. So did I, once."],
-			]},
-			{"if": {"any": [{"done": "gate"}, {"zone": ["hero", "chamber"]}]}, "do": [
-				["spawn", "choir"], ["spawn", "choir_dead"], ["objective", "choir"],
-				["say", "choir", "WE WERE NOT ASKED."],
-				["say", "sereth", "You will be. Everyone will be. That is what the six came here to promise."],
-			]},
-			{"if": {"done": ["gate", "choir"]}, "delay": 1.5, "do": [
-				["say", "voice", "Sereth. Leave my chair empty. But keep setting the table."],
-				["say", "sereth", "…I will, Liesl. I always have."],
-				["victory", "The Godbridle reached the vault."],
-			]},
-		],
-		"ending": LAST_COMMAND,
 	}
 
 
 # ====================================================================== NERIS
+# Dryads · Years Three–Five · docs/campaigns/dryads.md
 
 
 static func _neris_1() -> Dictionary:
 	return {
-		"id": "neris_1",
-		"title": "Ashgrove’s Promise",
-		"year": "Year Four · Spring",
-		"briefing": "Ashgrove, the oldest grove outside the Deepwood, grows in the square of the Human town of Thornbury, which took it in three hundred years ago. Gorrum Saltjaw’s raiders have broken from the Orc assembly, and they are burning far groves they claim drink the Basin’s water. Protect the heart trees and the town that sheltered them.",
-		"epilogue": "Ashgrove survived, scorched on one side. Its people sent Neris a single instruction through the roots: keep the promise. If she used the bridle to root the far groves back to the Deepwood, the roots would pass under Thornbury and take its wells. Neris understood that the grove would rather fail than break its word. Raska’s runner left with a message for the War Marshal: the Dryads would answer for Gorrum’s fires at the convocation, and so would he.",
-		"map": Maps.thornbury(),
-		"hero": {"pos": Vector2(0, -12), "facing": Vector2(0, -1)},
+		"id": "neris_feeder_channel",
+		"title": "The Grove That Refused",
+		"year": "Year Three",
+		"briefing": "The new cut has starved the oldest isolated Dryad grove of water. Neris could bring the Deepwood’s roots to it, but the grove withholds assent: the shortest crossing would run under the wells of Alderford, the town that sheltered it. The town has made another offer: room for a nursery, if the grove helps keep the old feeder channel open. A March levy has dammed that channel upstream for its own fields. Open the three sluices, then keep them open until water reaches the grove.",
+		"debrief": "Water reached the grove by the old channel, not by a root crossing. The grove’s people had been ready to risk transplanting their trees rather than break their promise to the town. Neris had come to save them on her terms; they had their own.\n\nShe agreed to the town’s nursery and to the work of keeping the channel clear. She went on seeking custody of the Godbridle, in case other groves had no town to bargain with.",
+		"map": Maps.grove_town(),
+		"hero": {"pos": Vector2(0, -8), "facing": Vector2(0, -1)},
 		"hero_level": 5,
 		"structures": [
-			{"id": "tree_west", "kind": &"heart_tree", "team": ALLY, "pos": Vector2(-8, -3), "name": "Western heart tree"},
-			{"id": "tree_east", "kind": &"heart_tree", "team": ALLY, "pos": Vector2(8, -3), "name": "Eastern heart tree"},
-			{"id": "tree_south", "kind": &"heart_tree", "team": ALLY, "pos": Vector2(0, 10), "name": "Ashgrove heart"},
+			{"id": "grove", "kind": &"heart_tree", "team": ALLY, "pos": Vector2(0, 2), "name": "The grove's oldest tree"},
 		],
 		"platoons": [
-			_p("thornkin", &"thornkin", ALLY, 18, 3, Vector2(-4, -16), {"name": "Ashgrove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
-			_p("spores", &"sporecasters", ALLY, 12, 3, Vector2(6, -16), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
-			_p("townsfolk", &"villagers", ALLY, 12, 3, Vector2(12, 8), {"name": "Thornbury Watch", "commandable": false, "order": {"kind": "hold"}}),
-			_p("raiders_n", &"saltjaw_raiders", FOE, 16, 3, Vector2(0, -52), {"name": "Saltjaw Raiders", "order": {"kind": "assault", "to": "grove"}}),
-			_p("raiders_e", &"saltjaw_raiders", FOE, 16, 3, Vector2(54, -6), {"name": "Saltjaw Raiders", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": "grove"}}),
-			_p("slingers", &"basin_slingers", FOE, 10, 3, Vector2(52, 0), {"name": "Saltjaw Slingers", "hidden": true, "facing": Vector2(-1, 0), "order": {"kind": "assault", "to": "grove"}}),
-			_p("raiders_w", &"saltjaw_raiders", FOE, 16, 4, Vector2(-54, 8), {"name": "Saltjaw Raiders", "hidden": true, "facing": Vector2(1, 0), "order": {"kind": "assault", "to": "grove"}}),
-			_hero("skarn", &"skarn", FOE, 6, Vector2(0, -54), {"name": "Skarn Emberhand", "hidden": true, "order": {"kind": "assault", "to": "grove"}}),
-			_p("skarn_band", &"saltjaw_raiders", FOE, 16, 5, Vector2(4, -56), {"name": "Emberhand's Band", "hidden": true, "order": {"kind": "assault", "to": "grove"}}),
-			_p("runners", &"basin_warriors", ALLY, 12, 4, Vector2(52, -8), {"name": "Raska's Runners", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
+			_p("thornkin", &"thornkin", ALLY, 16, 3, Vector2(-6, -12), {"name": "Grove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
+			_p("spores", &"sporecasters", ALLY, 10, 3, Vector2(6, -12), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
+			_p("diggers", &"villagers", ALLY, 10, 3, Vector2(10, 10), {"name": "Alderford Diggers", "commandable": false, "order": {"kind": "hold"}}),
+			_p("dam_crew", &"march_levy", FOE, 16, 3, Vector2(-14, -56), {"name": "Dam Crew", "aggro": 14.0}),
+			_p("west_crew", &"march_levy", FOE, 12, 3, Vector2(-48, -26), {"name": "Ditch Guard", "aggro": 12.0}),
+			_p("counter", &"march_levy", FOE, 16, 4, Vector2(52, -6), {"name": "March Levy", "hidden": true, "order": {"kind": "assault", "to": "town_sluice"}}),
+			_p("counter_bows", &"march_bows", FOE, 10, 4, Vector2(4, -56), {"name": "March Bowmen", "hidden": true, "order": {"kind": "assault", "to": "grove"}}),
+		],
+		"interactables": [
+			{"id": "sluice_dam", "pos": Vector2(-12, -48), "label": "Open the upper sluice", "duration": 3.0},
+			{"id": "sluice_west", "pos": Vector2(-42, -30), "label": "Open the west channel", "duration": 3.0},
+			{"id": "sluice_town", "pos": Vector2(-22, -6), "label": "Open the town sluice", "duration": 3.0},
 		],
 		"objectives": [
-			{"id": "trees", "text": "Protect Ashgrove's heart trees", "type": "protect", "who": ["tree_west", "tree_east", "tree_south"], "fail_text": "A heart tree burned. Its Dryads felt it die."},
-			{"id": "raiders", "text": "Drive the raiders out of Thornbury", "type": "defeat", "who": ["raiders_n", "raiders_e", "slingers", "raiders_w"]},
-			{"id": "skarn", "text": "Defeat Skarn Emberhand", "type": "defeat", "who": ["skarn"], "hidden": true},
+			{"id": "sluices", "text": "Open the three sluices on the old feeder channel", "type": "interact", "who": ["sluice_dam", "sluice_west", "sluice_town"]},
+			{"id": "flow", "text": "Keep the channel open until water reaches the grove", "type": "hold", "seconds": 60.0, "hidden": true},
+			{"id": "keep", "text": "The grove and the diggers must survive", "type": "protect", "who": ["grove", "diggers"], "fail_text": "The grove or the town's diggers were lost."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "hollis", "Rootspeaker! Raiders on the north road with torches. They say the grove is drinking the Basin dry."],
-				["say", "neris", "Ashgrove has lived in your square for three hundred years, Reeve. It will not burn in it."],
+				["say", "neris", "Let me bring the Deepwood to you. One season and your roots drink again."],
+				["say", "grove", "No. The shortest way runs under the town's wells."],
+				["say", "reeve", "We have another offer, Rootspeaker. Room for a nursery. Help us keep the old channel open, and the grove drinks from it."],
 			]},
-			{"if": {"time": 9.0}, "do": [["say", "narrator", "Hold L2 or Tab to command your platoons. Release to return to Neris."]]},
-			{"if": {"time": 40.0}, "do": [["spawn", "raiders_e"], ["spawn", "slingers"], ["say", "hollis", "East gate! They're coming over the wall."]]},
-			{"if": {"time": 80.0}, "do": [["spawn", "raiders_w"], ["say", "neris", "The western fields. They mean to surround the grove."]]},
-			{"if": {"time": 100.0}, "do": [
-				["spawn", "runners"],
-				["say", "narrator", "Orc runners under the assembly's banner arrive at the east gate."],
-				["say", "raska", "(message) The assembly disowns Saltjaw. My runners fight for Thornbury. — Raska Vennor"],
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. Open each sluice by holding Cross (or E) beside it."]]},
+			{"if": {"done": "sluices"}, "do": [
+				["objective", "flow"], ["spawn", "counter"], ["spawn", "counter_bows"],
+				["say", "reeve", "Water in the channel! And their levy coming back to shut it."],
 			]},
-			{"if": {"done": "raiders"}, "do": [
-				["spawn", "skarn"], ["spawn", "skarn_band"], ["objective", "skarn"],
-				["say", "skarn", "Gorrum says every tree in Vareth is drinking our sea. I'll start with this one."],
-			]},
-			{"if": {"done": "skarn"}, "delay": 1.5, "do": [
-				["say", "ashgrove", "Keep the promise."],
-				["say", "neris", "Even if it means you fail? …Yes. I hear you."],
-				["victory", "Ashgrove and Thornbury were saved."],
+			{"if": {"done": "flow"}, "do": [
+				["say", "grove", "We drink. We keep our word."],
+				["say", "neris", "And I keep mine. A nursery, then, and the channel kept clear."],
+				["victory", "The old feeder channel runs to the grove."],
 			]},
 		],
 	}
@@ -1040,51 +937,54 @@ static func _neris_1() -> Dictionary:
 
 static func _neris_2() -> Dictionary:
 	return {
-		"id": "neris_2",
-		"title": "The Thornwall",
-		"year": "Year Four · Autumn",
-		"briefing": "Sereth has sent word to all six peoples: bring your leaders to the Vault of the First Command in the spring. Isolde and Gorrum have joined forces and are marching to take Briar Pass, the last road to the Cairnspine. Plant four thorn saplings across the pass and hold until the groves can raise a living wall.",
-		"epilogue": "The Thornwall rose in a single night, a hedge of living briar forty feet high. Isolde’s army would have to march the long way around the Cairnspine and arrive at the vault in spring, as tired as everyone else. Every grove in the Deepwood had assented to the planting. It was the first time in a hundred years that they had agreed on anything.",
-		"map": Maps.briar_pass(),
-		"hero": {"pos": Vector2(0, 6), "facing": Vector2(0, -1)},
+		"id": "neris_spanwater_feeder",
+		"title": "The Feeder Branch",
+		"year": "Year Four",
+		"briefing": "At Spanwater Lock, the War Marshal is about to open the spillway into the old Basin riverbed. The surge could choke Alderford’s feeder branch with debris, and March defenders want its headgate shut so more water stays in their own channel. Keep the headgate standing, clear the feeder when the surge comes, and hold it open through the release.",
+		"debrief": "The feeder carried water to Alderford all through the release. Raska set the flow, the Tide Speaker’s launches carried households out by water, and the Dryads kept their part of the bargain without claiming any of the rest.\n\nOn the high bank, King Mara handed the Godbridle to the First Listener. Neris watched it go and felt relief, and was surprised by it.",
+		"map": Maps.spanwater(),
+		"hero": {"pos": Vector2(-46, -18), "facing": Vector2(1, 0)},
 		"hero_level": 11,
+		"structures": [
+			{"id": "headgate", "kind": &"headgate", "team": ALLY, "pos": Vector2(-22, -30), "name": "Feeder headgate"},
+		],
 		"platoons": [
-			_p("thornkin", &"thornkin", ALLY, 18, 8, Vector2(-6, 10), {"name": "Ashgrove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
-			_p("spores", &"sporecasters", ALLY, 12, 8, Vector2(6, 12), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
-			_p("deepwood", &"thornkin", ALLY, 16, 7, Vector2(0, 18), {"name": "Deepwood Kin", "persist": "deepwood", "order": {"kind": "hold"}}),
-			_p("vanguard", &"lowmarch_knights", FOE, 18, 9, Vector2(0, -40), {"name": "Lowmarch Vanguard", "order": {"kind": "assault", "to": "pass"}}),
-			_p("vanguard_bows", &"lowmarch_crossbows", FOE, 12, 9, Vector2(6, -50), {"name": "Lowmarch Crossbows", "order": {"kind": "assault", "to": "pass"}}),
-			_p("raiders_a", &"saltjaw_raiders", FOE, 18, 9, Vector2(-4, -60), {"name": "Saltjaw Raiders", "hidden": true, "order": {"kind": "assault", "to": "pass"}}),
-			_p("knights_b", &"lowmarch_knights", FOE, 18, 10, Vector2(4, -60), {"name": "Lowmarch Knights", "hidden": true, "order": {"kind": "assault", "to": "pass"}}),
-			_p("raiders_b", &"saltjaw_raiders", FOE, 18, 10, Vector2(0, -62), {"name": "Saltjaw Raiders", "hidden": true, "order": {"kind": "assault", "to": "pass"}}),
-			_p("bows_b", &"lowmarch_crossbows", FOE, 12, 10, Vector2(-6, -62), {"name": "Lowmarch Crossbows", "hidden": true, "order": {"kind": "assault", "to": "pass"}}),
+			_p("thornkin", &"thornkin", ALLY, 18, 9, Vector2(-40, -20), {"name": "Grove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
+			_p("spores", &"sporecasters", ALLY, 12, 9, Vector2(-50, -20), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
+			_p("volunteers", &"thornkin", ALLY, 14, 8, Vector2(-26, -24), {"name": "Alderford Volunteers", "persist": "volunteers", "order": {"kind": "hold"}}),
+			_p("gate_crew", &"march_levy", FOE, 16, 9, Vector2(-4, -16), {"name": "Headgate Crew", "order": {"kind": "assault", "to": "headgate"}}),
+			_p("bows", &"march_bows", FOE, 12, 9, Vector2(10, -14), {"name": "Lock Bowmen", "aggro": 18.0}),
+			_p("wave_two", &"march_levy", FOE, 16, 10, Vector2(-30, 40), {"name": "March Defenders", "hidden": true, "order": {"kind": "assault", "to": "headgate"}}),
+			_p("wave_three", &"march_riders", FOE, 12, 10, Vector2(20, -14), {"name": "March Riders", "hidden": true, "order": {"kind": "assault", "to": "headgate"}}),
+			_hero("raska", &"raska", NEUTRAL, 15, Vector2(-8, -22), {"name": "Raska Vennor", "commandable": false}),
+			_p("orcs", &"basin_warriors", NEUTRAL, 16, 12, Vector2(2, -20), {"name": "Saltwell Company", "commandable": false}),
 		],
 		"interactables": [
-			{"id": "sapling_1", "pos": Vector2(-12, -4), "label": "Plant a thorn sapling", "duration": 3.0},
-			{"id": "sapling_2", "pos": Vector2(-4, -4), "label": "Plant a thorn sapling", "duration": 3.0},
-			{"id": "sapling_3", "pos": Vector2(4, -4), "label": "Plant a thorn sapling", "duration": 3.0},
-			{"id": "sapling_4", "pos": Vector2(12, -4), "label": "Plant a thorn sapling", "duration": 3.0},
+			{"id": "debris_1", "pos": Vector2(-34, -28), "label": "Clear the debris", "duration": 2.5, "hidden": true},
+			{"id": "debris_2", "pos": Vector2(-48, -28), "label": "Clear the debris", "duration": 2.5, "hidden": true},
+			{"id": "debris_3", "pos": Vector2(-62, -28), "label": "Clear the debris", "duration": 2.5, "hidden": true},
 		],
 		"objectives": [
-			{"id": "plant", "text": "Plant thorn saplings across the pass", "type": "interact", "who": ["sapling_1", "sapling_2", "sapling_3", "sapling_4"]},
-			{"id": "grow", "text": "Hold Briar Pass while the Thornwall grows", "type": "hold", "seconds": 120.0, "zone": "pass", "overrun": 12, "hidden": true, "fail_text": "The enemy trampled the saplings and took the pass."},
+			{"id": "gate", "text": "Keep the feeder headgate standing", "type": "protect", "who": ["headgate"], "fail_text": "The headgate was smashed shut. Alderford lost its water."},
+			{"id": "release", "text": "Hold the feeder open through the release", "type": "hold", "zone": "headgate", "contest": true, "seconds": 120.0, "overrun_time": 14.0, "fail_text": "March defenders shut the feeder headgate."},
+			{"id": "debris", "text": "Clear the debris from the feeder", "type": "interact", "who": ["debris_1", "debris_2", "debris_3"], "hidden": true},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "neris", "Four saplings, and every grove in the Deepwood singing to them. Then this pass belongs to the briars."],
-				["say", "hollis", "Thornbury sent what it could, Rootspeaker. We owe Ashgrove that much."],
+				["say", "neris", "The War Marshal sets the flow. We only need the feeder to carry its share."],
+				["say", "reeve", "Their crew is going for the headgate, Rootspeaker."],
 			]},
-			{"if": {"interact": "sapling_2"}, "do": [["spawn", "raiders_a"], ["say", "neris", "Saltjaw's raiders. Gorrum sends the torches first."]]},
-			{"if": {"done": "plant"}, "do": [
-				["objective", "grow"], ["spawn", "knights_b"],
-				["say", "neris", "They are planted. Now the groves must agree, all of them at once. Hold the pass!"],
+			{"if": {"time": 40.0}, "do": [
+				["raise", "flood"], ["reveal", "debris_1"], ["reveal", "debris_2"], ["reveal", "debris_3"], ["objective", "debris"],
+				["say", "raska", "(from the wheel) Spillway open. River only."],
+				["say", "neris", "The surge is carrying half the riverbank into our channel. Clear it!"],
 			]},
-			{"if": {"after": ["plant", 45.0]}, "do": [["spawn", "raiders_b"], ["spawn", "bows_b"], ["say", "gorrum", "Burn the hedge before it grows! The sea is on the other side of these mountains!"]]},
-			{"if": {"after": ["plant", 70.0]}, "do": [["say", "ashgrove", "Assent."], ["say", "neris", "Ashgrove assents. The far groves are answering."]]},
-			{"if": {"done": "grow"}, "do": [
-				["raise", "thornwall"],
-				["say", "neris", "Every grove assents. Rise."],
-				["victory", "The Thornwall closed Briar Pass."],
+			{"if": {"time": 55.0}, "do": [["spawn", "wave_two"], ["say", "reeve", "Defenders from the south, cut off by the flood and angry about it."]]},
+			{"if": {"time": 85.0}, "do": [["spawn", "wave_three"]]},
+			{"if": {"done": ["release", "debris"]}, "do": [
+				["say", "reeve", "Water all the way to Alderford."],
+				["say", "neris", "Then we did what we came to do, and nothing more."],
+				["victory", "Alderford's feeder ran through the release."],
 			]},
 		],
 	}
@@ -1092,56 +992,226 @@ static func _neris_2() -> Dictionary:
 
 static func _neris_3() -> Dictionary:
 	return {
-		"id": "neris_3",
-		"title": "Roots of the Vault",
-		"year": "Year Five · The Last Command",
-		"briefing": "The northwest approach to the Vault crosses a chasm, and the only bridge is a span of living roots that the Dryads grew over the winter. If Isolde’s sappers cut it, the Undead and Druid columns on the far ledge cannot reach the Listening Chamber. Guard both ends of the root bridge.",
-		"epilogue": "The bridge held, and the last of the columns crossed it. In the Listening Chamber, Neris spoke for the groves that were failing far from home, and for the town that had taken one of them in. She asked Orrun for nothing. Afterward the far groves would have to be saved slowly, by seed envoys walking the old roads, and by neighbors.",
-		"map": Maps.vault(),
-		"hero": {"pos": Vector2(-50, -28), "facing": Vector2(0, -1)},
-		"hero_level": 18,
-		"structures": [
-			{"id": "root_south", "kind": &"root_bridge", "team": ALLY, "pos": Vector2(-50, -32), "name": "Southern bridge root", "hp": 52000.0},
-			{"id": "root_north", "kind": &"root_bridge", "team": ALLY, "pos": Vector2(-50, -48), "name": "Northern bridge root", "hp": 52000.0},
-		],
+		"id": "neris_vault_road",
+		"title": "The Road Kept Open",
+		"year": "Year Five",
+		"briefing": "The Dryad groves have refused a continent-wide crossing; no grove will be bound by a command spoken on its behalf. Neris has brought local volunteers to the Cairnspine road instead. Refugees and witnesses are climbing to the vault as rival claimants close in. Keep them moving and bring them to the witness camp.",
+		"debrief": "The witnesses reached the vault and saw the First Listener close it without a command. The refugees found room in the Keepers’ valleys for the winter.\n\nNearby groves had chosen to work together, root to root where they agreed and no farther, and each kept the right to refuse a crossing. Nothing had been spoken over their heads. The far groves would have to be saved slowly, by seed envoys and neighbors.",
+		"map": Maps.cairnspine_road(),
+		"hero": {"pos": Vector2(0, 70), "facing": Vector2(0, -1)},
+		"hero_level": 17,
 		"platoons": [
-			_p("thornkin", &"thornkin", ALLY, 18, 16, Vector2(-44, -26), {"name": "Ashgrove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
-			_p("spores", &"sporecasters", ALLY, 12, 16, Vector2(-56, -26), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
-			_p("deepwood", &"thornkin", ALLY, 18, 16, Vector2(-50, -54), {"name": "Deepwood Kin", "persist": "deepwood", "order": {"kind": "guard", "who": "root_north"}}),
-			_p("sappers_s", &"lowmarch_knights", FOE, 16, 15, Vector2(-26, -4), {"name": "Lowmarch Sappers", "order": {"kind": "assault", "to": Vector2(-50, -32)}}),
-			_p("bows_s", &"lowmarch_crossbows", FOE, 12, 16, Vector2(-62, -6), {"name": "Lowmarch Crossbows", "order": {"kind": "assault", "to": "bridge_south"}}),
-			_p("raiders_n", &"saltjaw_raiders", FOE, 16, 15, Vector2(-62, -66), {"name": "Saltjaw Raiders", "hidden": true, "order": {"kind": "assault", "to": Vector2(-50, -48)}}),
-			_p("sappers_b", &"lowmarch_knights", FOE, 16, 16, Vector2(-34, -4), {"name": "Lowmarch Sappers", "hidden": true, "order": {"kind": "assault", "to": Vector2(-50, -32)}}),
-			_p("raiders_s", &"saltjaw_raiders", FOE, 16, 16, Vector2(-66, -4), {"name": "Saltjaw Raiders", "hidden": true, "order": {"kind": "assault", "to": Vector2(-50, -32)}}),
-			_hero("brannoc", &"brannoc", FOE, 19, Vector2(-40, -2), {"name": "Ser Brannoc Hale", "hidden": true, "order": {"kind": "attack", "target": "hero"}}),
-			_p("brannoc_guard", &"lowmarch_knights", FOE, 16, 18, Vector2(-44, 0), {"name": "Hale's Lances", "hidden": true, "order": {"kind": "assault", "to": Vector2(-50, -32)}}),
-			_hero("sereth", &"sereth", ALLY, 18, Vector2(-50, -66), {"name": "Sereth Vale", "hidden": true, "commandable": false, "order": {"kind": "hunt"}}),
+			_p("thornkin", &"thornkin", ALLY, 18, 15, Vector2(-6, 72), {"name": "Grove Kin", "persist": "thornkin", "order": {"kind": "follow"}}),
+			_p("spores", &"sporecasters", ALLY, 12, 15, Vector2(8, 74), {"name": "Sporecasters", "persist": "spores", "order": {"kind": "follow"}}),
+			_p("volunteers", &"thornkin", ALLY, 16, 14, Vector2(0, 80), {"name": "Alderford Volunteers", "persist": "volunteers", "order": {"kind": "follow"}}),
+			_p("refugees", &"households", ALLY, 12, 8, Vector2(-4, 78), {"name": "Refugees", "commandable": false, "order": {"kind": "hold"}}),
+			_p("witnesses", &"well_keeper", ALLY, 8, 8, Vector2(4, 80), {"name": "Witnesses", "commandable": false, "order": {"kind": "hold"}}),
+			_p("west_levy", &"march_levy", FOE, 18, 15, Vector2(-58, 6), {"name": "Claimant Levy", "hidden": true, "order": {"kind": "attack", "target": "refugees"}}),
+			_p("east_riders", &"march_riders", FOE, 14, 15, Vector2(66, 4), {"name": "Claimant Riders", "hidden": true, "order": {"kind": "attack", "target": "witnesses"}}),
+			_p("road_block", &"march_levy", FOE, 16, 15, Vector2(-16, 6), {"name": "Claimant Roadblock", "aggro": 15.0}),
+			_p("road_bows", &"march_bows", FOE, 12, 15, Vector2(-26, 32), {"name": "Claimant Bowmen", "aggro": 20.0}),
+			_p("late_levy", &"march_levy", FOE, 16, 16, Vector2(60, -58), {"name": "Claimant Levy", "hidden": true, "order": {"kind": "attack", "target": "witnesses"}}),
 		],
 		"objectives": [
-			{"id": "roots", "text": "Protect both ends of the root bridge", "type": "protect", "who": ["root_south", "root_north"], "fail_text": "The root bridge was cut. The columns could not cross."},
-			{"id": "hold", "text": "Keep the bridge open while the columns cross", "type": "hold", "seconds": 150.0},
-			{"id": "brannoc", "text": "Defeat Ser Brannoc Hale", "type": "defeat", "who": ["brannoc"], "hidden": true},
+			{"id": "refugees", "text": "Bring the refugees to the witness camp", "type": "reach", "who": "refugees", "zone": "witness_camp"},
+			{"id": "witnesses", "text": "Bring the witnesses to the witness camp", "type": "reach", "who": "witnesses", "zone": "witness_camp"},
+			{"id": "safe", "text": "The refugees and witnesses must survive", "type": "protect", "who": ["refugees", "witnesses"], "fail_text": "Claimants cut down the people on the road."},
 		],
 		"events": [
 			{"if": {"time": 1.0}, "do": [
-				["say", "neris", "The roots took all winter to cross. They will not be cut in a morning."],
-				["say", "bryn", "The Druid column is on the far ledge, Rootspeaker. The Undead behind them."],
+				["say", "neris", "The groves said no to the great crossing. So we walk, like everyone else."],
+				["say", "reeve", "Alderford came because the grove's people asked. Point us where you need us."],
 			]},
-			{"if": {"time": 30.0}, "do": [["spawn", "raiders_n"], ["say", "neris", "Raiders on the northern ledge. Deepwood Kin, hold that root."]]},
-			{"if": {"time": 70.0}, "do": [["spawn", "sappers_b"], ["say", "neris", "More sappers from the south. Kin, stand on the roots."]]},
-			{"if": {"time": 100.0}, "do": [["spawn", "raiders_s"]]},
-			{"if": {"time": 90.0}, "do": [
-				["spawn", "sereth"],
-				["say", "sereth", "I am on your bridge, Rootspeaker, with something in my hands that must not fall. Keep it standing."],
+			{"if": {"time": 3.0}, "do": [
+				["order", "refugees", {"kind": "path", "points": [Vector2(-6, 50), Vector2(-22, 30), Vector2(-14, 6), Vector2(0, -20), Vector2(-2, -36)], "wait_for_hero": 18.0}],
+				["order", "witnesses", {"kind": "path", "points": [Vector2(-4, 52), Vector2(-20, 32), Vector2(-12, 8), Vector2(2, -20), Vector2(2, -36)], "wait_for_hero": 18.0}],
 			]},
-			{"if": {"done": "hold"}, "do": [
-				["spawn", "brannoc"], ["spawn", "brannoc_guard"], ["objective", "brannoc"],
-				["say", "brannoc", "The Queen wants that bridge in the chasm, Dryad. I don't fail her twice."],
+			{"if": {"zone": ["refugees", "switchback"]}, "do": [
+				["spawn", "west_levy"], ["spawn", "east_riders"],
+				["say", "reeve", "Claimants on both flanks! They're going for the witnesses, not the soldiers."],
 			]},
-			{"if": {"done": ["hold", "brannoc"]}, "delay": 1.5, "do": [
-				["say", "neris", "Everyone is across. The roots can rest."],
-				["victory", "The root bridge held."],
+			{"if": {"zone": ["witnesses", "upper_road"]}, "do": [["spawn", "late_levy"], ["say", "neris", "One more push from the northeast track. Keep walking."]]},
+			{"if": {"done": "refugees"}, "do": [["despawn", "refugees"]]},
+			{"if": {"done": "witnesses"}, "do": [["despawn", "witnesses"]]},
+			{"if": {"done": ["refugees", "witnesses"]}, "do": [
+				["say", "neris", "Everyone who walked is here. That is how groves should cross, too."],
+				["victory", "The road to the vault stayed open."],
 			]},
 		],
-		"ending": LAST_COMMAND,
+	}
+
+
+# ===================================================================== SERETH
+# Undead · Years Three–Five · docs/campaigns/undead.md
+
+
+static func _sereth_1() -> Dictionary:
+	return {
+		"id": "sereth_voices_cut",
+		"title": "Voices from the Cut",
+		"year": "Year Three",
+		"briefing": "The diverted river has cut a new channel along the Still Kingdom’s border. Where the bank at Hollowmere falls away from its oldest graves, the village has begun to hear voices address the living by name. Salvagers from across the border have come for what the water uncovered. Record the names at the three grave sites before the bank collapses, then bring the villagers back from its edge.",
+		"debrief": "No one at Hollowmere could say whether the voices were the dead themselves or their memories passing through Orrun’s dream. Sereth wrote down every name they spoke, and wrote beside each one that a voice is a reason to listen, not permission to bring anyone back.\n\nThe court did not wait for him to finish. It sent the High Executor to secure the Godbridle before another command could silence the voices, and left the question of consent for a later ruling.",
+		"map": Maps.cut_village(),
+		"hero": {"pos": Vector2(0, 8), "facing": Vector2(0, -1)},
+		"hero_level": 5,
+		"platoons": [
+			_p("ossuary", &"ossuary_guard", ALLY, 18, 3, Vector2(-6, 4), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
+			_p("casters", &"vigil_casters", ALLY, 12, 3, Vector2(6, 4), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
+			_p("villagers", &"villagers", ALLY, 10, 4, Vector2(-6, -28), {"name": "Listening villagers", "commandable": false, "order": {"kind": "hold"}}),
+			_p("salvage_east", &"salvagers", FOE, 14, 3, Vector2(50, 18), {"name": "Bone Salvagers", "order": {"kind": "assault", "to": "grave_east"}}),
+			_p("salvage_west", &"salvagers", FOE, 14, 3, Vector2(-50, -18), {"name": "Bone Salvagers", "hidden": true, "order": {"kind": "assault", "to": "grave_west"}}),
+			_p("salvage_late", &"salvagers", FOE, 16, 4, Vector2(50, 22), {"name": "Bone Salvagers", "hidden": true, "order": {"kind": "attack", "target": "villagers"}}),
+		],
+		"interactables": [
+			{"id": "names_west", "pos": Vector2(-24, -32), "label": "Record the names", "duration": 3.5},
+			{"id": "names_mid", "pos": Vector2(-6, -34), "label": "Record the names", "duration": 3.5},
+			{"id": "names_east", "pos": Vector2(14, -32), "label": "Record the names", "duration": 3.5},
+		],
+		"objectives": [
+			{"id": "names", "text": "Record the names at the three grave sites", "type": "interact", "who": ["names_west", "names_mid", "names_east"]},
+			{"id": "back", "text": "Bring the villagers back to Hollowmere", "type": "reach", "who": "villagers", "zone": "village", "hidden": true},
+			{"id": "villagers", "text": "The villagers must survive", "type": "protect", "who": ["villagers"], "fail_text": "The listening villagers were lost at the bank."},
+		],
+		"events": [
+			{"if": {"time": 1.0}, "do": [
+				["say", "aurel", "They stand at the bank all night, High Executor. The voices call them by name."],
+				["say", "sereth", "Then we listen too. Carefully. A voice is not a request."],
+			]},
+			{"if": {"time": 6.0}, "do": [["say", "narrator", "Hold L2 (or Tab) to command. The bank gives way after each site is recorded; watch for the warning."]]},
+			{"if": {"time": 30.0}, "do": [["spawn", "salvage_west"], ["say", "aurel", "More salvagers on the west track."]]},
+			{"if": {"interact": "names_west"}, "do": [
+				["hazard", "grave_west", 4.0, 10.0, 0.08],
+				["say", "voice", "Odile. Odile, you left the gate open."],
+				["say", "sereth", "Written. The bank is going. Step back."],
+			]},
+			{"if": {"interact": "names_mid"}, "do": [
+				["hazard", "grave_mid", 4.0, 10.0, 0.08],
+				["say", "voice", "Is anyone keeping the lamps?"],
+			]},
+			{"if": {"interact": "names_east"}, "do": [
+				["hazard", "grave_east", 4.0, 10.0, 0.08],
+				["say", "aurel", "That voice asked for its brother by name, Executor. He's standing right here."],
+				["say", "sereth", "And we still do not know whether it wants anything more than to be heard."],
+			]},
+			{"if": {"done": "names"}, "do": [
+				["objective", "back"], ["spawn", "salvage_late"],
+				["order", "villagers", {"kind": "path", "points": [Vector2(-6, -14), Vector2(-2, 8)], "wait_for_hero": 14.0}],
+				["say", "sereth", "Come away from the edge. We have the names. They are not lost."],
+			]},
+			{"if": {"done": "back"}, "do": [
+				["say", "aurel", "A rider from the court. You're to secure the Godbridle before anyone silences the voices."],
+				["say", "sereth", "And the question of whether anyone may be brought back?"],
+				["say", "aurel", "Deferred, Executor."],
+				["victory", "The names at Hollowmere were recorded."],
+			]},
+		],
+	}
+
+
+static func _sereth_2() -> Dictionary:
+	return {
+		"id": "sereth_recovered_records",
+		"title": "The Recovered Records",
+		"year": "Year Four",
+		"briefing": "The cut at Hollowmere is widening. The village record house, with its burial rolls, letters and testimony going back three centuries, will be underwater by nightfall, and a rival crown’s requisition company has come to commandeer the village’s boats. Recover the record chests, then escort the bearers to the high ground.",
+		"debrief": "The records came out of Hollowmere wet but whole. Sereth did not read them. There was no time, and part of him was afraid of what he might find.\n\nWord came from Spanwater that King Mara had handed the Godbridle to the First Listener. The court sent new orders: the High Executor would escort the court’s speaker to the vault, to speak there for the dead.",
+		"map": Maps.cut_village(),
+		"hero": {"pos": Vector2(0, 40), "facing": Vector2(0, -1)},
+		"hero_level": 11,
+		"platoons": [
+			_p("ossuary", &"ossuary_guard", ALLY, 18, 9, Vector2(-6, 42), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
+			_p("casters", &"vigil_casters", ALLY, 12, 9, Vector2(6, 42), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
+			_p("pallbearers", &"ossuary_guard", ALLY, 16, 8, Vector2(0, 46), {"name": "Pallbearers", "persist": "pallbearers", "order": {"kind": "follow"}}),
+			_p("bearers", &"villagers", ALLY, 10, 5, Vector2(12, 34), {"name": "Record bearers", "commandable": false, "order": {"kind": "hold"}}),
+			_p("requisition", &"march_levy", FOE, 18, 9, Vector2(48, 20), {"name": "Requisition Company", "order": {"kind": "assault", "to": "village"}}),
+			_p("req_bows", &"march_bows", FOE, 12, 9, Vector2(46, 28), {"name": "Requisition Bowmen", "order": {"kind": "move", "to": Vector2(30, 24)}, "aggro": 18.0}),
+			_p("req_two", &"march_levy", FOE, 18, 10, Vector2(-52, -16), {"name": "Requisition Company", "hidden": true, "order": {"kind": "attack", "target": "bearers"}}),
+			_p("req_riders", &"march_riders", FOE, 12, 10, Vector2(50, 18), {"name": "Requisition Riders", "hidden": true, "order": {"kind": "attack", "target": "bearers"}}),
+		],
+		"interactables": [
+			{"id": "chest_archive", "pos": Vector2(6, 31), "label": "Recover the record chest", "duration": 3.0},
+			{"id": "chest_west", "pos": Vector2(-16, -2), "label": "Recover the record chest", "duration": 3.0},
+			{"id": "chest_east", "pos": Vector2(16, -2), "label": "Recover the record chest", "duration": 3.0},
+		],
+		"objectives": [
+			{"id": "chests", "text": "Recover the three record chests", "type": "interact", "who": ["chest_archive", "chest_west", "chest_east"]},
+			{"id": "high", "text": "Escort the record bearers to the high ground", "type": "reach", "who": "bearers", "zone": "high_ground", "hidden": true},
+			{"id": "bearers", "text": "The record bearers must survive", "type": "protect", "who": ["bearers"], "fail_text": "The record bearers were cut down and the records lost."},
+		],
+		"events": [
+			{"if": {"time": 1.0}, "do": [
+				["say", "aurel", "Three chests. Burial rolls, letters, testimony. Three hundred years of Hollowmere."],
+				["say", "sereth", "Then three hundred years leave with us. Bearers, stay by the record house."],
+			]},
+			{"if": {"time": 40.0}, "do": [
+				["raise", "widened_cut"],
+				["say", "aurel", "The bank gave way. The cut is into the lower lanes!"],
+			]},
+			{"if": {"time": 55.0}, "do": [["spawn", "req_two"], ["say", "aurel", "A second company on the west track. They want the boats, and they'll take the chests to pay for them."]]},
+			{"if": {"done": "chests"}, "do": [
+				["objective", "high"], ["spawn", "req_riders"],
+				["order", "bearers", {"kind": "path", "points": [Vector2(-10, 32), Vector2(-28, 34), Vector2(-40, 38)], "wait_for_hero": 15.0}],
+				["say", "sereth", "That is all of it. Up to the high ground."],
+			]},
+			{"if": {"done": "high"}, "do": [
+				["say", "aurel", "Orders from the court. You are to escort Speaker Pyre to the vault."],
+				["say", "sereth", "To speak for the dead. Which dead, Aurel? And who asked them?"],
+				["victory", "Hollowmere's records were saved."],
+			]},
+		],
+	}
+
+
+static func _sereth_3() -> Dictionary:
+	return {
+		"id": "sereth_vault_witnesses",
+		"title": "A Lamp in the Window",
+		"year": "Year Five",
+		"briefing": "Among Hollowmere’s recovered records, Sereth found his sister’s letter. She asked him to leave a lamp in the window after she died. She said nothing about coming back. Sereth has refused to escort the court’s speaker to the vault. Now the court’s guard is on the Cairnspine road, and it means to speak for the unconsenting dead. Protect the witnesses on their way to the camp, and turn back Speaker Aldous Pyre.",
+		"debrief": "Speaker Pyre turned back at the vault court. The witnesses reached the camp and saw the First Listener close the vault without a new command.\n\nThe court stripped Sereth of his commission. He went home to the Still Kingdom as a private citizen and lit a lamp in his window. There would be no universal recall of the dead. The question of consent still stood, the way he had written it.",
+		"map": Maps.cairnspine_road(),
+		"hero": {"pos": Vector2(6, 60), "facing": Vector2(0, -1)},
+		"hero_level": 17,
+		"platoons": [
+			_p("ossuary", &"ossuary_guard", ALLY, 18, 15, Vector2(0, 64), {"name": "Ossuary Guard", "persist": "ossuary", "order": {"kind": "follow"}}),
+			_p("casters", &"vigil_casters", ALLY, 12, 15, Vector2(10, 66), {"name": "Vigil Casters", "persist": "casters", "order": {"kind": "follow"}}),
+			_p("pallbearers", &"ossuary_guard", ALLY, 16, 14, Vector2(-6, 66), {"name": "Pallbearers", "persist": "pallbearers", "order": {"kind": "follow"}}),
+			_p("witnesses", &"villagers", ALLY, 10, 8, Vector2(2, 74), {"name": "Hollowmere witnesses", "commandable": false, "order": {"kind": "hold"}}),
+			_hero("pyre", &"pyre", FOE, 17, Vector2(62, -58), {"name": "Speaker Aldous Pyre", "order": {"kind": "assault", "to": "vault_court"}}),
+			_p("court_guard", &"court_guard", FOE, 18, 15, Vector2(64, -54), {"name": "Court Guard", "order": {"kind": "assault", "to": "vault_court"}}),
+			_p("court_casters", &"vigil_casters", FOE, 12, 15, Vector2(66, -62), {"name": "Court Casters", "order": {"kind": "assault", "to": "vault_court"}}),
+			_p("court_intercept", &"court_guard", FOE, 16, 15, Vector2(64, 6), {"name": "Court Guard", "hidden": true, "order": {"kind": "attack", "target": "witnesses"}}),
+			_p("court_late", &"court_guard", FOE, 16, 16, Vector2(62, -58), {"name": "Court Guard", "hidden": true, "order": {"kind": "assault", "to": "vault_court"}}),
+		],
+		"objectives": [
+			{"id": "witnesses", "text": "Bring the Hollowmere witnesses to the witness camp", "type": "reach", "who": "witnesses", "zone": "witness_camp"},
+			{"id": "safe", "text": "The witnesses must survive", "type": "protect", "who": ["witnesses"], "fail_text": "The court's guard cut down the witnesses."},
+			{"id": "pyre", "text": "Turn back Speaker Aldous Pyre", "type": "defeat", "who": ["pyre"]},
+		],
+		"events": [
+			{"if": {"time": 1.0}, "do": [
+				["say", "aurel", "You are commanded to escort the Speaker, High Executor."],
+				["say", "sereth", "I helped write the rule that a person must consent to return. My sister's letter asks for a lamp, not a summons. I will not escort him."],
+				["say", "aurel", "Then I am to tell you the court will take your commission."],
+				["say", "sereth", "Tell them. And then help me with these witnesses."],
+			]},
+			{"if": {"time": 3.0}, "do": [
+				["order", "witnesses", {"kind": "path", "points": [Vector2(-6, 50), Vector2(-22, 30), Vector2(-14, 6), Vector2(0, -20), Vector2(0, -36)], "wait_for_hero": 18.0}],
+			]},
+			{"if": {"time": 45.0}, "do": [
+				["spawn", "court_intercept"],
+				["say", "pyre", "The dead have waited long enough for a hearing, Vale. The court will give them one."],
+			]},
+			{"if": {"zone": ["witnesses", "upper_road"]}, "do": [["spawn", "court_late"]]},
+			{"if": {"done": "witnesses"}, "do": [["despawn", "witnesses"]]},
+			{"if": {"dead": "pyre"}, "do": [
+				["say", "pyre", "Enough. I will not fight the Keepers alone. The court will hear of this."],
+				["despawn", "court_guard"], ["despawn", "court_casters"], ["despawn", "court_late"],
+			]},
+			{"if": {"done": ["witnesses", "pyre"]}, "do": [
+				["say", "sereth", "No one spoke for the dead today. Not even me."],
+				["victory", "The court turned back from the vault."],
+			]},
+		],
 	}
