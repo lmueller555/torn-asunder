@@ -64,6 +64,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "CAIRNSPINE ASSEMBLY · PUBLIC HEARING",
 		"orders": "Choose one lectern and read all three passages with the public scribe. Hold armed formations outside the hearing ring and leave its public exit clear. Keepers who walk out are not targets.",
 	},
+	"sova_vault_return": {
+		"scene": preload("res://game/battlefield/sova_vault_return_playtest.tscn"),
+		"dispatch": Beats.SOVA_VAULT_RETURN_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SOVA_VAULT_RETURN_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE VAULT · SHELF AND SIDE PATH",
+		"orders": "The valleys have pledged guards under public custody terms. Take either path with Sova carrying the Godbridle. Hold a guard at the marked approach to clear the closure zone, then finish the vault return. Leave the witness terrace open.",
+	},
 	"ilyra_moonwash_rescue": {
 		"scene": preload("res://game/battlefield/ilyra_moonwash_rescue_campaign.tscn"),
 		"dispatch": Beats.ILYRA_MOONWASH_DISPATCH,
@@ -85,6 +93,7 @@ const _DEPLOYMENTS := {
 
 const _INTERMISSIONS := {
 	"mara": {"moonwash_road": Beats.MARA_WATER_REQUEST},
+	"sova": {"cairnspine_vault_road": Beats.SOVA_GODBRIDLE_HANDOVER},
 }
 
 

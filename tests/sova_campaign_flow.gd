@@ -10,6 +10,8 @@ const Mission := preload("res://game/battlefield/sova_mine_evacuation.gd")
 const Evacuation := preload("res://game/battlefield/sova_mine_tunnels.gd")
 const Hearing := preload("res://game/battlefield/sova_public_record.gd")
 const HearingMission := preload("res://game/battlefield/sova_public_record_playtest.gd")
+const Vault := preload("res://game/battlefield/sova_vault_return.gd")
+const VaultMission := preload("res://game/battlefield/sova_vault_return_playtest.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const CAMP := "cairnspine_camp"
 const MINE := "year_one_mine"
@@ -17,6 +19,13 @@ const ASSEMBLY := "cairnspine_assembly"
 const CLEAR := "sova_mine_tunnels"
 const HEARING_CLEAR := "sova_public_record"
 const VAULT_ROAD := "cairnspine_vault_road"
+const VAULT_SITE := "cairnspine_vault"
+const VAULT_CLEAR := "sova_vault_return"
+const SHELF := ["ShelfDecision", "ShelfFoot", "ShelfClimb", "ShelfHold", "ShelfRejoin", "Forecourt"]
+const SIDE := [
+	"SideDecision", "SideApproach", "SideTurn", "SideRampFoot", "SideBlindBend", "SideRampTurn",
+	"SideNorthToe", "SideHighBend", "SideRejoin", "Forecourt",
+]
 const HUMAN_CLEAR := "mara_mine_escort"
 const DT := 1.0 / 60.0
 
@@ -51,7 +60,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Sova campaign: real Mine evacuation and public hearing, separate dispatch/debriefs, gated Vault Road, independent saves and Continue passed.")
+		print("Sova campaign: actual Mine, hearing and both Vault paths; Year Four handover, objective-gated clear, independent saves, Continue and replay passed.")
 	quit(0 if passed else 1)
 
 
@@ -167,20 +176,154 @@ func _flow() -> bool:
 	_read_dialogue(5)
 	if not _on_map(ASSEMBLY):
 		return _fail("The hearing debrief did not return to Assembly.")
+	_map().select_waypoint(VAULT_SITE)
+	_joy(JOY_BUTTON_A)
+	if not _on_map(ASSEMBLY):
+		return _fail("The vault could be reached directly without the handover waypoint.")
 	_map().select_waypoint(VAULT_ROAD)
-	if not _press("ConfirmTravel") or not _on_map(VAULT_ROAD) or _button("Confirm Deployment") \
+	if not _press("ConfirmTravel") or not _is_dialogue(Beats.SOVA_GODBRIDLE_HANDOVER) \
 			or _title._campaign_world.mission_at_current_waypoint() != "":
-		return _fail("The hearing did not open the Vault Road, or exposed an unbuilt vault mission.")
+		return _fail("The hearing did not open the non-battle road and its Year Four handover.")
+	if Profile.new(_profile_path).has_seen_intermission("sova", Beats.SOVA_GODBRIDLE_HANDOVER):
+		return _fail("The handover was marked seen before it was presented.")
+	_read_dialogue(5)
+	if not _on_map(VAULT_ROAD) or not Profile.new(_profile_path).has_seen_intermission("sova", Beats.SOVA_GODBRIDLE_HANDOVER):
+		return _fail("The completed handover did not return to the Road or remember it was seen.")
 	_joy(JOY_BUTTON_B)
 	if not _press("Continue") or not _on_map(VAULT_ROAD):
-		return _fail("Continue did not restore Sova's arrived Vault Road.")
+		return _fail("Continue did not restore the arrived Vault Road without repeating the handover.")
+	_map().select_waypoint(VAULT_SITE)
+	if not _press("ConfirmTravel") or not _on_briefing(VAULT_CLEAR) \
+			or not _press("Read Dispatch") or not _is_dialogue(Beats.SOVA_VAULT_RETURN_DISPATCH):
+		return _fail("The Vault Road did not open the authored Year Five briefing and dispatch.")
+	_read_dialogue(5)
+	if not _on_briefing(VAULT_CLEAR) or not _press("Confirm Deployment") or not _title._campaign_battle is VaultMission:
+		return _fail("The Vault briefing did not explicitly deploy Sova's real battlefield.")
+	var vault := _title._campaign_battle as VaultMission
+	var arrived_save := FileAccess.get_file_as_string(_profile_path)
+	vault.report_sova_fell()
+	vault._physics_process(DT)
+	await process_frame
+	if vault.objective.phase != Vault.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != arrived_save:
+		return _fail("A confirmed carrier fall counted as a clear or changed the arrived waypoint.")
+	_joy(JOY_BUTTON_BACK)
+	if not _on_map(VAULT_SITE) or not _reopen_vault():
+		return _fail("Defeat did not leave the campaign at the re-deployable Vault.")
 
+	for shelf in [true, false]:
+		vault = _title._campaign_battle as VaultMission
+		vault.set_physics_process(false)
+		await physics_frame
+		await physics_frame
+		var expected_before := PackedStringArray([CLEAR, HEARING_CLEAR]) if shelf else PackedStringArray([CLEAR, HEARING_CLEAR, VAULT_CLEAR])
+		if not _return_bridle(vault, shelf, expected_before):
+			return false
+		await process_frame
+		if not _is_dialogue(Beats.SOVA_VAULT_RETURN_DEBRIEF) \
+				or _saved_clears() != PackedStringArray([CLEAR, HEARING_CLEAR, VAULT_CLEAR]):
+			return _fail("A physical closure did not persist exactly one clear and show the finale debrief.")
+		_read_dialogue(6)
+		if not _on_map(VAULT_SITE) or _map()._heading.text != "Campaign Complete":
+			return _fail("The debrief did not lead to the completed yet replayable map.")
+		if shelf and not _reopen_vault():
+			return _fail("Could not replay the completed Vault and try its other path.")
+
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(VAULT_SITE) or _map()._heading.text != "Campaign Complete":
+		return _fail("Continue did not restore Sova's completed campaign at the Vault.")
 	var saved := Profile.new(_profile_path)
 	if saved.completed_missions("mara") != PackedStringArray([HUMAN_CLEAR]) \
 			or saved.load_campaign_world("mara").current_waypoint_id() != "marches_road" \
-			or saved.completed_missions("sova") != PackedStringArray([CLEAR, HEARING_CLEAR]):
-		return _fail("One campaign overwrote clear or position state in the other.")
+			or not saved.completed_missions("raska").is_empty() or not saved.completed_missions("neris").is_empty() \
+			or saved.has_seen_intermission("mara", Beats.SOVA_GODBRIDLE_HANDOVER):
+		return _fail("The Vault relied on or overwrote progress in another campaign.")
 	return true
+
+
+func _reopen_vault() -> bool:
+	return _press("ConfirmTravel") and _on_briefing(VAULT_CLEAR) and _press("Confirm Deployment") \
+		and _title._campaign_battle is VaultMission
+
+
+func _return_bridle(vault: VaultMission, shelf: bool, expected_before: PackedStringArray) -> bool:
+	if vault.objective.phase != Vault.Phase.CARRYING or vault._reserve_active or vault.battle.formations.is_empty():
+		return _fail("The new finale attempt inherited stale combat or objective state.")
+	for marker: String in ["ValleyAssembly", "SafeStaging"] + (SHELF if shelf else SIDE):
+		if not _walk_to(vault, marker, "Routes", true):
+			return false
+	if vault.objective.phase != Vault.Phase.CARRYING or _saved_clears() != expected_before:
+		return _fail("Reaching the forecourt without vault closure modified campaign completion.")
+	if shelf:
+		for marker: String in ["TerraceApproach", "TerraceEntry"]:
+			if not _walk_to(vault, marker, "Routes", true):
+				return false
+		if not _walk_to(vault, "WitnessTerrace", "Objectives", true):
+			return false
+		_key(KEY_SPACE)
+		vault._physics_process(DT)
+		_key(KEY_SPACE, false)
+		if vault.objective.phase != Vault.Phase.CARRYING or _saved_clears() != expected_before:
+			return _fail("A visit to the separate witness terrace replaced actual closure.")
+		for marker: String in ["TerraceEntry", "TerraceApproach", "Forecourt"]:
+			if not _walk_to(vault, marker, "Routes", true):
+				return false
+
+	for marker: String in ["CustodyLine", "VaultEntrance", "BridleReturn"]:
+		if not _walk_to(vault, marker, "Objectives", true):
+			return false
+	for _frame in range(600):
+		if vault._reserve_contests():
+			break
+		vault._physics_process(0.06)
+	_key(KEY_SPACE)
+	vault._physics_process(DT)
+	_key(KEY_SPACE, false)
+	if not vault._reserve_contests() or vault.objective.closure_progress != 0.0 or _saved_clears() != expected_before:
+		return _fail("The contested closure did not block campaign progress.")
+
+	var guard_index := 0 if shelf else 1
+	for marker: String in SHELF if shelf else SIDE:
+		if not _move_vault_guard(vault, guard_index, marker, "Routes"):
+			return false
+	if not _move_vault_guard(vault, guard_index, "CustodyLine", "Objectives"):
+		return false
+	for _frame in range(600):
+		if not vault._reserve_contests():
+			break
+		vault._physics_process(0.06)
+	if vault._reserve_contests() or not vault._reserve_screened or _saved_clears() != expected_before:
+		return _fail("The real Hold screen did not clear the reserve or counted as the vault return.")
+	if shelf:
+		_joy(JOY_BUTTON_A)
+	else:
+		_key(KEY_SPACE)
+	for _frame in range(100):
+		if vault.objective.phase == Vault.Phase.SUCCEEDED:
+			break
+		vault._physics_process(0.06)
+	if shelf:
+		_joy(JOY_BUTTON_A, false)
+	else:
+		_key(KEY_SPACE, false)
+	return vault.objective.phase == Vault.Phase.SUCCEEDED or _fail("Sova could not complete a fresh actual vault return.")
+
+
+func _move_vault_guard(vault: VaultMission, index: int, marker: String, group: String) -> bool:
+	var spot := vault.battlefield_marker(NodePath("Markers/" + group + "/" + marker)).global_position
+	var at := vault.to_local(spot)
+	_key(KEY_SHIFT)
+	vault.selected_index = index
+	vault.cursor = Vector2(at.x, at.z)
+	_joy(JOY_BUTTON_X)
+	_joy(JOY_BUTTON_X, false)
+	_key(KEY_SHIFT, false)
+	var guard := vault.battle.formations[index]
+	for _frame in range(1200):
+		if guard.order != Battle.Order.MOVE:
+			break
+		vault._physics_process(0.06)
+	return (guard.order == Battle.Order.HOLD and guard.position.is_equal_approx(Vector2(at.x, at.z))) \
+		or _fail("A guard could not follow the authored return route through " + marker)
 
 
 func _open_and_deploy() -> bool:
@@ -188,7 +331,7 @@ func _open_and_deploy() -> bool:
 		and _title._campaign_battle is Mission
 
 
-func _walk_to(mission: Node3D, marker: String, group := "Routes") -> bool:
+func _walk_to(mission: Node3D, marker: String, group := "Routes", flat := false) -> bool:
 	var world: Vector3 = mission.battlefield_marker(NodePath("Markers/" + group + "/" + marker)).global_position
 	var point: Vector3 = mission.to_local(world)
 	var target := Vector2(point.x, point.z)
@@ -203,6 +346,8 @@ func _walk_to(mission: Node3D, marker: String, group := "Routes") -> bool:
 		mission._physics_process(DT)
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if flat:
+		return mission.battle.hero_position.distance_to(target) < 0.13 or _fail("Could not walk to " + marker)
 	return mission.hero_world_position().distance_to(world) < 0.13 or _fail("Could not walk to " + marker)
 
 
@@ -242,10 +387,10 @@ func _key(code: Key, down := true) -> void:
 	root.push_input(event, true)
 
 
-func _joy(code: JoyButton) -> void:
+func _joy(code: JoyButton, down := true) -> void:
 	var event := InputEventJoypadButton.new()
 	event.button_index = code
-	event.pressed = true
+	event.pressed = down
 	root.push_input(event, true)
 
 
