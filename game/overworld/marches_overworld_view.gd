@@ -17,6 +17,13 @@ const MARKERS := {
 
 var _pins: Pins
 var _header: Control
+signal boundary_requested(destination: String)
+signal boundary_cancel_requested
+var _boundary_button: Button
+var _boundary_origin := ""
+var _boundary_destination := ""
+var _boundary_pending := false
+var _boundary_error := ""
 
 
 func build() -> bool:
@@ -89,6 +96,20 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or _navigation==null:
+		return
+	if _boundary_button != null and _boundary_button.visible and event.is_pressed() and not event.is_echo():
+		var key: bool = event is InputEventKey and event.keycode == KEY_TAB
+		var pad: bool = event is InputEventJoypadButton and event.button_index == JOY_BUTTON_Y
+		if key or pad:
+			_choose_boundary()
+			get_viewport().set_input_as_handled()
+			return
+	if _boundary_pending:
+		if event.is_pressed() and not event.is_echo():
+			var is_back: bool = (event is InputEventKey and event.keycode == KEY_ESCAPE) or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_B)
+			if is_back:
+				_back_or_cancel()
+			get_viewport().set_input_as_handled()
 		return
 	var zoom := false
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -186,6 +207,93 @@ func _select_at(point: Vector2) -> bool:
 	return super._select_at(point)
 
 
+func marker_styles() -> Dictionary:
+	return MARKERS
+
+
+func install_boundary_selector(from: String, to: String, label: String) -> void:
+	_boundary_origin = from
+	_boundary_destination = to
+	_boundary_button = Button.new()
+	_boundary_button.name = "SectorBoundarySelector"
+	_boundary_button.text = label + "   [Tab / Y]"
+	_boundary_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_boundary_button.offset_left = -349
+	_boundary_button.offset_right = -25
+	_boundary_button.offset_top = 25
+	_boundary_button.offset_bottom = 67
+	_boundary_button.focus_mode = Control.FOCUS_NONE
+	_boundary_button.pressed.connect(_choose_boundary)
+	add_child(_boundary_button)
+	_refresh()
+
+
+func _choose_boundary() -> void:
+	if _boundary_pending or _world.current_waypoint_id() != _boundary_origin:
+		return
+	_boundary_error = ""
+	_navigation.select(_boundary_destination)
+	_refresh()
+
+
+func set_boundary_pending(active: bool, message := "") -> void:
+	_boundary_pending = active
+	_boundary_error = message
+	_refresh()
+
+
+func confirm_selection() -> void:
+	if _boundary_pending:
+		return
+	if _boundary_button and _world.current_waypoint_id() == _boundary_origin and _navigation.selected_waypoint_id() == _boundary_destination:
+		if _navigation.action() == Navigation.Action.TRAVEL:
+			boundary_requested.emit(_boundary_destination)
+		return
+	super.confirm_selection()
+
+
+func _back_or_cancel() -> void:
+	if _boundary_pending:
+		boundary_cancel_requested.emit()
+		return
+	super._back_or_cancel()
+
+
+func _refresh() -> void:
+	super._refresh()
+	if not is_node_ready() or _boundary_button == null or not _navigation:
+		return
+	var here := _world.current_waypoint_id()
+	var active := here == _boundary_origin and not _navigation.is_travelling()
+	_boundary_button.visible = active
+	_boundary_button.disabled = _boundary_pending
+	if not active or _navigation.selected_waypoint_id() != _boundary_destination:
+		return
+	if _boundary_pending:
+		confirm_button.disabled = true
+		confirm_button.text = "Preparing sector…"
+		back_button.text = "Cancel Transfer"
+		status_label.text = "Checking the destination. Your party is still here."
+	elif _navigation.action() == Navigation.Action.TRAVEL:
+		confirm_button.disabled = false
+		confirm_button.text = "Confirm Sector Transfer"
+		if not _boundary_error.is_empty():
+			status_label.text = _boundary_error
+	elif _navigation.action() == Navigation.Action.LOCKED:
+		confirm_button.disabled = true
+		confirm_button.text = "Requires Grain on Credit"
+
+
+func marker_bearing(id: String, width: float) -> Vector2:
+	var y_offset := 17.0 if id in [CampSite.CAMP_ID, "marches_crossing"] else -27.0
+	var x_offset := -width-28.0 if id == CampSite.ROAD_ID and _points.has(CampSite.CAMP_ID) else 13.0
+	return Vector2(x_offset, y_offset)
+
+
+func edge_hint_from(id: String) -> bool:
+	return id == "marches_crossing"
+
+
 class Pins extends Control:
 	var map: Control
 	var _face := ThemeDB.fallback_font
@@ -196,13 +304,13 @@ class Pins extends Control:
 		if not is_instance_valid(map) or map._world==null or not is_instance_valid(map._camera):
 			return
 		var projected: Dictionary = map._projections()
-		for id: String in map.MARKERS:
+		for id: String in map.marker_styles():
 			if not projected.has(id): continue
 			var point: Vector2 = projected[id]
 			if point.y<120 or point.y>size.y-110 or point.x<45 or point.x>size.x-200: continue
 			var site: Dictionary = map._world.waypoint(id)
 			if site.is_empty(): continue
-			var kind: String = map.MARKERS[id]
+			var kind: String = map.marker_styles()[id]
 			var locked: bool = id=="marches_road" and map._renderer._link_locked("year_one_mine",id)
 			var color:=Color("#c5b8a9") if locked else Color("#e3c77f")
 			draw_circle(point,10,map.PANEL)
@@ -214,11 +322,14 @@ class Pins extends Control:
 				draw_arc(point,9 if map._navigation.selected_waypoint_id()==id else 7,0,TAU,20,color,2,true)
 				draw_circle(point,2,color)
 			var width:=_face.get_string_size(site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16).x
-			var y_offset := 17.0 if id in [CampSite.CAMP_ID,"marches_crossing"] else -27.0
-			var x_offset := -width-28.0 if id==CampSite.ROAD_ID and projected.has(CampSite.CAMP_ID) else 13.0
-			var pos:=Vector2(clampf(point.x+x_offset,12.0,size.x-width-29.0),point.y+y_offset)
+			var lean: Vector2 = map.marker_bearing(id, width)
+			if id==CampSite.ROAD_ID and not projected.has(CampSite.CAMP_ID):
+				lean.x=13.0
+			var pos:=Vector2(clampf(point.x+lean.x,12.0,size.x-width-29.0),point.y+lean.y)
 			if id in [CampSite.CAMP_ID,"marches_crossing"]:
 				draw_line(point+Vector2(4,6),Vector2(pos.x+5,pos.y),color,1.3,true)
+			elif absf(lean.x)>50.0 and id!=CampSite.ROAD_ID:
+				draw_line(point+Vector2(4,4),Vector2(pos.x+2,pos.y+21),color,1.3,true)
 			var bounds := Rect2(pos,Vector2(width+16,40))
 			label_regions[id] = bounds
 			draw_rect(bounds,map.PANEL)
@@ -236,7 +347,7 @@ class Pins extends Control:
 
 	func _draw_offscreen_connections(projected: Dictionary) -> void:
 		var here: String = map._world.current_waypoint_id()
-		if here != "marches_crossing":
+		if not map.edge_hint_from(here):
 			return
 		for row: Dictionary in map._world.route_options(map._confirmed):
 			var id: String = row.waypoint_id
