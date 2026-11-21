@@ -2,7 +2,9 @@
 
 **War Marshal Raska Vennor · Years One–Four · Three missions**
 
-Campaign design, not playable content. See [Raska’s mandate](../leaders.md#orcs--war-marshal-raska-vennor), [the shared war timeline](../war-timeline.md), and [combat and platoon training](../combat.md#platoon-training).
+All three chapters are playable as development builds from Raska’s campaign map. Open each briefing before deploying. See the [implementation index](implementation-index.md) for the exact mission wiring and [visual inventory](../visual-audit-inventory.md) for what remains unapproved.
+
+See [Raska’s mandate](../leaders.md#orcs--war-marshal-raska-vennor), [the shared war timeline](../war-timeline.md), and [combat and platoon training](../combat.md#platoon-training).
 
 The Red Basin elected Raska to get its river back. The lower towns want the sea as well: the restored river will reach the Basin, but it will not give those towns back their pastures and shore trade. The old sea, in turn, would inundate the town that hosts the assembly. Raska’s victories let him fulfill his mandate, not settle every claim to the water.
 
