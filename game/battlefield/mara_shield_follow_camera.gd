@@ -11,7 +11,6 @@ const Infantry := preload("res://game/battlefield/mara_infantry_attack.gd")
 const ROSTER: Array[StringName] = [&"shield_infantry", &"archers"]
 const MAX_SHIFT := 14.0
 const FOLLOW_SPEED := 24.0
-const FOLLOW_LABEL := "SHIELD INFANTRY FOLLOW  /  LIVE"
 
 var active := false
 var _policy := Policy.new(&"mara")
@@ -56,7 +55,7 @@ func frame(mission: Mission, minimap_aiming: bool, delta: float) -> void:
 
 	_shift = next
 	active = true
-	mission._mode_label.text = FOLLOW_LABEL
+	mission._mode_label.text = _follow_label(group)
 
 
 ## Drop the presentation offset before yielding to an input or another mode.
@@ -67,8 +66,13 @@ func restore(mission: Mission) -> void:
 		mission._update_cameras()
 	_shift = Vector3.ZERO
 	active = false
-	if mission._mode_label.text == FOLLOW_LABEL:
+	if mission._mode_label.text.ends_with(" FOLLOW  /  LIVE"):
 		mission._mode_label.text = "TACTICAL SECTOR  /  LIVE"
+
+
+
+func _follow_label(group: Battle.Formation) -> String:
+	return "%s FOLLOW  /  LIVE" % group.title.to_upper()
 
 
 func _in_contact(mission: Mission, group: Battle.Formation) -> bool:

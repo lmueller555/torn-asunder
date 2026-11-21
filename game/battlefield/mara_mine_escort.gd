@@ -28,6 +28,14 @@ const SPECIAL_PRESS := 0.52
 const SPECIAL_RELEASE := 0.32
 const INFANTRY_IDLE := &"Idle"
 const INFANTRY_RUN := &"Run"
+const HEAVY_IDLE := &"Shield-Ready Idle"
+const HEAVY_RUN := &"Combat Run"
+const HEAVY_MODEL_RUN_SPEED := 2.2
+# Local paired playtest values, not campaign training or skirmish stat changes.
+const HEAVY_HP := 380.0
+const HEAVY_CONTACT_BASE := 36.32
+const HEAVY_MOVE_SPEED := 2.55
+const CAMPAIGN_MINE := "res://game/battlefields/year_one_mine_campaign.tscn"
 
 @export var opposition_enabled := true
 @export var render_shield_infantry := false
@@ -40,6 +48,7 @@ const INFANTRY_RUN := &"Run"
 var objective := Escort.new()
 var encounter: Encounter
 var _launch_lead_level := 1
+var _heavy_replay_loadout := false
 var _pickup: Marker3D
 var _exit: Marker3D
 var _pass_release: Marker3D
@@ -81,7 +90,27 @@ func configure_campaign_lead_level(level: int) -> void:
 		_launch_lead_level = level
 
 
+## Local proof hook only. A later deployment caller must authorize both a
+## confirmed Mine replay and a separately earned Heavy detachment.
+func configure_replay_heavy_infantry(replay: bool, trained_detachment: bool) -> bool:
+	if is_inside_tree() or is_node_ready() or not replay or not trained_detachment \
+			or not render_shield_infantry or not battlefield_scene \
+			or battlefield_scene.resource_path != CAMPAIGN_MINE:
+		return false
+	var heavy := Catalog.TYPES[Catalog.HUMAN_HEAVY_INFANTRY].model as PackedScene
+	if not heavy or not heavy.can_instantiate():
+		return false
+	var instance := heavy.instantiate()
+	var player := instance.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	var approved_rig_ready := instance is Node3D and player != null \
+		and player.has_animation(HEAVY_IDLE) and player.has_animation(HEAVY_RUN)
+	instance.free()
+	_heavy_replay_loadout = approved_rig_ready
+	return approved_rig_ready
+
+
 func _ready() -> void:
+	_apply_infantry_loadout()
 	super._ready()
 	if sundering_strike_enabled and _input_device >= 0:
 		_special_pad_down = Input.get_joy_axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
@@ -161,20 +190,22 @@ func _add_formation_member_visual(member: Node3D, formation_index: int) -> bool:
 	if not model:
 		instance.free()
 		return false
-	model.name = "HumanInfantryModel"
+	model.name = "HeavyInfantryModel" if _heavy_replay_loadout else "HumanInfantryModel"
 	# The imported skirmish model faces +Z. The battlefield feet anchor faces
 	# -Z; turn the art once and keep its authored meter scale and zero foot offset.
 	model.rotate_y(PI)
 	member.add_child(model)
 	var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
-	if player and player.has_animation(INFANTRY_IDLE):
+	var idle := HEAVY_IDLE if _heavy_replay_loadout else INFANTRY_IDLE
+	if player and player.has_animation(idle):
 		_infantry_animators.append(player)
-		player.play(INFANTRY_IDLE)
+		player.play(idle)
 	return true
 
 
 func _infantry_model_scene() -> PackedScene:
-	var definition: Dictionary = Catalog.TYPES.get(Catalog.HUMAN_INFANTRY, {})
+	var unit := Catalog.HUMAN_HEAVY_INFANTRY if _heavy_replay_loadout else Catalog.HUMAN_INFANTRY
+	var definition: Dictionary = Catalog.TYPES.get(unit, {})
 	return definition.get("model") as PackedScene
 
 
@@ -194,9 +225,12 @@ func _sync_infantry_animation(reset := false) -> void:
 			continue
 		if reset:
 			player.stop()
-		var clip := INFANTRY_RUN if moving and not reset and player.has_animation(INFANTRY_RUN) else INFANTRY_IDLE
+		var idle := HEAVY_IDLE if _heavy_replay_loadout else INFANTRY_IDLE
+		var run := HEAVY_RUN if _heavy_replay_loadout else INFANTRY_RUN
+		var clip := run if moving and not reset and player.has_animation(run) else idle
 		if player.current_animation != clip or not player.is_playing():
-			var speed := Battle.FORMATION_SPEED / Skirmish.RUN_SPEED if clip == INFANTRY_RUN else 1.0
+			var clip_speed := HEAVY_MODEL_RUN_SPEED if _heavy_replay_loadout else Skirmish.RUN_SPEED
+			var speed := infantry.move_speed / clip_speed if clip == run else 1.0
 			player.play(clip, 0.0 if reset else 0.10, speed)
 
 
@@ -337,6 +371,9 @@ func restart_mission() -> void:
 	_interact_requested = false
 	_restart_button.release_focus()
 	restart_battle()
+	if _heavy_replay_loadout:
+		_apply_infantry_loadout()
+		_sync_view()
 	_sync_infantry_animation(true)
 	_reset_encounter()
 	_refresh_objective_view(hero_world_position())
@@ -424,6 +461,13 @@ func _make_bridle() -> Node3D:
 	return prop
 
 
+func _apply_infantry_loadout() -> void:
+	if _heavy_replay_loadout:
+		var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
+		infantry.move_speed = HEAVY_MOVE_SPEED
+		infantry.title = "Heavy Infantry"
+
+
 func _reset_encounter() -> void:
 	_interception_started = false
 	_guard_key = false
@@ -431,7 +475,8 @@ func _reset_encounter() -> void:
 	var guard_marker := battlefield_marker(road_guard_spawn)
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
-	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane, _launch_lead_level) \
+	var infantry: InfantryAttack = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE) if _heavy_replay_loadout else null
+	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane, _launch_lead_level, infantry) \
 		if opposition_enabled and guard_marker else null
 	if encounter and _pass_release:
 		var route := PackedVector2Array()
@@ -502,8 +547,8 @@ func _refresh_combat_view() -> void:
 		ceili(encounter.hero.hp), roundi(encounter.hero.max_hp), bp.balance, bp.capacity, bp.lead_level,
 	]
 	var troops := encounter.infantry_attack.attacker
-	_infantry_hp.text = "Shield Infantry · %d / %d prototype HP%s" % [
-		ceili(troops.hp), roundi(troops.max_hp), " · Defeated" if not troops.is_alive() else "",
+	_infantry_hp.text = "%s · %d / %d prototype HP%s" % [
+		infantry.title, ceili(troops.hp), roundi(troops.max_hp), " · Defeated" if not troops.is_alive() else "",
 	]
 	_refresh_archer_readout()
 	if not encounter.hero.is_alive():
@@ -512,7 +557,7 @@ func _refresh_combat_view() -> void:
 		_combat_tell.text = "Road guard defeated"
 	elif _enemy_warning.visible:
 		if targets_infantry:
-			_combat_tell.text = "Road guard winding up at Shield Infantry!"
+			_combat_tell.text = "Road guard winding up at %s!" % infantry.title
 		elif targets_archers:
 			_combat_tell.text = "Road guard winding up at Archers! Pull back."
 		else:
@@ -533,7 +578,7 @@ func _refresh_combat_view() -> void:
 	elif archers.order == Battle.Order.ATTACK and encounter.archer_attack.volley.phase == Archer.Phase.IDLE:
 		_combat_tell.text = "Archers need distance. Move them away from the guard."
 	elif infantry.order == Battle.Order.ATTACK:
-		_combat_tell.text = "Shield Infantry attacking the road guard"
+		_combat_tell.text = "%s attacking the road guard" % infantry.title
 	else:
 		_combat_tell.text = "Road guard %d / %d HP" % [ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
 
