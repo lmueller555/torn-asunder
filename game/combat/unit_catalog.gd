@@ -13,6 +13,9 @@ const ORC_BASIN_ARCHERS := &"orc_basin_archers"
 const ELF_SHORE_DETACHMENT := &"elf_shore_detachment"
 const ELF_SHORE_MARINES := &"elf_shore_marines"
 const ELF_SHIP_ARCHERS := &"elf_ship_archers"
+const DRUID_TUNNEL_GUARD := &"druid_tunnel_guard"
+const DRUID_OUTLET_SCREEN := &"druid_outlet_screen"
+const DRUID_SHELF_GUARD := &"druid_shelf_guard"
 const INFANTRY_SWORD_SLASH_SPEED := 1.4
 
 const TYPES: Dictionary[StringName, Dictionary] = {
@@ -85,8 +88,8 @@ const TYPES: Dictionary[StringName, Dictionary] = {
 }
 
 
-## Battlefield taxonomy and planning gates. Human Archer plus the Orc and Elf entries
-## intentionally have no entry in the model inventory (TYPES).
+## Battlefield taxonomy and planning gates. Metadata rows do not imply
+## a corresponding entry in the model inventory (TYPES).
 static func faction_roster() -> Roster:
 	var roster := Roster.new()
 	roster.add_unit(HUMAN_INFANTRY, Roster.HUMANS, Roster.MELEE)
@@ -110,6 +113,14 @@ static func faction_roster() -> Roster:
 		{Platoon.Skill.FORMATION_DRILL: 2, Platoon.Skill.SCOUTING: 1})
 	roster.add_advance(ELF_SHORE_DETACHMENT, ELF_SHIP_ARCHERS,
 		{Unit.Damage.RANGED: 4}, {Platoon.Skill.FORMATION_DRILL: 1})
+
+	roster.add_unit(DRUID_TUNNEL_GUARD, Roster.DRUIDS, Roster.MELEE, [], false, "Tunnel Guard")
+	roster.add_unit(DRUID_OUTLET_SCREEN, Roster.DRUIDS, Roster.MELEE, [], false, "Outlet Screen")
+	roster.add_unit(DRUID_SHELF_GUARD, Roster.DRUIDS, Roster.MELEE, [], false, "Shelf Guard")
+	# Provisional gates: spotting pressure for staged evacuation versus holding a narrow approach.
+	roster.add_advance(DRUID_TUNNEL_GUARD, DRUID_OUTLET_SCREEN, {}, {Platoon.Skill.SCOUTING: 3})
+	roster.add_advance(DRUID_TUNNEL_GUARD, DRUID_SHELF_GUARD,
+		{Unit.Damage.MELEE: 6}, {Platoon.Skill.FORMATION_DRILL: 3})
 	return roster
 
 
