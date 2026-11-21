@@ -173,12 +173,25 @@ def build_report(root: Path) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    parser.add_argument(
+        "--require-release-ready", action="store_true",
+        help="reject the registered campaign deployments if any lack full visual approval",
+    )
+    args = parser.parse_args(argv)
     try:
         report = build_report(Path(__file__).resolve().parents[1])
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Deployment art report rejected: {error}", file=sys.stderr)
         return 1
+    if args.require_release_ready:
+        # All current rows are development-only. A kit receipt never approves a deployment.
+        blocked = [row["mission_id"] for row in report["deployments"] if row["art_status"] != "release_approved"]
+        if blocked:
+            print(f"Campaign release art check failed: {len(blocked)} deployments lack full visual approval.",
+                  file=sys.stderr)
+            for mission in blocked:
+                print(f"  {mission}", file=sys.stderr)
+            return 2
     print(json.dumps(report, indent=2))
     return 0
 

@@ -1,5 +1,7 @@
 """The export is read-only and never promotes a kit receipt to map approval."""
 
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 import json
 from pathlib import Path
 import shutil
@@ -8,7 +10,7 @@ import unittest
 
 from tools.report_deployment_art import (
     CASE_BASE, CASE_CONSUMER, CASE_DEPLOYMENT, CASE_MISSION, CASE_RECEIPT, DEVELOPMENT, KITS,
-    _battlefield, _deployments, _verify_custody_case, _verify_kit, build_report,
+    _battlefield, _deployments, _verify_custody_case, _verify_kit, build_report, main,
 )
 
 
@@ -50,6 +52,17 @@ class DeploymentArtReportTest(unittest.TestCase):
         self.assertEqual(cut["verified_kit_receipts"][0]["receipt"], KITS[1].receipt)
         self.assertEqual(cut["verified_kit_receipts"][0]["verified_files"], 6)
         self.assertEqual(rows["sereth_pass_writ"]["verified_kit_receipts"], [])
+
+    def test_release_check_rejects_every_development_deployment_even_with_a_passed_kit(self):
+        out, err = StringIO(), StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            self.assertEqual(main(["--require-release-ready"]), 2)
+        self.assertEqual(out.getvalue(), "")
+        diagnostics = err.getvalue().splitlines()
+        self.assertIn("18 deployments lack full visual approval", diagnostics[0])
+        missions = [row["mission_id"] for row in build_report(ROOT)["deployments"]]
+        self.assertCountEqual([line.strip() for line in diagnostics[1:]], missions)
+        self.assertIn(CASE_MISSION, missions)  # A passing custody case is not a passing map.
 
     def test_catalog_and_registry_cannot_silently_diverge_or_be_empty(self):
         with tempfile.TemporaryDirectory() as temp:
