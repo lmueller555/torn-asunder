@@ -2,13 +2,23 @@ extends "res://game/battlefield/engagement_camera_playtest.gd"
 ## Standalone input experiment. Neither the shared minimap nor any live mission opts in.
 
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
+const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
+const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
 const MAP_SPEED := 13.0
 const NUDGE := 1.0
 
 class Reticle extends Control:
 	var point := Vector2.ZERO
+	var route := PackedVector2Array()
 
 	func _draw() -> void:
+		if route.size() > 1:
+			draw_polyline(route, Minimap.SECTOR, 1.5, true)
+		for index in route.size():
+			var marker := route[index]
+			draw_circle(marker, 7.0, Minimap.INK, true, -1.0, true)
+			draw_string(get_theme_default_font(), marker + Vector2(-3, 4), str(index + 1),
+				HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Minimap.PICKUP)
 		draw_circle(point, 7.0, Minimap.INK, false, 3.5, true)
 		draw_circle(point, 7.0, Minimap.HERO, false, 1.6, true)
 		draw_line(point - Vector2(10.0, 0.0), point + Vector2(10.0, 0.0), Minimap.HERO, 1.5, true)
@@ -26,6 +36,9 @@ var _consumed_buttons: Dictionary[int, bool] = {}
 var _consumed_keys: Dictionary[int, bool] = {}
 var _reticle := Reticle.new()
 var _map_note := ""
+var _routes := Routes.new()
+var _route_feedback := ""
+var _feedback_selection := &""
 
 @onready var _map_panel: PanelContainer = $MapHUD/Panel
 @onready var _map: Minimap = $MapHUD/Panel/Margin/Readout/Map
@@ -35,6 +48,7 @@ var _map_note := ""
 
 func _ready() -> void:
 	super._ready()
+	_routes.reset(battle)
 	_map.set_field_bounds(battle.bounds)
 	_map.resized.connect(_refresh_reticle)
 	_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -55,6 +69,10 @@ func _physics_process(delta: float) -> void:
 
 func _after_battle_step(delta: float) -> void:
 	super._after_battle_step(delta)
+	if policy.accepts_direct_hero_input():
+		# Direct control takes over the hero platoon's old march only.
+		_routes.clear(HERO)
+	_routes.advance(battle)
 	if _map_open and not _can_order_draft():
 		_close_map("Contact changed. No minimap order sent.")
 	_refresh_minimap()
@@ -112,7 +130,8 @@ func _read_map_button(event: InputEventJoypadButton) -> bool:
 	if event.pressed:
 		_consumed_buttons[button] = true
 		match button:
-			JOY_BUTTON_A: _confirm_draft()
+			JOY_BUTTON_A: _confirm_draft(false)
+			JOY_BUTTON_RIGHT_SHOULDER: _confirm_draft(true)
 			JOY_BUTTON_B: _close_map("Minimap canceled. No order sent.")
 			JOY_BUTTON_DPAD_UP: _step_map_cursor(Vector2.UP * NUDGE)
 			JOY_BUTTON_DPAD_DOWN: _step_map_cursor(Vector2.DOWN * NUDGE)
@@ -136,7 +155,8 @@ func _read_map_key(event: InputEventKey) -> bool:
 	if event.pressed and not event.echo:
 		_consumed_keys[key] = true
 		match key:
-			KEY_ENTER, KEY_KP_ENTER: _confirm_draft()
+			KEY_ENTER, KEY_KP_ENTER: _confirm_draft(false)
+			KEY_G: _confirm_draft(true)
 			KEY_ESCAPE, KEY_N: _close_map("Minimap canceled. No order sent.")
 			KEY_UP: _step_map_cursor(Vector2.UP * NUDGE)
 			KEY_DOWN: _step_map_cursor(Vector2.DOWN * NUDGE)
@@ -169,25 +189,77 @@ func _can_order_draft() -> bool:
 		and battle.formations[selected_index].can_receive_orders()
 
 
-func _confirm_draft() -> void:
+func _confirm_draft(append: bool) -> void:
 	if not _can_order_draft():
 		_close_map("Selection changed. No minimap order sent.")
 		return
-	var point := _map_cursor
-	if not point.is_finite() or not battle.clamp_to_field(point).is_equal_approx(point):
-		_map_note = "Choose a point inside the field."
-		_refresh_minimap()
-		return
-	# This flat fixture has no obstacles. If reused with terrain, respect the
-	# same solid-hit rule as the existing world/minimap mouse bindings.
-	if _terrain and _terrain.destination_from_ray(Vector3(point.x, 128.0, point.y), Vector3(point.x, -32.0, point.y)) == null:
-		_map_note = "That point is not walkable."
-		_refresh_minimap()
-		return
+	var result := _issue_route_at(_map_cursor, append)
 	var unit := battle.formations[selected_index].title
-	battle.order_move(selected_index, point)
-	_close_map("Move sent to " + unit + ".")
+	if result != Queue.Result.ACCEPTED:
+		_map_note = _route_feedback
+		_refresh_minimap()
+	elif append:
+		_map_note = "Waypoint appended to " + unit + "."
+		_refresh_minimap()
+	else:
+		_close_map("Move sent to " + unit + ".")
 	_sync_view()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if command_view and event.is_pressed() and not event.is_echo():
+		if (event is InputEventKey and event.physical_keycode == KEY_G) \
+				or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER
+					and _uses_joypad(event.device)):
+			_issue_route_at(cursor, true)
+			_sync_view()
+			return
+	super._unhandled_input(event)
+
+
+func _move_selected() -> void:
+	if command_view:
+		_issue_route_at(cursor, false)
+		_sync_view()
+
+
+func _hold_selected() -> void:
+	if command_view:
+		_routes.clear(selected_index)
+		_route_feedback = ""
+	super._hold_selected()
+
+
+func _issue_route_at(point: Vector2, append: bool) -> Queue.Result:
+	if not policy.accepts_formation_orders():
+		return Queue.Result.INVALID_FOR_BATTLEFIELD
+	var result := _routes.issue(battle, selected_index, point, append, _route_point_is_valid)
+	_feedback_selection = policy.selected_id()
+	match result:
+		Queue.Result.ACCEPTED: _route_feedback = ""
+		Queue.Result.DUPLICATE: _route_feedback = "Already on this route."
+		Queue.Result.FULL: _route_feedback = "Route full (%d pending)." % Queue.MAX_WAYPOINTS
+		_: _route_feedback = "Choose a walkable field point."
+	return result
+
+
+func _route_point_is_valid(point: Vector2) -> bool:
+	if not battle.clamp_to_field(point).is_equal_approx(point):
+		return false
+	# Flat fixture by default; use the existing solid-hit destination rule
+	# if the preview is run over authored terrain.
+	return not _terrain or _terrain.destination_from_ray(
+		Vector3(point.x, 128.0, point.y), Vector3(point.x, -32.0, point.y)
+	) != null
+
+
+func _sync_view() -> void:
+	super._sync_view()
+	if command_view:
+		_formation_label.text += "  ·  %d/%d waypoints" % [_routes.snapshot(selected_index).size(), Queue.MAX_WAYPOINTS]
+		if _feedback_selection == policy.selected_id() and not _route_feedback.is_empty():
+			_formation_label.text += "  ·  " + _route_feedback
+		_controls_label.text += "\nR1 / G: append waypoint"
 
 
 func _close_map(note: String) -> void:
@@ -228,6 +300,9 @@ func _refresh_reticle() -> void:
 	_reticle.visible = _map_open
 	if _map_open:
 		_reticle.point = _map.project(_map_cursor)
+		_reticle.route.clear()
+		for point in _routes.snapshot(selected_index):
+			_reticle.route.append(_map.project(point))
 		_reticle.queue_redraw()
 
 
@@ -245,7 +320,7 @@ func _refresh_minimap() -> void:
 	_map.show_frame(snapshot)
 	if _map_open:
 		_map_title.text = "MINIMAP DRAFT · " + battle.formations[selected_index].title
-		_map_help.text = "Left stick / D-pad: aim\nCross / Enter: Move   ·   Circle / Esc: cancel"
+		_map_help.text = "Left stick / D-pad: aim   ·   R1 / G: append to route\nCross / Enter: replace with Move   ·   Circle / Esc: close draft"
 	else:
 		_map_title.text = "MINIMAP · DEVELOPMENT PREVIEW"
 		_map_help.text = "D-pad Up / N: draft a Move" if policy.accepts_formation_orders() else "Read-only in hero action"
