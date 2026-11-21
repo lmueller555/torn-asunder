@@ -10,7 +10,11 @@ const MAX_PLATOONS := 4
 class PlatoonBuild:
 	var level := 1:
 		set = set_level
+	var unit_type: StringName:
+		get:
+			return _unit_type
 
+	var _unit_type := Catalog.HUMAN_INFANTRY
 	# Preserve purchase order so reducing the level refunds the latest investments.
 	var _investments: Array[Unit.Damage] = []
 
@@ -18,6 +22,20 @@ class PlatoonBuild:
 		level = clampi(value, 1, Unit.MAX_LEVEL)
 		if _investments.size() > level - 1:
 			_investments.resize(level - 1)
+		_recheck_unit_type()
+
+	func can_select_unit_type(value: StringName) -> bool:
+		if value == Catalog.HUMAN_INFANTRY:
+			return true
+		return value == Catalog.HUMAN_HEAVY_INFANTRY and Catalog.can_promote_with_ratings(
+			Catalog.HUMAN_INFANTRY, value, rating,
+		)
+
+	func set_unit_type(value: StringName) -> bool:
+		if not can_select_unit_type(value):
+			return false
+		_unit_type = value
+		return true
 
 	func points_for(type: Unit.Damage) -> int:
 		return _investments.count(type)
@@ -38,10 +56,12 @@ class PlatoonBuild:
 			_investments.append(type)
 		for i in range(target, current):
 			_investments.remove_at(_investments.rfind(type))
+		_recheck_unit_type()
 
 	func make_unit() -> Unit:
+		var definition: Dictionary = Catalog.TYPES[_unit_type]
 		var infantry: Dictionary = Catalog.TYPES[Catalog.HUMAN_INFANTRY]
-		var unit := Unit.new(infantry.starting_hp, infantry.ratings)
+		var unit := Unit.new(definition.starting_hp, infantry.ratings)
 		for gained_level in range(1, level):
 			unit.award_experience(unit.experience_for_next_level())
 		for type in _investments:
@@ -52,7 +72,13 @@ class PlatoonBuild:
 		var result := PlatoonBuild.new()
 		result.level = level
 		result._investments.assign(_investments)
+		result._unit_type = _unit_type
 		return result
+
+	func _recheck_unit_type() -> void:
+		# Returning to the prerequisite later does not auto-select the heavier profile.
+		if not can_select_unit_type(_unit_type):
+			_unit_type = Catalog.HUMAN_INFANTRY
 
 	func _base_rating(type: Unit.Damage) -> int:
 		return Catalog.TYPES[Catalog.HUMAN_INFANTRY].ratings.get(type, Unit.MIN_RATING)
