@@ -13,3 +13,14 @@ godot --headless --script tests/flying_sortie.gd
 ```
 
 The test uses the existing Marches forest canopy meshes for overhead cover and the existing terrain adapter for physical sight checks. No map or art changes.
+
+## Try the development playtest
+
+Run `godot game/battlefield/flying_sortie_playtest.tscn` (or F6 on the scene). Text markers on the existing Marches battlefield show the flyer, target and escort. The HUD reports cover, response readiness and actual HP loss.
+
+- **1 / Bombing:** Press **G / R1** to launch. Stay in the clearing for a hit, or move a short distance left with **A / left stick** while the bomber approaches. Stop when the HUD says **Canopy**; the leaves can protect you without moving out of the pass.
+- **2 / Ground anti-air:** Hold **H / Cross** while stationary to ready the equipped defender. In clear range, it drives off the bomber before release. Moving drops the response, so you can give up the shot and fall back into cover instead.
+- **3 / Fighter interception:** Launch to intercept the airborne target. Move the target away from the lane to evade; the fighter will not follow.
+- **4 / Fighter escort:** Move the escort into position, then hold **H / Cross** to defend the bomber. The escort still needs range and sight.
+
+**D-pad left/right** cycles the drills. **Backspace / Options** resets the current one. There is no campaign entry or production art. Verify the actual scene and controls with `godot --headless --script tests/flying_sortie_playtest.gd`.
