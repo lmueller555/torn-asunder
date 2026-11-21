@@ -1,6 +1,6 @@
 # Existing visual art audit
 
-This inventory tracks visual assets already in Torn Asunder. It is a working review list, not a claim that every existing file has been inspected. See the [quality gate](asset-quality-gate.md) for evidence, revision and publication rules.
+This inventory tracks visual assets already in Torn Asunder. It is a working review list, not a claim that every existing file has been inspected. See the [quality gate](asset-quality-gate.md) for evidence, revision and publication rules. Use the [live opening inventory](visual-audit-receipt-cli.md#inventory-existing-visuals-in-the-live-opening-scene) to find current placements and runtime-created meshes that are easy to miss in a file list.
 
 - **Pass**: approved for the identified delivery. The only initial passes are the two user-approved infantry references.
 - **Rework**: an inspected issue prevents approval. Keep it only in development playtests until replaced or audited again.
