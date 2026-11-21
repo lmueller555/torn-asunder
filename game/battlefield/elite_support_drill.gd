@@ -158,7 +158,7 @@ func _refresh_readout() -> void:
 		_pool.balance, _pool.capacity, Pulse.COST, _opponent.cohesion,
 	]
 	_role_status.text = "Selected: %s  ·  Support: %s  ·  Beast Handling: %d" % [
-		battle.formations[selected_index].title, "Holding" if source.order == Battle.Order.HOLD else "Not holding",
+		battle.formation_at(selected_index).title, "Holding" if source.order == Battle.Order.HOLD else "Not holding",
 		_beast.rank(Platoon.Skill.BEAST_HANDLING),
 	]
 	_response.text = _feedback

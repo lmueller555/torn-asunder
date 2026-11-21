@@ -164,7 +164,7 @@ func _read_map_key(event: InputEventKey) -> bool:
 
 
 func _open_map() -> void:
-	if not policy.accepts_formation_orders() or not battle.formations[selected_index].can_receive_orders():
+	if not policy.accepts_formation_orders() or not battle.formation_at(selected_index).can_receive_orders():
 		_map_note = "Minimap orders are unavailable in this context."
 		_refresh_minimap()
 		return
@@ -184,7 +184,7 @@ func _open_map() -> void:
 
 func _can_order_draft() -> bool:
 	return policy.accepts_formation_orders() and policy.selected_id() == _map_selection \
-		and battle.formations[selected_index].can_receive_orders()
+		and battle.formation_at(selected_index).can_receive_orders()
 
 
 func _confirm_draft(append: bool) -> void:
@@ -192,7 +192,7 @@ func _confirm_draft(append: bool) -> void:
 		_close_map("Selection changed. No minimap order sent.")
 		return
 	var result := _issue_route_at(_map_cursor, append)
-	var unit := battle.formations[selected_index].title
+	var unit := battle.formation_at(selected_index).title
 	if result != Queue.Result.ACCEPTED:
 		_map_note = _route_feedback
 		_refresh_minimap()
@@ -306,7 +306,7 @@ func _refresh_plot_overlays() -> void:
 	_reticle.point = _map.project(_map_cursor)
 	_reticle.queue_redraw()
 	var pending := _routes.snapshot(selected_index)
-	var unit := battle.formations[selected_index]
+	var unit := battle.formation_at(selected_index)
 	var active_from: Variant = null
 	if not pending.is_empty() and unit.order == Battle.Order.MOVE and unit.destination.is_equal_approx(pending[0]):
 		active_from = unit.position
@@ -326,7 +326,7 @@ func _refresh_minimap() -> void:
 			snapshot.visible_enemies.append(Minimap.Marker.new(StringName("practice_%d" % index), _positions[index]))
 	_map.show_frame(snapshot)
 	if _map_open:
-		_map_title.text = "MINIMAP DRAFT · " + battle.formations[selected_index].title
+		_map_title.text = "MINIMAP DRAFT · " + battle.formation_at(selected_index).title
 		_map_help.text = "Left stick / D-pad: aim   ·   R1 / G: append to route\nCross / Enter: replace with Move   ·   Circle / Esc: close draft\nGold line: moving now   ·   Numbered points: pending"
 	else:
 		_map_title.text = "MINIMAP · DEVELOPMENT PREVIEW"

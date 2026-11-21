@@ -25,7 +25,7 @@ func _run() -> void:
 	_key(KEY_D, true)
 	await _frames(10)
 	_key(KEY_D, false)
-	_check(battle.hero_position.x > hero_spawn.x, "WASD moves the hero.")
+	_check(battle.hero_position == hero_spawn and not battle.lead_engaged, "Outside combat WASD does not walk the leader away from their platoon.")
 	var hero_before_command := battle.hero_position
 
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.35)
@@ -34,6 +34,15 @@ func _run() -> void:
 	_check(_harness.command_view and root.get_camera_3d().name == &"CommandCamera", "L2 activates the command camera.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.40)
 	_check(_harness.command_view, "Trigger hysteresis prevents flicker.")
+	_button(JOY_BUTTON_DPAD_LEFT)
+	_check(_harness.selected_index == Battle.LEAD_INDEX, "D-pad selection reaches the leader's own platoon.")
+	var march_to := battle.hero_position + Vector2(3.0, -2.0)
+	_harness.cursor = march_to
+	_button(JOY_BUTTON_X)
+	_check(battle.lead.order == Battle.Order.MOVE and battle.lead.destination.is_equal_approx(march_to), "Square sends the lead platoon to the cursor like any platoon.")
+	await _frames(60)
+	_check(battle.hero_position.is_equal_approx(march_to) and battle.lead.order == Battle.Order.HOLD, "The leader marches at the head of their platoon and halts there.")
+	hero_before_command = battle.hero_position
 	_button(JOY_BUTTON_DPAD_LEFT)
 	_check(_harness.selected_index == 1, "D-pad selection wraps to the second formation.")
 	var old_cursor := _harness.cursor
@@ -53,7 +62,13 @@ func _run() -> void:
 	_key(KEY_W, true)
 	await _frames(10)
 	_key(KEY_W, false)
-	_check(battle.hero_position.y < hero_before_command.y, "Hero movement resumes on release.")
+	_check(battle.hero_position == hero_before_command, "Releasing L2 outside combat leaves the leader with their platoon.")
+	battle.lead_engaged = true
+	_key(KEY_W, true)
+	await _frames(10)
+	_key(KEY_W, false)
+	_check(battle.hero_position.y < hero_before_command.y and battle.lead.position == battle.hero_position, "In combat WASD steers the leader and their platoon stays with them.")
+	battle.lead_engaged = false
 	_check(_harness.battle == battle and archers.position != mid_move and archers.order == Battle.Order.MOVE, "The same formation keeps moving after returning to the hero.")
 	_button(JOY_BUTTON_A)
 	_check(archers.order == Battle.Order.MOVE, "Cross cannot issue a Hold order in hero view.")
@@ -83,7 +98,7 @@ func _run() -> void:
 	_harness.queue_free()
 	await process_frame
 	if _failures == 0:
-		print("Command harness: hero movement, L2/Shift transitions, cursor, selection, continued orders, Hold and arrival passed.")
+		print("Command harness: lead platoon march, combat-only hero control, L2/Shift transitions, cursor, selection, continued orders, Hold and arrival passed.")
 	quit(0 if _failures == 0 else 1)
 
 

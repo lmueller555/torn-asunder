@@ -416,3 +416,8 @@ func _sign(parent: Node3D, title: String, color: Color, height: float) -> Label3
 	parent.add_child(label)
 	label.position.y = height
 	return label
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_patrol])

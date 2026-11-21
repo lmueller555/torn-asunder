@@ -203,6 +203,10 @@ func _add_formation_member_visual(member: Node3D, formation_index: int) -> bool:
 	return true
 
 
+func _lead_member_scene() -> PackedScene:
+	return _infantry_model_scene() if render_shield_infantry else null
+
+
 func _infantry_model_scene() -> PackedScene:
 	var unit := Catalog.HUMAN_HEAVY_INFANTRY if _heavy_replay_loadout else Catalog.HUMAN_INFANTRY
 	var definition: Dictionary = Catalog.TYPES.get(unit, {})
@@ -523,7 +527,7 @@ func _refresh_combat_view() -> void:
 	_enemy_warning.visible = encounter.enemy_phase == Encounter.EnemyPhase.WINDUP
 	var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
 	var archers := battle.formations[ArcherAttack.ARCHER_INDEX]
-	var selected := battle.formations[selected_index]
+	var selected := battle.formation_at(selected_index)
 	var target_selected := command_view and selected.order != Battle.Order.DEFEATED and encounter.target_at(cursor)
 	_enemy_target_ring.visible = command_view and (target_selected or infantry.order == Battle.Order.ATTACK \
 		or archers.order == Battle.Order.ATTACK)
@@ -623,3 +627,10 @@ func _refresh_archer_readout() -> void:
 	elif volley.phase == Archer.Phase.RELOAD:
 		action = " · Reloading"
 	_archer_status.text = "Archers · %d / %d prototype HP%s" % [ceili(archers.hp), roundi(archers.max_hp), action]
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	if encounter and opposition_enabled and encounter.enemy.is_alive():
+		return PackedVector2Array([encounter.enemy_position])
+	return PackedVector2Array()

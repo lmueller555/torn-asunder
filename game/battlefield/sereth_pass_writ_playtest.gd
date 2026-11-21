@@ -399,3 +399,8 @@ func _debug_marker(point: Vector3, title: String, tint: Color) -> Node3D:
 	node.add_child(label)
 	label.position.y = 2.5
 	return node
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_patrol, _reserve])

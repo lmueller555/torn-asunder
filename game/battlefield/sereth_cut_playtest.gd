@@ -431,3 +431,8 @@ func _sign(parent: Node3D, title: String, color: Color, height: float) -> void:
 	sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sign.position.y = height
 	parent.add_child(sign)
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_raider])

@@ -14,6 +14,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_harness = Mine.instantiate()
+	# This test covers direct locomotion on the terrain, not the lead platoon march.
+	_harness.lead_platoon_enabled = false
 	root.add_child(_harness)
 	# Moving the whole scene must not displace its local bounds or picks.
 	_harness.position = Vector3(7.0, 3.0, 15.0)

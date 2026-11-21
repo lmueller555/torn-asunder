@@ -136,9 +136,12 @@ func _release_without_combat_leaks() -> bool:
 	_joy(JOY_BUTTON_LEFT_SHOULDER, false)
 	_axis(JOY_AXIS_TRIGGER_RIGHT, 0.0)
 	_axis(JOY_AXIS_LEFT_X, 0.0)
+	# Direct stick control belongs to combat; use the free leader to check input recovery.
+	_mission.battle.lead_platoon_enabled = false
 	_axis(JOY_AXIS_LEFT_X, 1.0)
 	_tick(4)
 	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_mission.battle.lead_platoon_enabled = true
 	if _mission.battle.hero_position == start:
 		return _fail("Neutral plus a fresh stick input did not recover ordinary hero movement.")
 	_joy(JOY_BUTTON_LEFT_SHOULDER, true)

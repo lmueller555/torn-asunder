@@ -538,3 +538,8 @@ func _footprint(path: String) -> Rect2:
 
 static func _xz(point: Vector3) -> Vector2:
 	return Vector2(point.x, point.z)
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_patrol])

@@ -317,3 +317,8 @@ func _point(path: NodePath) -> Vector3:
 func _flat(world: Vector3) -> Vector2:
 	var local_point := to_local(world)
 	return Vector2(local_point.x, local_point.z)
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_reserve]) if _reserve_active else PackedVector2Array()

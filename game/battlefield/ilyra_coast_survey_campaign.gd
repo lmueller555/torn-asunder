@@ -537,3 +537,8 @@ func _face(actor: Node3D, point: Vector3) -> void:
 	var offset := point - actor.global_position
 	if Vector2(offset.x, offset.z).length_squared() > 0.000001:
 		actor.rotation.y = atan2(-offset.x, -offset.z)
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions(_crews)

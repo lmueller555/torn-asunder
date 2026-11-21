@@ -119,7 +119,7 @@ func _sync_view() -> void:
 	_mode_label.text = "Mixed formations · Development playtest"
 	_formation_label.text = "%s · Shield %d HP · Archers %d HP (%s) · Team %d BP" % [
 		guard, ceili(infantry.attacker.hp), ceili(archers.attacker.hp), archer_state, encounter.points.balance]
-	_controls_label.text = "Selected: %s · %s\n" % [battle.formations[selected_index].title, status]
+	_controls_label.text = "Selected: %s · %s\n" % [battle.formation_at(selected_index).title, status]
 	_controls_label.text += "L2 / Shift: command · D-pad / Z X: select · Triangle / K: attack at cursor\n"
 	_controls_label.text += "Left stick / WASD / mouse: aim · Square / right click: Move · Cross / H: Hold\n"
 	_controls_label.text += "Options / Backspace: reset"

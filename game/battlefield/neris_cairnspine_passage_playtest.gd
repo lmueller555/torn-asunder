@@ -440,3 +440,12 @@ func _route(id: String) -> Vector2:
 
 func _spot(folder: String, id: String) -> Vector2:
 	return _marker_position(battlefield_marker(NodePath("Markers/%s/%s" % [folder, id])))
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for patrol in _patrols:
+		if patrol.active:
+			result.append(patrol.position)
+	return result

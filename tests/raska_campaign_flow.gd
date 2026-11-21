@@ -297,14 +297,13 @@ func _span_point(span: Spanwater, path: String) -> Vector2:
 
 
 func _walk_spanwater(span: Spanwater, point: Vector2, tolerance: float) -> bool:
-	var budget := ceili(span.battle.hero_position.distance_to(point) / Battle.HERO_SPEED / DT) + 65
+	var budget := ceili(span.battle.hero_position.distance_to(point) / Battle.LEAD_SPEED / DT) + 65
 	for _step in range(budget):
 		var offset := point - span.battle.hero_position
 		if offset.length() <= tolerance or span._finished():
 			break
 		var aim := offset.normalized().rotated(span._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, aim.x)
-		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		_march_lead(Vector2(aim.x, aim.y), span)
 		span._physics_process(DT)
 	_stop()
 	return span.battle.hero_position.distance_to(point) <= tolerance or _fail("Raska did not reach " + str(point))
@@ -381,14 +380,13 @@ func _deliver_well_carts(well: WellScene) -> bool:
 func _walk_well_hero(well: WellScene, target: Vector3) -> bool:
 	var local := well.to_local(target)
 	var point := Vector2(local.x, local.z)
-	var budget := ceili(well.battle.hero_position.distance_to(point) / Battle.HERO_SPEED / DT) + 75
+	var budget := ceili(well.battle.hero_position.distance_to(point) / Battle.LEAD_SPEED / DT) + 75
 	for _step in range(budget):
 		var offset := point - well.battle.hero_position
 		if offset.length() <= 0.17:
 			break
 		var aim := offset.normalized().rotated(well._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, aim.x)
-		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		_march_lead(Vector2(aim.x, aim.y), well)
 		well._physics_process(DT)
 	_stop()
 	return well.battle.hero_position.distance_to(point) <= 0.17 or _fail("Raska did not reach " + str(point))
@@ -449,7 +447,7 @@ func _follow(route: Array) -> bool:
 
 
 func _drive_to(target: Vector3, allow_success := false) -> bool:
-	var budget := ceili(_mission.hero_world_position().distance_to(target) / Battle.HERO_SPEED / DT) + 90
+	var budget := ceili(_mission.hero_world_position().distance_to(target) / Battle.LEAD_SPEED / DT) + 90
 	for _step in range(budget):
 		if _mission.hero_world_position().distance_to(target) < 0.13 or _mission._finished():
 			break
@@ -463,8 +461,7 @@ func _drive_to(target: Vector3, allow_success := false) -> bool:
 func _walk_tick(target: Vector3) -> void:
 	var local := _mission.to_local(target)
 	var aim := (Vector2(local.x, local.z) - _mission.battle.hero_position).normalized().rotated(_mission._hero_yaw)
-	_axis(JOY_AXIS_LEFT_X, aim.x)
-	_axis(JOY_AXIS_LEFT_Y, aim.y)
+	_march_lead(Vector2(aim.x, aim.y), _mission)
 	_mission._physics_process(DT)
 
 
@@ -553,3 +550,17 @@ func _press(name: String) -> bool:
 func _fail(message: String) -> bool:
 	push_error(message)
 	return false
+
+
+## Outside combat the leader travels with their platoon by Move orders, as the
+## player sets them; in combat the stick steers the leader directly.
+func _march_lead(aim: Vector2, mission: Node) -> void:
+	var battle = mission.battle
+	if battle.direct_hero_control():
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		return
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if aim.length_squared() > 0.0:
+		battle.order_move(Battle.LEAD_INDEX, battle.hero_position + aim.normalized().rotated(-mission._hero_yaw) * Battle.LEAD_SPEED * DT)

@@ -113,19 +113,45 @@ func _run() -> void:
 
 
 func _walk_to_guard() -> void:
-	_key(KEY_W, true)
-	_wait_for_windup(900)
-	_key(KEY_W, false)
+	# March the lead platoon toward the guard until contact starts combat, then close in directly.
+	var held := false
+	for index in range(900):
+		if _mission.encounter.enemy_phase == Encounter.EnemyPhase.WINDUP:
+			break
+		var battle = _mission.battle
+		if battle.direct_hero_control():
+			if not held:
+				_key(KEY_W, true)
+				held = true
+		else:
+			battle.order_move(Battle.LEAD_INDEX, battle.hero_position + Vector2.UP.rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED / 60.0)
+		_tick()
+	if held:
+		_key(KEY_W, false)
+	_check(_mission.encounter.enemy_phase == Encounter.EnemyPhase.WINDUP, "The road guard starts a swing when Mara closes to melee.")
 
 
 func _drive(key: Key, target: float, along_x := false) -> void:
-	_key(key, true)
+	# Outside combat the leader's platoon marches by Move orders; in combat the key steers.
+	var heading: Vector2 = {KEY_W: Vector2.UP, KEY_S: Vector2.DOWN, KEY_A: Vector2.LEFT, KEY_D: Vector2.RIGHT}[key]
+	var held := false
 	for index in range(900):
 		var point := _mission.hero_world_position()
 		if absf((point.x if along_x else point.z) - target) < 0.10 or _mission._finished():
 			break
+		var battle = _mission.battle
+		if battle.direct_hero_control():
+			if not held:
+				_key(key, true)
+				held = true
+		else:
+			if held:
+				_key(key, false)
+				held = false
+			battle.order_move(Battle.LEAD_INDEX, battle.hero_position + heading.rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED / 60.0)
 		_tick()
-	_key(key, false)
+	if held:
+		_key(key, false)
 
 
 func _wait_for_windup(budget := 150) -> void:

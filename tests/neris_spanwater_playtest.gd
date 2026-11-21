@@ -174,14 +174,13 @@ func _restart_and_miss_crest() -> void:
 
 func _drive_to(at: Vector3) -> void:
 	var target := _xz(at)
-	var budget := ceili(_mission.battle.hero_position.distance_to(target) / Battle.HERO_SPEED / DT) + 40
+	var budget := ceili(_mission.battle.hero_position.distance_to(target) / Battle.LEAD_SPEED / DT) + 40
 	for tick in range(budget):
 		var offset := target - _mission.battle.hero_position
 		if offset.length() <= 0.18:
 			break
 		var stick := offset.normalized().rotated(_mission._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, stick.x)
-		_axis(JOY_AXIS_LEFT_Y, stick.y)
+		_march_lead(Vector2(stick.x, stick.y))
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
@@ -245,3 +244,17 @@ func _check(ok: bool, detail: String) -> void:
 	if not ok:
 		_failures += 1
 		push_error(detail)
+
+
+## Outside combat the leader travels with their platoon by Move orders, as the
+## player sets them; in combat the stick steers the leader directly.
+func _march_lead(aim: Vector2) -> void:
+	var battle = _mission.battle
+	if battle.direct_hero_control():
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		return
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if aim.length_squared() > 0.0:
+		battle.order_move(Battle.LEAD_INDEX, battle.hero_position + aim.normalized().rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED * DT)

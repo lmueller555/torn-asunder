@@ -31,6 +31,8 @@ var _hero_report := ""
 
 
 func _ready() -> void:
+	# This playtest models its own hero platoon and engagement rules.
+	lead_platoon_enabled = false
 	battle.formations = [
 		Battle.Formation.new("Hero Platoon", battle.hero_position),
 		Battle.Formation.new("Shield Infantry", Vector2(-8.0, 4.0)),
@@ -112,7 +114,7 @@ func _apply_context() -> void:
 		if _mode == Mode.TACTICAL:
 			policy.set_tactical_cursor(cursor)
 		if next == Mode.PLATOON_FOLLOW:
-			cursor = battle.formations[selected_index].position
+			cursor = battle.formation_at(selected_index).position
 		elif next == Mode.TACTICAL:
 			cursor = policy.tactical_cursor()
 		elif next == Mode.HERO_ACTION:
@@ -175,7 +177,7 @@ func _toggle_overview() -> void:
 func _update_cameras() -> void:
 	super._update_cameras()
 	if _mode == Mode.PLATOON_FOLLOW:
-		var target := _ground(battle.formations[selected_index].position, 0.70)
+		var target := _ground(battle.formation_at(selected_index).position, 0.70)
 		var offset := Vector3(0.0, sin(_command_pitch), cos(_command_pitch)).rotated(Vector3.UP, _command_yaw)
 		_command_camera.size = FOLLOW_SPAN
 		_command_camera.position = target + offset * FOLLOW_SPAN

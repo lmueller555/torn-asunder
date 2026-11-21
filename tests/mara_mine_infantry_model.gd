@@ -82,8 +82,7 @@ func _approach_and_frame_hero() -> bool:
 		if toward.length() < 0.13:
 			break
 		var stick := toward.normalized().rotated(_mission._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, stick.x)
-		_axis(JOY_AXIS_LEFT_Y, stick.y)
+		_march_lead(Vector2(stick.x, stick.y))
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
@@ -260,3 +259,17 @@ func _tick(count := 1) -> void:
 func _fail(message: String) -> bool:
 	push_error(message)
 	return false
+
+
+## Outside combat the leader travels with their platoon by Move orders, as the
+## player sets them; in combat the stick steers the leader directly.
+func _march_lead(aim: Vector2) -> void:
+	var battle = _mission.battle
+	if battle.direct_hero_control():
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		return
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if aim.length_squared() > 0.0:
+		battle.order_move(Battle.LEAD_INDEX, battle.hero_position + aim.normalized().rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED * DT)

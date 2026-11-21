@@ -382,3 +382,8 @@ func _refresh_withdrawal() -> void:
 				_route.text = "The lower stair is cracking. Use the inland bypass if still below."
 			else:
 				_route.text = "Take the flagged stair or inland bypass. Hold the landing to cover the retreat."
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return PackedVector2Array([levy.position]) if levy else PackedVector2Array()

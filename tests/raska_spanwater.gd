@@ -77,7 +77,9 @@ func _run() -> void:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_RIGHT_STICK)
 	_button(JOY_BUTTON_DPAD_RIGHT)
-	_check(_mission.selected_index == 0, "A departing friendly cannot be selected or commanded.")
+	var cycled_to := _mission.selected_index
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_check(cycled_to == Battle.LEAD_INDEX and _mission.selected_index == 0, "A departing friendly cannot be selected or commanded; the cycle is Raska's platoon and the regulars.")
 	var stand := _point("Objectives/SpillwayWheel") + Vector2(-5.6, 0.0)
 	_order_at(stand)
 	_finish_march(regulars, stand, "screen outside the wheel ring")
@@ -180,13 +182,12 @@ func _finish_march(formation: Battle.Formation, point: Vector2, context: String)
 
 
 func _drive_to(point: Vector2, tolerance: float, must_reach := true) -> void:
-	var budget := ceili(_mission.battle.hero_position.distance_to(point) / Battle.HERO_SPEED / DT) + 65
+	var budget := ceili(_mission.battle.hero_position.distance_to(point) / Battle.LEAD_SPEED / DT) + 65
 	for i in range(budget):
 		if _mission.battle.hero_position.distance_to(point) <= tolerance or _mission._finished():
 			break
 		var aim := (point - _mission.battle.hero_position).normalized().rotated(_mission._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, aim.x)
-		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		_march_lead(Vector2(aim.x, aim.y))
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
@@ -225,3 +226,17 @@ func _check(ok: bool, message: String) -> void:
 	if not ok:
 		_failures += 1
 		push_error(message)
+
+
+## Outside combat the leader travels with their platoon by Move orders, as the
+## player sets them; in combat the stick steers the leader directly.
+func _march_lead(aim: Vector2) -> void:
+	var battle = _mission.battle
+	if battle.direct_hero_control():
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		return
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if aim.length_squared() > 0.0:
+		battle.order_move(Battle.LEAD_INDEX, battle.hero_position + aim.normalized().rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED * DT)

@@ -222,7 +222,7 @@ func _capture_key(event: InputEventKey) -> bool:
 
 func _can_open_controller() -> bool:
 	return _mission.command_view and not _mission._finished() \
-		and _mission.battle.formations[_mission.selected_index].can_receive_orders()
+		and _mission.battle.formation_at(_mission.selected_index).can_receive_orders()
 
 
 func _can_confirm_controller() -> bool:
@@ -360,7 +360,7 @@ func _refresh_selected_route() -> void:
 	if not _route_overlay.visible:
 		_route_overlay.clear_route()
 		return
-	var formation := _mission.battle.formations[index]
+	var formation := _mission.battle.formation_at(index)
 	var active_from: Variant = null
 	if formation.order == Battle.Order.MOVE and formation.destination.is_equal_approx(pending[0]):
 		active_from = formation.position

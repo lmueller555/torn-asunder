@@ -107,7 +107,7 @@ func _focus_sector(point: Vector2) -> void:
 
 
 func _move_from_map(point: Vector2) -> bool:
-	if not _usable(point) or not _field.battle.formations[_field.selected_index].can_receive_orders():
+	if not _usable(point) or not _field.battle.formation_at(_field.selected_index).can_receive_orders():
 		return false
 	var hit: Variant = _walkable_hit(point)
 	if hit == null:
@@ -281,7 +281,7 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 
 func _can_plan() -> bool:
 	return (visible and _route_battle != null and _field.command_view
-		and _field.battle.formations[_field.selected_index].can_receive_orders())
+		and _field.battle.formation_at(_field.selected_index).can_receive_orders())
 
 
 func _can_open() -> bool:

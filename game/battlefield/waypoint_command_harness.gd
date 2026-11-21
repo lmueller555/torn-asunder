@@ -54,7 +54,7 @@ func _hold_selected() -> void:
 
 
 func _issue_route(append: bool) -> void:
-	if not command_view or not battle.formations[selected_index].can_receive_orders():
+	if not command_view or not battle.formation_at(selected_index).can_receive_orders():
 		return
 	_feedback_index = selected_index
 	var result := _routes.issue(battle, selected_index, cursor, append, _route_point_is_valid)

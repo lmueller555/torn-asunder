@@ -459,3 +459,8 @@ func _near_rack() -> bool:
 
 func _finished() -> bool:
 	return objective.phase in [Feeder.Phase.SUCCEEDED, Feeder.Phase.FAILED]
+
+
+## Enemies that can engage the leader's platoon and switch to direct control.
+func _hostile_positions() -> PackedVector2Array:
+	return _visible_node_positions([_patrol])

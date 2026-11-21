@@ -10,6 +10,11 @@ const STICK_DEADZONE := 0.18
 const CURSOR_SPEED := 12.0
 const ORBIT_SPEED := 1.6
 const FLOOR := Plane(Vector3.UP, 0.0)
+## A hostile this close to the leader or their platoon starts combat.
+const LEAD_ENGAGE_RADIUS := 8.0
+## Combat ends once every hostile is beyond this range for LEAD_RELEASE_SECONDS.
+const LEAD_RELEASE_RADIUS := 12.0
+const LEAD_RELEASE_SECONDS := 1.5
 
 @export var battlefield_scene: PackedScene
 @export var field_bounds := Battle.FLAT_BOUNDS
@@ -17,6 +22,9 @@ const FLOOR := Plane(Vector3.UP, 0.0)
 @export_range(16.0, 150.0) var local_sector_size := 58.0
 @export var hero_spawn: NodePath
 @export var formation_spawns: Array[NodePath] = []
+
+## Off restores the free-walking leader for scenes that model their own hero platoon.
+@export var lead_platoon_enabled := true
 
 var battle := Battle.new()
 var command_view := false
@@ -32,6 +40,10 @@ var _hero_pitch := deg_to_rad(23.0)
 var _command_yaw := 0.0
 var _command_pitch := deg_to_rad(59.0)
 var _hero: Node3D
+var _lead_model: Node3D
+var _lead_members: Array[Node3D] = []
+var _lead_banner: Label3D
+var _calm_seconds := 0.0
 var _formation_models: Array[Node3D] = []
 var _formation_members: Array[Array] = []
 var _field: Node3D
@@ -58,6 +70,7 @@ func _ready() -> void:
 		for axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_TRIGGER_LEFT]:
 			_axes[axis] = Input.get_joy_axis(_input_device, axis)
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
+	battle.lead_platoon_enabled = lead_platoon_enabled
 	_configure_field()
 	_build_placeholders()
 	_update_cameras()
@@ -79,8 +92,11 @@ func _physics_process(delta: float) -> void:
 	else:
 		_hero_yaw = wrapf(_hero_yaw - look.x * ORBIT_SPEED * delta, -PI, PI)
 		_hero_pitch = clampf(_hero_pitch + look.y * delta, deg_to_rad(10.0), deg_to_rad(48.0))
-	# Only the hero input is suppressed in command view. Formations always advance.
-	battle.step(delta, Vector2.ZERO if command_view else movement.rotated(-_hero_yaw) * _hero_move_factor(), _movement_check())
+	_update_lead_engagement(delta)
+	# Stick and D-pad steer the leader only in combat; otherwise the lead platoon
+	# follows its Move order or waypoints. Formations always advance.
+	var steering := not command_view and battle.direct_hero_control()
+	battle.step(delta, movement.rotated(-_hero_yaw) * _hero_move_factor() if steering else Vector2.ZERO, _movement_check())
 	_after_battle_step(delta)
 	_update_cameras()
 	if not repoint or not _point_cursor(_mouse_position, true):
@@ -89,6 +105,47 @@ func _physics_process(delta: float) -> void:
 
 func _after_battle_step(_delta: float) -> void:
 	pass
+
+
+## Hostile battlefield positions that can engage the leader's platoon. Scenes with
+## enemies override this; an empty list means the leader always marches by orders.
+func _hostile_positions() -> PackedVector2Array:
+	return PackedVector2Array()
+
+
+## Battlefield XZ of the visible, live nodes among `nodes`, for _hostile_positions.
+func _visible_node_positions(nodes: Array) -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for node in nodes:
+		if node is Node3D and is_instance_valid(node) and node.is_inside_tree() and node.is_visible_in_tree():
+			var local := to_local((node as Node3D).global_position)
+			result.append(Vector2(local.x, local.z))
+	return result
+
+
+func _update_lead_engagement(delta: float) -> void:
+	var nearest := INF
+	for point in _hostile_positions():
+		if point.is_finite():
+			nearest = minf(nearest, minf(point.distance_to(battle.hero_position), point.distance_to(battle.lead.position)))
+	if not battle.lead_engaged:
+		if nearest <= LEAD_ENGAGE_RADIUS:
+			battle.lead_engaged = true
+			_calm_seconds = 0.0
+			_on_lead_engagement_changed(true)
+		return
+	if nearest <= LEAD_RELEASE_RADIUS:
+		_calm_seconds = 0.0
+		return
+	_calm_seconds += delta
+	if _calm_seconds >= LEAD_RELEASE_SECONDS:
+		battle.lead_engaged = false
+		_on_lead_engagement_changed(false)
+
+
+## Scenes can react when the leader's platoon enters or leaves combat.
+func _on_lead_engagement_changed(_engaged: bool) -> void:
+	_sync_view()
 
 
 func _step_sector_cursor(movement: Vector2, delta: float) -> bool:
@@ -218,17 +275,19 @@ func _update_mode() -> void:
 	_sync_view()
 
 
+## The leader's platoon (LEAD_INDEX) comes first in the selection cycle.
 func _select_relative(step: int) -> void:
-	selected_index = posmod(selected_index + step, battle.formations.size())
+	var count := battle.formations.size() + 1
+	selected_index = posmod(selected_index + 1 + step, count) - 1
 	_sync_view()
 
 
 func _select_at_cursor() -> void:
 	var nearest := 2.2
-	for index in range(battle.formations.size()):
-		if not battle.formations[index].can_receive_orders():
+	for index in range(Battle.LEAD_INDEX, battle.formations.size()):
+		if not battle.formation_at(index).can_receive_orders():
 			continue
-		var distance := battle.formations[index].position.distance_to(cursor)
+		var distance := battle.formation_at(index).position.distance_to(cursor)
 		if distance < nearest:
 			nearest = distance
 			selected_index = index
@@ -284,9 +343,12 @@ func _update_cameras() -> void:
 
 
 func _sync_view() -> void:
-	var selected := battle.formations[selected_index]
+	if not battle.is_valid_command_index(selected_index):
+		selected_index = 0 if not battle.formations.is_empty() else Battle.LEAD_INDEX
+	var selected := battle.formation_at(selected_index)
 	_hero.position = _ground(battle.hero_position)
 	_hero.rotation.y = atan2(-battle.hero_heading.x, -battle.hero_heading.y)
+	_sync_lead_platoon()
 	for index in range(battle.formations.size()):
 		var formation := battle.formations[index]
 		var model := _formation_models[index]
@@ -308,7 +370,9 @@ func _sync_view() -> void:
 	_destination_marker.position = _ground(selected.destination, 0.08)
 	_destination_marker.visible = command_view and selected.order == Battle.Order.MOVE
 	var status: String = ["Holding", "Moving", "Blocked", "Attacking", "Defeated", "Extracted"][selected.order]
-	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else "HERO VIEW  /  LIVE"
+	if selected == battle.lead and battle.lead_engaged:
+		status = "In combat · direct control"
+	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else ("HERO VIEW  /  COMBAT" if battle.lead_engaged else "HERO VIEW  /  MARCHING")
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
 	if command_view:
 		if _sector:
@@ -319,7 +383,10 @@ func _sync_view() -> void:
 			if not _sector.overview:
 				_controls_label.text += "\nPan with the cursor or move the mouse to a screen edge"
 	else:
-		_controls_label.text = "Hold L2 / Shift to command\nLeft stick / WASD: move   ·   Right stick / Q E R F: camera   ·   D-pad / Z X: allied status"
+		if battle.direct_hero_control():
+			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nHold L2 / Shift to command other platoons"
+		else:
+			_controls_label.text = "MARCHING · the leader moves with their platoon\nHold L2 / Shift, select Lead Platoon, and set a move or waypoints   ·   Right stick / Q E R F: camera"
 
 
 func _configure_field() -> void:
@@ -339,6 +406,8 @@ func _configure_field() -> void:
 func restart_battle() -> void:
 	battle = Battle.new()
 	battle.bounds = field_bounds
+	battle.lead_platoon_enabled = lead_platoon_enabled
+	_calm_seconds = 0.0
 	selected_index = 0
 	cursor = Vector2.ZERO
 	_mouse_cursor_active = false
@@ -438,9 +507,66 @@ func _build_placeholders() -> void:
 		banner.outline_size = 9
 		group.add_child(banner)
 
+	_build_lead_platoon(troop, equipment)
 	_selection = _mesh(self, _ring(1.84, 1.97), _material(Color("#77dcfa"), true))
 	_cursor_marker = _mesh(self, _ring(0.35, 0.48), _material(Color("#fff1bb"), true))
 	_destination_marker = _mesh(self, _ring(0.49, 0.62), _material(Color("#77dcfa"), true))
+
+
+## The leader's own platoon: two files flanking and trailing the leader, leaving a
+## clear lane behind them for the hero camera.
+func _build_lead_platoon(troop: Mesh, equipment: Mesh) -> void:
+	_lead_model = Node3D.new()
+	_lead_model.name = "LeadPlatoon"
+	add_child(_lead_model)
+	var uniform := _material(Color("#d9a85a"))
+	var trim := _material(Color("#f2dcae"))
+	var art := _lead_member_scene()
+	_lead_members.clear()
+	for side in [-1.0, 1.0]:
+		for row in range(3):
+			for file in range(2):
+				var member := Node3D.new()
+				member.position = Vector3(side * (1.5 + file * 0.85), 0.0, -0.4 + row * 0.85)
+				_lead_model.add_child(member)
+				_lead_members.append(member)
+				var model: Node3D = art.instantiate() as Node3D if art and art.can_instantiate() else null
+				if model:
+					model.rotate_y(PI)
+					member.add_child(model)
+					var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+					if player and player.has_animation(&"Idle"):
+						player.play(&"Idle")
+				else:
+					_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
+					_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+	_lead_banner = Label3D.new()
+	_lead_banner.text = battle.lead.title
+	_lead_banner.position = Vector3(0.0, 2.4, 0.4)
+	_lead_banner.pixel_size = 0.016
+	_lead_banner.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_lead_banner.outline_size = 9
+	_lead_model.add_child(_lead_banner)
+
+
+## Scenes with rigged soldier art return it here for the leader's platoon.
+func _lead_member_scene() -> PackedScene:
+	return null
+
+
+func _sync_lead_platoon() -> void:
+	if not _lead_model:
+		return
+	_lead_model.visible = battle.lead_platoon_enabled
+	_lead_banner.visible = command_view
+	var origin := _ground(battle.hero_position)
+	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
+	_lead_model.position = origin
+	_lead_model.rotation.y = yaw
+	if _terrain:
+		for member in _lead_members:
+			var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, yaw)
+			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin.y
 
 
 ## Scenes may fill the existing feet anchor without changing simulation or formations.

@@ -17,6 +17,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_harness = HarnessScene.instantiate()
+	# Camera recentering follows a directly moved leader here.
+	_harness.lead_platoon_enabled = false
 	_harness.battlefield_scene = _ground_fixture()
 	_harness.field_bounds = FIELD
 	_harness.enable_sector_camera = true

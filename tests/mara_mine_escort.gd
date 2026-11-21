@@ -101,13 +101,26 @@ func _move_to_pickup(pickup: Vector3) -> void:
 
 
 func _drive(key: Key, target: float, along_x := false) -> void:
-	_key(key, true)
+	# Outside combat the leader's platoon marches by Move orders; in combat the key steers.
+	var heading: Vector2 = {KEY_W: Vector2.UP, KEY_S: Vector2.DOWN, KEY_A: Vector2.LEFT, KEY_D: Vector2.RIGHT}[key]
+	var held := false
 	for index in range(1100):
 		var point := _mission.hero_world_position()
 		if absf((point.x if along_x else point.z) - target) < 0.10 or _mission._finished():
 			break
+		var battle = _mission.battle
+		if battle.direct_hero_control():
+			if not held:
+				_key(key, true)
+				held = true
+		else:
+			if held:
+				_key(key, false)
+				held = false
+			battle.order_move(Battle.LEAD_INDEX, battle.hero_position + heading.rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED / 60.0)
 		_tick()
-	_key(key, false)
+	if held:
+		_key(key, false)
 
 
 func _tick(count := 1) -> void:

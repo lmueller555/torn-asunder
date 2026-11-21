@@ -163,7 +163,7 @@ func _checkpoint(_label: String) -> void:
 
 func _walk(id: String) -> bool:
 	var at := _position(id)
-	var cap := ceili(_mission.battle.hero_position.distance_to(at) / Battle.HERO_SPEED / DT) + 130
+	var cap := ceili(_mission.battle.hero_position.distance_to(at) / Battle.LEAD_SPEED / DT) + 130
 	var reached := false
 	for i in cap:
 		var offset := at - _mission.battle.hero_position
@@ -171,8 +171,7 @@ func _walk(id: String) -> bool:
 			reached = true
 			break
 		var axes := offset.normalized().rotated(_mission._hero_yaw)
-		_axis(JOY_AXIS_LEFT_X, axes.x)
-		_axis(JOY_AXIS_LEFT_Y, axes.y)
+		_march_lead(Vector2(axes.x, axes.y))
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
@@ -228,3 +227,17 @@ func _key(code: Key) -> void:
 func _fail(message: String) -> bool:
 	push_error(message)
 	return false
+
+
+## Outside combat the leader travels with their platoon by Move orders, as the
+## player sets them; in combat the stick steers the leader directly.
+func _march_lead(aim: Vector2) -> void:
+	var battle = _mission.battle
+	if battle.direct_hero_control():
+		_axis(JOY_AXIS_LEFT_X, aim.x)
+		_axis(JOY_AXIS_LEFT_Y, aim.y)
+		return
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	if aim.length_squared() > 0.0:
+		battle.order_move(Battle.LEAD_INDEX, battle.hero_position + aim.normalized().rotated(-_mission._hero_yaw) * Battle.LEAD_SPEED * DT)

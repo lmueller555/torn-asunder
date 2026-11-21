@@ -60,6 +60,8 @@ func _check_field_effect_in_motion() -> void:
 	var drag := hit.root_drag
 	var battle := Battle.new()
 	battle.hero_position = Vector2.ZERO
+	# Drag applies to the leader steered directly in combat.
+	battle.lead_engaged = true
 	drag.advance(NAN)
 	drag.advance(-1.0)
 	_check(drag.remaining == Elemental.ROOT_DRAG_SECONDS and drag.movement_scale == Elemental.ROOT_DRAG_MOVEMENT,

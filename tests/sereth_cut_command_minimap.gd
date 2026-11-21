@@ -205,8 +205,11 @@ func _controller_draft() -> void:
 	_check(hud._draft_battle == null and not _map.is_visible_in_tree() and _orders == [0]
 		and _mission.battle.hero_position.is_equal_approx(hero), "L2 release discards aim and cannot move the hero on a held stick.")
 	_axis(JOY_AXIS_LEFT_X, 0.0)
+	# Direct stick control belongs to combat; use the free leader to check input recovery.
+	_mission.battle.lead_platoon_enabled = false
 	_axis(JOY_AXIS_LEFT_X, 0.65)
 	_tick(12)
+	_mission.battle.lead_platoon_enabled = true
 	_check(_mission.battle.hero_position.distance_to(hero) > 0.1, "Neutral followed by new input restores the existing hero stick.")
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 
