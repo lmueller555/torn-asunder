@@ -4,6 +4,7 @@ extends "res://game/battlefield/command_harness.gd"
 signal mission_finished(won: bool)
 
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
+const CommandMinimap := preload("res://game/battlefield/sereth_cut_command_minimap.gd")
 const Bundle := Cut.BundleStatus
 const Account := Cut.AccountStatus
 const Action := Cut.Interaction
@@ -29,7 +30,9 @@ const ROOM_TO_ROAD := ["Routes/RecordRoomInside", "Routes/RecordRoomDoor", "Rout
 	"Objectives/DroppedBundleRecovery", "Routes/OpenRecordApproach", "Routes/RoadRecordFork"]
 const EAST_EXIT := ["Routes/RoadEastReveal", "Objectives/EnemyRetreatExit"]
 
-enum Raid { WAITING, WARNING, APPROACH_CUT, APPROACH_ROOM, AT_ROOM, TAKE_IN_ROOM, EXTRACTING, DISPERSED }
+enum Raid { WAITING, WARNING, APPROACH_CUT, APPROACH_ROOM, AT_ROOM, TAKE_IN_ROOM, EXTRACTING, DISPERSED, RETREATING_EMPTY }
+
+@export var enable_command_minimap := false
 
 var objective := Cut.new()
 var _iren: Node3D
@@ -61,6 +64,7 @@ var _interact := false
 @onready var _pressure: Label = $ObjectiveHUD/Panel/Margin/Readout/Pressure
 @onready var _hint: Label = $ObjectiveHUD/Panel/Margin/Readout/Hint
 @onready var _restart: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
+@onready var _command_minimap: CommandMinimap = $ObjectiveHUD/CommandMinimap
 
 
 func _ready() -> void:
@@ -98,6 +102,10 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if objective.outcome == Cut.Outcome.ACTIVE:
 		super._physics_process(delta)
+	elif objective.outcome == Cut.Outcome.SUCCEEDED and _raid == Raid.RETREATING_EMPTY:
+		# A standalone victory can finish before the empty party leaves. Only
+		# its presentation continues, not input, interactions or objectives.
+		_step_empty_retreat(delta)
 
 
 func _after_battle_step(delta: float) -> void:
@@ -122,6 +130,8 @@ func _after_battle_step(delta: float) -> void:
 	_refresh_readout()
 	if objective.outcome != Cut.Outcome.ACTIVE:
 		mission_finished.emit(objective.outcome == Cut.Outcome.SUCCEEDED)
+	elif enable_command_minimap:
+		_command_minimap.advance_routes()
 
 
 func _interaction_at(hero: Vector3) -> Cut.Interaction:
@@ -140,6 +150,9 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 	match _raid:
 		Raid.WAITING, Raid.DISPERSED:
 			return
+		Raid.RETREATING_EMPTY:
+			_step_empty_retreat(delta)
+			return
 		Raid.WARNING:
 			_warning_left = maxf(0.0, _warning_left - delta)
 			if _warning_left == 0.0:
@@ -153,8 +166,13 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 			frame.hero_interaction = Action.NONE
 			_drop_at = raider_feet
 			frame.enemy_dropped_bundle = objective.bundle_status == Bundle.WITH_ENEMY
-			_raid = Raid.DISPERSED
-			_raider.hide()
+			if frame.enemy_dropped_bundle and _raid == Raid.EXTRACTING:
+				# Keep this actor's current route/cursor; the dropped bundle
+				# stays at contact while the now-unarmed party withdraws.
+				_raid = Raid.RETREATING_EMPTY
+			else:
+				_raid = Raid.DISPERSED
+				_raider.hide()
 		return
 	if _near(hero, raider_feet):
 		_contact_time += delta
@@ -185,6 +203,12 @@ func _step_raider(delta: float, hero: Vector3, frame: Cut.Observation) -> void:
 		Raid.EXTRACTING:
 			frame.enemy_carrier_at_retreat_exit = _walk_raider(CARRIER_SPEED * delta) \
 				and _raider.global_position.is_equal_approx(_retreat_at)
+
+
+func _step_empty_retreat(delta: float) -> void:
+	if _walk_raider(CARRIER_SPEED * delta):
+		_raid = Raid.DISPERSED
+		_raider.hide()
 
 
 func _room_contested() -> bool:
@@ -260,6 +284,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		super._unhandled_input(event)
 
 
+func _sync_view() -> void:
+	super._sync_view()
+	if _command_minimap:
+		_command_minimap.refresh(self, enable_command_minimap and objective.outcome == Cut.Outcome.ACTIVE)
+
+
 func _notification(what: int) -> void:
 	super._notification(what)
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
@@ -330,6 +360,12 @@ func _refresh_readout() -> void:
 		return
 	if _raid == Raid.DISPERSED:
 		_pressure.text = "March party driven back"
+		return
+	if _raid == Raid.RETREATING_EMPTY:
+		_raider_label.text = "Retreating"
+		_pressure.text = "March party withdrawing without the records."
+		if objective.bundle_status == Bundle.DROPPED:
+			_hint.text = "Recover the dropped bundle here. There is no need to pursue."
 		return
 	if _screened():
 		_raider_label.text = "March records party · screened"

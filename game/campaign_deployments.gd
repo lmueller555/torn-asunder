@@ -14,7 +14,7 @@ const _DEPLOYMENTS := {
 		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
 	},
 	"mara_grain_crossing": {
-		"scene": preload("res://game/battlefield/mara_grain_crossing_playtest.tscn"),
+		"scene": preload("res://game/battlefield/mara_grain_crossing_campaign.tscn"),
 		"dispatch": Beats.MARA_GRAIN_DISPATCH,
 		"briefing_dispatch": true,
 		"result_debrief": true,
@@ -90,6 +90,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "MOONWASH SURVEY SHORE · BEACH AND HEADLAND",
 		"orders": "Record both readings as Ilyra. Hold the Shore Detachment at a marked guard ring. Transmit from either staffed, secure relay while the cutter is at its stop and in sight. Missed passes return.",
 	},
+	"ilyra_spanwater_evacuation": {
+		"scene": preload("res://game/battlefield/ilyra_spanwater_playtest.tscn"),
+		"dispatch": Beats.ILYRA_SPANWATER_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.ILYRA_SPANWATER_DEBRIEF,
+		"battlefield_label": "SPANWATER LOCK · SOUTH BANK LANDING",
+		"orders": "Call both household groups and hold the marines at the landing approach. Board through the single berth before the stairs flood, then get both loaded groups past the boat exit. Loaded boats can still leave after the landing closes. Leave the Godbridle convoy alone.",
+	},
 	"neris_failing_grove": {
 		"scene": preload("res://game/battlefield/neris_failing_grove_playtest.tscn"),
 		"dispatch": Beats.NERIS_FAILING_GROVE_DISPATCH,
@@ -105,6 +113,38 @@ const _DEPLOYMENTS := {
 		"debrief": Beats.NERIS_SPANWATER_FEEDER_DEBRIEF,
 		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
 		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
+	},
+	"neris_cairnspine_passage": {
+		"scene": preload("res://game/battlefield/neris_cairnspine_passage_playtest.tscn"),
+		"dispatch": Beats.NERIS_CAIRNSPINE_PASSAGE_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.NERIS_CAIRNSPINE_PASSAGE_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE PASS · ROAD TO THE WITNESS TERRACE",
+		"orders": "Meet the refugee guide and signal the witness guide. Confirm a route for each party. Hold the contested rejoin or guide a waiting party back to take the other path. Both parties must reach the terrace. Leave the vault to its own escort.",
+	},
+	"sereth_voices_at_the_cut": {
+		"scene": preload("res://game/battlefield/sereth_cut_playtest.tscn"),
+		"dispatch": Beats.SERETH_CUT_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_CUT_DEBRIEF,
+		"battlefield_label": "STILL KINGDOM CUT · CEMETERY STAIR AND RECORD ROOM",
+		"orders": "Hear Iren by the stair and relay her account to the village clerk. Carry the exposed bundle to the record room. If raiders take it, hold a guard to stall them and recover it before they reach the east exit.",
+	},
+	"sereth_pass_writ": {
+		"scene": preload("res://game/battlefield/sereth_pass_writ_playtest.tscn"),
+		"dispatch": Beats.SERETH_PASS_WRIT_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_PASS_WRIT_DEBRIEF,
+		"battlefield_label": "KEEPER BOUNDARY POST · OPEN ROAD AND SHEEP TRACK",
+		"orders": "Carry the writ to the neutral Keeper. Use the sheep track for cover or screen the open road. Protect the post, offer the writ in person, and wait for the Keeper's reply. Once the hearing is granted, withdraw to the west rally. You do not need to defeat the riders.",
+	},
+	"sereth_no_proxy": {
+		"scene": preload("res://game/battlefield/sereth_no_proxy_playtest.tscn"),
+		"dispatch": Beats.SERETH_NO_PROXY_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_NO_PROXY_DEBRIEF,
+		"battlefield_label": "CAIRNSPINE · ASSEMBLY, CUSTODY LINE AND TERRACE",
+		"orders": "Refuse the escort before the assembly witnesses. Hold the court speaker on either route with the Household Guard, then challenge him before the custody line. Drive back the rival company and reach the terrace approach. Leave the vault and the witnesses' journey to their own escorts.",
 	},
 }
 

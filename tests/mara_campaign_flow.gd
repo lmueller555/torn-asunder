@@ -7,6 +7,7 @@ const CampaignMap := preload("res://game/campaign_map.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Mission := preload("res://game/battlefield/mara_mine_escort.gd")
+const BP := preload("res://game/combat/battle_points.gd")
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
@@ -58,7 +59,11 @@ func _run() -> void:
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("neris"):
+	if _has_playtest_notice():
+		return _fail("The campaign playtest notice leaked onto the title menu.")
+	if not _press("New Game") or _title._page != Title.Page.VAULT or not _has_playtest_notice():
+		return _fail("The Campaign Vault did not visibly identify its development playtests.")
+	if not _press("neris"):
 		return false
 	if _title._page != Title.Page.WORLD_MAP or not _map() or _button("Confirm Deployment") \
 			or _title._campaign_world.campaign_id() != "neris":
@@ -69,7 +74,7 @@ func _flow() -> bool:
 	if not _on_map(CAMP) or _button("Confirm Deployment"):
 		return _fail("New Game did not start at the camp on the overworld.")
 	_joy(JOY_BUTTON_A)
-	if _title._page != Title.Page.BRIEFING or not _button("Unit Progression") or not _press("Read Dispatch"):
+	if _title._page != Title.Page.BRIEFING or _mine_briefing_label() or not _button("Unit Progression") or not _press("Read Dispatch"):
 		return _fail("Camp Operations did not offer practice and the dispatch.")
 	if not _is_dialogue(Beats.MARA_MINE_DISPATCH):
 		return _fail("Camp Operations did not start the authored mine dispatch.")
@@ -86,9 +91,14 @@ func _flow() -> bool:
 		return _fail("An unconfirmed mine selection moved the party.")
 	if not _on_briefing() or _saved_world() != MINE or not _saved_clears().is_empty():
 		return _fail("Mine arrival did not persist the waypoint and stop at briefing without awarding a clear.")
+	if not _has_playtest_notice():
+		return _fail("The deployment briefing did not identify the placeholder art before confirmation.")
+	if not _mine_briefing_budget(1, 700) or _title._campaign_battle:
+		return _fail("The initial Mine briefing lacked the level-one budget or deployed without confirmation.")
 	_joy(JOY_BUTTON_B)
-	if not _on_map(MINE) or not _press("ConfirmTravel") or not _on_briefing():
-		return _fail("Cancel did not return to the actual arrived position with a way to reopen briefing.")
+	if not _on_map(MINE) or _mine_briefing_label() or not _press("ConfirmTravel") or not _on_briefing() \
+			or not _mine_briefing_budget(1, 700):
+		return _fail("Cancel and reopening did not preserve the fresh budget on the Mine briefing alone.")
 	var at_mine := FileAccess.get_file_as_string(_profile_path)
 
 	if not _press("Confirm Deployment") or not _title._campaign_battle:
@@ -108,13 +118,19 @@ func _flow() -> bool:
 	await physics_frame
 	if mission._field.name != &"YearOneMineCampaign" or mission.encounter == null:
 		return _fail("Deployment fell back to the toy map or disabled live combat.")
+	if not _mine_budget(mission, 1, 700):
+		return _fail("A fresh Mine deployment did not show 400 / 700 BP at lead level one.")
+	_key(KEY_V)
+	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
+		return _fail("The fresh attempt did not spend on the existing special.")
 	mission.report_hero_incapacitated()
 	_tick()
 	if mission.objective.phase != Escort.Phase.FAILED or FileAccess.get_file_as_string(_profile_path) != at_mine:
 		return _fail("Defeat saved an escort clear or opened the debrief.")
 	_key(KEY_BACKSPACE)
-	if mission.objective.phase != Escort.Phase.AWAITING_PICKUP or FileAccess.get_file_as_string(_profile_path) != at_mine:
-		return _fail("Retry did not reset only the local attempt.")
+	if mission.objective.phase != Escort.Phase.AWAITING_PICKUP or FileAccess.get_file_as_string(_profile_path) != at_mine \
+			or not _mine_budget(mission, 1, 700):
+		return _fail("Retry did not refill 400 BP at the same launch cap or changed the saved profile.")
 	if not _win_escort():
 		return false
 	await process_frame
@@ -134,11 +150,21 @@ func _flow() -> bool:
 
 	var after_clear := FileAccess.get_file_as_string(_profile_path)
 	_map().select_waypoint(MINE)
-	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
-		return false
-	_title._campaign_battle.set_physics_process(false)
+	if not _press("ConfirmTravel") or not _mine_briefing_budget(2, 720) or _title._campaign_battle \
+			or FileAccess.get_file_as_string(_profile_path) != after_clear or not _press("Confirm Deployment"):
+		return _fail("The replay briefing must show 400 / 720 without deploying or changing the saved clear.")
+	mission = _title._campaign_battle as Mission
+	mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
+	if not _mine_budget(mission, 2, 720):
+		return _fail("A replay after the first saved clear did not show lead level two and 400 / 720 BP.")
+	_key(KEY_V)
+	if mission.team_battle_points_frame().balance != BP.STARTING_BALANCE - Mission.SUNDERING_COST:
+		return _fail("The existing special did not spend from the higher-cap launch pool.")
+	_key(KEY_BACKSPACE)
+	if not _mine_budget(mission, 2, 720) or FileAccess.get_file_as_string(_profile_path) != after_clear:
+		return _fail("Retry must refill without reverting the higher launch cap or touching the profile.")
 	if not _win_escort():
 		return false
 	await process_frame
@@ -158,8 +184,8 @@ func _flow() -> bool:
 
 func _grain_flow() -> bool:
 	_map().select_waypoint(CROSSING)
-	if not _press("ConfirmTravel") or not _on_briefing() or _saved_world() != CROSSING:
-		return _fail("The new linked Crossing did not stop at its briefing and save its own waypoint.")
+	if not _press("ConfirmTravel") or not _on_briefing() or _mine_briefing_label() or _saved_world() != CROSSING:
+		return _fail("The Crossing must offer its own briefing and save arrival without the Mine budget.")
 	if not _press("Read Dispatch") or not _finish_beat(Beats.MARA_GRAIN_DISPATCH) or not _on_briefing():
 		return _fail("Grain dispatch did not return to the battlefield briefing without deploying.")
 	_joy(JOY_BUTTON_B)
@@ -291,8 +317,61 @@ func _high_quay_flow() -> bool:
 	if not _win_high_quay(quay):
 		return false
 	await process_frame
-	return (_is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) and FileAccess.get_file_as_string(_profile_path) == replay_before
-		and _saved_grain() == Grain.SEED_ONLY) or _fail("Final replay duplicated a clear or rewrote the saved first result.")
+	if not _is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) or FileAccess.get_file_as_string(_profile_path) != replay_before \
+			or _saved_grain() != Grain.SEED_ONLY:
+		return _fail("Final replay duplicated a clear or rewrote the saved first result.")
+	return await _completed_mine_replay()
+
+
+func _completed_mine_replay() -> bool:
+	if not _finish_beat(Beats.MARA_HIGH_QUAY_DEBRIEF):
+		return false
+	for waypoint in [MOONWASH, CROSSING, ROAD, MINE]:
+		_map().select_waypoint(waypoint)
+		if not _press("ConfirmTravel"):
+			return _fail("Returning to the Mine must follow the existing map links.")
+		if waypoint == CROSSING and _on_briefing():
+			_joy(JOY_BUTTON_B)
+		if waypoint != MINE and not _on_map(waypoint):
+			return _fail("Revisiting the clear waypoints triggered the wrong screen.")
+	var mine_profile := FileAccess.get_file_as_string(_profile_path)
+	if not _on_briefing() or not _mine_briefing_budget(3, 740) or not _press("Confirm Deployment") \
+			or FileAccess.get_file_as_string(_profile_path) != mine_profile:
+		return _fail("The completed campaign must preview 400 / 740 at the Mine without changing the save.")
+	var mission := _title._campaign_battle as Mission
+	mission.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	if not _mine_budget(mission, 3, 740):
+		return _fail("A completed campaign should reopen the Mine at lead level three with 400 / 740 BP.")
+	if not _win_escort():
+		return false
+	await process_frame
+	return (_is_dialogue(Beats.MARA_MINE_DEBRIEF) and FileAccess.get_file_as_string(_profile_path) == mine_profile
+		and _saved_clears() == PackedStringArray([CLEAR_ID, GRAIN_ID, QUAY_ID]) and _saved_grain() == Grain.SEED_ONLY) \
+		or _fail("A boosted Mine replay rewrote the completed profile or original Grain result.")
+
+
+func _mine_briefing_label() -> Label:
+	return _title._stage.get_node_or_null("MineDeploymentBudget") as Label
+
+
+func _mine_briefing_budget(level: int, capacity: int) -> bool:
+	var line := _mine_briefing_label()
+	var deploy := _button("Confirm Deployment")
+	return line != null and line.is_visible_in_tree() and deploy != null \
+		and line.get_rect().end.y <= deploy.get_rect().position.y \
+		and line.text.contains("400 starting BP") and line.text.contains("Lead platoon Lv %d" % level) \
+		and line.text.contains("%d BP cap" % capacity) and line.text.contains("Each Mine attempt starts fresh") \
+		and line.text.contains("Confirmed Human chapter clears")
+
+
+func _mine_budget(mission: Mission, level: int, capacity: int) -> bool:
+	var bp := mission.team_battle_points_frame()
+	# The derived lead level only sets the budget. Unit stats are unchanged.
+	return bp.balance == BP.STARTING_BALANCE and bp.capacity == capacity and bp.lead_level == level \
+		and mission.encounter.hero.level == 1 \
+		and mission._combat_hp.text.contains("Team 400 / %d BP (lead Lv %d)" % [capacity, level])
 
 
 func _win_high_quay(quay: HighQuay) -> bool:
@@ -527,6 +606,13 @@ func _drive_to(marker_id: String, until_windup := false) -> bool:
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
 	return reached or _fail("The actual route did not reach " + marker_id)
+
+
+func _has_playtest_notice() -> bool:
+	for child in _title._stage.get_children():
+		if child is Label and child.is_visible_in_tree() and child.text.begins_with("Development playtest: includes placeholder art."):
+			return true
+	return false
 
 
 func _on_map(id: String) -> bool:

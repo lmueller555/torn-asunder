@@ -1,6 +1,6 @@
 # Year One Mine: campaign-scale battlefield graybox
 
-`game/battlefields/year_one_mine_campaign.tscn` is a separate, large 3D layout for the [shared Year One encounter](combat.md#year-one-battle-at-the-mine). The [96 × 88 m mine pocket](year-one-mine-map.md) remains a separate prototype. The larger valley is now used by Mara's escort and Sova's evacuation prototypes. Mara's encounter stages an Orc at EastReserve until the living carrier approaches PassRelease with the Godbridle. The same Orc then runs through InterceptMouth to the road merge; a warning precedes contact. Delivery at the east exit is still the goal, whether or not the Orc is defeated.
+`game/battlefields/year_one_mine_campaign.tscn` is a separate, large 3D layout for the [shared Year One encounter](combat.md#year-one-battle-at-the-mine). The [96 × 88 m mine pocket](year-one-mine-map.md) remains a separate prototype. The larger valley is used by Mara’s escort, Sova’s evacuation, and Raska’s witness route. Each launches separately from its campaign. Only the [front V10 timber entrance and connected shoulders](audits/mine-timber-portal-v10.json) have passed the environmental art audit; the evacuation arch and rest of the mine remain development art. The [sealed Godbridle case](audits/godbridle-custody-case-v3.json) is also approved for Mara’s campaign pickup and carry only. It is not part of the shared terrain. Mara's encounter stages an Orc at EastReserve until the living carrier approaches PassRelease with the Godbridle. The same Orc then runs through InterceptMouth to the road merge; a warning precedes contact. Delivery at the east exit is still the goal, whether or not the Orc is defeated.
 
 Open `tests/year_one_mine_campaign_preview.tscn` and press F6. Press **1** for the full valley, **2** for the local command sector, or **3** for the road at hero height. The 1.8 m capsules give scale, not combat or formations. The command view frames a 116 m vertical span around the pass so troop-scale detail isn't lost in the valley-wide view. The hero view uses a 65° lens and a follow-distance proxy of about 6 m.
 
@@ -20,6 +20,12 @@ The support plane is **360 × 260 m** (convention: +X east, −Z north, one unit
 - **Pass reserves.** The Orc east reserve sits off the main road with a second approach into the interception mouth. South of the road, a longer traverse connects a reserve pocket, a screened flank cut and the pass fallback without crossing the narrowest part of the throat. It changes where a formation can enter the fight; it isn't a duplicate straight road.
 
 At the current prototype's **5.5 m/s hero** and **3 m/s formation** speeds, 260 m is about **47 s / 87 s of uninterrupted travel**. These are pacing estimates, not win targets. Later mission passes should test whether movement and competing orders fill those windows, and shorten or move a decision point if its approach feels idle.
+
+### Measured battlefield size: Small
+
+Normal infantry marched **326.925 m in 109.02 s** (6,541 physics steps at 60 Hz, **3 m/s**) in each direction. The route starts at the playable foot of the west crag (local XZ **−152, −17**), turns through WestAssembly, QuarryTurn, RoadWest, RoadJunction, RoadCut, EastPass and PassRelease, then reaches the playable foot of an east crag (**157, −30**). The geometry test issues each move through the live command simulation and checks walkable support and formation clearance at every step. At both ends, solid crag collision prevents another outward move even though that move is still inside the command bounds.
+
+That puts the valley in the **Small** planning class (110 s reference). This is the unopposed infantry march on the large shared battlefield, not a bounding-box estimate, a Godbridle delivery time, or a target for the three missions.
 
 ## Integration contract
 

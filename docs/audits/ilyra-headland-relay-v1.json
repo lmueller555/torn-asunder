@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "scope": "Static V1 Headland Relay stone shoe, cedar mast, iron hardware, return halyard, spar and fixed pennant in Ilyra’s Two Shorelines only. No approval of the Beach Relay, coast, surrounding actors, cutter or transmission effects.",
+  "author": "Torn Asunder Headland Relay coastal prop artist",
+  "reviewer": "Dot, independent render and integration review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independently inspected matched full 1280 × 720 registered hero views before readings, while the physical cutter holds and is contested, while transmitting, and after acknowledgment, plus the ordinary 105 m tactical sector. Independently reproduced all eighteen frame files byte-for-byte after importing the final delivery in a fresh Godot checkout.",
+    "close_up": "Native landward and seaward shoulder views reached over the solid walkable apron. They show the socket seated into the platform, metal bands across the mast, halyard and cleat, and a readable cloth fold on either side, with no floating or exposed seams.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, Mesa llvmpipe. Deploy Ilyra from Survey Shore. Record the Ancestral Stone and Fishing Inlet, follow the inland ramp, Hold the Shore Detachment at the high guard marker, and signal from the separate ring when the cutter stops in clear line of sight. Inspect independently from shoulder and Shift/L2 sector views. Run tests/ilyra_headland_relay_skin.gd for exact placement, unchanged original colliders/envelopes and Beach binding, absence of new collision and animation, and signal ray; run tests/ilyra_coast_survey_campaign.gd for physical mission flow.",
+    "measurements": "928 triangles, one surface, three mipmapped 512 × 512 atlas textures, conservative 4 MiB RGBA8 including mips; one placement only. The site budget was ≤1,000 extra submitted primitives and no more visible draw calls in each view. Actual hero +904 / −2 draws and sector +438 / −2 draws; author’s alternating software medians 40.457→41.672 ms hero and 45.483→45.823 ms sector. These are not console or target-GPU performance claims."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "A tapered timber mast and physically seated layered stone foot, with clearly attached spar, cloth and rope, replace the block silhouettes without new solids. Two playable angles are coherent."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Cool stone, cedar, iron and a restrained blue-green cloth are distinct under the original coast lighting, including on the darker landward side. No added illumination."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The pennant’s silhouette reads at hero distance without competing with the real cyan cue. Only 237 pixels change in the sector comparison, all at the stand and its shadow. Nine pairs preserve all pixels outside their stand/shadow bounds."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "This is a stationary prop with a fixed pennant shape. Cutter movement, active signal graphics, timing and animation are outside this visual receipt."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact editable and shipped bytes verified before and after Godot import. Same collision boxes, ring, caption rules, LOS, Beach model, and matched real contested/acknowledged sequence. Scoped visible submission limits met."
+    }
+  },
+  "files": {
+    "assets/models/environment/ilyra_headland_relay/headland_relay.glb": "ccbfffa826b4e16852720c6e8a4def671bc3b2ab2f0c38b71019a31631f17b95",
+    "assets/models/environment/ilyra_headland_relay/headland_relay.glb.import": "580f9d4a37b61739d17f941ee287d154a22cf674d4a7e2368c91f9f0ff2eae8a",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_color.png": "eec8a65f24db0655b907813f59a302ad626e77cfc27d6feccf5aef710a65024a",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_color.png.import": "90d57a7ddb07b1437af52f8b38cad17153f2ce717efc3b1504aeb6b168779bef",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_mr.png": "af56d3a0a3c34faf9aa0dbf87766e5210b222e2932370405e11c49065753aa2c",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_mr.png.import": "d98062db695163da4945b9aee0ef57729decf7dda3253adc5107069120e12ba4",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_normal.png": "6618ab8a8011a153095577acc2154c0a9633e91acf3727cc1e0647405bcb8334",
+    "assets/models/environment/ilyra_headland_relay/headland_relay_headland_normal.png.import": "0b45ec176a7212710c348ffb0b856d4bb5d365d1b0d8f8b0ebf8bc720d3217bc",
+    "assets/source/moonwash_survey_shore/headland_relay.blend": "594b4d321e8edda7f5e3b4c548a7f35e44c8324df00f49ab92c76d2f1c6654da",
+    "game/battlefield/props/ilyra_headland_relay_binding.gd": "524ba5cd7c3f7cd16c5a4513b291b2cb9ab35defb88f793f1e1918cd5a187677",
+    "game/battlefield/props/ilyra_headland_relay_binding.gd.uid": "25cf4d74e238a07fc9deb3fedf1f39acc4cd1ee1b8b0b5044595eb2e617a0d34",
+    "game/battlefields/moonwash_survey_shore.tscn": "5053f25e9fe2ee8f66be7d5e9c4d259940b1679f9d5fffbada9b60321bfc8d51"
+  },
+  "integration_scope": {
+    "reviewed_deployment_path": "game/battlefield/ilyra_coast_survey_campaign.tscn",
+    "reviewed_battlefield_path": "game/battlefields/moonwash_survey_shore.tscn",
+    "reviewed_binding_sha256_at_delivery": {
+      "game/battlefield/ilyra_coast_survey_campaign.tscn": "a95aef6bea70a353ddd771dddbe4e5cf605615024a767987a5fd200c19e5ab2b",
+      "game/battlefields/moonwash_survey_shore.tscn": "5053f25e9fe2ee8f66be7d5e9c4d259940b1679f9d5fffbada9b60321bfc8d51"
+    },
+    "context": "Separate adapter in the registered survey scene. It hides only two stock meshes, keeps both solid bodies and uses the exact shared battlefield."
+  },
+  "offline_evidence_sha256": {
+    "candidate-close-landward.png": "c2b45b4b86a7c187407798041e4b91ea9be7f59908fdbe06e6fe9e789e600553",
+    "candidate-close-seaward.png": "8028484237ed05e50b676a9d4b5216dabc497d882e6515b9b22807c5c79274ba",
+    "candidate-hero-acknowledged.png": "6175d3f8207947cb25d2505fe25da747ad1ebcef68da503491d83483f1d1e0cc",
+    "candidate-hero-before-readings.png": "8944b482ca6abc9db9c8cbc08d90c284cc6ea405b650e7649ad6ee46c21acce6",
+    "candidate-hero-contested.png": "8ed968e8475cd2dfeb50284bffdff4409418263d6fac9b2cb8f5a884d80d35c7",
+    "candidate-hero-held.png": "8ed968e8475cd2dfeb50284bffdff4409418263d6fac9b2cb8f5a884d80d35c7",
+    "candidate-hero-transmitting.png": "6b3abb3233905af63b8a92b3548ed9883919adcc85e324ef421343cb582581b3",
+    "candidate-sector-held.png": "60baab95c66547cefa817ae61d70edbcbeb3bf4deb2d349b7ec4a8a08c2e9cf2",
+    "candidate-sector-transmitting.png": "490aec714b2cffd04e70deb14a6061e523a14ed7867db34489b371a5c3f1fc9e",
+    "stock-close-landward.png": "e9e59896ac7f22e9ef5fedb14a98da80c705f9c9939c7c173a9f36b115e606d2",
+    "stock-close-seaward.png": "78e53969dfffa5834c195c2e80421228c3f27c91fb5b29d4d54ff60327915383",
+    "stock-hero-acknowledged.png": "94af6497dca58600e5e233e9cdf4168d86aa791d0c44321702f7bc5ab76310b6",
+    "stock-hero-before-readings.png": "e6bd2a8c90a35ae684f58f549011a8d72fc370b4b478039eb9a87578cf3523e5",
+    "stock-hero-contested.png": "f8f17f86b69c49c5489f9bf0bbb1eed1f68f681e21983f7d3399b4396e43f028",
+    "stock-hero-held.png": "f8f17f86b69c49c5489f9bf0bbb1eed1f68f681e21983f7d3399b4396e43f028",
+    "stock-hero-transmitting.png": "170eee7525be5bca49ab55ef1907741fd7e11038709b38037c5757b801cbac30",
+    "stock-sector-held.png": "cf41f85c52c740d9304a6b6dbcfff9b2fadb5b6ced6f5dcd110b6aa7cc763083",
+    "stock-sector-transmitting.png": "371956b0a5df9179bd85ba69f3eb8783d865e8c9ce8b354a9d6ca2a1ddba7fbd",
+    "metrics.txt": "7a721062cd7f9cacdfca176d086d0f16c8d63d45752b373dc6df3037771d4137"
+  }
+}

@@ -154,34 +154,29 @@ const _MAPS := {
 		],
 	},
 	"sereth": {
-		"start": "still_court",
+		"start": "still_kingdom_camp",
 		"waypoints": {
-			"still_court": {
-				"id": "still_court", "label": "The Still Court", "kind": WaypointKind.CAMP,
-				"map_position": Vector2(0.94, 0.10),
+			"still_kingdom_camp": {
+				"id": "still_kingdom_camp", "label": "Still Kingdom Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.84, 0.17),
 			},
 			"still_kingdom_cut": {
-				"id": "still_kingdom_cut", "label": "The Cut", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.85, 0.24), "mission_id": "sereth_voices_at_the_cut",
-			},
-			"court_chambers": {
-				"id": "court_chambers", "label": "Court Chambers", "kind": WaypointKind.REGION,
-				"map_position": Vector2(0.93, 0.30),
+				"id": "still_kingdom_cut", "label": "Still Kingdom Cut", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.76, 0.33), "mission_id": "sereth_voices_at_the_cut",
 			},
 			"cairnspine_boundary_post": {
-				"id": "cairnspine_boundary_post", "label": "Boundary Post", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.68, 0.19), "mission_id": "sereth_pass_writ",
+				"id": "cairnspine_boundary_post", "label": "Keeper Boundary Post", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.62, 0.46), "mission_id": "sereth_pass_writ",
 			},
-			"cairnspine_vault_road": {
-				"id": "cairnspine_vault_road", "label": "Cairnspine Pass", "kind": WaypointKind.BATTLEFIELD,
-				"map_position": Vector2(0.52, 0.13), "mission_id": "sereth_no_proxy",
+			"cairnspine_assembly": {
+				"id": "cairnspine_assembly", "label": "Valley Assembly", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.78, 0.55), "mission_id": "sereth_no_proxy",
 			},
 		},
 		"routes": [
-			{"from_id": "still_court", "to_id": "still_kingdom_cut"},
-			{"from_id": "still_kingdom_cut", "to_id": "court_chambers", "required_clear_id": "sereth_voices_at_the_cut"},
-			{"from_id": "court_chambers", "to_id": "cairnspine_boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
-			{"from_id": "cairnspine_boundary_post", "to_id": "cairnspine_vault_road", "required_clear_id": "sereth_pass_writ"},
+			{"from_id": "still_kingdom_camp", "to_id": "still_kingdom_cut"},
+			{"from_id": "still_kingdom_cut", "to_id": "cairnspine_boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
+			{"from_id": "cairnspine_boundary_post", "to_id": "cairnspine_assembly", "required_clear_id": "sereth_pass_writ"},
 		],
 	},
 }

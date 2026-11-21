@@ -2,13 +2,13 @@
 
 **Rootspeaker Neris Alder · Years Three–Five · Three missions**
 
-The Year Three opening is playable from the campaign map. Later battles are planned. See [the Dryad groves and their authority](../leaders.md#dryads--rootspeaker-neris-alder), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
+All three chapters are available from the campaign map as development playtests. See [the Dryad groves and their authority](../leaders.md#dryads--rootspeaker-neris-alder), [the shared war timeline](../war-timeline.md), and [battlefield command](../combat.md#battlefield-command).
 
 Neris comes to the oldest isolated grove thinking the Deepwood could save it. The people there say no: her shortest route runs under the wells of the town that gave them land. She can lead a common defense, but she cannot grant assent for them. Each mission gives her a job the people on that ground asked her to do.
 
 ## 1. What We Planted Here — Year Three (`neris_failing_grove`)
 
-**Playtest:** Choose Neris, travel from Grove Camp to the Isolated Grove, and read “What We Planted Here” (`neris_failing_grove_dispatch`) before deployment. “Room for the First Tree” (`neris_failing_grove_debrief`) follows the successful transplant. That clear opens travel to Spanwater Lock, not deployment for the feeder battle yet. Opening `game/battlefield/neris_failing_grove_playtest.tscn` directly runs the same battle without updating a campaign save.
+**Playtest:** Choose Neris, travel from Grove Camp to the Isolated Grove, and read “What We Planted Here” (`neris_failing_grove_dispatch`) before deployment. “Room for the First Tree” (`neris_failing_grove_debrief`) follows the successful transplant. That clear opens travel to the feeder battle at Spanwater Lock. Opening `game/battlefield/neris_failing_grove_playtest.tscn` directly runs the same battle without updating a campaign save.
 
 **Briefing:** The river’s new cut has left the grove dry. The town offers a watered nursery plot if the grove helps keep the old feeder open. The grove withholds assent for the root crossing and asks Neris to help with its first transplant.
 
@@ -27,6 +27,8 @@ Neris comes to the oldest isolated grove thinking the Deepwood could save it. Th
 - **Cost:** Neris stays with the feeder instead of sending the platoons after the Godbridle. Ilyra’s boats have their own evacuation lane; neither the boats nor an Orc victory screen is required. In the debrief the volunteers hand the working gauge over to the town, which keeps its wells and the nursery. Mara’s later handover does not put the bridle in Neris’s custody.
 
 ## 3. A Road We Can Share — Year Five (`neris_cairnspine_passage`)
+
+**Playtest:** The town-gauge clear opens Cairnspine Vault Road. Read “A Road We Can Share” and confirm deployment. Screen the routes your groups take or reroute a waiting party, then bring both groups to the witness terrace to see “Room by the Stove” and complete Neris’s campaign. The vault ceremony and the other factions’ results are not prerequisites. Continue stays at the arrived waypoint; the finished battle remains replayable.
 
 **Briefing:** The groves refuse a continent-wide crossing. Nearby groves separately send volunteers to keep people moving while Sova takes the bridle to the vault. Neris accepts those offers without reopening the question of the crossing.
 

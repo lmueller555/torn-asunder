@@ -34,12 +34,20 @@ const ILYRA_MOONWASH_CREWS_DEBRIEF := &"ilyra_moonwash_debrief_crews_only"
 const ILYRA_COAST_SURVEY_DISPATCH := &"ilyra_coast_survey_dispatch"
 const ILYRA_COAST_SURVEY_BEACH_DEBRIEF := &"ilyra_coast_survey_debrief_beach"
 const ILYRA_COAST_SURVEY_HEADLAND_DEBRIEF := &"ilyra_coast_survey_debrief_headland"
+const ILYRA_SPANWATER_DISPATCH := &"ilyra_spanwater_dispatch"
+const ILYRA_SPANWATER_DEBRIEF := &"ilyra_spanwater_debrief"
 const NERIS_FAILING_GROVE_DISPATCH := &"neris_failing_grove_dispatch"
 const NERIS_FAILING_GROVE_DEBRIEF := &"neris_failing_grove_debrief"
 const NERIS_SPANWATER_FEEDER_DISPATCH := &"neris_spanwater_feeder_dispatch"
 const NERIS_SPANWATER_FEEDER_DEBRIEF := &"neris_spanwater_feeder_debrief"
+const NERIS_CAIRNSPINE_PASSAGE_DISPATCH := &"neris_cairnspine_passage_dispatch"
+const NERIS_CAIRNSPINE_PASSAGE_DEBRIEF := &"neris_cairnspine_passage_debrief"
 const SERETH_CUT_DISPATCH := &"sereth_cut_dispatch"
 const SERETH_CUT_DEBRIEF := &"sereth_cut_debrief"
+const SERETH_PASS_WRIT_DISPATCH := &"sereth_pass_writ_dispatch"
+const SERETH_PASS_WRIT_DEBRIEF := &"sereth_pass_writ_debrief"
+const SERETH_NO_PROXY_DISPATCH := &"sereth_no_proxy_dispatch"
+const SERETH_NO_PROXY_DEBRIEF := &"sereth_no_proxy_debrief"
 const MARA_PORTRAIT := preload("res://assets/art/mara.webp")
 const RASKA_PORTRAIT := preload("res://assets/art/raska.webp")
 const SOVA_PORTRAIT := preload("res://assets/art/sova.webp")
@@ -68,14 +76,21 @@ const PILOT := "Moonwash Pilot"
 const SIGNALLER := "Fleet Signaller"
 const PORT_CLERK := "Harbor Clerk"
 const INLET_PILOT := "Fishing Inlet Pilot"
+const PORT_CAPTAIN := "Port Captain"
 
 const NERIS := "Rootspeaker Neris Alder"
 const GROVE_ENVOY := "Grove Envoy"
 const FEEDER_KEEPER := "Town Feeder Keeper"
+const REFUGEE_GUIDE := "Refugee Guide"
+const WITNESS_GUIDE := "Witness Guide"
 const SERETH := "High Executor Sereth Vale"
 const IREN := "Iren"
 const VILLAGE_CLERK := "Village Clerk"
 const HOUSEHOLD_GUARD := "Household Guard"
+const COURT_COURIER := "Court Courier"
+const COURT_SPEAKER := "Court Speaker"
+const SERETH_VALE := "Sereth Vale"
+const AT_SERETHS_WINDOW := "Later, at Sereth's window"
 
 const BEATS := {
 	MARA_MINE_DISPATCH: {
@@ -385,6 +400,29 @@ const BEATS := {
 			{"speaker": INLET_PILOT, "text": "I'll carry ours home. If you need boats in the shallows again, send for us."},
 		],
 	},
+	ILYRA_SPANWATER_DISPATCH: {
+		"title": "Last Boat at Spanwater",
+		"location": "Spanwater south bank · Before the evacuation",
+		"lines": [
+			{"speaker": INLET_PILOT, "text": "Both groups made the south bank. They can't get across the causeway. We can take them from the low landing, one launch at the berth at a time."},
+			{"speaker": SIGNALLER, "text": "Raska's at the spillway. He means to fill the riverbed, not open the sea gate. Watch the landing steps for the last departure. If the current is too strong, the launches hold at the outflow."},
+			{"speaker": PORT_CAPTAIN, "text": "My port is signaling our ships to break off. Others have sent the same order. They want the Godbridle convoy while it's still within reach."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Signal back that the launches stay. The village pilots came to get people through the shallows. That's what we'll do."},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Post the marines at the landing approach. I'll call the near group or the far one, whichever we can get down first. Don't count either group safe until its launch is past the boat exit."},
+		],
+	},
+	ILYRA_SPANWATER_DEBRIEF: {
+		"title": "One More Mile",
+		"location": "Spanwater downstream bank · After the evacuation",
+		"lines": [
+			{"speaker": SIGNALLER, "text": "Both household groups are past the boat exit. I counted them again on the bank."},
+			{"speaker": PORT_CAPTAIN, "text": "The ports that ordered the pursuit have recalled their pledged ships. Mine's one of them. Who'll take our place in the fleet?"},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Can you take one family a little farther downriver before you go? They have people waiting for them below the bend."},
+			{"speaker": PORT_CAPTAIN, "text": "I can take them that far. Tell them to bring their things."},
+			{"speaker": INLET_PILOT, "text": "I'll stay to witness the handover, if Mara brings the case down. What do you want on the record?"},
+			{"speaker": ILYRA, "portrait": ILYRA_PORTRAIT, "text": "Only what you see change hands. I still want our coast back. It isn't in that case, and you aren't there to give it away."},
+		],
+	},
 	NERIS_FAILING_GROVE_DISPATCH: {
 		"title": "What We Planted Here",
 		"location": "Isolated grove · Before the transplant",
@@ -427,6 +465,28 @@ const BEATS := {
 			{"speaker": GROVE_ENVOY, "text": "I'll take the first turn. It used to take me all morning to carry enough water for one tree."},
 		],
 	},
+	NERIS_CAIRNSPINE_PASSAGE_DISPATCH: {
+		"title": "A Road We Can Share",
+		"location": "Cairnspine valley assembly · Year Five, before the ascent",
+		"lines": [
+			{"speaker": REFUGEE_GUIDE, "text": "My grove sent me to walk these families to the terrace. It didn't send me to answer for the other groves."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The groves refused the crossing. That answer stands. Sova has his own escort. I'm here for the people on the road."},
+			{"speaker": REFUGEE_GUIDE, "text": "Meet me at staging. We can take the shelf or the side path. If the road ahead turns bad, we'll wait at the last safe marker."},
+			{"speaker": WITNESS_GUIDE, "text": "The witnesses are with me. Give me a signal, then tell us which lane to take. We can wait under cover until you're ready."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "I'll confirm each route at the fork. If the rivals get to the rejoin, have the volunteers hold it. We need the road to the terrace, not the vault gate."},
+		],
+	},
+	NERIS_CAIRNSPINE_PASSAGE_DEBRIEF: {
+		"title": "Room by the Stove",
+		"location": "Cairnspine witness terrace · Year Five, after the escort",
+		"lines": [
+			{"speaker": REFUGEE_GUIDE, "text": "Both groups are here. A few of the families are asking where they can go when the terrace empties."},
+			{"speaker": WITNESS_GUIDE, "text": "My people will wait here. They'll speak to what they see at the vault, not before."},
+			{"speaker": NERIS, "portrait": NERIS_PORTRAIT, "text": "The last volunteers stay with the witnesses. I'll walk back with anyone who wants to come. That nursery tree still needs watering."},
+			{"speaker": REFUGEE_GUIDE, "text": "My grove has a room by the stove. I'll ask the family with the baby whether they'd like it."},
+			{"speaker": WITNESS_GUIDE, "text": "I can take the man with the wet bedroll and his father. I'll ask them while we wait."},
+		],
+	},
 	SERETH_CUT_DISPATCH: {
 		"title": "Before Anyone Writes It Down",
 		"location": "Still Kingdom village · Year Three, before the defense",
@@ -447,6 +507,49 @@ const BEATS := {
 			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Seal the bundle for cataloging. Don't send the court a list of names to call back. Hearing a name doesn't tell us who wants to return."},
 			{"speaker": VILLAGE_CLERK, "text": "The court's courier is at the door. They want you to secure the Godbridle before anyone gives another command."},
 			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I'll go. If you come across a letter for me, put it in the register with everything else. It can wait."},
+		],
+	},
+	SERETH_PASS_WRIT_DISPATCH: {
+		"title": "An Audience, Not a Seizure",
+		"location": "Cairnspine west road · Year Four, before the handover",
+		"lines": [
+			{"speaker": COURT_COURIER, "text": "Mara has handed the bridle to Sova. The court wants a hearing before the vault closes. Its seal is on this writ."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The seal makes me a messenger. It doesn't give me leave to seize the bridle. I'll take the writ to the Keeper myself."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "We can screen the open road or take the sheep track on foot. There's a lookout where the track comes back into the open."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "Keep the post clear while I offer the writ and wait for an answer. Once the Keeper grants the hearing, fall back to the west rally. Don't chase the riders."},
+			{"speaker": COURT_COURIER, "text": "Bring me the terms in writing. The court will ask what the Keeper's signature buys us."},
+		],
+	},
+	SERETH_PASS_WRIT_DEBRIEF: {
+		"title": "A Hearing Only",
+		"location": "Cairnspine west rally · Year Four, after the withdrawal",
+		"lines": [
+			{"speaker": HOUSEHOLD_GUARD, "text": "You're back at the west rally. Did the Keeper answer?"},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The Keeper wrote 'a hearing only, at the valley assembly.' I countersigned those terms so nobody could say I'd heard different."},
+			{"speaker": COURT_COURIER, "text": "The Keeper's name and yours, then. Will that get our speaker through the vault gate?"},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "No entry to the vault. No right to take or use the bridle. And neither signature can answer for the dead."},
+			{"speaker": COURT_COURIER, "text": "I'll tell them they may send someone to be heard. I can't promise that's all they'll ask for."},
+		],
+	},
+	SERETH_NO_PROXY_DISPATCH: {
+		"title": "The Lamp in the Window",
+		"location": "Cairnspine valley assembly · Year Five, before the refusal",
+		"lines": [
+			{"speaker": VILLAGE_CLERK, "text": "I found this while cataloging the bundle we brought up from the cut. It was addressed to you."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "I know that hand. My sister wrote, ‘When I die, leave a lamp in the window.’ That's all she asks."},
+			{"speaker": COURT_SPEAKER, "text": "The court orders you to escort me to the vault. I'll ask Orrun to bring back those who left no wishes. Someone has to speak for them."},
+			{"speaker": SERETH, "portrait": SERETH_PORTRAIT, "text": "The Keeper granted a hearing here, not a right to the bridle. I'll give you my answer here too, where the witnesses can hear it."},
+			{"speaker": HOUSEHOLD_GUARD, "text": "If you refuse, the court troops go with the speaker. The household stays with you. The shelf and the side path both lead to the forecourt, before the custody line."},
+		],
+	},
+	SERETH_NO_PROXY_DEBRIEF: {
+		"title": "What She Asked",
+		"location": "Cairnspine terrace approach · Year Five, after the stand",
+		"lines": [
+			{"speaker": HOUSEHOLD_GUARD, "text": "The speaker didn't cross the custody line. The rival company pulled back. The witnesses can use the approach now."},
+			{"speaker": COURT_COURIER, "text": "I have the court's answer to your refusal. Your commission is revoked. Give me the seal."},
+			{"speaker": SERETH_VALE, "portrait": SERETH_PORTRAIT, "text": "Take it. Let the witnesses go on. They'll tell what they see."},
+			{"speaker": AT_SERETHS_WINDOW, "text": "Sereth lights a lamp and sets it in the window. He folds his sister's letter and leaves it beside the lamp."},
 		],
 	},
 }

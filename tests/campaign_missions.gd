@@ -2,6 +2,9 @@ extends SceneTree
 
 const Campaigns := preload("res://game/campaigns.gd")
 const Missions := preload("res://game/campaign_missions.gd")
+const World := preload("res://game/campaign_world.gd")
+const Deployment := preload("res://game/campaign_deployments.gd")
+const Beats := preload("res://game/campaign_dialogues.gd")
 
 const EXPECTED := {
 	"mara": [
@@ -38,9 +41,9 @@ const EXPECTED := {
 
 
 func _initialize() -> void:
-	var passed := _check_catalog() and _check_progression() and _check_isolation()
+	var passed := _check_catalog() and _check_progression() and _check_isolation() and _check_deployed_routes()
 	if passed:
-		print("Verified 18 authored missions, campaign order, shared routing, unlocks, replays, and unknown IDs.")
+		print("Verified all 18 authored missions and reachable deployments, campaign order, gates, replays, and unknown IDs.")
 	quit(0 if passed else 1)
 
 
@@ -127,6 +130,46 @@ func _check_isolation() -> bool:
 	if fresh.size() != 3 or fresh[0].title == "Edited locally" or fresh[0].year != 1:
 		return _fail("A caller mutated the authored catalog.")
 	return true
+
+
+func _check_deployed_routes() -> bool:
+	var deployed := {}
+	for campaign_id: String in EXPECTED:
+		var world := World.new(campaign_id)
+		var waypoints := {}
+		for waypoint in world.waypoints():
+			if waypoint.kind != World.WaypointKind.BATTLEFIELD:
+				if waypoint.has("mission_id"):
+					return _fail("Non-battle waypoint offered a hidden deployment: " + waypoint.id)
+				continue
+			var id: String = waypoint.mission_id
+			if waypoints.has(id) or Missions.mission_for_campaign(campaign_id, id).is_empty():
+				return _fail("Battlefield waypoint lacks its own unique campaign mission: " + id)
+			waypoints[id] = waypoint.id
+		var clears := PackedStringArray()
+		for mission in Missions.missions_for_campaign(campaign_id):
+			var id: String = mission.id
+			var waypoint: String = waypoints.get(id, "")
+			if not world.is_waypoint_reachable(waypoint, clears):
+				return _fail("No reachable deployment after prerequisite clears: " + id)
+			if not clears.is_empty():
+				var before_last := clears.slice(0, clears.size() - 1)
+				if world.is_waypoint_reachable(waypoint, before_last):
+					return _fail("Reached later deployment before its previous mission cleared: " + id)
+			var entry := Deployment.for_mission(id)
+			var scene := entry.get("scene") as PackedScene
+			if not scene or not scene.can_instantiate() or Beats.get_beat(entry.get("dispatch", &"")).is_empty():
+				return _fail("Deployment or dispatch is missing for " + id)
+			var carries_result: bool = entry.get("result_debrief", false)
+			var actor := scene.instantiate()
+			var has_outcome := actor.has_signal(&"mission_cleared" if carries_result else &"mission_finished")
+			actor.free()
+			if not has_outcome or (not carries_result and Beats.get_beat(entry.get("debrief", &"")).is_empty()):
+				return _fail("Deployment lacks a clear signal or debrief: " + id)
+			clears.append(id)
+			deployed[id] = true
+	return (deployed.size() == 18 and Deployment._DEPLOYMENTS.size() == deployed.size()) \
+		or _fail("Expected exactly 18 reachable registered deployments.")
 
 
 func _fail(message: String) -> bool:

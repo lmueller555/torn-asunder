@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/environment/keeper_shelter.glb" id="1_keeper_shell"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_cut"]
 albedo_color = Color(0.52, 0.45, 0.34, 1)
 
@@ -649,6 +651,7 @@ shape = SubResource("Shape_0p62_2p8_0p61")
 position = Vector3(109, 1.65, -1.3)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Post/KeeperShelterBack"]
+cast_shadow = 3
 mesh = SubResource("Mesh_10_3p3_1p1")
 material_override = SubResource("Mat_plaster")
 
@@ -659,6 +662,7 @@ shape = SubResource("Shape_10_3p3_1p1")
 position = Vector3(113.75, 1.65, 2)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Post/KeeperShelterSide"]
+cast_shadow = 3
 mesh = SubResource("Mesh_1p1_3p3_6p8")
 material_override = SubResource("Mat_plaster")
 
@@ -669,6 +673,7 @@ shape = SubResource("Shape_1p1_3p3_6p8")
 position = Vector3(104.25, 1.65, 2)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Post/KeeperShelterWestPost"]
+cast_shadow = 3
 mesh = SubResource("Mesh_0p75_3p3_0p75")
 material_override = SubResource("Mat_stone")
 
@@ -679,11 +684,23 @@ shape = SubResource("Shape_0p75_3p3_0p75")
 position = Vector3(109, 3.32, 1.9)
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Post/KeeperShelterRoof"]
+cast_shadow = 3
 mesh = SubResource("Mesh_11p4_0p47_7p5")
 material_override = SubResource("Mat_roof")
 
 [node name="Collision" type="CollisionShape3D" parent="Geometry/Post/KeeperShelterRoof"]
 shape = SubResource("Shape_11p4_0p47_7p5")
+
+[node name="KeeperShelterVisual" parent="Geometry/Post" instance=ExtResource("1_keeper_shell")]
+position = Vector3(109, 0, 2)
+
+[node name="SHELTER_HERO" parent="Geometry/Post/KeeperShelterVisual" index="0"]
+cast_shadow = 0
+visibility_range_end = 48.0
+
+[node name="SHELTER_TACTICAL" parent="Geometry/Post/KeeperShelterVisual" index="1"]
+cast_shadow = 0
+visibility_range_begin = 48.0
 
 [node name="KeeperBench" type="StaticBody3D" parent="Geometry/Post"]
 position = Vector3(108, 0.44, 2)
@@ -927,3 +944,5 @@ position = Vector3(-143, 0, 11)
 [node name="KeeperOccupation" type="Marker3D" parent="Markers/Zones"]
 position = Vector3(109, 1, 8.8)
 metadata/box_size = Vector3(17, 4, 11)
+
+[editable path="Geometry/Post/KeeperShelterVisual"]

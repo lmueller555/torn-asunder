@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "scope": "V10 Year One Mine entrance only: timber portal, connected mortared shoulders and their visual integration on the existing Mine route. This pass does not cover surrounding terrain, Mountain, or other props.",
+  "author": "Asset author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "roles": {
+    "asset_author": "Produced, iterated and froze the candidate, ran real-engine measurements and authored this record. Did not independently approve the work.",
+    "independent_render_reviewer": "Separately inspected the matched hero, tactical, close, reverse and bidirectional LOD evidence; checked the exact candidate manifest, cost limits and gameplay regressions, then recorded the overall PASS for this prop only."
+  },
+  "evidence": {
+    "godot_context": "Offline matched 1280×720 Mara hero and 116 m tactical views, unchanged campaign lighting and HUD. The V9 close stills are valid for V10 because the matching rendered close/front/reverse frames and generated close/caster arrays are identical.",
+    "close_up": "Offline neutral joinery close-up and HUD-free close capture of the actual campaign map, checked against the same high-detail V10 geometry, textures and caster.",
+    "reproduction": "Godot 4.7.2 GL Compatibility, 1280×720. Run game/battlefield/mara_mine_escort_campaign.tscn. Move the hero from the haul road toward the timber portal at (-63, 0, 57); pan near x=-70 to -58, z=50, look from inside the tunnel, and toggle Shift/L2 for the 116 m tactical sector. Matched cost fixture freezes the scene, frames hero at XZ (-64.65, 51.25) aimed at (-63, 57), and centers tactical camera at XZ (-63, 53), yaw -2.70 radians; original/candidate/candidate/original, 16 warm frames then 28 timed renders each.",
+    "motion": "Offline 237-frame 24 fps, 9.875 s real Godot camera walkthrough, preserving the original view sequence and returning through the same LOD distances. Check 3.25–3.29 s retreat and 8.25–8.29 s approach; masonry/braces/crown stay visible and the smaller fittings drop together. Closing and opening poses are pixel-matched; no reverse hole observed.",
+    "measurements": "Offline ABBA counters, decoded texture/geometry identity measurements, and six headless Mine/gameplay regressions. Exact evidence identities and quantitative limits below."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Intended scale and silhouette keep the original opening. Mortared relief, hewn beam, bracing and banded fittings read as a mine portal from frontal and reverse playable angles."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Layered stone, baked contact joints, broken timber grain and localized iron wear remain distinct in the unchanged scene light. Scope is the entrance prop, not the flat surrounding cliff."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Same opening and approach in normal hero and tactical views. No objective, route or visibility-cue edits."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Static prop checked in motion. Both LOD directions keep the baked stone atlas, braces and crown. Shared bounds keep the small hardware drop synchronized; no hole or old V9 masonry collapse."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Exact reviewed files, clean import, unchanged collision and markers, six gameplay/terrain suites, and measured per-prop draw, rendered primitive, geometry and memory limits satisfied."
+    }
+  },
+  "review_manifest_sha256": "325b7508886560a3bddeca2767712d9679f91a7818ee29c9ea5f2cbb2a50d8d8",
+  "offline_evidence_sha256": {
+    "portal-pan-retreat-tactical-reverse-approach.mp4": "8c54a118341d449b6e0ce69837c1837362ea1d823a2d2c5d1b9ca6ebf02bedbe",
+    "lod-retreat-and-approach.png": "ba2c93f40fb037286fa0301905268d0bc5677dbee93129b19bb8b5735df6fa3c",
+    "interleaved-abba.log": "5293f6ef4264d2e6c2e5549c5dcf856a366378905414143b4e9e904a487c48ea",
+    "interleaved-abba-repeat.log": "e849b3ed45c5c1642a6e0b23d183a2fc91c52e0251d917d828e072af259b68aa",
+    "interleaved-abba-affinity.log": "debee6236ef25014551a2d1cf95475ea60b7c5887ac7752495effc8d397256c6",
+    "mesh-identity.log": "270bd9f61ebe9d68674a19d53db3ee6cc3f318885d1c1757f36a4476d82036b1",
+    "texture-footprint.log": "2a637909b1101a71f7d883724c632d1a41de574dbdbb06a415bf896c193e2fee",
+    "regressions.log": "996fd1f9c37a8ed698ca84c9d66df30e9d6a47a8c7cf1514a80b1fccd6c9a818",
+    "budget.md": "957a32d0b083feeb2ce0108ba1227f9ca18ec41d87db7223a0d74b7ae4720ea3",
+    "receipt.md": "7308a2f1e7c4a8d806e1fded336970a9605ebd29f4ce34847661ff5c5793ad41",
+    "v10-files.sha256": "325b7508886560a3bddeca2767712d9679f91a7818ee29c9ea5f2cbb2a50d8d8",
+    "v9-v10-file-delta.diff": "038fc1799f040be1a236b4e53893ae457fc29a3e2664781a78f4adca2bdb75a9",
+    "after-hero.png": "a1ae1130ad68c0c98be9dc6f2f5b4aa3b37a26c0f3dbd17036fdf1e93d4391b6",
+    "after-command.png": "dc0fed722fc4ec601f6ef40dd6aa192da0e7216bae42bca3287b73621025053a",
+    "neutral-joinery.png": "9ef668d13cde3729d7b9ef2ba19ce59c63f11a508fcc781e271ab4e09c0e44d1",
+    "after-in-context-closeup.png": "4df474fbc131c7435c0a6b154cea8e712bf5775dae5adc0d9a2cc0b7bde75e0e"
+  },
+  "notes": {
+    "scene_limits": "24 original box collision resources and 231 non-mesh marker and geometry nodes unchanged in the local comparison. The evacuation portal is unchanged.",
+    "cost": "Original → V10: hero 156 → 160 draws, 3,916 → 10,304 rendered primitives (+4/+6,388, limits +8/+7,000); tactical 184 → 181 draws, 7,604 → 7,856 primitives (−3/+252, limits +2/+256). 426,504 B raw geometry, 3,451,612 B mipped imported surface image data, 65,536 B decoded relief (limits 512 KiB / 4 MiB / 256 KiB).",
+    "software_timing_limit": "Mesa llvmpipe only. In pinned 2-CPU/2-thread repeat, software hero 113.04 → 139.74 ms (+23.6%) and tactical 106.09 → 113.51 ms (+7.0%), mean of two per-order medians. Unrestricted repeats varied under host contention; tactical software medians were higher in all paired runs. These are not console FPS or overall scene performance guarantees.",
+    "provenance": "Reproducible original authored Godot and Python/NumPy/Pillow sources. Offline captures and raw review logs are identified by digest, not included in the deliverable."
+  },
+  "files": {
+    "assets/models/mine_timber_portal/connected_stone_shoulder.gd": "38f21ffe2b2065f52c6ae6994871ef225eb51b5b5019d03aefbb0f84809699f8",
+    "assets/models/mine_timber_portal/connected_stone_shoulder.gd.uid": "0bb72536bde3879f050671656875606275c9718f6aa15ae8e0f5587702b5bc10",
+    "assets/models/mine_timber_portal/connected_stone_shoulder.gdshader": "b4adb5047f2224c964185de00c5a03776824329220c13f1c9dec0b5a13e173ab",
+    "assets/models/mine_timber_portal/connected_stone_shoulder.gdshader.uid": "234cdca42ef44390154c186b059c3f6170a8c7848f5f7a9e7d4af5f93f83d38f",
+    "assets/models/mine_timber_portal/forged_iron.gdshader": "3bf31ed0072c587d4869935f4118fe259be4a4f6909454ef757440429173ddd5",
+    "assets/models/mine_timber_portal/forged_iron.gdshader.uid": "39cd2a516c60c8abd46f16e8f2627de4cc400566134e1b7e3f76096c39a03f25",
+    "assets/models/mine_timber_portal/iron_normal.png": "3d963611627f9bd1c7a0f21e060dea932b5176fd5096bdf7b60c4e127ced0df5",
+    "assets/models/mine_timber_portal/iron_normal.png.import": "b50aabe4e23dd954b9b213d613cc3e7e8be9b76fc443fc32f9ab82aa1f587f51",
+    "assets/models/mine_timber_portal/iron_surface.png": "7c2a14d3880b5ed251d96833c85b1c502b0cbc61dcc1dfa58cd9039e64e623f4",
+    "assets/models/mine_timber_portal/iron_surface.png.import": "f85bb849f51ccd945987b763c73cbac6987ad6288f4ec48ff36ff4f46dc4bdc3",
+    "assets/models/mine_timber_portal/mine_timber_portal.gd": "aca92e9350e3c89b8895d642d1038ac11bb3864f289474b66e3c18a0126e689c",
+    "assets/models/mine_timber_portal/mine_timber_portal.gd.uid": "b3338ed1aaa55779d5fe1cdbe2f03046ec1eeb69edcc608ab9497d0c8abbb023",
+    "assets/models/mine_timber_portal/mine_timber_portal.tscn": "3a14c740ac7522f65e6bd0b3517bd0928cec1e723c033f50ceac2e8f80d89ff5",
+    "assets/models/mine_timber_portal/quarried_stone.gdshader": "ead1b9f40fca05a4b89804fabc0b8933719a6dc8c0b9f3a47b40dff749f73cd9",
+    "assets/models/mine_timber_portal/quarried_stone.gdshader.uid": "29fdb0d08e0d0fc31939957351e7cae8bf1d0cbe9408174ad452208e4e2998a2",
+    "assets/models/mine_timber_portal/shoulder_diffuse_roughness.png": "17a1242f2af4f9c6b40ccb921bf4161cacc714f1bcfba16a5bdeb5a62ec522a7",
+    "assets/models/mine_timber_portal/shoulder_diffuse_roughness.png.import": "ea5a2df6b2f059fb0707378abf8162e59d9a443d8e8a9462bb4b1a61f44ab7df",
+    "assets/models/mine_timber_portal/shoulder_relief.png": "9be7cfa5372cba1a92a3ae23c7aa694f405d7c3972b335467dca3e2eb4e7e4fb",
+    "assets/models/mine_timber_portal/shoulder_relief.png.import": "5aa33ceebab191c383f708572aa3fbf9a5665546ab06039e988b77e69d774ac1",
+    "assets/models/mine_timber_portal/shoulder_tangent_normal.png": "45558e55037be8f1d5b091f60f934280dbde5bdd931aece5a422d3f32e39539a",
+    "assets/models/mine_timber_portal/shoulder_tangent_normal.png.import": "f808f644c2203e2725b726d6efba85c5261c25b6fc6155e22b2788befe7d0c3c",
+    "assets/models/mine_timber_portal/stone_normal.png": "d1a59d0c2c4471f6f1b98d4b45e0f9ce94335cc7c10cef7d7612dfd5d1e12f7e",
+    "assets/models/mine_timber_portal/stone_normal.png.import": "4a5418e6941bc6bad0c2873a353cd4a48bb5ca85cc5d709f5168d40ada9c95aa",
+    "assets/models/mine_timber_portal/stone_surface.png": "f616bae359138e0c5bdad67cb3e4d8d3abf7e262460031b74eb7d1a0ea91894d",
+    "assets/models/mine_timber_portal/stone_surface.png.import": "673b848a3b075042224330a669999ab7a9412d91e20ac2f206a306176673ee25",
+    "assets/models/mine_timber_portal/weathered_timber.gdshader": "fa833c70d573f777f1fb47e7ecfc4189128deec025db34867178a3f94cdf3df3",
+    "assets/models/mine_timber_portal/weathered_timber.gdshader.uid": "786bb0e7171786acfd2f799e19cc2d7adb911e2226f6fbac69b5784b3c1707ca",
+    "assets/source/mine_timber_portal/bake_surfaces.py": "64a8edfc900891f9c53f41d3100df95c2f5f0cb8b4909c090ec1953aa4475be1",
+    "assets/source/mine_timber_portal/sculpt_shoulders.py": "b434aee037b8a70708237801c2b24f15930761a15a264e6681a5dc19257c86e2",
+    "game/battlefields/year_one_mine_campaign.tscn": "c354397f9ec1732f4fa139236d095e7c07b7a1181329f722ffd03fe11765793b"
+  }
+}

@@ -27,13 +27,13 @@ const RECOVERY_TIME := 0.95
 const ENEMY_SPEED := 2.9
 const INTERCEPTION_SPEED := 5.4
 
-var points := Points.new()
-var infantry_attack := InfantryAttack.new()
+var hero := Unit.new(HERO_HP)
+var points: Points
+var infantry_attack: InfantryAttack
 var archer_attack: ArcherAttack
 var _feet: Callable
-var hero := Unit.new(HERO_HP)
 var enemy := Unit.new(ENEMY_HP)
-var defense := Defense.new(hero, HERO_TEAM, points)
+var defense: Defense
 var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
@@ -48,9 +48,13 @@ var _interception_route := PackedVector2Array()
 var _interception_leg := 0
 
 
-func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable()) -> void:
+func _init(spawn: Vector2, feet := Callable(), clear_ranged := Callable(), lead_level := 1,
+		infantry: InfantryAttack = null) -> void:
+	infantry_attack = infantry if infantry else InfantryAttack.new()
 	enemy_position = spawn
 	_feet = feet
+	points = Points.new(lead_level)
+	defense = Defense.new(hero, HERO_TEAM, points)
 	archer_attack = ArcherAttack.new(points, HERO_TEAM, ENEMY_TEAM, clear_ranged)
 
 
@@ -105,7 +109,7 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 	var infantry_damage := infantry_attack.advance(delta, battle, enemy, enemy_position, clear_contact, can_move)
 	if infantry_damage > 0.0:
 		var credited := points.award_confirmed_hit(InfantryAttack.BP_PER_HIT)
-		_feedback("Shield Infantry hit · +%d BP" % credited)
+		_feedback("%s hit · +%d BP" % [battle.formations[InfantryAttack.INFANTRY_INDEX].title, credited])
 	# Archers share the same HP target and pool, and do not claim killing blows twice.
 	if _feet.is_valid():
 		var shot := archer_attack.advance(delta, hero.is_alive(), battle.formations[ArcherAttack.ARCHER_INDEX],
@@ -221,12 +225,13 @@ func _resolve_enemy_contact(battle: Battle, clear_contact: Callable) -> void:
 			Defense.HitOutcome.GUARDED: _feedback("Guarded · −%d HP" % roundi(hit.hp_lost))
 			Defense.HitOutcome.EVADED: _feedback("Dodged the swing")
 	elif _windup_target == Target.INFANTRY and infantry_attack.attacker.is_alive():
+		var infantry := battle.formations[InfantryAttack.INFANTRY_INDEX]
 		var lost := infantry_attack.attacker.receive_hit(enemy, hit_profile)
 		if not infantry_attack.attacker.is_alive():
-			battle.formations[InfantryAttack.INFANTRY_INDEX].defeat()
-			_feedback("Shield Infantry defeated")
+			infantry.defeat()
+			_feedback("%s defeated" % infantry.title)
 		elif lost > 0.0:
-			_feedback("Shield Infantry hit · −%d HP" % roundi(lost))
+			_feedback("%s hit · −%d HP" % [infantry.title, roundi(lost)])
 	elif _windup_target == Target.ARCHERS and archer_attack.attacker.is_alive():
 		var lost := archer_attack.attacker.receive_hit(enemy, hit_profile)
 		if not archer_attack.attacker.is_alive():

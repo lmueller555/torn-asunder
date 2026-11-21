@@ -1,5 +1,7 @@
 # Still Kingdom cut and village: campaign graybox
 
+The [approved V7 S3TC cemetery stair kit](audits/cut-cemetery-stair-v7.json) replaces the old stair visuals, retaining sides, and footing. The [approved V3.1 Record Room exterior](audits/cut-record-room-v31.json) replaces the doorway assembly, exterior walls, slate eave and sign. A [separate context review](audits/cut-cemetery-stair-v7-continuity.json) confirms the new shared scene retains the exact stair art, placement and physical ascent. Routes, cover, objective markers and collision are unchanged. The interior props, surrounding village and rest of the map have not passed the visual audit.
+
 `game/battlefields/still_kingdom_cut.tscn` is the terrain for Sereth's Year Three mission [The Names at the Cut](campaigns/undead.md#1-the-names-at-the-cut--year-three-sereth_voices_at_the_cut). This scene has no living actors, patrols, objective logic, water simulation, voices or apparitions. Iren's and the clerk's positions are placement hooks, not evidence of what the villagers heard.
 
 Run `tests/still_kingdom_cut_preview.tscn` with F6. **1** gives the whole cut, **2** the village sector, and **3** a hero-height view from below the cemetery stairs. The capsules are scale markers only.
@@ -18,7 +20,7 @@ The support plane measures **410 × 248 m**. **+X is east toward the retreat edg
 - **Village and record room.** The walled foot lane doglegs between gates and baffles. It reaches a hollow, roofed record room by the west doorway. The living clerk, place to enter the account, and bundle security point are distinct. A recovery point outside the room and a separate east retreat edge let future rules distinguish losing control, recovering the bundle, and losing it to extraction.
 - **Mounted pressure.** The straight, exposed village road reaches the record approach. A north-bank bluff hides the reserve until it rounds the screen and reaches a visible warning point. Solid walls break a direct mounted run through the interior foot lane; they also let a nearby foot party move without being seen from the road. No charge, detection or guaranteed interception is scripted here.
 
-The separate **normal edge march** is **386 m / 128.7 s** through the traversable road markers, measured by driving the current formation model at 3 m/s through the actual terrain adapter. It is near the provisional 130-second class. This benchmark is not the support-plane rectangle or the length of an account/bundle objective path.
+The **normal infantry march** takes **about 130 s over 390 m** between the live mission’s two command limits on the open village road, including the 386 m between the inset road-edge markers. The test drives the actual formation at 3 m/s and verifies floor support along the route. This is the [Standard](campaigns/mission-events.md#scale-and-interception) class. Both roads continue visually beyond the command limits rather than ending in solid crags. This is not the support-plane rectangle or the length of the account or bundle objective.
 
 ## Marker contract
 

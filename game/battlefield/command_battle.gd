@@ -3,17 +3,28 @@ extends RefCounted
 
 enum Order { HOLD, MOVE, BLOCKED, ATTACK, DEFEATED, EXTRACTED }
 
+## Explicit Move/Hold requests, not the Hold produced by reaching a destination.
+signal formation_commanded(index: int)
+
 const FLAT_BOUNDS := Rect2(-17.0, -12.0, 34.0, 24.0)
 const HERO_SPEED := 5.5
 const FORMATION_SPEED := 3.0
 
 
 class Formation:
+	signal order_changed(next_order: Order)
+
 	var title: String
 	var position: Vector2
 	var destination: Vector2
 	var heading := Vector2.UP
-	var order := Order.HOLD
+	var move_speed := FORMATION_SPEED
+	var order := Order.HOLD:
+		set(value):
+			if value == order:
+				return
+			order = value
+			order_changed.emit(order)
 
 	func _init(label: String, spawn: Vector2) -> void:
 		title = label
@@ -44,7 +55,7 @@ class Formation:
 		var travel := destination - position
 		if travel.length_squared() > 0.0:
 			heading = travel.normalized()
-		var next := position.move_toward(destination, FORMATION_SPEED * delta)
+		var next := position.move_toward(destination, move_speed * delta)
 		if can_move.is_valid() and not can_move.call(position, next, true):
 			order = Order.BLOCKED
 			return
@@ -72,10 +83,14 @@ func order_move(index: int, point: Vector2) -> void:
 		return
 	formation.destination = clamp_to_field(point)
 	formation.order = Order.MOVE
+	formation_commanded.emit(index)
 
 
 func order_hold(index: int) -> void:
-	formations[index].hold()
+	var formation := formations[index]
+	if formation.can_receive_orders():
+		formation.hold()
+		formation_commanded.emit(index)
 
 
 func step(delta: float, hero_direction: Vector2, can_move := Callable()) -> void:

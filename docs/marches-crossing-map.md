@@ -15,6 +15,10 @@ The **360 × 310 m** valley runs north to south, with **+X east** and **−Z nor
 - **Bread-grain cart:** A **309 m** route, about **37% longer**, through the southern shallows to the town store. The bend, bank shoulder, and hedges screen the crossing from the far-bank archer position. The southern path is longer even before any mission-specific shallows movement penalty.
 - The river is an obstacle outside the two marked crossings. The surrounding high ground bounds the sides of the valley; the field does not require invisible tall walls across the open lanes.
 
+## Measured march scale
+
+A normal infantry formation crosses **290 m in about 97 seconds** without opposition, from the playable west ridge foot to the east ridge foot using the northern bridge. The map test issues a real move and advances the shared formation and terrain adapter at 60 ticks per second. Both ends border the actual solid perimeter. This is a [Compact](campaigns/mission-events.md#scale-and-interception) through-route, not a measurement of the rectangle, the staged cart routes, or the length of a contested mission.
+
 ## Scene contract
 
 Resolve these paths relative to the map instance and use marker world positions once the map joins the scene. Markers sit at foot level and face toward their suggested route where applicable. Coordinates and metadata are geometry hooks, not orders or triggers.

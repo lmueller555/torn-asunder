@@ -34,7 +34,7 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	_mission.mission_cleared.connect(func(value: StringName) -> void: _results.append(value))
-	if not _visit_both() or not _reach_contested_beach():
+	if not _check_beach_billboard_presentation() or not _visit_both() or not _reach_contested_beach():
 		quit(1)
 		return
 	var obstruction := _place_test_obstruction()
@@ -50,6 +50,47 @@ func _run() -> void:
 	if passed:
 		print("Two Shorelines: real hero/formation routes, manual readings, moving cutter and missed loop, solid LOS, pressure, interrupted signal, both relay clears and retry passed.")
 	quit(0 if passed else 1)
+
+
+func _check_beach_billboard_presentation() -> bool:
+	var styles := _mission._beach_billboards
+	if styles.size() != 2 or styles[0].label.get_parent() != _mission._signal_flags[0] \
+			or styles[1].label.get_parent() != _mission._crews[0]:
+		return _fail("Only the Beach Signal and its own port crew billboards should be bound.")
+	var beach: Label3D = styles[0].label
+	var crew: Label3D = styles[1].label
+	if not _walk_routes(STONE_PATH + INLET_PATH):
+		return false
+	if not beach.visible or beach.modulate != styles[0].face or crew.modulate != styles[1].face:
+		return _fail("Distant hero route must retain the original nameplates.")
+	var inlet := _point("Objectives/FishingInlet")
+	var turn := _point("Routes/InletBeachTurn")
+	if not _walk_to(inlet.lerp(turn, 0.75)):
+		return false
+	if not beach.visible or beach.modulate.a <= 0.1 or beach.modulate.a >= 0.9 \
+			or not is_equal_approx(beach.outline_modulate.a, styles[0].outline.a * beach.modulate.a):
+		return _fail("The beach caption should gradually fade along the actual approach.")
+	if not _walk_routes(BEACH_PATH):
+		return false
+	_key(KEY_SPACE)
+	_tick()
+	if beach.visible or crew.visible or _mission._crews[0].visible \
+			or _mission.objective.phase != Survey.Phase.TAKING_READINGS \
+			or not _mission._hint.text.contains("First find"):
+		return _fail("Up close, neither label should cover the unchanged pre-reading lock and ring.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	for style in styles:
+		if style.label.visible != style.visible or style.label.modulate != style.face \
+				or style.label.outline_modulate != style.outline:
+			return _fail("Entering command must restore original caption style immediately.")
+	if not _mission.command_view or _mission._crews[0].visible:
+		return _fail("Restoring a crew caption must not show a crew that hasn't spawned.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	if beach.visible or crew.visible:
+		return _fail("Returning to the nearby hero must recede both labels again.")
+	_key(KEY_BACKSPACE)
+	return (_fresh_state() and beach.visible and crew.visible) \
+		or _fail("Return to distant spawn did not restore original label visibility.")
 
 
 func _visit_both() -> bool:
@@ -246,7 +287,10 @@ func _walk_routes(paths: Array) -> bool:
 
 
 func _walk(path: String) -> bool:
-	var point := _point(path)
+	return _walk_to(_point(path)) or _fail("Ilyra could not walk to %s from %s." % [path, _mission.hero_world_position()])
+
+
+func _walk_to(point: Vector3) -> bool:
 	var target := _xz(point)
 	var budget := ceili(target.distance_to(_mission.battle.hero_position) / Battle.HERO_SPEED / DT) + 105
 	for _step in range(budget):
@@ -259,8 +303,7 @@ func _walk(path: String) -> bool:
 		_tick()
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_Y, 0.0)
-	return _mission.hero_world_position().distance_to(point) < 0.15 \
-		or _fail("Ilyra could not walk to %s from %s." % [path, _mission.hero_world_position()])
+	return _mission.hero_world_position().distance_to(point) < 0.15
 
 
 func _wait(condition: Callable, description: String) -> bool:

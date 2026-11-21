@@ -1,10 +1,28 @@
 extends "res://game/battlefield/command_harness.gd"
-## Standalone logistics prototype. The mounted reserve interdicts, without combat damage.
+## Logistics prototype with optional directional charge pressure on formation cohesion only.
 
 signal mission_finished(won: bool)
 
 const WellRoad := preload("res://game/battlefield/raska_well_road.gd")
 const Rival := preload("res://game/battlefield/marches_rival_reserve.gd")
+const MountedPass := preload("res://game/combat/mounted_brace_encounter.gd")
+const Platoon := preload("res://game/combat/platoon.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
+const Roster := preload("res://game/combat/faction_roster.gd")
+
+enum PassStage { AVAILABLE, ARMED, RUNNING, WITHDRAWING, RESTAGING, WITHDRAWN, SPENT }
+const BRACE_INDEX := 0
+const BRACE_GATE_RADIUS := 2.5
+# Both incoming segments are oblique. Keep enough room behind the marker
+# that even a front wagon turning away does not clip the held follower.
+const SALT_REAR_DISTANCE := 9.0
+const SALT_FRONT_RELEASE := 10.0
+const CART_CAPTION_HEIGHT := 2.8
+const CART_CAPTION_PIXEL_SIZE := 0.028
+const CLOSE_STAGE_CAPTION_DISTANCE := 14.0
+# Clear the existing Salt Road marker's title and keep both parked names legible.
+const CLOSE_STAGE_CAPTION_HEIGHT := 3.60
+const CLOSE_STAGE_CAPTION_PIXEL_SIZE := 0.012
 const CART_SPEED := 7.5
 const HOUSEHOLD_SPEED := 3.0
 const BOARDING_REACH := 2.8
@@ -52,6 +70,12 @@ var _exit: Vector3
 var _salt_trigger: Vector3
 var _reserve_spawn: Vector3
 var _reserve_path := PackedVector3Array()
+var _pass_stage := PassStage.AVAILABLE
+var _salt_stage_front := -1
+var _pass: MountedPass
+var _brace_line: Platoon
+var _mounted_line: Platoon
+var _explicit_brace := false
 
 @onready var _rival: Rival = $MountedReserve
 @onready var _goal: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
@@ -103,6 +127,7 @@ func _physics_process(delta: float) -> void:
 
 func _after_battle_step(delta: float) -> void:
 	var was_active := objective.outcome == WellRoad.Outcome.ACTIVE
+	_release_salt_front_if_clear()
 	_step_boarding(delta)
 	_step_reserve(delta)
 	var frame := WellRoad.Observation.new()
@@ -180,6 +205,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		super._unhandled_input(event)
 
 
+func _move_selected() -> void:
+	if command_view and selected_index == BRACE_INDEX:
+		_explicit_brace = false
+	super._move_selected()
+
+
+func _hold_selected() -> void:
+	if command_view and selected_index == BRACE_INDEX and objective.outcome == WellRoad.Outcome.ACTIVE:
+		var group := battle.formations[BRACE_INDEX]
+		var aim := cursor - group.position
+		if group.can_receive_orders() and group.position.distance_to(_xz(_route("SaltChargeGate"))) <= BRACE_GATE_RADIUS \
+				and aim.length_squared() > 0.25:
+			if _pass_stage == PassStage.AVAILABLE and _rival.status != Rival.Status.WAITING:
+				_notice = "The riders have mobilized. Use an ordinary screen or reroute to the wash."
+			elif _pass_stage == PassStage.AVAILABLE and _salt_staging_occupied():
+				_notice = "A cart is already entering the salt lane. Use an ordinary screen or reroute."
+			elif _pass_stage in [PassStage.AVAILABLE, PassStage.ARMED, PassStage.RUNNING]:
+				group.heading = aim.normalized()
+				_explicit_brace = true
+				if _pass_stage == PassStage.AVAILABLE:
+					_pass_stage = PassStage.ARMED
+	super._hold_selected()
+
+
 func _select_other_cart() -> void:
 	if objective.outcome == WellRoad.Outcome.ACTIVE:
 		selected_cart = WellRoad.Cart.LOWER if selected_cart == WellRoad.Cart.UPPER else WellRoad.Cart.UPPER
@@ -252,7 +301,29 @@ func _step_cart(cart: WellRoad.Cart, route: WellRoad.Route, delta: float) -> voi
 		var trial := here.move_toward(target, remaining)
 		# A wagon retreating toward the fork is moving away from the charge lane.
 		var on_salt := route == WellRoad.Route.SALT_ROAD and data.next > data.fork and data.next <= data.merge
-		if on_salt and _rival.blocks_cart_step(here, trial):
+		var rear_wait := false
+		var claim_front := false
+		if on_salt and target == _salt_trigger and (_pass_owns_lane() or _salt_stage_front >= 0):
+			var stage_distance := trial.distance_to(_salt_trigger)
+			if _salt_stage_front == -1 and stage_distance <= SALT_REAR_DISTANCE:
+				claim_front = true
+			elif _salt_stage_front >= 0 and _salt_stage_front != cart:
+				# Stop on the follower's actual incoming segment, short of the
+				# shared marker. Do not insert a new turn or move it backwards.
+				var rear := target.move_toward(data.path[data.next - 1], SALT_REAR_DISTANCE)
+				if here.distance_to(target) <= rear.distance_to(target):
+					data.waiting_on = "Cart ahead"
+					return
+				if stage_distance <= rear.distance_to(target):
+					trial = rear
+					rear_wait = true
+		# A deliberate pass stages salt wagons outside the complete swept lane.
+		# This checkpoint is 32 m west of its run-out; the covered wash never
+		# waits here, and a cart can turn back while the riders move.
+		if on_salt and here.is_equal_approx(_salt_trigger) and _pass_owns_lane():
+			data.waiting_on = "Mounted pass"
+			return
+		if on_salt and _pass_stage != PassStage.WITHDRAWN and _rival.blocks_cart_step(here, trial):
 			data.waiting_on = "Mounted reserve"
 			return
 		if not _can_move(here, trial):
@@ -260,12 +331,36 @@ func _step_cart(cart: WellRoad.Cart, route: WellRoad.Route, delta: float) -> voi
 			return
 		_face(data.wagon, target)
 		data.wagon.global_position = trial
+		if claim_front:
+			_salt_stage_front = cart
 		remaining -= here.distance_to(trial)
+		if rear_wait:
+			data.waiting_on = "Cart ahead"
+			return
 		if trial != target:
 			break
 		data.next += 1
 		if on_salt and target == _salt_trigger:
 			_rival.mobilize(_reserve_path)
+
+
+func _salt_staging_occupied() -> bool:
+	for cart in range(_carts.size()):
+		if objective.cart_state(cart) == WellRoad.CartState.EN_ROUTE \
+				and objective.route_for(cart) == WellRoad.Route.SALT_ROAD \
+				and _carts[cart].wagon.global_position.distance_to(_salt_trigger) <= SALT_REAR_DISTANCE:
+			return true
+	return false
+
+
+func _release_salt_front_if_clear() -> void:
+	if _salt_stage_front < 0:
+		return
+	var front := _carts[_salt_stage_front]
+	# Rerouting alone is not enough: the front wagon must physically clear
+	# the shared space before the rear wagon may enter its approach.
+	if front.lost or front.wagon.global_position.distance_to(_salt_trigger) >= SALT_FRONT_RELEASE:
+		_salt_stage_front = -1
 
 
 func _step_boarding(delta: float) -> void:
@@ -301,11 +396,83 @@ func _step_boarding(delta: float) -> void:
 
 
 func _step_reserve(delta: float) -> void:
+	var brace := battle.formations[BRACE_INDEX]
+	_pass.observe_defender(brace.position, brace.heading, _explicit_brace and brace.order == Battle.Order.HOLD, delta)
+	match _pass_stage:
+		PassStage.RUNNING:
+			_pass.advance(delta)
+			_rival.global_position = to_global(_ground(_pass.rider_position))
+			var direction := _pass.travel_direction
+			_rival.rotation.y = atan2(-direction.x, -direction.y)
+			_rival._banner.text = "Mounted reserve · Regrouping" if _pass.phase == MountedPass.Phase.REGROUPING else "Mounted reserve · Charging"
+			if _pass.phase == MountedPass.Phase.READY:
+				_finish_pass()
+			return
+		PassStage.WITHDRAWING, PassStage.RESTAGING:
+			_rival.step(delta, _can_move, PackedVector3Array())
+			if _rival.status == Rival.Status.BLOCKING:
+				_pass_stage = PassStage.WITHDRAWN if _pass_stage == PassStage.WITHDRAWING else PassStage.SPENT
+			else:
+				_rival._banner.text = "Mounted reserve · Withdrawing" if _pass_stage == PassStage.WITHDRAWING else "Mounted reserve · Returning"
+			if _pass_stage == PassStage.WITHDRAWN:
+				_rival._banner.text = "Mounted reserve · Withdrew"
+			return
+		PassStage.WITHDRAWN:
+			return
 	var held := PackedVector3Array()
 	for formation in battle.formations:
 		if formation.order == Battle.Order.HOLD:
 			held.append(to_global(_ground(formation.position)))
+	var reserve_before := _rival.global_position
 	_rival.step(delta, _can_move, held)
+	if _pass_stage != PassStage.ARMED:
+		return
+	for cart in range(_carts.size()):
+		if objective.cart_state(cart) != WellRoad.CartState.EN_ROUTE \
+				or objective.route_for(cart) != WellRoad.Route.SALT_ROAD \
+				or not _carts[cart].wagon.global_position.is_equal_approx(_salt_trigger):
+			continue
+		if _rival.status == Rival.Status.MARCHING:
+			if delta > 0.0 and _rival.global_position == reserve_before:
+				_release_unavailable_pass()
+			return
+		if _rival.status in [Rival.Status.BLOCKING, Rival.Status.SCREENED] \
+				and _rival.global_position.is_equal_approx(_route("MountedChargeStart")) \
+				and _pass.sync_ready_riders(_xz(_rival.global_position)) \
+				and _pass.order_pass(_xz(_route("MountedRunout"))):
+			_pass_stage = PassStage.RUNNING
+		else:
+			_release_unavailable_pass()
+		return
+
+
+func _release_unavailable_pass() -> void:
+	# Leave the surviving actors where they are and restore the normal convoy
+	# rules. A rejected pass must not keep an otherwise movable cart staged.
+	_pass_stage = PassStage.SPENT
+	_notice = "Mounted pass unavailable. Screen the reserve or reroute to the wash."
+
+
+func _finish_pass() -> void:
+	var repelled := _pass.result == MountedPass.Result.REPELLED
+	_pass_stage = PassStage.WITHDRAWING if repelled else PassStage.RESTAGING
+	# Reuse the mounted formation's ordinary physical movement starting exactly
+	# where the real pass finished. Repelled riders leave the deck alive.
+	var charge_start := _route("MountedChargeStart")
+	var route := PackedVector3Array([charge_start])
+	if repelled:
+		route.append(_route("MountedWarning"))
+	_rival.reset(_rival.global_position)
+	_rival.mobilize(route)
+
+
+func _pass_owns_lane() -> bool:
+	return _pass_stage in [PassStage.ARMED, PassStage.RUNNING, PassStage.WITHDRAWING, PassStage.RESTAGING]
+
+
+func _xz(point: Vector3) -> Vector2:
+	var local := to_local(point)
+	return Vector2(local.x, local.z)
 
 
 func _can_move(from: Vector3, to: Vector3, wide := true) -> bool:
@@ -314,7 +481,7 @@ func _can_move(from: Vector3, to: Vector3, wide := true) -> bool:
 	return _terrain.can_move(Vector2(a.x, a.z), Vector2(b.x, b.z), wide)
 
 
-## Hooks for a later combat scene; the mounted reserve in this playtest does not deal damage.
+## Definitive loss hooks. The optional mounted pass affects only formation cohesion.
 func report_cart_lost(cart: WellRoad.Cart) -> void:
 	_carts[cart].lost = true
 
@@ -340,6 +507,13 @@ func _reset_convoy() -> void:
 	_hero_fell = false
 	_notice = ""
 	_rival.reset(_reserve_spawn)
+	_pass_stage = PassStage.AVAILABLE
+	_salt_stage_front = -1
+	_explicit_brace = false
+	_brace_line = Platoon.new([Unit.new()], {})
+	_mounted_line = Platoon.new([Unit.new()], {})
+	_pass = MountedPass.new(_mounted_line, _brace_line, _xz(_reserve_spawn), Roster.ANTI_RIDING,
+		_terrain.can_move.bind(true), _terrain.clear_melee_contact)
 	for i in range(_carts.size()):
 		var data := _carts[i]
 		data.path.clear()
@@ -364,16 +538,20 @@ func _refresh() -> void:
 	_salt.disabled = not active or not _route_admitted(selected_cart)
 	_wash.disabled = _salt.disabled
 	var labels: Array[String] = []
+	var close_stage := _close_salt_stage_captions()
 	for cart in range(_carts.size()):
 		var state := _cart_status(cart)
 		labels.append("%s: %s" % [CART_NAMES[cart], state])
-		_carts[cart].banner.text = ("%s: " % CART_NAMES[cart]) + state
-		_carts[cart].banner.modulate = CART_COLORS[cart] if cart == selected_cart else Color.WHITE
+		var caption := _carts[cart].banner
+		caption.text = CART_NAMES[cart] + (" · Selected" if cart == selected_cart else "") if close_stage else labels[-1]
+		caption.pixel_size = CLOSE_STAGE_CAPTION_PIXEL_SIZE if close_stage else CART_CAPTION_PIXEL_SIZE
+		caption.position.y = CLOSE_STAGE_CAPTION_HEIGHT if close_stage else CART_CAPTION_HEIGHT
+		caption.modulate = CART_COLORS[cart] if cart == selected_cart else Color.WHITE
 		_carts[cart].wagon.visible = objective.cart_state(cart) != WellRoad.CartState.LOST
 	_status.text = "  ·  ".join(labels)
 	_instructions.text = "At the lower storehouse, return to Raska and press Cross / Space to board households."
 	if objective.cart_state(WellRoad.Cart.LOWER) != WellRoad.CartState.LOADING:
-		_instructions.text = "Both carts must reach the Basin exit. Route orders are independent; Hold a formation near the reserve to screen it."
+		_instructions.text = "Both carts must arrive. Hold near the reserve to screen it, or aim and Hold Brace Infantry at Salt Charge Gate before riders mobilize."
 	match objective.outcome:
 		WellRoad.Outcome.ACTIVE:
 			_goal.text = "Escort both well carts to the Basin exit"
@@ -390,6 +568,21 @@ func _refresh() -> void:
 			_instructions.text = ""
 
 
+## In the close hero shot only, the two full salt-wait labels cover
+## each other. Keep their names and selection in-world; keep both full
+## wait reasons in the original HUD. Do not retune other field labels.
+func _close_salt_stage_captions() -> bool:
+	if command_view or _salt_stage_front < 0:
+		return false
+	var ahead := _carts[_salt_stage_front]
+	var behind := _carts[1 - _salt_stage_front]
+	if ahead.waiting_on != "Mounted pass" or behind.waiting_on != "Cart ahead":
+		return false
+	var hero := hero_world_position()
+	return hero.distance_to(ahead.wagon.global_position) <= CLOSE_STAGE_CAPTION_DISTANCE \
+		and hero.distance_to(behind.wagon.global_position) <= CLOSE_STAGE_CAPTION_DISTANCE
+
+
 func _cart_status(cart: WellRoad.Cart) -> String:
 	match objective.cart_state(cart):
 		WellRoad.CartState.LOADING:
@@ -404,11 +597,31 @@ func _cart_status(cart: WellRoad.Cart) -> String:
 
 
 func _reserve_cue() -> String:
+	var cohesion := "Brace cohesion %.0f · Mounted cohesion %.0f." % [_brace_line.cohesion, _mounted_line.cohesion]
+	match _pass_stage:
+		PassStage.ARMED:
+			var facing := battle.formations[BRACE_INDEX].heading
+			var toward_riders := (_xz(_route("MountedChargeStart")) - _xz(_route("SaltChargeGate"))).normalized()
+			var ready := "Brace ready." if _pass.brace_ready else "Brace setting."
+			if facing.dot(toward_riders) < MountedPass.FRONT_DOT:
+				ready = "Brace faces away. Aim east and Hold."
+			var warning := "Riders approaching. " if _rival.status == Rival.Status.MARCHING else ""
+			return "%s%s Salt carts line up west of the charge lane. Wash open. %s" % [warning, ready, cohesion]
+		PassStage.RUNNING:
+			match _pass.result:
+				MountedPass.Result.REPELLED: return "Brace held. Riders regrouping to withdraw. " + cohesion
+				MountedPass.Result.LANDED: return "The charge broke through. Reroute to the wash or screen when riders return. " + cohesion
+				MountedPass.Result.NONE: pass
+				_: return "The pass made no contact. Riders regrouping; wash open. " + cohesion
+			return "Riders charging from the east. Salt carts wait west of the lane. Wash open. " + cohesion
+		PassStage.WITHDRAWING: return "Brace held. Riders withdrawing clear of the salt road. " + cohesion
+		PassStage.RESTAGING: return "Riders returning to the salt road. Wash open. " + cohesion
+		PassStage.WITHDRAWN: return "Riders withdrew. Salt road open. " + cohesion
 	match _rival.status:
 		Rival.Status.MARCHING: return "Mounted reserve approaching the salt road. Wash stays open."
 		Rival.Status.BLOCKING: return "Mounted reserve blocking the salt road. Screen it or turn a cart back through the fork to the wash."
 		Rival.Status.SCREENED: return "Mounted reserve screened by allied Hold. Salt road open."
-	return "The salt road is shorter but exposed. The wash offers a covered approach."
+	return "Salt road is shorter; the wash is covered. To brace, aim and Hold Brace Infantry at Salt Charge Gate before the riders move."
 
 
 func _name_formations() -> void:
@@ -436,7 +649,7 @@ func _make_cart(cart: WellRoad.Cart) -> Convoy:
 	for x in [-0.93, 0.93]:
 		for z in [-0.56, 0.56]:
 			_mesh(wagon, _box(Vector3(0.16, 0.65, 0.65)), iron, Vector3(x, 0.35, z))
-	data.banner = _sign(wagon, CART_NAMES[cart], CART_COLORS[cart], 2.8)
+	data.banner = _sign(wagon, CART_NAMES[cart], CART_COLORS[cart], CART_CAPTION_HEIGHT)
 	return data
 
 

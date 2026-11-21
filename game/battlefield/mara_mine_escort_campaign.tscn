@@ -4,6 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/battlefields/year_one_mine_campaign.tscn" id="2_valley"]
 [ext_resource type="Script" path="res://game/battlefield/mara_campaign_minimap.gd" id="3_adapter"]
 [ext_resource type="Script" path="res://game/battlefield/battlefield_minimap.gd" id="4_widget"]
+[ext_resource type="PackedScene" path="res://assets/models/environment/godbridle_custody_case.glb" id="5_case"]
+
+[ext_resource type="Script" path="res://game/battlefield/mara_mine_storehouse_art.gd" id="6_storehouse"]
 
 [node name="MaraMineEscortCampaign" instance=ExtResource("1_mara")]
 battlefield_scene = ExtResource("2_valley")
@@ -11,6 +14,7 @@ field_bounds = Rect2(-160, -108, 320, 224)
 enable_sector_camera = true
 sundering_strike_enabled = true
 render_shield_infantry = true
+custody_case_scene = ExtResource("5_case")
 local_sector_size = 116.0
 road_guard_spawn = NodePath("Markers/Routes/EastReserve")
 interception_approach = NodePath("Markers/Routes/PassRelease")
@@ -69,3 +73,6 @@ mouse_filter = 2
 text = "▲ Mara    ■ Formation    ◆ Pickup    ⊓ Exit"
 theme_override_colors/font_color = Color(0.76, 0.84, 0.85, 1)
 theme_override_font_sizes/font_size = 13
+
+[node name="StorehouseArt" type="Node" parent="."]
+script = ExtResource("6_storehouse")

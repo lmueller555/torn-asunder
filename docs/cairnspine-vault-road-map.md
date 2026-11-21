@@ -19,6 +19,12 @@ The support plane is **340 × 250 m**, with one unit per meter, **+X toward the 
 - **Forecourt, terrace and vault.** A screened north reserve can reach the forecourt after rounding its cover. The route to the witness terrace branches before the custody line. Witnesses can see the vault entrance from their own terrace, without walking through custody or closure. The forecourt, custody line, bridle return, and terrace are separate hooks for Sereth, Sova and Neris.
 - **Public hearing.** The valley contains two different Year Two lectern placements. The open dais can be approached from the north or west; the recessed dais has solid rear/side cover and a narrower public approach. Each has an independent ring footprint, scribe placement and clear public exit. None of the Year Five objectives is used to run the hearing.
 
+## Measured perimeter march
+
+In each registered Year Five deployment, a standard unopposed infantry formation marches **522.48 m in 174.20 seconds** at 3 m/s in either direction. The north and south endpoints are within about 2 m of solid perimeter crags, not the command boundary. The forecourt foundations block the direct crossing, so the measured route follows the valley floor around the west foot of the raised pass. This is an **Expansive** terrain benchmark, not the time to reach or complete a mission objective.
+
+The six command-selectable points (X/Z in meters, north to south) are `(124, -79) → (-75.5, -47.5) → (-90.5, -35.5) → (-51.5, 74) → (21, 83) → (133, 83)`. Run `godot --headless --script tests/cairnspine_perimeter_march.gd` after importing to reproduce the march through each deployment's movement adapter at 60 Hz. The test also checks the crags and verifies that straight shortcuts between nonadjacent route points are blocked. It does not add terrain, objective markers, or pathfinding.
+
 ## Marker contract
 
 Paths are relative to the map instance. Use `global_position` after instancing. Land markers sit at foot level. Layer 1 is solid and layer 2 tags only walkable supporting surfaces.

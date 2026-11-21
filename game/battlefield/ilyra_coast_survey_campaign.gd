@@ -12,6 +12,10 @@ const SITE_NAMES := ["Beach", "Headland"]
 const READING_MARKERS := ["AncestralStone", "FishingInlet"]
 const SIGNAL_MARKERS := ["BeachSignal", "HeadlandSignal"]
 const INTERACT_RADIUS := 2.6
+const HIDE_BEACH_BILLBOARDS_WITHIN := 7.5
+const SHOW_BEACH_BILLBOARDS_BEYOND := 13.0
+const HIDE_HEADLAND_BILLBOARDS_WITHIN := 7.5
+const SHOW_HEADLAND_BILLBOARDS_BEYOND := 13.0
 const STAFF_RADIUS := 4.0
 const SCREEN_RADIUS := 8.0
 const CONTEST_RADIUS := 4.5
@@ -24,6 +28,19 @@ const BOAT_LOOP := [
 ]
 const APPROACH_STOPS := [2, 6]
 const HOLD_STOPS := [3, 7]
+
+class RelayBillboard:
+	var label: Label3D
+	var face: Color
+	var outline: Color
+	var visible: bool
+
+	func _init(node: Label3D) -> void:
+		label = node
+		face = node.modulate
+		outline = node.outline_modulate
+		visible = node.visible
+
 
 var objective := Survey.new()
 var _reading_points := PackedVector3Array()
@@ -42,6 +59,10 @@ var _crew_next: Array[int] = [1, 1]
 var _sea_guides: Node3D
 var _signal_flags: Array[Node3D] = []
 var _interact_requested := false
+var _beach_billboards: Array[RelayBillboard] = []
+var _beach_billboard_opacity := -1.0
+var _headland_billboards: Array[RelayBillboard] = []
+var _headland_billboard_opacity := -1.0
 
 @onready var _chart: Label = $ObjectiveHUD/Panel/Margin/Readout/Chart
 @onready var _shore: Label = $ObjectiveHUD/Panel/Margin/Readout/Shore
@@ -59,7 +80,8 @@ func _ready() -> void:
 		_reading_points.append(reading)
 		_signal_points.append(relay)
 		_beacon(reading, ["ANCESTRAL STONE", "FISHING INLET"][index], Color("#ffdc93"), self)
-		_signal_flags.append(_beacon(relay, SITE_NAMES[index].to_upper() + " SIGNAL", Color("#85f0d7"), self))
+		_signal_flags.append(_beacon(relay, SITE_NAMES[index].to_upper() + " SIGNAL",
+			Color("#85f0d7"), self, (index + 1) as Survey.SignalSite))
 	for marker: String in ["BeachGuard", "HighGuard"]:
 		var guard := _point("Routes/" + marker)
 		_guard_points.append(guard)
@@ -73,8 +95,8 @@ func _ready() -> void:
 	_crew_routes.append(_route(["Spawns/HeadlandPressure", "Routes/HeadlandReserveTurn",
 			"Routes/HeadlandGuard", "Routes/HeadlandRampFoot", "Routes/HeadlandRampTop",
 			"Routes/HeadlandApron", "Routes/HighGuard", "Objectives/HeadlandSignal"]))
-	_crews.append(_build_crew("Port landing crew"))
-	_crews.append(_build_crew("Landward port crew"))
+	_crews.append(_build_crew("Port landing crew", BEACH))
+	_crews.append(_build_crew("Landward port crew", HEADLAND))
 	_restart.pressed.connect(restart_mission)
 	_reset_runtime()
 	_refresh_objective()
@@ -121,6 +143,12 @@ func _reset_runtime() -> void:
 func _physics_process(delta: float) -> void:
 	if objective.phase not in [Survey.Phase.SUCCEEDED, Survey.Phase.FAILED]:
 		super._physics_process(delta)
+
+
+func _update_mode() -> void:
+	super._update_mode()
+	_refresh_beach_billboards()
+	_refresh_headland_billboards()
 
 
 func _after_battle_step(delta: float) -> void:
@@ -266,6 +294,8 @@ func _site_status(index: int) -> String:
 
 
 func _refresh_objective() -> void:
+	_refresh_beach_billboards()
+	_refresh_headland_billboards()
 	_sea_guides.visible = command_view
 	_chart.text = "Chart   ·   Ancestral stone: %s   /   Fishing inlet: %s" % [
 		"recorded" if objective.has_reading(Survey.Reading.ANCESTRAL_STONE) else "unread",
@@ -300,6 +330,51 @@ func _refresh_objective() -> void:
 		_hint.text = "Take the short beach turn or reach the headland from the inland ramp."
 
 
+# Nearby in hero view, the original ring and objective HUD already show where
+# to act and what's blocking the signal. Clear the two overlapping captions
+# without touching the crew's parent visibility or any of the tactical cues.
+func _refresh_beach_billboards() -> void:
+	if _beach_billboards.is_empty():
+		return
+	var opacity := 1.0
+	if not command_view:
+		var distance := hero_world_position().distance_to(_signal_points[BEACH - 1])
+		opacity = smoothstep(HIDE_BEACH_BILLBOARDS_WITHIN, SHOW_BEACH_BILLBOARDS_BEYOND, distance)
+	if opacity == _beach_billboard_opacity:
+		return
+	_beach_billboard_opacity = opacity
+	for style in _beach_billboards:
+		style.label.visible = style.visible and opacity > 0.0
+		style.label.modulate = Color(style.face, style.face.a * opacity)
+		style.label.outline_modulate = Color(style.outline, style.outline.a * opacity)
+
+
+# Match the Beach presentation at the high site. Only the relay's
+# world label and the landward crew label are affected. The actual cue,
+# status HUD, and crew visibility/movement stay in their own systems.
+func _refresh_headland_billboards() -> void:
+	if _headland_billboards.is_empty():
+		return
+	var opacity := 1.0
+	if not command_view:
+		var distance := hero_world_position().distance_to(_signal_points[HEADLAND - 1])
+		opacity = smoothstep(HIDE_HEADLAND_BILLBOARDS_WITHIN, SHOW_HEADLAND_BILLBOARDS_BEYOND, distance)
+	if opacity == _headland_billboard_opacity:
+		return
+	_headland_billboard_opacity = opacity
+	for style in _headland_billboards:
+		style.label.visible = style.visible and opacity > 0.0
+		style.label.modulate = Color(style.face, style.face.a * opacity)
+		style.label.outline_modulate = Color(style.outline, style.outline.a * opacity)
+
+
+func _register_relay_billboard(label: Label3D, site: Survey.SignalSite) -> void:
+	if site == BEACH:
+		_beach_billboards.append(RelayBillboard.new(label))
+	elif site == HEADLAND:
+		_headland_billboards.append(RelayBillboard.new(label))
+
+
 func _relay_hint(index: int) -> String:
 	if _contested(index):
 		return "Relay contested. Order the Shore Detachment to Hold at the blue guard ring."
@@ -322,12 +397,13 @@ func _build_cutter() -> void:
 	_sign(_cutter, "SURVEY CUTTER", Color("#9ff1db"), 3.8)
 
 
-func _build_crew(label: String) -> Node3D:
+func _build_crew(label: String, fade_site: Survey.SignalSite = Survey.SignalSite.NONE) -> Node3D:
 	var actor := Node3D.new()
 	add_child(actor)
 	for rank in range(3):
 		_mesh(actor, _box(Vector3(0.63, 1.42, 0.57)), _material(Color("#ad5f4c")), Vector3((rank - 1) * 0.78, 0.77, rank % 2 * 0.85))
-	_sign(actor, label, Color("#f6ba95"), 2.4)
+	var sign := _sign(actor, label, Color("#f6ba95"), 2.4)
+	_register_relay_billboard(sign, fade_site)
 	return actor
 
 
@@ -364,18 +440,19 @@ func _dotted(path: PackedVector3Array, afloat: bool) -> void:
 			_mesh(_sea_guides if afloat else self, bead, tint, position)
 
 
-func _beacon(point: Vector3, label: String, tint: Color, parent: Node3D) -> Node3D:
+func _beacon(point: Vector3, label: String, tint: Color, parent: Node3D, fade_site: Survey.SignalSite = Survey.SignalSite.NONE) -> Node3D:
 	var beacon := Node3D.new()
 	parent.add_child(beacon)
 	beacon.global_position = point
 	var material := _material(tint, true)
 	_mesh(beacon, _ring(1.48, 1.62), material, Vector3.UP * 0.11)
 	_mesh(beacon, _box(Vector3(0.10, 1.76, 0.10)), material, Vector3.UP * 0.91)
-	_sign(beacon, label, tint, 2.3)
+	var sign := _sign(beacon, label, tint, 2.3)
+	_register_relay_billboard(sign, fade_site)
 	return beacon
 
 
-func _sign(parent: Node3D, label: String, tint: Color, height: float) -> void:
+func _sign(parent: Node3D, label: String, tint: Color, height: float) -> Label3D:
 	var sign := Label3D.new()
 	sign.text = label
 	sign.modulate = tint
@@ -385,6 +462,7 @@ func _sign(parent: Node3D, label: String, tint: Color, height: float) -> void:
 	sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sign.position.y = height
 	parent.add_child(sign)
+	return sign
 
 
 func _point(path: String) -> Vector3:

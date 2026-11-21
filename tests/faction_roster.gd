@@ -11,8 +11,14 @@ func _initialize() -> void:
 	_check_taxonomy()
 	_check_branches()
 	_check_live_catalog()
+	_check_human_ranged_catalog()
+	_check_orc_catalog()
+	_check_elf_catalog()
+	_check_druid_catalog()
+	_check_dryad_catalog()
+	_check_undead_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, all six starter rosters, faction-specific gates and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -96,16 +102,273 @@ func _check_branches() -> void:
 
 func _check_live_catalog() -> void:
 	var roster := Catalog.faction_roster()
-	_check(roster.units_for_faction(Roster.HUMANS).size() == 3
-		and roster.has_label(Catalog.HUMAN_ARCHER, Roster.RANGED)
+	_check(roster.has_label(Catalog.HUMAN_ARCHER, Roster.RANGED)
 		and roster.has_label(Catalog.HUMAN_HEAVY_INFANTRY, Roster.MELEE)
 		and not Catalog.TYPES.has(Catalog.HUMAN_ARCHER),
-		"The real first slice covers existing Human Infantry, Heavy Infantry and the established Archer without faking an art entry.")
+		"The established Archer is classified without faking an art entry.")
 	for rating in [1, 9, 10, 11]:
 		var read_rating := func(_stat: int) -> int: return rating
 		_check(roster.can_advance(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating)
 			== Catalog.can_promote_with_ratings(Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, read_rating),
 			"New metadata matches the live Heavy Infantry rule at rating %d." % rating)
+
+
+func _check_human_ranged_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var archers := Catalog.HUMAN_ARCHER
+	var longbows := Catalog.HUMAN_MARCHES_LONGBOWS
+	var entry := roster.unit(longbows)
+	_check(roster.units_for_faction(Roster.HUMANS) == [
+		Catalog.HUMAN_INFANTRY, Catalog.HUMAN_HEAVY_INFANTRY, archers, longbows,
+	] and entry.get("display_name") == "Marches Longbows" and entry.get("primary_family") == Roster.RANGED
+		and entry.get("secondary_tags") == [] and entry.get("elite_support") == false,
+		"Marches Longbows are a Human ranged specialist, not elite support or a hybrid.")
+	for fixture: Array in [[7, 2, false], [8, 1, false], [8, 2, true], [9, 3, true]]:
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.RANGED: fixture[0], Unit.Damage.MELEE: 10})
+		var platoon := Platoon.new([soldier], {Platoon.Skill.FORMATION_DRILL: fixture[1], Platoon.Skill.SCOUTING: 5})
+		_check(roster.can_advance(archers, longbows, soldier.rating, platoon.rank) == fixture[2],
+			"Ranged Power %d and Formation Drill %d are separate Archer gates." % [fixture[0], fixture[1]])
+
+	var read_rating := func(_stat: int) -> int: return 10
+	var read_training := func(_stat: int) -> int: return 5
+	_check(roster.eligible_advances(archers, read_rating, read_training) == [longbows]
+		and roster.eligible_advances(Catalog.HUMAN_INFANTRY, read_rating, read_training) == [Catalog.HUMAN_HEAVY_INFANTRY]
+		and not roster.can_advance(Catalog.HUMAN_HEAVY_INFANTRY, longbows, read_rating, read_training)
+		and roster.eligible_advances(longbows, read_rating, read_training).is_empty(),
+		"Archers and Infantry stay on their own lines; there is no skip or reverse advancement.")
+	for faction: StringName in Roster.FACTIONS:
+		if faction != Roster.HUMANS:
+			_check(roster.inspect_advances(archers, faction, read_rating, read_training).is_empty(),
+				"Only the Human roster can inspect this Archer branch.")
+			for source: StringName in roster.units_for_faction(faction):
+				_check(not roster.can_advance(source, longbows, read_rating, read_training),
+					"No other faction's troops can advance to Marches Longbows.")
+	_check(not Catalog.TYPES.has(longbows) and not Catalog.can_promote_with_ratings(archers, longbows, read_rating),
+		"Qualifying for Marches Longbows grants no live promotion or model entry.")
+
+
+func _check_orc_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var regulars := Catalog.ORC_BASIN_REGULARS
+	var brace := Catalog.ORC_BRACE_INFANTRY
+	var archers := Catalog.ORC_BASIN_ARCHERS
+	_check(roster.units_for_faction(Roster.ORCS) == [regulars, brace, archers],
+		"The Orc slice has only the three initial canon field roles.")
+	for fixture: Array in [
+		[regulars, "Basin Regulars", Roster.MELEE, []],
+		[brace, "Brace Infantry", Roster.ANTI_RIDING, [Roster.MELEE]],
+		[archers, "Basin Archers", Roster.RANGED, []],
+	]:
+		var entry := roster.unit(fixture[0])
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == fixture[2]
+			and entry.get("secondary_tags") == fixture[3] and entry.get("elite_support") == false,
+			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
+		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
+			"No Orc prototype should become an art entry or a live Human promotion.")
+	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
+		and not roster.has_label(archers, Roster.ANTI_RIDING),
+		"Each specialist has an independent role rather than replacing all the regulars' jobs.")
+
+	# Melee, Ranged, Charge & Brace, Scouting; use the actual rating and training readers.
+	var expectations := [
+		[[1, 1, 0, 0], []],
+		[[5, 6, 0, 0], []],
+		[[1, 1, 5, 5], []],
+		[[4, 6, 2, 2], [archers]],
+		[[5, 5, 2, 2], [brace]],
+		[[5, 6, 1, 2], [archers]],
+		[[5, 6, 2, 1], [brace]],
+		[[5, 6, 2, 2], [brace, archers]],
+	]
+	for fixture: Array in expectations:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {
+			Unit.Damage.MELEE: values[0], Unit.Damage.RANGED: values[1],
+		})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[2], Platoon.Skill.SCOUTING: values[3],
+		})
+		_check(roster.eligible_advances(regulars, soldier.rating, platoon.rank) == fixture[1],
+			"Orc branches must honor their own exact rating and training gate: %s." % str(values))
+		_check(not roster.can_advance(brace, archers, soldier.rating, platoon.rank)
+			and not roster.can_advance(archers, brace, soldier.rating, platoon.rank)
+			and not roster.can_advance(regulars, Catalog.HUMAN_HEAVY_INFANTRY, soldier.rating, platoon.rank),
+			"High ratings do not authorize a sibling switch or a foreign faction's edge.")
+		_check(soldier.level == 1 and soldier.stat_points == 0 and platoon.cohesion == Platoon.FULL_COHESION,
+			"Eligibility is a read-only inquiry.")
+	var exported := roster.unit(regulars)
+	exported.display_name = "Not a canon name"
+	_check(Catalog.faction_roster().unit(regulars).display_name == "Basin Regulars"
+		and roster.unit(regulars).display_name == "Basin Regulars", "Roster consumers can't rename the canon entry through a snapshot.")
+
+
+func _check_elf_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var shore := Catalog.ELF_SHORE_DETACHMENT
+	var marines := Catalog.ELF_SHORE_MARINES
+	var archers := Catalog.ELF_SHIP_ARCHERS
+	_check(roster.units_for_faction(Roster.ELVES) == [shore, marines, archers],
+		"The Elven tree should contain only the three named field units.")
+	for fixture: Array in [
+		[shore, "Shore Detachment", Roster.MELEE],
+		[marines, "Shore Marines", Roster.MELEE],
+		[archers, "Ship Archers", Roster.RANGED],
+	]:
+		var entry := roster.unit(fixture[0])
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == fixture[2]
+			and entry.get("secondary_tags", [Roster.RIDING]).is_empty() and entry.get("elite_support") == false
+			and not Catalog.TYPES.has(fixture[0]), "Elven planning rows don't imply models, elite standing, or mounted troops.")
+	# Ranged rating, Formation Drill, Scouting. Read actual ratings and ranks.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[4, 0, 1], []],
+		[[1, 2, 1], [marines]],
+		[[4, 1, 1], [archers]],
+		[[4, 2, 0], [archers]],
+		[[3, 2, 1], [marines]],
+		[[4, 2, 1], [marines, archers]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.RANGED: values[0], Unit.Damage.MELEE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.FORMATION_DRILL: values[1], Platoon.Skill.SCOUTING: values[2], Platoon.Skill.CHARGE_BRACE: 5,
+		})
+		_check(roster.eligible_advances(shore, soldier.rating, platoon.rank) == fixture[1],
+			"The coastal branches should accept only their own training and rating minima: %s." % str(values))
+		_check(not roster.can_advance(marines, archers, soldier.rating, platoon.rank)
+			and not roster.can_advance(archers, marines, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.ORC_BASIN_REGULARS, marines, soldier.rating, platoon.rank)
+			and not roster.can_advance(shore, Catalog.HUMAN_HEAVY_INFANTRY, soldier.rating, platoon.rank),
+			"Neither sibling nor established faction links are opened by the Elven branch.")
+	var trained := func(_stat: int) -> int: return 2
+	_check(roster.can_advance(shore, marines, Callable(), trained)
+		and not roster.can_advance(shore, archers, Callable(), trained),
+		"Ship Archers need a rating reader; Shore Marines can qualify through training alone.")
+
+
+func _check_druid_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var tunnel := Catalog.DRUID_TUNNEL_GUARD
+	var outlet := Catalog.DRUID_OUTLET_SCREEN
+	var shelf := Catalog.DRUID_SHELF_GUARD
+	_check(roster.units_for_faction(Roster.DRUIDS) == [tunnel, outlet, shelf],
+		"The Druid starter tree contains only the three named guard formations.")
+	for fixture: Array in [[tunnel, "Tunnel Guard"], [outlet, "Outlet Screen"], [shelf, "Shelf Guard"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty()
+			and not roster.has_label(id, Roster.ELITE_SUPPORT) and not Catalog.TYPES.has(id),
+			"Druid guards don't imply spellcasting, elite standing or a model entry.")
+	# Melee, Formation Drill, Scouting. Neither Riding nor magic should satisfy these gates.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[6, 2, 2], []],
+		[[5, 3, 2], []],
+		[[1, 0, 3], [outlet]],
+		[[6, 3, 2], [shelf]],
+		[[6, 2, 3], [outlet]],
+		[[6, 3, 3], [outlet, shelf]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.NATURE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.FORMATION_DRILL: values[1], Platoon.Skill.SCOUTING: values[2],
+			Platoon.Skill.MOUNTED_TRAINING: 5,
+		})
+		_check(roster.eligible_advances(tunnel, soldier.rating, platoon.rank) == fixture[1],
+			"The Druid lanes require separate exact scouting or line-holding gates: %s." % str(values))
+		_check(not roster.can_advance(outlet, shelf, soldier.rating, platoon.rank)
+			and not roster.can_advance(shelf, outlet, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.ELF_SHORE_DETACHMENT, outlet, soldier.rating, platoon.rank)
+			and not roster.can_advance(tunnel, Catalog.ORC_BRACE_INFANTRY, soldier.rating, platoon.rank),
+			"Both Druid paths must originate at Tunnel Guard and stay within their faction.")
+	var trained := func(_stat: int) -> int: return 3
+	_check(roster.can_advance(tunnel, outlet, Callable(), trained) and not roster.can_advance(tunnel, shelf, Callable(), trained),
+		"The Outlet Screen can qualify without a rating reader; Shelf Guard cannot.")
+
+
+func _check_dryad_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var loading := Catalog.DRYAD_LOADING_GUARD
+	var reserve := Catalog.DRYAD_FEEDER_RESERVE
+	var volunteers := Catalog.DRYAD_SHELF_VOLUNTEERS
+	_check(roster.units_for_faction(Roster.DRYADS) == [loading, reserve, volunteers],
+		"The Dryad tree uses only the three existing grove-escort formations.")
+	for fixture: Array in [[loading, "Loading Guard"], [reserve, "Feeder Reserve"], [volunteers, "Shelf Volunteers"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty() and not Catalog.TYPES.has(id)
+			and not roster.has_label(id, Roster.ELITE_SUPPORT), "Dryad escorts aren't spellcasters, engineers, or a model entry.")
+	# Melee, Charge & Brace, Formation Drill, Scouting.
+	for fixture: Array in [
+		[[1, 0, 0, 0], []],
+		[[3, 0, 2, 1], []],
+		[[2, 1, 1, 2], []],
+		[[1, 1, 2, 0], [reserve]],
+		[[3, 0, 0, 2], [volunteers]],
+		[[3, 1, 2, 1], [reserve]],
+		[[2, 1, 2, 2], [reserve]],
+		[[3, 1, 2, 2], [reserve, volunteers]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.NATURE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[1], Platoon.Skill.FORMATION_DRILL: values[2],
+			Platoon.Skill.SCOUTING: values[3], Platoon.Skill.SIEGECRAFT: 5,
+		})
+		_check(roster.eligible_advances(loading, soldier.rating, platoon.rank) == fixture[1],
+			"The Dryad lanes need their own exact worker-screen and route-escort gates: %s." % str(values))
+		_check(not roster.can_advance(reserve, volunteers, soldier.rating, platoon.rank)
+			and not roster.can_advance(volunteers, reserve, soldier.rating, platoon.rank)
+			and not roster.can_advance(Catalog.DRUID_TUNNEL_GUARD, volunteers, soldier.rating, platoon.rank)
+			and not roster.can_advance(loading, Catalog.DRUID_SHELF_GUARD, soldier.rating, platoon.rank),
+			"Shared place and 'shelf' names cannot turn Dryad escorts into Druid guard promotions.")
+	var trained := func(_stat: int) -> int: return 2
+	_check(roster.can_advance(loading, reserve, Callable(), trained)
+		and not roster.can_advance(loading, volunteers, Callable(), trained),
+		"The work-site reserve can qualify by training, the route escort also needs Melee.")
+
+
+func _check_undead_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var household := Catalog.UNDEAD_HOUSEHOLD_GUARD
+	var stair := Catalog.UNDEAD_STAIR_GUARD
+	var court := Catalog.UNDEAD_COURT_FOOT
+	_check(roster.units_for_faction(Roster.UNDEAD) == [household, stair, court],
+		"Only the three canonical foot formations are roster units, not living witnesses or court staff.")
+	for fixture: Array in [[household, "Household Guard"], [stair, "Stair Guard"], [court, "Court Foot"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty()
+			and not roster.has_label(id, Roster.ELITE_SUPPORT) and not Catalog.TYPES.has(id),
+			"An Undead foot unit does not imply a caster, elite standing or a model.")
+	# Melee, Charge & Brace, Formation Drill. Maxed Curse must not qualify a unit.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[3, 1, 2], []],
+		[[4, 0, 2], []],
+		[[4, 1, 1], []],
+		[[4, 1, 2], [stair]],
+		[[100, 5, 5], [stair]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.CURSE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[1], Platoon.Skill.FORMATION_DRILL: values[2],
+			Platoon.Skill.SCOUTING: 5,
+		})
+		_check(roster.eligible_advances(household, soldier.rating, platoon.rank) == fixture[1],
+			"Each Stair Guard gate is required and Curse alone does not qualify: %s." % str(values))
+		_check(roster.eligible_advances(court, soldier.rating, platoon.rank).is_empty()
+			and roster.eligible_advances(stair, soldier.rating, platoon.rank).is_empty()
+			and not roster.can_advance(household, court, soldier.rating, platoon.rank)
+			and not roster.can_advance(household, Catalog.DRUID_SHELF_GUARD, soldier.rating, platoon.rank),
+			"Neither high Curse nor any training buys court allegiance, a reverse edge or a Druid role.")
+	for faction in Roster.FACTIONS:
+		_check(not roster.units_for_faction(faction).is_empty(), "Each faction now has its own small roster source.")
 
 
 func _check(ok: bool, title: String) -> void:

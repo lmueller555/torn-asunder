@@ -7,9 +7,13 @@ const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
+const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
+const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
+const MaraTraining := preload("res://game/combat/mara_subordinate_training.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
+const CAMPAIGN_PLAYTEST_NOTICE := "Development playtest: includes placeholder art."
 const WAR_YEARS := ["", "Year One", "Year Two", "Year Three", "Year Four", "Year Five"]
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
@@ -18,6 +22,7 @@ const BattlePointsDrill := preload("res://game/combat/battle_points_drill.gd")
 const Platoon := preload("res://game/combat/platoon.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const UnitCatalog := preload("res://game/combat/unit_catalog.gd")
+const FactionRoster := preload("res://game/combat/faction_roster.gd")
 const SkirmishView := preload("res://game/combat/infantry_skirmish_view.gd")
 const Skirmish := preload("res://game/combat/infantry_skirmish.gd")
 const SkirmishSetup := preload("res://game/combat/skirmish_setup.gd")
@@ -38,7 +43,7 @@ const DARK := Color("#171a1a")
 enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
-	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE,
+	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
 }
 
 const RATING_NAMES := {
@@ -51,6 +56,24 @@ const RATING_NAMES := {
 	Unit.Damage.HOLY: "Holy",
 	Unit.Damage.CURSE: "Curse",
 }
+
+const PRACTICE_ROSTERS := {
+	"raska": [FactionRoster.ORCS, UnitCatalog.ORC_BASIN_REGULARS],
+	"ilyra": [FactionRoster.ELVES, UnitCatalog.ELF_SHORE_DETACHMENT],
+	"sova": [FactionRoster.DRUIDS, UnitCatalog.DRUID_TUNNEL_GUARD],
+	"neris": [FactionRoster.DRYADS, UnitCatalog.DRYAD_LOADING_GUARD],
+	"sereth": [FactionRoster.UNDEAD, UnitCatalog.UNDEAD_HOUSEHOLD_GUARD],
+}
+
+const TRAINING_NAMES := {
+	Platoon.Skill.CHARGE_BRACE: "Charge & Brace",
+	Platoon.Skill.MOUNTED_TRAINING: "Mounted Training",
+	Platoon.Skill.FORMATION_DRILL: "Formation Drill",
+	Platoon.Skill.SCOUTING: "Scouting",
+	Platoon.Skill.SIEGECRAFT: "Siegecraft",
+	Platoon.Skill.BEAST_HANDLING: "Beast Handling",
+}
+
 
 var _profile := ProfileStore.new()
 var _body_face := FontVariation.new()
@@ -160,6 +183,14 @@ func _go_back() -> void:
 		Page.UNIT_PROGRESSION:
 			_show_briefing()
 			_stage.get_node("Unit Progression").grab_focus()
+		Page.MARA_SHIELD_DRILL:
+			_show_briefing()
+			var drill := _stage.get_node_or_null("Shield Infantry Drill") as Button
+			if drill:
+				drill.grab_focus()
+		Page.ROSTER_REQUIREMENTS:
+			_show_unit_progression(true)
+			_stage.get_node("Preview Advancement").grab_focus()
 		Page.BATTLE_POINTS_DRILL:
 			_show_drills()
 			_stage.get_node("Battle Points Drill").grab_focus()
@@ -202,7 +233,7 @@ func _show_title() -> void:
 
 func _show_vault(initial_index: int) -> void:
 	_open_page(Page.VAULT)
-	var back := _heading("Campaign Vault", "Choose a leader to begin their campaign.")
+	var back := _heading("Campaign Vault", CAMPAIGN_PLAYTEST_NOTICE + " Choose a leader to begin.")
 	_portraits.clear()
 	for index in range(Campaigns.ALL.size()):
 		var campaign := Campaigns.ALL[index]
@@ -306,19 +337,42 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	if deployment.is_empty() or mission.is_empty():
 		return
 	_open_page(Page.MISSION_BRIEFING)
-	var generic := deployment.has("mission_id")
 	var back := _heading("Battlefield Briefing", "%s  /  %s" % [mission.title, WAR_YEARS[mission.year]])
 	_label(_stage, deployment.get("battlefield_label", "THE MINE · MARCHES BORDER"),
 		Rect2(76, 248, 1120, 44), 25, GOLD)
-	var orders := _label(_stage, deployment.orders, Rect2(76, 304, 1180, 190), 25 if generic else 29, IVORY)
+	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	orders.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_label(_stage, "Hold L2 or Tab to command · Square/J attack · Cross/E interact · R1/Q officer ability" if generic else "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 500, 1180, 32), 21, MUTED)
-	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
+	var can_replay_heavy := _mine_replay_heavy_available(_active_campaign.id, mission_id, _profile.completed_missions(_active_campaign.id))
+	var roster_notice := " Optional replay loadout." if can_replay_heavy else " Fixed test roster."
+	_label(_stage, CAMPAIGN_PLAYTEST_NOTICE + roster_notice, Rect2(76, 475, 1080, 32), 21, MUTED)
+	var deploy_y := 555.0
+	if _active_campaign.id == "mara" and mission_id == "mara_mine_escort":
+		# The full orders initially expand the label before wrapping is enabled.
+		orders.set_deferred("size", Vector2(1000, 120))
+		deploy_y = 578.0
+		var lead := LeadProgress.inspect("mara", _profile.completed_missions("mara"))
+		var budget := _label(_stage,
+			"Mine deployment: %d starting BP · Lead platoon Lv %d · %d BP cap.\n"
+			% [lead.next_mission_bp, lead.lead_level, lead.next_mission_capacity]
+			+ "Each Mine attempt starts fresh. Confirmed Human chapter clears set the lead level and cap.",
+			Rect2(76, 506, 1080, 46), 19, IVORY)
+		budget.name = "MineDeploymentBudget"
+	var deploy := _button("Confirm Deployment", Rect2(76, deploy_y, 372, 58), _deploy_campaign_mission.bind(mission_id))
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
-	if deployment.get("briefing_dispatch", false):
-		var dispatch := _button("Read Dispatch", Rect2(468, 555, 268, 58),
+	if can_replay_heavy:
+		var heavy := _button("Replay with Heavy Infantry", Rect2(468, deploy_y, 395, 58),
+			_deploy_campaign_mission.bind(mission_id, true))
+		_link_focus(deploy, SIDE_RIGHT, heavy)
+		_link_focus(heavy, SIDE_LEFT, deploy)
+		_link_focus(heavy, SIDE_TOP, back)
+		var tradeoff := _label(_stage, "Heavy Infantry can withstand more hits, but moves slower and deals less damage. "
+			+ "Confirm Deployment uses regular Shield Infantry.",
+			Rect2(76, 649, 1150, 46), 20, MUTED)
+		tradeoff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tradeoff.name = "MineHeavyReplayTradeoff"
+	elif deployment.get("briefing_dispatch", false):
+		var dispatch := _button("Read Dispatch", Rect2(468, deploy_y, 268, 58),
 			_present_campaign_dialogue.bind(deployment.dispatch, _show_campaign_mission_briefing.bind(mission_id)))
 		_link_focus(deploy, SIDE_RIGHT, dispatch)
 		_link_focus(dispatch, SIDE_LEFT, deploy)
@@ -327,22 +381,43 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	_show_campaign_warning()
 
 
-func _deploy_campaign_mission(mission_id: String) -> void:
-	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != mission_id:
+func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confirmed_clears: PackedStringArray) -> bool:
+	return (campaign_id == MaraTraining.CAMPAIGN_ID and mission_id == MaraTraining.QUALIFYING_CLEAR
+		and _has_mara_shield_drill() and confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR)
+		and _profile.mara_shield_infantry_training().qualifies_for_branch(
+			MaraTraining.SHIELD_INFANTRY_SLOT, MaraTraining.BRANCH_UNIT))
+
+
+func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
+	if _page != Page.MISSION_BRIEFING or not _campaign_world or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
 	var campaign_id: String = _active_campaign.id
-	if not CampaignMissions.is_unlocked(campaign_id, mission_id, _profile.completed_missions(campaign_id)):
+	var confirmed_clears := _profile.completed_missions(campaign_id)
+	if not CampaignMissions.is_unlocked(campaign_id, mission_id, confirmed_clears):
 		return
 	var deployment := CampaignDeployments.for_mission(mission_id)
 	if deployment.is_empty():
 		return
+	# The briefing's button is not authorization. Recheck against the current
+	# campaign record immediately before configuring this one attempt.
+	var authorize_heavy := use_heavy and _mine_replay_heavy_available(campaign_id, mission_id, confirmed_clears)
+	if use_heavy and not authorize_heavy:
+		_show_notice("Heavy Infantry requires a confirmed Mine clear and Shield Infantry Drill Rank 2.")
+		return
 	var scene: PackedScene = deployment.scene
-	_replace_stage(Page.CAMPAIGN_BATTLE)
-	_victory_pending = false
 	var mission: Node3D = scene.instantiate()
 	if deployment.has("mission_id"):
 		mission.set("mission_id", deployment.mission_id)
 		mission.set("campaign_id", campaign_id)
+	if use_heavy and (not mission is MaraMine or not mission.configure_replay_heavy_infantry(
+			confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR), authorize_heavy)):
+		mission.free()
+		_show_notice("Heavy Infantry is unavailable. You can still deploy with regular Shield Infantry.")
+		return
+	_replace_stage(Page.CAMPAIGN_BATTLE)
+	_victory_pending = false
+	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
+		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
 		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
@@ -459,7 +534,64 @@ func _show_briefing() -> void:
 		_link_focus(drills, SIDE_BOTTOM, dispatch)
 		_link_focus(progression, SIDE_BOTTOM, dispatch)
 		_link_focus(dispatch, SIDE_TOP, drills)
+		if _has_mara_shield_drill():
+			var shield := _button("Shield Infantry Drill", Rect2(736, 636, 290, 57), _show_mara_shield_drill)
+			_link_focus(shield, SIDE_TOP, progression)
+			_link_focus(dispatch, SIDE_RIGHT, shield)
+			_link_focus(shield, SIDE_LEFT, dispatch)
 	back.grab_focus()
+
+
+func _has_mara_shield_drill() -> bool:
+	return (_campaign_world != null and _active_campaign.get("id") == MaraTraining.CAMPAIGN_ID
+		and _campaign_world.campaign_id() == MaraTraining.CAMPAIGN_ID)
+
+
+func _show_mara_shield_drill() -> void:
+	if not _has_mara_shield_drill():
+		return
+	var plan := _profile.mara_shield_infantry_training()
+	var slot := MaraTraining.SHIELD_INFANTRY_SLOT
+	var rank := plan.formation_drill_rank(slot)
+	var credit := plan.available_drill_credit(slot)
+	_open_page(Page.MARA_SHIELD_DRILL)
+	var back := _heading("Shield Infantry Drill", "Mara’s development playtest · Training is separate from lead stats and Battle Points.")
+	var rank_label := _label(_stage, "Formation Drill: Rank %d" % rank, Rect2(76, 236, 1040, 65), 39, IVORY, DISPLAY_FACE)
+	rank_label.name = "ShieldDrillRank"
+	var credit_label := _label(_stage, "Available drill credit: %d" % credit, Rect2(76, 314, 1040, 35), 25, GOLD)
+	credit_label.name = "ShieldDrillCredit"
+	var summary: String
+	var qualified := plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT)
+	if qualified:
+		summary = "Qualified for Heavy Infantry."
+	elif credit > 0:
+		summary = "Spend 1 drill credit to reach Rank 2 and qualify for Heavy Infantry."
+	else:
+		summary = "Locked: Clear The Pass Below the Mine to earn 1 drill credit."
+	var status := _label(_stage, summary, Rect2(76, 381, 1040, 68), 26, IVORY)
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.name = "ShieldDrillStatus"
+	var loadout_help := "On the Mine replay briefing, choose Replay with Heavy Infantry. Regular Shield Infantry is still the default."
+	if not qualified:
+		loadout_help = "Rank 2 unlocks the Heavy Infantry option on Mine replays only. Regular Shield Infantry stays the default."
+	var availability := _label(_stage, loadout_help, Rect2(76, 459, 1040, 63), 22, MUTED)
+	availability.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	availability.name = "ShieldDrillAvailability"
+	if credit > 0:
+		var confirm := _button("Confirm Training (1 drill credit)", Rect2(76, 572, 450, 57), _purchase_mara_shield_drill)
+		_link_focus(back, SIDE_BOTTOM, confirm)
+		_link_focus(confirm, SIDE_TOP, back)
+	back.grab_focus()
+
+
+func _purchase_mara_shield_drill() -> void:
+	if _page != Page.MARA_SHIELD_DRILL or not _has_mara_shield_drill():
+		return
+	var result := _profile.purchase_mara_shield_infantry_drill()
+	if result == OK:
+		_show_mara_shield_drill()
+	else:
+		_show_notice("Training could not be saved. The purchase was not applied.")
 
 
 func _show_unit_progression(keep_training: bool = false) -> void:
@@ -491,8 +623,11 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		_training_promotion_status = _label(_stage, "", Rect2(76, 469, 435, 74), 20, GOLD)
 		_training_promotion_status.name = "Promotion Status"
 		_training_promotion = _button("Promote to Heavy Infantry", Rect2(76, 600, 345, 45), _promote_training_unit)
+	var planner: Button
 	if definition.has("model"):
 		_training_inspect = _button("Inspect 3D Model", Rect2(76, 650, 345, 45), _show_unit_model.bind(definition))
+	elif PRACTICE_ROSTERS.has(_active_campaign.id):
+		planner = _button("Preview Advancement", Rect2(76, 630, 345, 45), _show_roster_requirements)
 
 	_rule(Rect2(523, 229, 841, 1), HAIRLINE)
 	_label(_stage, "Combat ratings", Rect2(523, 245, 820, 42), 29, GOLD, DISPLAY_FACE)
@@ -520,12 +655,80 @@ func _show_unit_progression(keep_training: bool = false) -> void:
 		_link_focus(_training_promotion, SIDE_RIGHT, left[2])
 	if _training_inspect:
 		_link_focus(_training_inspect, SIDE_RIGHT, left[3])
+	if planner:
+		_link_focus(_training_award, SIDE_BOTTOM, planner)
+		_link_focus(planner, SIDE_TOP, _training_award)
+		_link_focus(planner, SIDE_RIGHT, left[3])
 	for row in range(left.size()):
 		_link_focus(left[row], SIDE_LEFT, _training_award)
 		_link_focus(left[row], SIDE_RIGHT, right[row])
 		_link_focus(right[row], SIDE_LEFT, left[row])
 	_update_training()
 	_training_award.grab_focus()
+
+
+func _show_roster_requirements() -> void:
+	var source: Array = PRACTICE_ROSTERS.get(_active_campaign.id, [])
+	if _page != Page.UNIT_PROGRESSION or source.is_empty():
+		return
+	var faction: StringName = source[0]
+	var unit_id: StringName = source[1]
+	var roster := UnitCatalog.faction_roster()
+	var unit_name: String = roster.unit(unit_id).display_name
+	_open_page(Page.ROSTER_REQUIREMENTS)
+	var back := _heading("Advancement Requirements", "%s  /  %s  /  Provisional, not playable" % [_active_campaign.faction, unit_name])
+	_label(_stage, "Uses your practice ratings. Sample rank applies to every platoon skill for this preview only.",
+		Rect2(76, 221, 1235, 42), 23, IVORY)
+	var rank_value := _label(_stage, "", Rect2(76, 282, 344, 48), 25, GOLD)
+	rank_value.name = "Sample Training Rank"
+	var report_labels: Array[Label] = []
+	var sample := [0]
+	var read_training := func(_skill: int) -> int: return sample[0]
+	for index in range(roster.inspect_advances(unit_id, faction).size()):
+		var x := 76.0 + 655.0 * index
+		_rule(Rect2(x, 373, 615, 1), HAIRLINE)
+		var report := _label(_stage, "", Rect2(x, 397, 615, 285), 23, IVORY)
+		report.name = "Branch Requirements %d" % index
+		report.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		report_labels.append(report)
+	var redraw := func() -> void:
+		rank_value.text = "Sample training rank: %d / %d" % [sample[0], Platoon.MAX_RANK]
+		var rows := roster.inspect_advances(unit_id, faction, _training_unit.rating, read_training)
+		for index in range(rows.size()):
+			var branch: Dictionary = rows[index]
+			var text := "%s\n%s" % [roster.unit(branch.target).display_name,
+				"Eligible in this sample · Not playable" if branch.eligible else "Locked · Not playable"]
+			text += "\n\nCombat ratings" + _requirement_lines(branch.ratings, RATING_NAMES, "points")
+			text += "\n\nPlatoon training" + _requirement_lines(branch.training, TRAINING_NAMES, "ranks")
+			report_labels[index].text = text
+	var shift_rank := func(delta: int) -> void:
+		sample[0] = clampi(sample[0] + delta, 0, Platoon.MAX_RANK)
+		redraw.call()
+	var lower := _button("Lower Sample Rank", Rect2(429, 282, 263, 48), shift_rank.bind(-1))
+	var raise := _button("Raise Sample Rank", Rect2(706, 282, 263, 48), shift_rank.bind(1))
+	_link_focus(lower, SIDE_RIGHT, raise)
+	_link_focus(raise, SIDE_LEFT, lower)
+	_link_focus(lower, SIDE_TOP, back)
+	_link_focus(raise, SIDE_TOP, back)
+	_link_focus(back, SIDE_BOTTOM, raise)
+	_label(_stage, "Viewing these requirements cannot recruit a unit or change a save.", Rect2(76, 711, 1150, 38), 21, MUTED)
+	redraw.call()
+	raise.grab_focus()
+
+
+func _requirement_lines(gates: Dictionary, names: Dictionary, units: String) -> String:
+	if gates.is_empty():
+		return ": None"
+	var lines := ""
+	for stat: int in gates:
+		var gate: Dictionary = gates[stat]
+		if gate.missing == null:
+			lines += "\n%s: requires %d · current unknown" % [names[stat], gate.minimum]
+		elif gate.missing == 0:
+			lines += "\n%s: %d / %d · met" % [names[stat], gate.current, gate.minimum]
+		else:
+			lines += "\n%s: %d / %d · missing %d %s" % [names[stat], gate.current, gate.minimum, gate.missing, units]
+	return lines
 
 
 func _show_unit_model(definition: Dictionary) -> void:

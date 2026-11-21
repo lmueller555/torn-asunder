@@ -13,6 +13,8 @@ const Battle := preload("res://game/battlefield/command_battle.gd")
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
 const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
+const Evacuation := preload("res://game/battlefield/ilyra_spanwater_playtest.gd")
+const BoatRescue := preload("res://game/battlefield/ilyra_spanwater_evacuation.gd")
 const CAMP := "moonwash_camp"
 const HARBOR := "moonwash_harbor"
 const SHORE := "moonwash_survey_shore"
@@ -31,7 +33,9 @@ const RAMP := ["Routes/HeadlandLandwardTurn", "Routes/HeadlandRampFoot", "Routes
 const OTHER_SAVES := {
 	"mara": [["mara_mine_escort", "mara_grain_crossing", "mara_moonwash_quay"],
 		["year_one_mine", "marches_road", "marches_crossing", "moonwash_road", HARBOR]],
-	"raska": [["orc_mine_witness"], ["year_one_mine", "basin_well_road"]],
+	"raska": [["orc_mine_witness", "orc_well_road", "orc_spanwater_release"],
+		["year_one_mine", "basin_well_road", SPANWATER]],
+	"neris": [["neris_failing_grove", "neris_spanwater_feeder"], ["isolated_grove_nursery", SPANWATER]],
 	"sova": [["sova_mine_tunnels"], ["year_one_mine", "cairnspine_assembly"]],
 }
 
@@ -61,7 +65,7 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Ilyra campaign: rescue and survey dispatches, physical clears, abort/retry, both survey debriefs, travel-only Spanwater, replay, Continue and isolated first results passed.")
+		print("Ilyra campaign: all three physical chapter clears, abort/defeat/retry, loaded exit after closure, complete ending, replay, Continue and isolated first results passed.")
 	quit(0 if passed else 1)
 
 
@@ -146,7 +150,7 @@ func _flow() -> bool:
 		return _fail("Replay rewrote the first clear or the original provision outcome.")
 	_read_dialogue()
 	_map().select_waypoint(SHORE)
-	if not await _survey_flow():
+	if not await _survey_flow() or not await _spanwater_flow():
 		return false
 	saved = Profile.new(_profile_path)
 	for id: String in OTHER_SAVES:
@@ -154,7 +158,7 @@ func _flow() -> bool:
 		if saved.completed_missions(id) != PackedStringArray(itinerary[0]) 				or saved.load_campaign_world(id).current_waypoint_id() != itinerary[1].back():
 			return _fail("Ilyra's route overwrote " + id + "'s progress or position.")
 	return (saved.grain_clear_result() == &"both" and saved.ilyra_moonwash_clear_result() == Rescue.CREWS_ONLY) \
-		or _fail("Survey progress overwrote a first Moonwash or Human Grain outcome.")
+		or _fail("Elven progress overwrote a first Moonwash or Human Grain outcome.")
 
 
 
@@ -207,15 +211,138 @@ func _survey_flow() -> bool:
 			or FileAccess.get_file_as_string(_profile_path) != first_survey_save:
 		return _fail("Headland replay selected the wrong debrief or mutated saved outcomes.")
 	_read_dialogue(5)
-	if not _on_map(SHORE) or not _map().select_waypoint(SPANWATER) or not _press("ConfirmTravel") \
-			or _title._campaign_world.mission_at_current_waypoint() != "ilyra_spanwater_evacuation":
-		return _fail("The surveyed route could not reach the Spanwater evacuation.")
-	if _title._page == Title.Page.MISSION_BRIEFING:
-		_joy(JOY_BUTTON_B)
+	return _on_map(SHORE) or _fail("The headland debrief did not return to the Survey Shore.")
+
+
+func _spanwater_flow() -> bool:
+	if not _map().select_waypoint(SPANWATER) or not _press("ConfirmTravel") or not _on_briefing(EVACUATION):
+		return _fail("The genuine survey victory did not open the Elven Spanwater briefing.")
+	var prior := PackedStringArray([CLEAR, SURVEY_CLEAR])
+	var profile := Profile.new(_profile_path)
+	if profile.completed_missions("ilyra") != prior or profile.load_campaign_world("ilyra").current_waypoint_id() != SPANWATER:
+		return _fail("Arriving at the Elven landing wrote a clear or did not save the reached waypoint.")
 	_joy(JOY_BUTTON_B)
-	return (_press("Continue") and _on_map(SPANWATER) \
-		and not Profile.new(_profile_path).completed_missions("ilyra").has(EVACUATION)) \
-		or _fail("Continue lost the Spanwater visit or travel counted as a third clear.")
+	if not _on_map(SPANWATER):
+		return _fail("Back did not retain the reached Spanwater waypoint.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(SPANWATER) or not _press("ConfirmTravel") \
+			or not _on_briefing(EVACUATION) or not _press("Read Dispatch") or not _is_dialogue(Beats.ILYRA_SPANWATER_DISPATCH):
+		return _fail("Continue or the route failed to expose Ilyra's own briefing and dispatch.")
+	_read_dialogue(Beats.get_beat(Beats.ILYRA_SPANWATER_DISPATCH).lines.size())
+	if not _on_briefing(EVACUATION) or not _press("Confirm Deployment"):
+		return _fail("Reading the dispatch did not return to explicit deployment.")
+	var arrived := FileAccess.get_file_as_string(_profile_path)
+	var evacuation := _title._campaign_battle as Evacuation
+	if not await _mount_evacuation(evacuation):
+		return false
+	if not _call_party(BoatRescue.Group.NEAR):
+		return false
+	if evacuation.objective.group_status(BoatRescue.Group.NEAR) != BoatRescue.GroupStatus.APPROACHING:
+		return _fail("The abort fixture never physically called the near households.")
+	_joy(JOY_BUTTON_BACK)
+	if not _on_map(SPANWATER) or FileAccess.get_file_as_string(_profile_path) != arrived:
+		return _fail("Aborting a partial evacuation wrote a save.")
+	if not _press("ConfirmTravel") or not _on_briefing(EVACUATION) or not _press("Confirm Deployment"):
+		return _fail("A partial attempt prevented redeployment.")
+	evacuation = _title._campaign_battle as Evacuation
+	if not await _mount_evacuation(evacuation):
+		return false
+	if not _wait(func() -> bool: return evacuation.objective.outcome == BoatRescue.Outcome.FAILED, 6800):
+		return false
+	if evacuation.objective.failure != BoatRescue.Failure.LANDING_CLOSED \
+			or _title._page != Title.Page.CAMPAIGN_BATTLE or FileAccess.get_file_as_string(_profile_path) != arrived:
+		return _fail("A real loss to rising stairs changed the save or advanced the campaign.")
+	_key(KEY_BACKSPACE)
+	if evacuation.objective.landing_closed or evacuation.objective.outcome != BoatRescue.Outcome.ACTIVE \
+			or evacuation.objective.group_status(BoatRescue.Group.FAR) != BoatRescue.GroupStatus.SHELTERED:
+		return _fail("Retry did not restore launch and household starting states.")
+	if not await _finish_evacuation(evacuation, BoatRescue.Group.FAR, true, arrived):
+		return false
+	profile = Profile.new(_profile_path)
+	var complete := PackedStringArray([CLEAR, SURVEY_CLEAR, EVACUATION])
+	if profile.completed_missions("ilyra") != complete or profile.ilyra_moonwash_clear_result() != Rescue.CREWS_ONLY \
+			or not _is_dialogue(Beats.ILYRA_SPANWATER_DEBRIEF):
+		return _fail("Both verified exits did not save the campaign and open its actual ending.")
+	_read_dialogue(Beats.get_beat(Beats.ILYRA_SPANWATER_DEBRIEF).lines.size())
+	if not _on_map(SPANWATER) or _map()._heading.text != "Campaign Complete":
+		return _fail("The ending did not return to the completed map.")
+	_joy(JOY_BUTTON_B)
+	if not _press("Continue") or not _on_map(SPANWATER) or _map()._heading.text != "Campaign Complete" \
+			or not _press("ConfirmTravel") or not _on_briefing(EVACUATION) or not _press("Confirm Deployment"):
+		return _fail("Continue did not restore completion or permit a fresh finale replay.")
+	var victory_save := FileAccess.get_file_as_string(_profile_path)
+	evacuation = _title._campaign_battle as Evacuation
+	if not await _mount_evacuation(evacuation) \
+			or not await _finish_evacuation(evacuation, BoatRescue.Group.NEAR, false, victory_save):
+		return false
+	if not _is_dialogue(Beats.ILYRA_SPANWATER_DEBRIEF) or FileAccess.get_file_as_string(_profile_path) != victory_save:
+		return _fail("The other boarding order changed the ending or rewrote the completed save.")
+	_read_dialogue(Beats.get_beat(Beats.ILYRA_SPANWATER_DEBRIEF).lines.size())
+	return (_on_map(SPANWATER) and _map()._heading.text == "Campaign Complete") \
+		or _fail("Replay did not return to the completed Spanwater map.")
+
+
+func _mount_evacuation(evacuation: Evacuation) -> bool:
+	if not evacuation or evacuation._field.name != &"SpanwaterLockCampaign" \
+			or evacuation.objective.group_status(BoatRescue.Group.NEAR) != BoatRescue.GroupStatus.SHELTERED \
+			or evacuation.objective.group_status(BoatRescue.Group.FAR) != BoatRescue.GroupStatus.SHELTERED:
+		return _fail("The confirmed finale did not deploy a fresh Elven Spanwater scene.")
+	var prototype := evacuation.get_node_or_null("ObjectiveHUD/Panel/Margin/Readout/Prototype") as Label
+	if not prototype or not prototype.is_visible_in_tree() or not prototype.text.contains("DEVELOPMENT PLAYTEST"):
+		return _fail("The finale did not visibly retain its development-only visual label.")
+	_field_mission = evacuation
+	evacuation.set_physics_process(false)
+	await physics_frame
+	await physics_frame
+	return true
+
+
+func _call_party(group: BoatRescue.Group) -> bool:
+	var far := group == BoatRescue.Group.FAR
+	var path := ["Routes/LandingApproach", "Spawns/HouseholdsNear", "Routes/HouseholdScreenTurn", "Spawns/HouseholdsFar"] \
+		if far else ["Routes/LandingApproach", "Spawns/HouseholdsNear"]
+	if not _walk(path):
+		return false
+	_joy(JOY_BUTTON_A)
+	_tick()
+	return true
+
+
+func _finish_evacuation(evacuation: Evacuation, first: BoatRescue.Group, through_closure: bool, save_before: String) -> bool:
+	var objective := evacuation.objective
+	if not _place_detachment(["Routes/LandingApproach"]) or not _call_party(first):
+		return false
+	if not _wait(func() -> bool: return objective.passenger_group(BoatRescue.Launch.FIRST) == first, 3600):
+		return _fail("The initially called group did not physically board at the single berth.")
+	var second := BoatRescue.Group.NEAR if first == BoatRescue.Group.FAR else BoatRescue.Group.FAR
+	var next_path := ["Routes/HouseholdScreenTurn", "Spawns/HouseholdsNear"] if second == BoatRescue.Group.NEAR \
+		else ["Routes/HouseholdScreenTurn", "Spawns/HouseholdsFar"]
+	if not _walk(next_path):
+		return false
+	if through_closure:
+		var closure_time := Evacuation.RELEASE_AT + (evacuation._landing.x - evacuation._sweep_start.x) / Evacuation.RIVER_SPEED \
+			+ Evacuation.CLOSED_HEIGHT / Evacuation.RISE_SPEED
+		if not _wait(func() -> bool: return evacuation._elapsed >= closure_time - 17.0, 2300):
+			return false
+	_joy(JOY_BUTTON_A)
+	_tick()
+	if not _wait(func() -> bool: return objective.group_status(first) == BoatRescue.GroupStatus.SAFE, 2500):
+		return false
+	if evacuation._boats[0].view.position != evacuation._boat_exit or objective.outcome != BoatRescue.Outcome.ACTIVE \
+			or FileAccess.get_file_as_string(_profile_path) != save_before or _title._victory_pending:
+		return _fail("The physical first exit incorrectly cleared both household groups.")
+	if through_closure:
+		if not _wait(func() -> bool: return objective.landing_closed, 2900):
+			return false
+		if objective.group_status(second) != BoatRescue.GroupStatus.ABOARD or not evacuation._stairs_water.visible \
+				or FileAccess.get_file_as_string(_profile_path) != save_before:
+			return _fail("The real closure did not leave an in-transit launch aboard without awarding its clear.")
+	if not _wait(func() -> bool: return objective.outcome == BoatRescue.Outcome.SUCCEEDED, 3300):
+		return false
+	if objective.group_status(second) != BoatRescue.GroupStatus.SAFE or evacuation._boats[1].view.position != evacuation._boat_exit:
+		return _fail("The game cleared before the second loaded launch reached the physical exit.")
+	await process_frame
+	return true
 
 
 func _complete_survey(site: Survey.SignalSite) -> bool:

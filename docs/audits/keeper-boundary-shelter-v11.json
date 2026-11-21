@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "scope": "Exact Keeper Boundary Post V1.1 open-front shelter exterior in Sereth's Year Four writ deployment only. Does not approve the bench, people, writ, lookout signs, paths, or battlefield.",
+  "author": "Torn Asunder terrain asset author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Matched 1280×720 native hero approach from the existing low trail, open front during the actual handover/reply, tactical sector and overview in Sereth's live writ deployment. Same surroundings, cameras, collision and scene lights.",
+    "close_up": "Real front underside and near handover, legal road-side three-quarter, and supplementary east/west rear views show keyed masonry, foot, joinery and exposed rafter edge. Labels hidden only in a diagnostic.",
+    "reproduction": "Godot 4.7.2 GL Compatibility. Run game/battlefield/sereth_pass_writ_playtest.tscn. Follow the sheep track to the exterior Keeper handover; aim at the actual shelter and bench. In hero view use Space/Cross within the handover ring, let the Keeper physically approach, then verify Shift/Home and M are normal tactical sector and overview. Preserve existing road and withdrawal.",
+    "measurements": "518 hero / 380 tactical triangles, one surface each, two unique S3TC textures with mips (873,840 bytes). Added 470/332/332 renderer primitives, removed three draws per lens. Eight matched short hero pairs median ratio 1.031; software-only measurements are not a console or GPU frame-rate result."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "A real working open shelter, with oak bearing against keyed irregular split-stone and a foot block, exposed roof layering and no invented doorway. Both returns have distinct plausible ashlar bonds. Verified dressed geometry remains in the exact physical envelope."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Distinct split stone, oak, slate and footing under original scene lights, with relieved front corner and less repetitive rear facing. Stock shadow-only forms protect existing light behavior without doubling geometry on screen."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Open front and external handover remain obvious. No false entrance at the separately retained bench. 22 measured native perspective/orthographic transition readings select exactly one asset view through 48 m."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Clean import and inverse restores original host exactly. Original four solids, roof targeting, paths and occupation use unchanged. Fits scoped audit limits: under 1 MiB compressed, at most 500/350/350 added primitives at the three views and no added draws. Actual handover and return exercised; no target hardware benchmark."
+    },
+    "motion_and_effects": {
+      "result": "NOT_APPLICABLE",
+      "reason": "Static shelter. Native gameplay approach, true Keeper movement and handover/reply, and near-to-tactical state verified separately, without treating those actors or their effects as approved."
+    }
+  },
+  "files": {
+    "assets/models/environment/keeper_shelter.glb": "a3be574e35460f27f54a77f6a74fbe286d21f28b54ad0f3f6b15d6d696e0ad36",
+    "assets/models/environment/keeper_shelter.glb.import": "e30fc4c6952ad800e6499012707d114093ba725c0768b7cbb8f30777fb3f2cb8",
+    "assets/models/environment/keeper_shelter_import.gd": "e0fdc8e484e9a5ce299b4221edf7397596ecb74146172a6857f12862dd2ab793",
+    "assets/models/environment/keeper_shelter_import.gd.uid": "dfaa9371d1dd44c150a89277de5725c784ed9dc01a4630a72e34df9ee65e0224",
+    "game/battlefields/cairnspine_boundary_post.tscn": "920af86da755c2364a3a98806bcb8f4cdc143a4b2be3c288f21d2e61d5006b6c",
+    "assets/source/cairnspine_boundary_post/keeper_shelter.blend": "acfd6c6848d8ba63e60e7c7ea7fdfe3215080c4350c7dad2fde0d00dbeee071c"
+  },
+  "review_manifest_sha256": "d83dd47fa08067dab690b9438eaa51289a9f47739ee988de79701da64aee23f3",
+  "offline_evidence_sha256": {
+    "matched-masonry-review.jpg": "499bbe1abe7bab9f4d76dfe8d2e8bb749202a8fb205a9f3e03a14cae03c1f198",
+    "matched-live-views.jpg": "42aace94d6caf68ea17eea1d6b0fe38eac242c04fcbbf1964e3cc5fad4c70da5",
+    "candidate-native-hero-underside.png": "51b5e78a97e409500f586b3f27b4d040e0182eb0f4ddc869dde3d2e1d5e71cda",
+    "hero-keeper-consent.png": "792d6fadc34ca5dad5947fd464553882602216b883eb5b0690c2e9579a262d40",
+    "command-sector.png": "393ebc587241a1d7f32c5945ba1906adc8291dfd9e93f66ed78289903df37e38",
+    "command-overview.png": "18c806efb5751b3dccccae589550f64b407c8aeeb1ecba98aaea4882ad2fcceb",
+    "exact-mesh-validation.txt": "c316d2a5d2faf9c9a44d463e4af74a85cbb823fe5b54535091d57a63c22aeefb",
+    "profile-interleave.txt": "bad03f8c6151ef9e2b0616804488559deffc338713de41939679fd99202c3e90",
+    "regression-summary.txt": "baa7e0370a716ca8b1f787dd3234699b9bd40db132e5996e5c114aa5d969ad23"
+  },
+  "measurements": {
+    "triangles_hero_tactical": [
+      518,
+      380
+    ],
+    "compressed_mipped_texture_bytes": 873840,
+    "unique_textures": 2,
+    "additional_primitives_hero_sector_overview": [
+      470,
+      332,
+      332
+    ],
+    "draw_call_deltas": [
+      -3,
+      -3,
+      -3
+    ],
+    "hero_interleaved_paired_median_ratio": 1.03117358685587,
+    "hardware_fps_claim": false
+  },
+  "tests": [
+    "Clean import",
+    "cairnspine_boundary_post.gd",
+    "sereth_pass_writ.gd",
+    "sereth_pass_writ_playtest.gd",
+    "Actual hero approach, Keeper handover, withdraw, sign-negative and held/outside checks",
+    "22 actual distance and lens samples"
+  ]
+}

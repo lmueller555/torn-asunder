@@ -4,7 +4,9 @@ extends "res://game/battlefield/command_harness.gd"
 
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 
-var _routes: Array[Queue] = []
+const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
+
+var _routes := Routes.new()
 var _waypoint_feedback := ""
 var _feedback_index := -1
 var _waypoint_labels: Array[Label3D] = []
@@ -31,13 +33,11 @@ func restart_battle() -> void:
 
 
 func route_for(index: int) -> PackedVector2Array:
-	return _routes[index].snapshot()
+	return _routes.snapshot(index)
 
 
 func _reset_routes() -> void:
-	_routes.clear()
-	for _formation in battle.formations:
-		_routes.append(Queue.new())
+	_routes.reset(battle)
 	_waypoint_feedback = ""
 	_feedback_index = -1
 
@@ -48,7 +48,7 @@ func _move_selected() -> void:
 
 func _hold_selected() -> void:
 	if command_view:
-		_routes[selected_index].clear()
+		_routes.clear(selected_index)
 		_waypoint_feedback = ""
 	super._hold_selected()
 
@@ -57,18 +57,10 @@ func _issue_route(append: bool) -> void:
 	if not command_view or not battle.formations[selected_index].can_receive_orders():
 		return
 	_feedback_index = selected_index
-	var route := _routes[selected_index]
-	var was_empty := route.count() == 0
-	var result: Queue.Result
-	if append:
-		result = route.add_waypoint(cursor, _route_point_is_valid)
-	else:
-		result = route.set_destination(cursor, _route_point_is_valid)
+	var result := _routes.issue(battle, selected_index, cursor, append, _route_point_is_valid)
 	match result:
 		Queue.Result.ACCEPTED:
 			_waypoint_feedback = ""
-			if not append or was_empty:
-				battle.order_move(selected_index, cursor)
 		Queue.Result.DUPLICATE:
 			_waypoint_feedback = "Already on this route"
 		Queue.Result.FULL:
@@ -85,19 +77,7 @@ func _route_point_is_valid(point: Vector2) -> bool:
 
 
 func _after_battle_step(_delta: float) -> void:
-	for index in _routes.size():
-		var route := _routes[index]
-		var formation := battle.formations[index]
-		if not formation.can_receive_orders():
-			route.clear()
-			continue
-		# The core sets Hold only at the exact destination. Do not consume early
-		# or walk past a stopped/blocked formation merely because it is close.
-		if formation.order != Battle.Order.HOLD or not route.consume_if_arrived(formation.position):
-			continue
-		var following: Variant = route.next_waypoint()
-		if following != null:
-			battle.order_move(index, following)
+	_routes.advance(battle)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -121,7 +101,7 @@ func _sync_view() -> void:
 		if marker.visible:
 			marker.position = _ground(points[index], 0.35)
 	if command_view:
-		_formation_label.text += "  ·  %d/%d waypoints" % [_routes[selected_index].count(), Queue.MAX_WAYPOINTS]
+		_formation_label.text += "  ·  %d/%d waypoints" % [points.size(), Queue.MAX_WAYPOINTS]
 		if selected_index == _feedback_index and not _waypoint_feedback.is_empty():
 			_formation_label.text += "  ·  " + _waypoint_feedback
 		_controls_label.text += "\nR1 / G: append waypoint   ·   Move replaces the route"

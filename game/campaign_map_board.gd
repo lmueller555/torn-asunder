@@ -9,6 +9,13 @@ const PALE := Color("#e7dfc7")
 const QUIET := Color("#afb5a3")
 const BLOCKED := Color("#bb8e77")
 
+enum RouteCue { DISTANT, REACHABLE, SELECTED_REACHABLE, LOCKED }
+
+const LABEL_MARGIN := 12.0
+const LABEL_HEIGHT := 26.0
+const LABEL_TEXT_INSET := Vector2(7.0, 20.0)
+const LABEL_FONT_SIZE := 20
+
 var world: World
 var selected_id := ""
 var token_position := Vector2.ZERO
@@ -97,6 +104,7 @@ func _draw_terrain() -> void:
 			"raska": area = "RED BASIN APPROACH"
 			"ilyra": area = "THE MOONWASH COAST"
 			"neris": area = "ISOLATED GROVES"
+			"sereth": area = "STILL KINGDOM BORDER"
 	draw_string(TYPE, Vector2(26, 30), "VARETH  /  " + area, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 15, QUIET)
 	var compass := Vector2(size.x - 45.0, 44.0)
 	draw_line(compass - Vector2(0, 17), compass + Vector2(0, 15), QUIET, 1.0, true)
@@ -119,13 +127,35 @@ func _draw_tree(p: Vector2, height: float) -> void:
 	draw_line(p, p + Vector2(0, 4), Color("#354336"), 1.5)
 
 
+## Only a one-leg route from the party to the selected pin earns strong emphasis.
+func route_cue(edge: Dictionary) -> RouteCue:
+	var required: String = edge.get("required_clear_id", "")
+	if not required.is_empty() and not completed_ids.has(required):
+		return RouteCue.LOCKED
+	var origin := world.current_waypoint_id()
+	if edge.from_id == origin or edge.to_id == origin:
+		var destination: String = edge.to_id if edge.from_id == origin else edge.from_id
+		if selected_id == destination:
+			return RouteCue.SELECTED_REACHABLE
+		return RouteCue.REACHABLE
+	return RouteCue.DISTANT
+
+
 func _draw_route(edge: Dictionary) -> void:
 	var source := point_at(world.waypoint(edge.from_id).map_position)
 	var target := point_at(world.waypoint(edge.to_id).map_position)
-	var required: String = edge.get("required_clear_id", "")
-	var blocked := not required.is_empty() and not completed_ids.has(required)
-	var highlighted: bool = selected_id == edge.to_id or selected_id == edge.from_id
-	var tint := BLOCKED if blocked else GOLD if highlighted else QUIET
+	var cue := route_cue(edge)
+	var tint := QUIET
+	var radius := 1.6
+	match cue:
+		RouteCue.DISTANT:
+			tint = Color(QUIET, 0.48)
+			radius = 1.35
+		RouteCue.SELECTED_REACHABLE:
+			tint = GOLD
+			radius = 2.45
+		RouteCue.LOCKED:
+			tint = BLOCKED
 	var distance := source.distance_to(target)
 	if distance < 60.0:
 		return
@@ -133,8 +163,8 @@ func _draw_route(edge: Dictionary) -> void:
 	var steps := maxi(1, roundi((distance - 50.0) / 12.0))
 	for i in range(steps + 1):
 		var p := source + vector * lerpf(25.0, distance - 25.0, float(i) / steps)
-		draw_circle(p, 2.05 if highlighted else 1.6, tint, true, -1.0, true)
-	if blocked:
+		draw_circle(p, radius, tint, true, -1.0, true)
+	if cue == RouteCue.LOCKED:
 		var lock_point := (source + target) * 0.5
 		draw_circle(lock_point, 13.0, Color("#242523"), true, -1.0, true)
 		draw_arc(lock_point + Vector2(0, -2), 4.2, PI, TAU, 12, BLOCKED, 1.5, true)
@@ -162,11 +192,23 @@ func _draw_waypoint(node: Dictionary) -> void:
 		_:
 			draw_polyline(PackedVector2Array([p + Vector2(-10, 0), p + Vector2(8, 0), p + Vector2(2, -6)]), tint, 2.0, true)
 			draw_line(p + Vector2(8, 0), p + Vector2(2, 6), tint, 2.0, true)
-	var label: String = node.label
-	var label_width := TYPE.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20).x
-	var label_origin := Vector2(clampf(p.x - label_width * 0.5, 11.0, size.x - label_width - 11.0), p.y + 49.0)
-	draw_rect(Rect2(label_origin + Vector2(-7, -20), Vector2(label_width + 14.0, 26.0)), Color(0.085, 0.1, 0.08, 0.84))
-	draw_string(TYPE, label_origin, label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, tint)
+	var bounds := waypoint_label_bounds(node)
+	draw_rect(bounds, Color(0.085, 0.1, 0.08, 0.84))
+	draw_string(TYPE, bounds.position + LABEL_TEXT_INSET, node.label, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		LABEL_FONT_SIZE, tint)
+
+
+func waypoint_label_bounds(node: Dictionary) -> Rect2:
+	var p := point_at(node.map_position)
+	var width := TYPE.get_string_size(node.label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, LABEL_FONT_SIZE).x \
+		+ 2.0 * LABEL_TEXT_INSET.x
+	var x := clampf(p.x - width * 0.5, LABEL_MARGIN, maxf(LABEL_MARGIN, size.x - width - LABEL_MARGIN))
+	var top := p.y + 29.0
+	# At the southern edge put the plaque above the entire party badge, not on the
+	# pin or token. Reserve that space whether the party is here or not.
+	if top + LABEL_HEIGHT > size.y - LABEL_MARGIN:
+		top = p.y - 82.0
+	return Rect2(x, maxf(LABEL_MARGIN, top), width, LABEL_HEIGHT)
 
 
 func _draw_token() -> void:

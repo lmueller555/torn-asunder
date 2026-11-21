@@ -42,7 +42,7 @@ var _advances: Array[Dictionary] = []
 ## Elite Support is independent standing, never a replacement for the unit's
 ## battlefield function. Engineering is an optional secondary capability.
 func add_unit(id: StringName, faction: StringName, primary_family: StringName,
-		secondary_tags: Array[StringName] = [], elite_support := false) -> bool:
+		secondary_tags: Array[StringName] = [], elite_support := false, display_name := "") -> bool:
 	if id == &"" or _units.has(id) or faction not in FACTIONS or not _is_family(primary_family):
 		return false
 	var seen: Array[StringName] = [primary_family]
@@ -57,6 +57,8 @@ func add_unit(id: StringName, faction: StringName, primary_family: StringName,
 		"secondary_tags": secondary_tags.duplicate(),
 		"elite_support": elite_support,
 	}
+	if not display_name.strip_edges().is_empty():
+		_units[id]["display_name"] = display_name.strip_edges()
 	return true
 
 
@@ -111,6 +113,31 @@ func eligible_advances(source: StringName, read_rating := Callable(), read_train
 	return targets
 
 
+## Inspect direct branches for a known unit in the supplied faction. Each
+## ratings/training entry is keyed by its own enum (even if the integers overlap)
+## and reports {current, minimum, missing}. Unavailable/invalid reads are null,
+## never zero; one unknown requirement keeps the branch ineligible.
+func inspect_advances(source: StringName, faction: StringName,
+		read_rating := Callable(), read_training := Callable()) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if not _units.has(source) or _units[source].faction != faction:
+		return rows
+	var rating_values := {}
+	var training_values := {}
+	for edge in _advances:
+		if edge.source != source:
+			continue
+		var ratings := _inspect_gates(edge.ratings, read_rating, Unit.MIN_RATING, Unit.MAX_RATING, rating_values)
+		var training := _inspect_gates(edge.training, read_training, 0, Platoon.MAX_RANK, training_values)
+		rows.append({
+			"target": edge.target,
+			"eligible": _no_missing(ratings) and _no_missing(training),
+			"ratings": ratings,
+			"training": training,
+		})
+	return rows
+
+
 func _edge(source: StringName, target: StringName) -> Dictionary:
 	for edge in _advances:
 		if edge.source == source and edge.target == target:
@@ -149,14 +176,43 @@ static func _gates_valid(gates: Dictionary, valid: Array, minimum: int, maximum:
 
 
 static func _qualifies(edge: Dictionary, read_rating: Callable, read_training: Callable) -> bool:
-	return _meets(edge.ratings, read_rating, Unit.MAX_RATING) and _meets(edge.training, read_training, Platoon.MAX_RANK)
+	return _meets(edge.ratings, read_rating, Unit.MIN_RATING, Unit.MAX_RATING) \
+		and _meets(edge.training, read_training, 0, Platoon.MAX_RANK)
 
 
-static func _meets(gates: Dictionary, reader: Callable, maximum: int) -> bool:
-	for stat in gates:
-		if not reader.is_valid():
-			return false
-		var actual: Variant = reader.call(stat)
-		if typeof(actual) != TYPE_INT or actual < gates[stat] or actual > maximum:
+static func _meets(gates: Dictionary, reader: Callable, floor_value: int, maximum: int) -> bool:
+	for stat: int in gates:
+		var actual: Variant = _read_stat(reader, stat, floor_value, maximum)
+		if actual == null or actual < gates[stat]:
 			return false
 	return true
+
+
+static func _inspect_gates(gates: Dictionary, reader: Callable, floor_value: int, maximum: int, cache: Dictionary) -> Dictionary:
+	var report := {}
+	for stat: int in gates:
+		# All sibling branches in one inspection share a stat snapshot.
+		if not cache.has(stat):
+			cache[stat] = _read_stat(reader, stat, floor_value, maximum)
+		var actual: Variant = cache[stat]
+		var minimum: int = gates[stat]
+		report[stat] = {
+			"current": actual,
+			"minimum": minimum,
+			"missing": null if actual == null else maxi(minimum - int(actual), 0),
+		}
+	return report
+
+
+static func _no_missing(report: Dictionary) -> bool:
+	for requirement: Dictionary in report.values():
+		if requirement.missing != 0:
+			return false
+	return true
+
+
+static func _read_stat(reader: Callable, stat: int, floor_value: int, maximum: int) -> Variant:
+	if not reader.is_valid():
+		return null
+	var actual: Variant = reader.call(stat)
+	return actual if typeof(actual) == TYPE_INT and actual >= floor_value and actual <= maximum else null
