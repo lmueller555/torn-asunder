@@ -12,6 +12,9 @@ const RASKA_WELL_ROAD_DISPATCH := &"raska_well_road_dispatch"
 const RASKA_WELL_ROAD_DEBRIEF := &"raska_well_road_debrief"
 const SOVA_MINE_DISPATCH := &"sova_mine_dispatch"
 const SOVA_MINE_DEBRIEF := &"sova_mine_debrief"
+const SOVA_PUBLIC_RECORD_DISPATCH := &"sova_public_record_dispatch"
+const SOVA_PUBLIC_RECORD_DEBRIEF := &"sova_public_record_debrief"
+const SOVA_GODBRIDLE_HANDOVER := &"sova_godbridle_handover"
 const MARA_GRAIN_DISPATCH := &"mara_grain_dispatch"
 const MARA_GRAIN_SEED_DEBRIEF := &"mara_grain_debrief_seed_only"
 const MARA_GRAIN_BREAD_DEBRIEF := &"mara_grain_debrief_bread_only"
@@ -34,6 +37,9 @@ const LOWER_CAPTAIN := "Lower-Town Captain"
 const MINER := "Mine Witness"
 const SOVA := "First Listener Sova Cairn"
 const GUARD := "Cairnspine Guard"
+const SCRIBE := "Public Scribe"
+const ORC_WITNESS := "Orc Witness"
+const ELVEN_WITNESS := "Elven Witness"
 const CLERK := "Council Clerk"
 const MILLER := "Mill Steward"
 const BAKER := "Town Baker"
@@ -127,6 +133,38 @@ const BEATS := {
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "That was her choice?"},
 			{"speaker": GUARD, "text": "She said so herself. Mara's carrier cleared the pass with the Godbridle. We have a copy of the account she gave Raska."},
 			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Fold it into the survey. When we get home, ask the Keepers to bring out the old sealed record. I'm going to read it to the valleys."},
+		],
+	},
+	SOVA_PUBLIC_RECORD_DISPATCH: {
+		"title": "Let Them Walk Out",
+		"location": "Valley assembly · Before the public reading",
+		"lines": [
+			{"speaker": GUARD, "text": "Armed groups are watching the open dais. The recessed lectern has cover, but its public exit is close to the approach."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Bring the record and a public scribe to whichever lectern we choose. Put the guards outside the ring and keep the exit clear."},
+			{"speaker": SCRIBE, "text": "Several Keepers are standing by that exit. Do we wait if they leave before you read the names?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Let them go. My predecessors put those names under seal. I'm reading all three passages whether the Keepers stay or not."},
+		],
+	},
+	SOVA_PUBLIC_RECORD_DEBRIEF: {
+		"title": "Copies at the Door",
+		"location": "Valley assembly · After the public reading",
+		"lines": [
+			{"speaker": SCRIBE, "text": "I have all three passages: who gave the command to raise the Cairnspine, how the Elven coast drowned, and how the Red Basin lost its sea."},
+			{"speaker": GUARD, "text": "Some of the Keepers left. Do you want them brought back to answer for what we heard?"},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "No. Move the guards away from the exit. If I ever ask those valleys for their help, they need to be able to say no."},
+			{"speaker": SCRIBE, "text": "I made a copy for Ilyra. I can leave another at the door for anyone who wants it."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Do that. Keep the record open here. Nobody should have to ask a Keeper before they can read it again."},
+		],
+	},
+	SOVA_GODBRIDLE_HANDOVER: {
+		"title": "In Sight of Witnesses",
+		"location": "Spanwater · Year Four, after the breach",
+		"lines": [
+			{"speaker": MARA, "portrait": MARA_PORTRAIT, "text": "I won't ask Orrun to close the breach. Before another crown comes for the Godbridle, I want you to take custody of it."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Break the seal so the witnesses can see what's inside. We don't need to say a word to it."},
+			{"speaker": ELVEN_WITNESS, "text": "I see the bridle. I'll attest that it passed from your hands to his."},
+			{"speaker": ORC_WITNESS, "text": "So will I. I'm here to witness a handover, not to sign away anyone's claim."},
+			{"speaker": SOVA, "portrait": SOVA_PORTRAIT, "text": "Close the case. I'll take it into custody. When the valleys meet, this goes into the public record too."},
 		],
 	},
 	MARA_GRAIN_DISPATCH: {
