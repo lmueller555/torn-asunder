@@ -33,7 +33,7 @@ func _run() -> void:
 	_view.return_requested.connect(func() -> void: _returns += 1)
 	root.add_child(_view)
 	await process_frame
-	var passed := _exercise_flow(clears)
+	var passed := _check_label_margin() and _exercise_flow(clears)
 	if FileAccess.file_exists(profile_path) != original_exists \
 			or (original_exists and FileAccess.get_file_as_string(profile_path) != original_save):
 		passed = _fail("Map navigation wrote a profile file.")
@@ -110,6 +110,22 @@ func _exercise_flow(clears: PackedStringArray) -> bool:
 	_key(KEY_ESCAPE)
 	_joy(JOY_BUTTON_B)
 	return _returns == 2 or _fail("Escape and Circle were not offered to the shell as return requests.")
+
+
+func _check_label_margin() -> bool:
+	var harbor: Dictionary = _world.waypoint("moonwash_harbor")
+	var board := _view._board
+	var pin := board.point_at(harbor.map_position)
+	var plaque := board.waypoint_label_bounds(harbor)
+	if plaque.end.y > pin.y - 55.0 or not Rect2(Vector2.ONE * 12.0,
+			board.size - Vector2.ONE * 24.0).encloses(plaque):
+		return _fail("The harbor edge label collides with the party badge or map border.")
+	if board.waypoint_at(pin) != harbor.id:
+		return _fail("Moving a label changed the real selectable harbor pin.")
+	var camp: Dictionary = _world.waypoint(CAMP)
+	if board.waypoint_label_bounds(camp).position.y <= board.point_at(camp.map_position).y:
+		return _fail("Ordinary waypoints should keep their labels below their pins.")
+	return true
 
 
 func _route_cue(first: String, second: String) -> Board.RouteCue:
