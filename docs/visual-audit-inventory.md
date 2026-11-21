@@ -58,6 +58,14 @@ These rework decisions cover the families visible in the linked Godot previews a
 | [Moonwash Survey Shore beach, shoal and signal structure](../tests/moonwash_survey_shore_preview.tscn) | Rework | Hard-edged bands and angular surf stripes read as depth markers. The plain post and ramp do not distinguish a working signal station at hero height. Keep the two headland occlusions and beach/high route distinction in later art. |
 | [Spanwater main channel, spillway and wheel stand](../tests/spanwater_lock_campaign_preview.tscn) | Rework | The channel and spilling water are solid color planes and square masses. The wheel is recognizable but its block stand, gates and banks lack construction or believable joins. Moving water cues and the two layouts still need separate in-game checks. |
 
+## Inspected: Vareth overworld
+
+| Existing asset or family | Status | What blocks a pass |
+|---|---|---|
+| [Vareth campaign board](../game/campaign_map_board.gd) | Rework | Native Godot captures on Mara’s and Ilyra’s routes show the same flat schematic terrain: repeated peak silhouettes, angular river and coastline, and no authored settlement or shoreline detail. At a smaller window the whole board shrinks rather than reflowing, with Moonwash Harbor’s label nearly touching the lower frame. On Mara's locked road, gold also highlights an onward leg that the party cannot take from its current location. |
+
+Keep the current-location marker distinct from selection; keep explicit lock icons and reasons, travel separate from deployment, and mouse, keyboard and controller input. Audit the 3D replacement in the live campaign shell at ordinary view and real close zoom, including locked, available and in-transit states. These observations apply to the existing board, not to an unmerged art candidate.
+
 ## Existing art awaiting individual review
 
 Use one audit per shared asset or kit, with every distinct gameplay use recorded. Split these rows into individual records as the assets are inspected. Do not infer a pass or fail from an unreviewed row.
@@ -69,5 +77,4 @@ Use one audit per shared asset or kit, with every distinct gameplay use recorded
 | Remaining Moonwash harbor and survey shore families | Unapproved | [Harbor](../game/battlefields/moonwash_harbor_campaign.tscn) and [survey shore](../game/battlefields/moonwash_survey_shore.tscn). Review water, shoreline, quays, rigs, boats, signals and character visuals independently. |
 | Remaining Spanwater Lock and nursery families | Unapproved | [Lock](../game/battlefields/spanwater_lock_campaign.tscn) and [grove](../game/battlefields/isolated_grove_nursery.tscn). Review both lock layouts, water channels and control props, then the nursery, sled, tree and supporting figures. |
 | Remaining Cairnspine Vault Road and Cut/Boundary families | Unapproved | [Vault Road](../game/battlefields/cairnspine_vault_road.tscn). Review its settlement and route materials, landmarks, and uninspected non-benchmark character art across the three locations. |
-| Vareth overworld | Unapproved | [Current board](../game/campaign_map_board.gd) is a development view. Check its art separately from waypoint and travel logic; the replacement must preserve route and pin readability at ordinary view and close zoom, including locked and unlocked states on the camp-to-Mine path. |
 | Other existing UI art and portraits | Unapproved | [Art resources](../assets/art/). These are not terrain, but are not among the user-approved reference assets. Audit in their actual UI context. |
