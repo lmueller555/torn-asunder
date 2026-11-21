@@ -123,8 +123,8 @@ func _check_ice_flow() -> bool:
 		return _fail("An interrupted committed cast unexpectedly changed the shared points.")
 	if not _press("SimulatedLane") or not _press("CastBenediction"):
 		return false
-	for count in range(48):
-		await process_frame
+	await create_timer(Ice.WINDUP_SECONDS + 0.15).timeout
+	await process_frame
 	if not "Ice hit" in _label("DrillFeedback") or _label("WoundedAllyHP") == hp \
 			or _label("PoolBalance") != "%d / %d BP" % [start - 2 * Ice.COST, cap]:
 		return _fail("An uninterrupted windup did not deal one visible hit for the agreed cost.")
