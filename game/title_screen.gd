@@ -2,15 +2,13 @@ extends Control
 
 const Campaigns := preload("res://game/campaigns.gd")
 const CampaignMissions := preload("res://game/campaign_missions.gd")
+const CampaignDeployments := preload("res://game/campaign_deployments.gd")
 const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
-const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
 const CAMPAIGN_MAP_SCENE := preload("res://game/campaign_map.tscn")
 const CAMPAIGN_DIALOGUE_SCENE := preload("res://game/campaign_dialogue.tscn")
-const MARA_MINE_SCENE := preload("res://game/battlefield/mara_mine_escort_campaign.tscn")
-const MARA_MINE_ID := "mara_mine_escort"
 const ProfileStore := preload("res://game/profile_store.gd")
 const Embers := preload("res://game/embers.gd")
 const Drills := preload("res://game/combat/drills.gd")
@@ -67,7 +65,7 @@ var _selection_summary: Label
 var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
 var _campaign_warning := ""
-var _mara_mine: MaraMine
+var _campaign_battle: Node3D
 var _victory_pending := false
 var _drill_index := 0
 var _drill_rank := Platoon.MAX_RANK
@@ -122,7 +120,7 @@ func _input(event: InputEvent) -> void:
 		# Circle belongs to the hero's dodge; keyboard Escape and controller Create return.
 		if key_back or pad_back:
 			get_viewport().set_input_as_handled()
-			_return_from_mara_mine()
+			_return_from_campaign_battle()
 		return
 	var controller_button := event is InputEventJoypadButton and event.is_pressed()
 	var controller_stick: bool = event is InputEventJoypadMotion and absf(event.axis_value) > 0.65
@@ -253,7 +251,7 @@ func _open_campaign(campaign: Dictionary) -> void:
 	var result := _profile.mark_played(campaign.id)
 	_campaign_world = null
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
-	if campaign.id == "mara":
+	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
 		_show_world_map()
 	else:
@@ -264,11 +262,11 @@ func _open_campaign(campaign: Dictionary) -> void:
 func _show_world_map() -> void:
 	_replace_stage(Page.WORLD_MAP)
 	var map: CampaignMap = CAMPAIGN_MAP_SCENE.instantiate()
-	map.configure(_campaign_world, _profile.completed_missions("mara"), _profile.setting("reduced_motion"))
+	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
 	map.return_requested.connect(_show_title)
 	map.camp_operations_requested.connect(_show_briefing)
 	map.waypoint_arrived.connect(_on_waypoint_arrived)
-	map.briefing_requested.connect(_show_mara_mine_briefing)
+	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
 	_show_campaign_warning()
 
@@ -281,59 +279,64 @@ func _on_waypoint_arrived(_id: String) -> void:
 			_show_campaign_warning()
 
 
-func _show_mara_mine_briefing(mission_id: String) -> void:
-	if mission_id != MARA_MINE_ID:
+func _show_campaign_mission_briefing(mission_id: String) -> void:
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	var mission := CampaignMissions.mission_for_campaign(_active_campaign.id, mission_id)
+	if deployment.is_empty() or mission.is_empty():
 		return
-	var mine := CampaignMissions.mission_for_campaign("mara", mission_id)
 	_open_page(Page.MISSION_BRIEFING)
-	var back := _heading("Battlefield Briefing", "%s  /  Year One" % mine.title)
+	var back := _heading("Battlefield Briefing", "%s  /  Year One" % mission.title)
 	_label(_stage, "THE MINE · MARCHES BORDER", Rect2(76, 248, 1120, 44), 25, GOLD)
-	var orders := _label(_stage,
-		"Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
-		Rect2(76, 318, 1000, 120), 29, IVORY)
+	var orders := _label(_stage, deployment.orders, Rect2(76, 318, 1000, 120), 29, IVORY)
 	orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label(_stage, "Campaign-scale graybox prototype · Fixed test roster", Rect2(76, 475, 1080, 32), 21, MUTED)
-	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_mara_mine)
+	var deploy := _button("Confirm Deployment", Rect2(76, 555, 372, 58), _deploy_campaign_mission.bind(mission_id))
 	_link_focus(back, SIDE_BOTTOM, deploy)
 	_link_focus(deploy, SIDE_TOP, back)
 	back.grab_focus()
 	_show_campaign_warning()
 
 
-func _deploy_mara_mine() -> void:
-	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != MARA_MINE_ID:
+func _deploy_campaign_mission(mission_id: String) -> void:
+	if _page != Page.MISSION_BRIEFING or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
-	if not CampaignMissions.is_unlocked("mara", MARA_MINE_ID, _profile.completed_missions("mara")):
+	var campaign_id: String = _active_campaign.id
+	if not CampaignMissions.is_unlocked(campaign_id, mission_id, _profile.completed_missions(campaign_id)):
 		return
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	if deployment.is_empty():
+		return
+	var scene: PackedScene = deployment.scene
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
-	var mission: MaraMine = MARA_MINE_SCENE.instantiate()
-	_mara_mine = mission
-	mission.mission_finished.connect(_on_mara_mine_finished.bind(mission))
+	var mission: Node3D = scene.instantiate()
+	_campaign_battle = mission
+	mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
-	var back := _button("Return to Campaign Map", Rect2(1079, 735, 330, 48), _return_from_mara_mine)
+	var back := _button("Return to Campaign Map", Rect2(1079, 735, 330, 48), _return_from_campaign_battle)
 	back.name = "ReturnToMap"
 	back.focus_mode = Control.FOCUS_NONE
 	back.tooltip_text = "Escape or DualSense Create"
 
 
-func _on_mara_mine_finished(won: bool, mission: MaraMine) -> void:
-	if not won or mission != _mara_mine:
+func _on_campaign_battle_finished(won: bool, mission: Node3D, campaign_id: String, mission_id: String) -> void:
+	if not won or mission != _campaign_battle:
 		return
 	_victory_pending = true
-	if _profile.record_mission_clear("mara", MARA_MINE_ID) != OK:
-		_campaign_warning = "The escort was completed, but its clear could not be saved."
+	if _profile.record_mission_clear(campaign_id, mission_id) != OK:
+		_campaign_warning = "The mission was completed, but its clear could not be saved."
 	elif _profile.record_world_waypoint(_campaign_world) != OK:
-		_campaign_warning = "The escort cleared, but the current waypoint could not be saved."
-	_finish_mara_mine.call_deferred(mission)
+		_campaign_warning = "The mission cleared, but the current waypoint could not be saved."
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	_finish_campaign_battle.call_deferred(mission, deployment.debrief)
 
 
-func _finish_mara_mine(mission: MaraMine) -> void:
-	if mission == _mara_mine:
-		_present_campaign_dialogue(DialogueBeats.MARA_MINE_DEBRIEF, _show_world_map)
+func _finish_campaign_battle(mission: Node3D, debrief: StringName) -> void:
+	if mission == _campaign_battle:
+		_present_campaign_dialogue(debrief, _show_world_map)
 
 
-func _return_from_mara_mine() -> void:
+func _return_from_campaign_battle() -> void:
 	if _page == Page.CAMPAIGN_BATTLE and not _victory_pending:
 		_show_world_map()
 
@@ -380,9 +383,10 @@ func _show_briefing() -> void:
 	_link_focus(drills, SIDE_RIGHT, progression)
 	_link_focus(progression, SIDE_TOP, back)
 	_link_focus(progression, SIDE_LEFT, drills)
-	if _campaign_world:
+	var deployment := CampaignDeployments.opening_for_campaign(campaign.id)
+	if _campaign_world and not deployment.is_empty():
 		var dispatch := _button("Read Dispatch", Rect2(442, 636, 274, 57),
-			_present_campaign_dialogue.bind(DialogueBeats.MARA_MINE_DISPATCH, _show_briefing))
+			_present_campaign_dialogue.bind(deployment.dispatch, _show_briefing))
 		_link_focus(drills, SIDE_BOTTOM, dispatch)
 		_link_focus(progression, SIDE_BOTTOM, dispatch)
 		_link_focus(dispatch, SIDE_TOP, drills)
@@ -923,7 +927,7 @@ func _replace_stage(page: Page) -> void:
 	_page = page
 	_hint = null
 	_notice = null
-	_mara_mine = null
+	_campaign_battle = null
 	if is_instance_valid(_stage):
 		remove_child(_stage)
 		_stage.queue_free()

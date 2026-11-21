@@ -7,6 +7,7 @@ signal camp_operations_requested
 signal return_requested
 
 const World := preload("res://game/campaign_world.gd")
+const Missions := preload("res://game/campaign_missions.gd")
 const Board := preload("res://game/campaign_map_board.gd")
 const DISPLAY := preload("res://assets/fonts/Cinzel.ttf")
 const BODY := preload("res://assets/fonts/SourceSans3.ttf")
@@ -204,26 +205,34 @@ func _refresh_selection() -> void:
 			_confirm_button.text = "Current Waypoint"
 	else:
 		var route := _route_to_selection()
+		var required_clear := _blocking_clear_for_selection()
 		if not route.is_empty() and route.is_open:
 			_detail.text = "Connected route. Confirm to move your party to this waypoint."
 			if selected.kind == World.WaypointKind.BATTLEFIELD:
 				_detail.text += " Arriving opens the battlefield briefing."
 			_confirm_button.disabled = false
-		elif _road_lock_applies():
-			_detail.text = "Complete the Mine Escort to open the road into the Marches."
+		elif not required_clear.is_empty():
+			_detail.text = _locked_route_detail(required_clear, selected.label)
 			_confirm_button.text = "Road Locked"
 		else:
 			_detail.text = "No direct route from your party's current waypoint."
 			_confirm_button.text = "No Direct Route"
 
 
-func _road_lock_applies() -> bool:
+func _blocking_clear_for_selection() -> String:
 	for edge in _world.routes():
 		if _selected_id == edge.to_id or _selected_id == edge.from_id:
 			var clear: String = edge.get("required_clear_id", "")
 			if not clear.is_empty() and not _completed.has(clear):
-				return true
-	return false
+				return clear
+	return ""
+
+
+func _locked_route_detail(clear: String, destination: String) -> String:
+	if clear == "mara_mine_escort":
+		return "Complete the Mine Escort to open the road into the Marches."
+	var mission := Missions.mission_for_campaign(_world.campaign_id(), clear)
+	return "Complete %s to open the route to %s." % [mission.get("title", "the required mission"), destination]
 
 
 func _route_to_selection() -> Dictionary:

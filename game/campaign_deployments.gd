@@ -1,0 +1,32 @@
+extends RefCounted
+## Runtime wiring for authored missions with an actual campaign battlefield scene.
+
+const Missions := preload("res://game/campaign_missions.gd")
+const Beats := preload("res://game/campaign_dialogues.gd")
+
+const _DEPLOYMENTS := {
+	"mara_mine_escort": {
+		"scene": preload("res://game/battlefield/mara_mine_escort_campaign.tscn"),
+		"dispatch": Beats.MARA_MINE_DISPATCH,
+		"debrief": Beats.MARA_MINE_DEBRIEF,
+		"orders": "Recover the Godbridle at the mine approach and carry it to the east road exit. Use the ridge and the pass to cover the escort; defeating the road guard is not required.",
+	},
+	"sova_mine_tunnels": {
+		"scene": preload("res://game/battlefield/sova_mine_evacuation_campaign.tscn"),
+		"dispatch": Beats.SOVA_MINE_DISPATCH,
+		"debrief": Beats.SOVA_MINE_DEBRIEF,
+		"orders": "Release both groups at the tunnel mouth and bend. The evacuation is complete when both reach Druid safety and the willing witness is waiting at the outlet. The Godbridle is not your objective.",
+	},
+}
+
+
+static func for_mission(mission_id: String) -> Dictionary:
+	var entry: Dictionary = _DEPLOYMENTS.get(mission_id, {})
+	return entry.duplicate()
+
+
+static func opening_for_campaign(campaign_id: String) -> Dictionary:
+	var missions := Missions.missions_for_campaign(campaign_id)
+	if missions.is_empty():
+		return {}
+	return for_mission(missions[0].id)

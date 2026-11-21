@@ -45,7 +45,7 @@ func _run() -> void:
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("sova"):
+	if not _press("New Game") or not _press("raska"):
 		return false
 	if _title._page != Title.Page.BRIEFING or _map() or _button("Confirm Deployment"):
 		return _fail("A non-Mara campaign opened a deployable mission.")
@@ -77,10 +77,10 @@ func _flow() -> bool:
 		return _fail("Cancel did not return to the actual arrived position with a way to reopen briefing.")
 	var at_mine := FileAccess.get_file_as_string(_profile_path)
 
-	if not _press("Confirm Deployment") or not _title._mara_mine:
+	if not _press("Confirm Deployment") or not _title._campaign_battle:
 		return _fail("Explicit deployment did not start the actual mission scene.")
 	_joy(JOY_BUTTON_B)
-	if not _title._mara_mine:
+	if not _title._campaign_battle:
 		return _fail("Title intercepted combat Circle as a return.")
 	_key(KEY_ESCAPE)
 	if not _on_map(MINE) or FileAccess.get_file_as_string(_profile_path) != at_mine:
@@ -88,7 +88,7 @@ func _flow() -> bool:
 
 	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
 		return false
-	var mission := _title._mara_mine
+	var mission := _title._campaign_battle as Mission
 	mission.set_physics_process(false)
 	await physics_frame
 	await physics_frame
@@ -118,7 +118,7 @@ func _flow() -> bool:
 	_map().select_waypoint(MINE)
 	if not _press("ConfirmTravel") or not _press("Confirm Deployment"):
 		return false
-	_title._mara_mine.set_physics_process(false)
+	_title._campaign_battle.set_physics_process(false)
 	await physics_frame
 	await physics_frame
 	if not _win_escort():
@@ -130,7 +130,7 @@ func _flow() -> bool:
 	if not _on_map(MINE):
 		return _fail("Skipping debrief did not return to the map.")
 	_map().select_waypoint(ROAD)
-	if not _press("ConfirmTravel") or not _on_map(ROAD) or _saved_world() != ROAD or _title._mara_mine:
+	if not _press("ConfirmTravel") or not _on_map(ROAD) or _saved_world() != ROAD or _title._campaign_battle:
 		return _fail("The open road did not persist arrival or started an unimplemented mission.")
 	_joy(JOY_BUTTON_B)
 	if not _press("Continue") or not _on_map(ROAD) or _saved_clears() != PackedStringArray([CLEAR_ID]):
@@ -144,7 +144,7 @@ func _win_escort() -> bool:
 			return false
 	_joy(JOY_BUTTON_A)
 	_tick()
-	var mission := _title._mara_mine
+	var mission := _title._campaign_battle as Mission
 	if mission.objective.phase != Escort.Phase.ESCORTING:
 		return _fail("Cross did not interact with the deployed battlefield's bridle.")
 	for id: String in ["Routes/MineYard", "Routes/RoadWest", "Routes/RoadJunction", "Routes/RoadCut"]:
@@ -169,7 +169,7 @@ func _win_escort() -> bool:
 
 
 func _drive_to(marker_id: String, until_windup := false) -> bool:
-	var mission := _title._mara_mine
+	var mission := _title._campaign_battle as Mission
 	var mark := mission.battlefield_marker(NodePath("Markers/" + marker_id))
 	var local := mission.to_local(mark.global_position)
 	var target := Vector2(local.x, local.z)
@@ -198,7 +198,7 @@ func _on_map(id: String) -> bool:
 
 
 func _on_briefing() -> bool:
-	return _title._page == Title.Page.MISSION_BRIEFING and _button("Confirm Deployment") != null and _title._mara_mine == null
+	return _title._page == Title.Page.MISSION_BRIEFING and _button("Confirm Deployment") != null and _title._campaign_battle == null
 
 
 func _map() -> CampaignMap:
@@ -225,7 +225,7 @@ func _saved_clears() -> PackedStringArray:
 
 func _tick(count := 1) -> void:
 	for _step in range(count):
-		_title._mara_mine._physics_process(DT)
+		(_title._campaign_battle as Mission)._physics_process(DT)
 
 
 func _key(code: Key, down := true) -> void:
