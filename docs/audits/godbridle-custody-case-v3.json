@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "scope": "Mara Year One Mine campaign only: sealed Godbridle custody case, ground pose, carrier keeper, and explicit tactical alternate; not the wider battlefield or character placeholder",
+  "author": "Asset author",
+  "reviewer": "Dot, independent render review",
+  "reviewed_on": "2026-11-21",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Independent matched Godot review of exact editor-imported hero pickup and carry, orthographic tactical command view, and the original proxy baseline under the same scene and cameras.",
+    "close_up": "Independent near-hero ground, side keeper contact, seal detail, neutral front and reverse. Hashes below name the off-repository evidence.",
+    "motion": "Real Mine mission pickup, traveled carry, tactical transition, terminal loss and restart, plus 48 frames of close inspection while the real carrier moves. Existing pickup state switch, not a new hand animation. An art-only drop/re-lift study is separate from the game.",
+    "reproduction": "Godot 4.7.2, Compatibility, Mesa llvmpipe 1280×720. Import the project, run tests/godbridle_case_visual.gd, launch the Mara Mine campaign scene, approach GodbridlePickup from the southwest, press Space or Cross, move with the closed case and hold/release Shift or L2 to compare tactical and hero. A terminal-loss report hides the case; Backspace restarts the same attempt.",
+    "measurements": "Four marker-on/off renders changed 0 of 184,160 case-dependent pixels. Same-camera tactical near/far each covered the same 7 changed pixels. Interleaved ABBA hero draws 494→490 and 116,172→126,738 submitted primitives; tactical 192→186 and 8,098→6,962. Timing drift in software, no console FPS assertion."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "An intact sealed case, not an exposed relic. Clean footing and case/keeper fit, visible strap connections, readable shaped lid and forged hardware under close inspection."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Differentiated walnut, leather, bronze and pressed wax. Real hero and neutral faces are coherent; the existing emissive beacon does not bleed onto or mask case pixels in the matched test."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "The hero camera distinguishes the carry case. The command camera retains the tactical footprint, existing marker/label and minimap; only the case visual alternates."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Actual movement, pickup, pose contact, near/tactical swaps, terminal loss, restart and tight moving mount evidence. The intentional cord tail remains attached under the wax; no keeper in the grounded or tactical poses."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Editor import embeds maps; explicit mutually exclusive LODs. Clean launch and focused actual input/regression evidence. Single-object budget passes; not a console-performance claim."
+    }
+  },
+  "files": {
+    "assets/models/environment/godbridle_case_visual.gd": "f831ee156a62b79f55dc7797c2fa4040bf5064c3727d041d9fca1e2dff6d3d1b",
+    "assets/models/environment/godbridle_case_visual.gd.uid": "441dffd12be3b4e85dfa791b51f8850815f41097d48d21ba9054935d1f92dfea",
+    "assets/models/environment/godbridle_custody_case.glb": "6f44758dea8c2920c5906529b7b8a0a4c3d79774dad7159aae09b3d61e96874e",
+    "assets/models/environment/godbridle_custody_case.glb.import": "674c4fa79fa5f5daaf8fdd36896bfcacd49108299853719e05748e81aea1bee3",
+    "assets/source/godbridle_case/source/bake_case_maps.py": "2d1ef5ce166aa5875d90f1043783df5b39e6f920db3ba7f654735730538733cd",
+    "assets/source/godbridle_case/source/build_case.py": "34e4de613a28e297a1e185b04ad2d4e8975e6c6fe407327add9f19959916276a",
+    "assets/source/godbridle_case/source/godbridle_custody_case.blend": "25fa033bbc5159be499590269af81e387fec6034e7130b1c8cfc38f7fd804567",
+    "assets/source/godbridle_case/textures/CustodyCase_Color.png": "e87f5a207542d78be4cdb56c291aa1acae7b81c03acb443b8776b5093d045742",
+    "assets/source/godbridle_case/textures/CustodyCase_Normal.png": "3c78739c35a4e2705579af244ba3917554ac428b34abf7d86a34aed0c4b3189d",
+    "assets/source/godbridle_case/textures/CustodyCase_RoughMetal.png": "c2dffa575b2eeb84d3ed089edbd4ca2ec7cabc52c70ac58d8b939c35bef60c80"
+  },
+  "integration_scope": {
+    "initial_capture_base": "e6c040128f00c55c96a6feeffc875b5aeadd92df",
+    "release_base": "bb1c39f0568735ba8dc645749d5dfb713c1545d1",
+    "reviewed_14_path_manifest_sha256": "6c8eed4ffedef0700956e41365690356895142e1924b44bb2428b2e559291f74",
+    "reviewed_binding_sha256_at_delivery": {
+      "game/battlefield/mara_mine_escort.gd": "cbd2a13f01c71db5b633900528c8497e809269f2d8ffbe8d5bf60c51663ef6e4",
+      "game/battlefield/mara_mine_escort_campaign.tscn": "2825f86a4760ab2d4ede1ad10a51b9a8b7d23f9caba0979349d91ce2d74341c2"
+    },
+    "note": "These historical hashes record the campaign-only binding at review; unlike the durable visual files, they do not assert future gameplay scripts remain identical. Recheck relevant anchor, state visibility, lighting and camera context if they change.",
+    "release_runtime_retested_base": "eb8cd12404fe9ce2912b90bc32ad8fb86deae475"
+  },
+  "offline_evidence_manifest_sha256": "ba0b23fa369037c1a2aedd8eab865edf247ae8e15e221a799699c20072a5ae57",
+  "offline_evidence_sha256": {
+    "study-hero-ready.png": "c969a1222693c95528475e86f34d72d695fa83d173c623f19613fd1ef5a13cc3",
+    "study-hero-carry.png": "2622d354a60e9a07333be312490ba25285be08d01dcae6281bc61be7e6648947",
+    "study-command-ready.png": "0c19dfb1cd7886336dddc2e731fb00c82be64b704d948ee217cf07196022a87d",
+    "study-ground-close.png": "7e70de71ca2b4b5a5d0a2c901c994363ef2ac437ad0369f3b25fef25dce33ed1",
+    "study-carry-contact.png": "a53b08d9d6693b89aadfb3687e219c144c7a66c1dc4c459d41d0e923200ceb4d",
+    "neutral-front.png": "3531fe1cd71c82bd6b5e46f112a66fa4e3eef5eaa705ef44348ca78e6262d760",
+    "neutral-reverse.png": "0f46efd75dbfc25656978dd4012e8ed6d4ac90235c781d687d91c8d90bc21589",
+    "game.mp4": "4b8feaba0072555019a42ac73010f515520543c517f4a424c0004af870ca3069",
+    "carry-contact-motion.mp4": "8e47c3daf33a255e9b36187b8a219f47d0342d21b906070c4a2e099479046dbe",
+    "review-pixels.json": "4c11b5f2d35b711321af4739be49228aae546f8dbd8983089397e4fc0973103e",
+    "budget.log": "09598cb7db0bc19e8853d2f302630fce840341910083ffbd7d226190925f2e6b",
+    "regressions.log": "229e509afbe968c71cf9b572d3450bf8e4cc28dbf61881c319913b9f7c2354d3"
+  },
+  "budget": {
+    "single_prop_scope_only": true,
+    "near_body_triangles": 5681,
+    "carry_keeper_triangles": 574,
+    "tactical_triangles": 404,
+    "raw_mesh_bytes": 195746,
+    "embedded_mipped_image_bytes": 1048656,
+    "conservative_raw_plus_mips_mib": 4.19,
+    "predeclared_caps": {
+      "carried_triangles": 6500,
+      "tactical_triangles": 500,
+      "conservative_mib": 4.25,
+      "incremental_hero_submitted_primitives": 11000,
+      "incremental_command_submitted_primitives": 0,
+      "incremental_draw_calls": 0
+    },
+    "software_only": true
+  }
+}

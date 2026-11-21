@@ -13,6 +13,7 @@ const Attack := preload("res://game/combat/hero_attack_sequence.gd")
 const Points := preload("res://game/combat/battle_points.gd")
 const Defense := preload("res://game/combat/hero_defense.gd")
 const Escort := preload("res://game/battlefield/mine_escort_objective.gd")
+const CustodyCaseVisual := preload("res://assets/models/environment/godbridle_case_visual.gd")
 const PICKUP_RADIUS := 2.2
 const EXIT_RADIUS := 2.7
 # PassRelease faces the exit. This corridor catches the uphill approach early
@@ -34,6 +35,7 @@ const INFANTRY_RUN := &"Run"
 @export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
 @export var interception_approach: NodePath
 @export var interception_route: Array[NodePath] = []
+@export var custody_case_scene: PackedScene
 
 var objective := Escort.new()
 var encounter: Encounter
@@ -45,6 +47,7 @@ var _interception_started := false
 var _pickup_beacon: Node3D
 var _exit_beacon: Node3D
 var _bridle: Node3D
+var _custody_case: CustodyCaseVisual
 var _interact_requested := false
 var _hero_incapacitated := false
 var _bridle_lost := false
@@ -355,6 +358,8 @@ func _refresh_objective_view(feet: Vector3) -> void:
 	else:
 		_bridle.global_position = _hero.to_global(Vector3(0.46, 0.89, 0.06))
 		_bridle.rotation.y = _hero.rotation.y
+	if _custody_case and (awaiting or carrying):
+		_custody_case.present(carrying, command_view)
 	match objective.phase:
 		Escort.Phase.AWAITING_PICKUP:
 			var distance := feet.distance_to(_pickup.global_position)
@@ -403,6 +408,10 @@ func _beacon(marker: Marker3D, radius: float, color: Color, title: String) -> No
 func _make_bridle() -> Node3D:
 	var prop := Node3D.new()
 	add_child(prop)
+	if custody_case_scene:
+		_custody_case = CustodyCaseVisual.new(custody_case_scene.instantiate() as Node3D)
+		prop.add_child(_custody_case)
+		return prop
 	var leather := _material(Color("#a05d37"))
 	var brass := _material(WARM_LIGHT, true)
 	var loop := _mesh(prop, _ring(0.15, 0.19), leather, Vector3(0.0, 0.10, 0.0))
