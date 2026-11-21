@@ -13,6 +13,10 @@ const Roster := preload("res://game/combat/faction_roster.gd")
 enum PassStage { AVAILABLE, ARMED, RUNNING, WITHDRAWING, RESTAGING, WITHDRAWN, SPENT }
 const BRACE_INDEX := 0
 const BRACE_GATE_RADIUS := 2.5
+# Both incoming segments are oblique. Keep enough room behind the marker
+# that even a front wagon turning away does not clip the held follower.
+const SALT_REAR_DISTANCE := 9.0
+const SALT_FRONT_RELEASE := 10.0
 const CART_SPEED := 7.5
 const HOUSEHOLD_SPEED := 3.0
 const BOARDING_REACH := 2.8
@@ -61,6 +65,7 @@ var _salt_trigger: Vector3
 var _reserve_spawn: Vector3
 var _reserve_path := PackedVector3Array()
 var _pass_stage := PassStage.AVAILABLE
+var _salt_stage_front := -1
 var _pass: MountedPass
 var _brace_line: Platoon
 var _mounted_line: Platoon
@@ -116,6 +121,7 @@ func _physics_process(delta: float) -> void:
 
 func _after_battle_step(delta: float) -> void:
 	var was_active := objective.outcome == WellRoad.Outcome.ACTIVE
+	_release_salt_front_if_clear()
 	_step_boarding(delta)
 	_step_reserve(delta)
 	var frame := WellRoad.Observation.new()
@@ -207,6 +213,8 @@ func _hold_selected() -> void:
 				and aim.length_squared() > 0.25:
 			if _pass_stage == PassStage.AVAILABLE and _rival.status != Rival.Status.WAITING:
 				_notice = "The riders have mobilized. Use an ordinary screen or reroute to the wash."
+			elif _pass_stage == PassStage.AVAILABLE and _salt_staging_occupied():
+				_notice = "A cart is already entering the salt lane. Use an ordinary screen or reroute."
 			elif _pass_stage in [PassStage.AVAILABLE, PassStage.ARMED, PassStage.RUNNING]:
 				group.heading = aim.normalized()
 				_explicit_brace = true
@@ -287,6 +295,22 @@ func _step_cart(cart: WellRoad.Cart, route: WellRoad.Route, delta: float) -> voi
 		var trial := here.move_toward(target, remaining)
 		# A wagon retreating toward the fork is moving away from the charge lane.
 		var on_salt := route == WellRoad.Route.SALT_ROAD and data.next > data.fork and data.next <= data.merge
+		var rear_wait := false
+		var claim_front := false
+		if on_salt and target == _salt_trigger and (_pass_owns_lane() or _salt_stage_front >= 0):
+			var stage_distance := trial.distance_to(_salt_trigger)
+			if _salt_stage_front == -1 and stage_distance <= SALT_REAR_DISTANCE:
+				claim_front = true
+			elif _salt_stage_front >= 0 and _salt_stage_front != cart:
+				# Stop on the follower's actual incoming segment, short of the
+				# shared marker. Do not insert a new turn or move it backwards.
+				var rear := target.move_toward(data.path[data.next - 1], SALT_REAR_DISTANCE)
+				if here.distance_to(target) <= rear.distance_to(target):
+					data.waiting_on = "Cart ahead"
+					return
+				if stage_distance <= rear.distance_to(target):
+					trial = rear
+					rear_wait = true
 		# A deliberate pass stages salt wagons outside the complete swept lane.
 		# This checkpoint is 32 m west of its run-out; the covered wash never
 		# waits here, and a cart can turn back while the riders move.
@@ -301,12 +325,36 @@ func _step_cart(cart: WellRoad.Cart, route: WellRoad.Route, delta: float) -> voi
 			return
 		_face(data.wagon, target)
 		data.wagon.global_position = trial
+		if claim_front:
+			_salt_stage_front = cart
 		remaining -= here.distance_to(trial)
+		if rear_wait:
+			data.waiting_on = "Cart ahead"
+			return
 		if trial != target:
 			break
 		data.next += 1
 		if on_salt and target == _salt_trigger:
 			_rival.mobilize(_reserve_path)
+
+
+func _salt_staging_occupied() -> bool:
+	for cart in range(_carts.size()):
+		if objective.cart_state(cart) == WellRoad.CartState.EN_ROUTE \
+				and objective.route_for(cart) == WellRoad.Route.SALT_ROAD \
+				and _carts[cart].wagon.global_position.distance_to(_salt_trigger) <= SALT_REAR_DISTANCE:
+			return true
+	return false
+
+
+func _release_salt_front_if_clear() -> void:
+	if _salt_stage_front < 0:
+		return
+	var front := _carts[_salt_stage_front]
+	# Rerouting alone is not enough: the front wagon must physically clear
+	# the shared space before the rear wagon may enter its approach.
+	if front.lost or front.wagon.global_position.distance_to(_salt_trigger) >= SALT_FRONT_RELEASE:
+		_salt_stage_front = -1
 
 
 func _step_boarding(delta: float) -> void:
@@ -454,6 +502,7 @@ func _reset_convoy() -> void:
 	_notice = ""
 	_rival.reset(_reserve_spawn)
 	_pass_stage = PassStage.AVAILABLE
+	_salt_stage_front = -1
 	_explicit_brace = false
 	_brace_line = Platoon.new([Unit.new()], {})
 	_mounted_line = Platoon.new([Unit.new()], {})
@@ -532,7 +581,7 @@ func _reserve_cue() -> String:
 			if facing.dot(toward_riders) < MountedPass.FRONT_DOT:
 				ready = "Brace faces away. Aim east and Hold."
 			var warning := "Riders approaching. " if _rival.status == Rival.Status.MARCHING else ""
-			return "%s%s Salt carts wait at the west marker. Wash open. %s" % [warning, ready, cohesion]
+			return "%s%s Salt carts line up west of the charge lane. Wash open. %s" % [warning, ready, cohesion]
 		PassStage.RUNNING:
 			match _pass.result:
 				MountedPass.Result.REPELLED: return "Brace held. Riders regrouping to withdraw. " + cohesion
