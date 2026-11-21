@@ -4,6 +4,7 @@ extends "res://game/battlefield/command_harness.gd"
 signal mission_finished(won: bool)
 
 const Cut := preload("res://game/battlefield/sereth_voices_at_the_cut.gd")
+const CommandMinimap := preload("res://game/battlefield/sereth_cut_command_minimap.gd")
 const Bundle := Cut.BundleStatus
 const Account := Cut.AccountStatus
 const Action := Cut.Interaction
@@ -30,6 +31,8 @@ const ROOM_TO_ROAD := ["Routes/RecordRoomInside", "Routes/RecordRoomDoor", "Rout
 const EAST_EXIT := ["Routes/RoadEastReveal", "Objectives/EnemyRetreatExit"]
 
 enum Raid { WAITING, WARNING, APPROACH_CUT, APPROACH_ROOM, AT_ROOM, TAKE_IN_ROOM, EXTRACTING, DISPERSED, RETREATING_EMPTY }
+
+@export var enable_command_minimap := false
 
 var objective := Cut.new()
 var _iren: Node3D
@@ -61,6 +64,7 @@ var _interact := false
 @onready var _pressure: Label = $ObjectiveHUD/Panel/Margin/Readout/Pressure
 @onready var _hint: Label = $ObjectiveHUD/Panel/Margin/Readout/Hint
 @onready var _restart: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
+@onready var _command_minimap: CommandMinimap = $ObjectiveHUD/CommandMinimap
 
 
 func _ready() -> void:
@@ -276,6 +280,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if objective.outcome == Cut.Outcome.ACTIVE:
 		super._unhandled_input(event)
+
+
+func _sync_view() -> void:
+	super._sync_view()
+	if _command_minimap:
+		_command_minimap.refresh(self, enable_command_minimap and objective.outcome == Cut.Outcome.ACTIVE)
 
 
 func _notification(what: int) -> void:

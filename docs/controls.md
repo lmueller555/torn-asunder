@@ -55,11 +55,17 @@ On fields that enable the sector camera, hold **L2 / Shift** to start in a nearb
 
 This mode is opt-in through the command scene's `enable_sector_camera`, `field_bounds`, and `local_sector_size` settings. The current small prototypes keep their existing camera. Run `godot --headless --script tests/sector_camera.gd` to exercise both views and ordering on a synthetic 440 × 300 m field.
 
+## Sereth’s command minimap at the Cut
+
+In **The Names at the Cut**, hold **L2 / Shift** to show the north-up minimap. It shows Sereth, the two friendly guards, the selected platoon, and the area shown by the tactical camera. **Left-click** the minimap to center the camera without moving a platoon. **Right-click** a walkable point for one Move order. The Record Room roof rejects orders. The existing formation movement still checks obstacles on the way to a valid point.
+
+Controller aiming, Move and Hold stay on the usual stick and buttons. This minimap does not show raiders, support waypoint queues, or appear in hero view. **Return to Campaign Map** remains usable while holding command. Verify the live campaign with `godot --headless --script tests/sereth_cut_command_minimap.gd`.
+
 ## Prototype platoon waypoints
 
 The [original *Kingdom Under Fire: Heroes* Xbox manual, pp. 12–17](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) describes issuing movement the same way with the minimap on and placing up to eight waypoints. Torn Asunder’s standalone queue keeps that limit. Both a tactical cursor and a minimap can supply the same battlefield XZ point and terrain check. A direct destination replaces the route, an appended waypoint extends it, and only reaching the next point consumes it. Duplicate or invalid requests leave the route intact. Hold or cancel must clear it explicitly.
 
-Try route orders in the standalone flat-field scene: `godot game/battlefield/waypoint_command_harness.tscn`. Hold **L2 / Shift** for command, then press **R1 / G** to append the point under the terrain cursor. **Square / right-click** replaces the route; **Cross / H** clears it and holds. The selected platoon’s pending points are numbered in tactical view and in **R3 / M** overview. Orders keep advancing when you return to the hero. The regular campaign HUD and minimap are not yet wired to the queue. Run `godot --headless --script tests/platoon_waypoint_queue.gd` to check the rules.
+Try route orders in the standalone flat-field scene: `godot game/battlefield/waypoint_command_harness.tscn`. Hold **L2 / Shift** for command, then press **R1 / G** to append the point under the terrain cursor. **Square / right-click** replaces the route; **Cross / H** clears it and holds. The selected platoon’s pending points are numbered in tactical view and in **R3 / M** overview. Orders keep advancing when you return to the hero. Campaign route queues are opt-in by mission; the Cut’s minimap sends single Move orders. Run `godot --headless --script tests/platoon_waypoint_queue.gd` to check the rules.
 
 ## Engagement camera policy
 

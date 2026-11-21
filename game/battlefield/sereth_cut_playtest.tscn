@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://game/battlefield/command_harness.tscn" id="1_harness"]
 [ext_resource type="PackedScene" path="res://game/battlefields/still_kingdom_cut.tscn" id="2_cut"]
 [ext_resource type="Script" path="res://game/battlefield/sereth_cut_playtest.gd" id="3_playtest"]
+
+[ext_resource type="Script" path="res://game/battlefield/sereth_cut_command_minimap.gd" id="4_map_hud"]
+[ext_resource type="Script" path="res://game/battlefield/battlefield_minimap.gd" id="5_map"]
 
 [node name="SerethCutPlaytest" instance=ExtResource("1_harness")]
 script = ExtResource("3_playtest")
@@ -10,6 +13,7 @@ battlefield_scene = ExtResource("2_cut")
 field_bounds = Rect2(-195, -103, 390, 200)
 enable_sector_camera = true
 local_sector_size = 78.0
+enable_command_minimap = true
 hero_spawn = NodePath("Markers/Spawns/Sereth")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HouseholdGuard"), NodePath("Markers/Spawns/StairGuard")])
 
@@ -59,3 +63,49 @@ theme_override_font_sizes/font_size = 15
 size_flags_horizontal = 0
 focus_mode = 0
 text = "Restart  [Backspace / Options]"
+
+
+[node name="CommandMinimap" type="PanelContainer" parent="ObjectiveHUD"]
+visible = false
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -292.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 212.0
+grow_horizontal = 0
+mouse_filter = 0
+script = ExtResource("4_map_hud")
+
+[node name="Margin" type="MarginContainer" parent="ObjectiveHUD/CommandMinimap"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Readout" type="VBoxContainer" parent="ObjectiveHUD/CommandMinimap/Margin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ObjectiveHUD/CommandMinimap/Margin/Readout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.88, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "THE CUT  /  COMMAND SECTOR"
+
+[node name="Map" type="Control" parent="ObjectiveHUD/CommandMinimap/Margin/Readout"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("5_map")
+
+[node name="Hint" type="Label" parent="ObjectiveHUD/CommandMinimap/Margin/Readout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.82, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 13
+text = "Left-click: focus  ·  Right-click: move"
