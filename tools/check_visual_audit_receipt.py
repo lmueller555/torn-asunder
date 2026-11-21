@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import date
+from datetime import date, datetime, timezone
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -84,7 +84,7 @@ def verify_receipt(receipt_path: Path, candidate_root: Path, proposed_files: lis
     reviewed_on = _text(receipt.get("reviewed_on"), "reviewed_on")
     if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", reviewed_on):
         raise ValueError("reviewed_on must use YYYY-MM-DD")
-    if date.fromisoformat(reviewed_on) > date.today():
+    if date.fromisoformat(reviewed_on) > datetime.now(timezone.utc).date():
         raise ValueError("reviewed_on cannot be in the future")
     _audit_checks(receipt)
 
