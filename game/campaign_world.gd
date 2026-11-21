@@ -31,12 +31,17 @@ const _MAPS := {
 				"id": "moonwash_road", "label": "Road to Moonwash", "kind": WaypointKind.REGION,
 				"map_position": Vector2(0.46, 0.82),
 			},
+			"moonwash_harbor": {
+				"id": "moonwash_harbor", "label": "Moonwash Harbor", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.27, 0.90), "mission_id": "mara_moonwash_quay",
+			},
 		},
 		"routes": [
 			{"from_id": "marches_camp", "to_id": "year_one_mine"},
 			{"from_id": "year_one_mine", "to_id": "marches_road", "required_clear_id": "mara_mine_escort"},
 			{"from_id": "marches_road", "to_id": "marches_crossing"},
 			{"from_id": "marches_crossing", "to_id": "moonwash_road", "required_clear_id": "mara_grain_crossing"},
+			{"from_id": "moonwash_road", "to_id": "moonwash_harbor"},
 		],
 	},
 	"raska": {

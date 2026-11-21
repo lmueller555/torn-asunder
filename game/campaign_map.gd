@@ -179,6 +179,10 @@ func _refresh_selection() -> void:
 	if not is_node_ready():
 		return
 	var current := _world.waypoint(_world.current_waypoint_id())
+	var campaign := _world.campaign_id()
+	var complete := not Missions.missions_for_campaign(campaign).is_empty() \
+		and Missions.first_unplayed_mission_id(campaign, _completed).is_empty()
+	_heading.text = "Campaign Complete" if complete else "Campaign Map"
 	var selected := _world.waypoint(_selected_id)
 	_location.text = current.get("label", "No map")
 	_selection.text = selected.get("label", "None")

@@ -8,6 +8,7 @@ const PATH := "user://profile.cfg"
 const CAMPAIGNS := "campaigns"
 const MISSION_PROGRESS := "mission_progress"
 const MISSION_RESULTS := "mission_results"
+const CAMPAIGN_INTERMISSIONS := "campaign_intermissions"
 const MARA := "mara"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
@@ -117,6 +118,24 @@ func _is_moonwash_result(result: StringName) -> bool:
 
 func _is_grain_result(result: StringName) -> bool:
 	return result in [Grain.SEED_ONLY, Grain.BREAD_ONLY, Grain.BOTH]
+
+
+## Intermissions are story presentation, not mission clears or outcomes.
+func has_seen_intermission(campaign_id: String, beat: StringName) -> bool:
+	var seen: Variant = _config.get_value(CAMPAIGN_INTERMISSIONS, campaign_id, PackedStringArray())
+	return seen is PackedStringArray and seen.has(String(beat))
+
+
+## Mark after the player finishes or deliberately skips an intermission.
+func record_intermission_seen(campaign_id: String, beat: StringName) -> Error:
+	if campaign_id.is_empty() or beat == &"":
+		return ERR_INVALID_PARAMETER
+	var saved: Variant = _config.get_value(CAMPAIGN_INTERMISSIONS, campaign_id, PackedStringArray())
+	var seen: PackedStringArray = saved.duplicate() if saved is PackedStringArray else PackedStringArray()
+	if seen.has(String(beat)):
+		return OK
+	seen.append(String(beat))
+	return _set_value(CAMPAIGN_INTERMISSIONS, campaign_id, seen)
 
 
 ## Restore only position. An invalid/old save falls back to the authored start without a write.

@@ -19,6 +19,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "MARCHES CROSSING · BRIDGE AND FORD",
 		"orders": "Deliver at least one grain load and resolve both carts. The rival reserve moves against the first cart to commit to a crossing. Screen the threatened lane with a holding platoon, or turn back that cart and get the other through.",
 	},
+	"mara_moonwash_quay": {
+		"scene": preload("res://game/battlefield/mara_moonwash_playtest.tscn"),
+		"dispatch": Beats.MARA_HIGH_QUAY_DISPATCH,
+		"debrief": Beats.MARA_HIGH_QUAY_DEBRIEF,
+		"briefing_dispatch": true,
+		"battlefield_label": "MOONWASH HARBOR · UPPER QUAY",
+		"orders": "Withdraw the hero and both royal platoons through the upper-quay exit. Hold the landing to cover the retreat, then bring up the rear guard. Use the marked inland bypass if the lower stair closes. Leave the crews and boats to Ilyra.",
+	},
 	"orc_mine_witness": {
 		"scene": preload("res://game/battlefield/raska_mine_witness_campaign.tscn"),
 		"dispatch": Beats.RASKA_MINE_DISPATCH,
@@ -32,6 +40,15 @@ const _DEPLOYMENTS := {
 		"orders": "Release both groups at the tunnel mouth and bend. The evacuation is complete when both reach Druid safety and the willing witness is waiting at the outlet. The Godbridle is not your objective.",
 	},
 }
+
+
+const _INTERMISSIONS := {
+	"mara": {"moonwash_road": Beats.MARA_WATER_REQUEST},
+}
+
+
+static func intermission_at(campaign_id: String, waypoint_id: String) -> StringName:
+	return _INTERMISSIONS.get(campaign_id, {}).get(waypoint_id, &"")
 
 
 static func for_mission(mission_id: String) -> Dictionary:
