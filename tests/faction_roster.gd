@@ -15,8 +15,9 @@ func _initialize() -> void:
 	_check_elf_catalog()
 	_check_druid_catalog()
 	_check_dryad_catalog()
+	_check_undead_catalog()
 	if _failures == 0:
-		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, stat-gated Orc, Elf, Druid and Dryad branches and live Human parity passed.")
+		print("Faction roster: nine labels, hybrid roles, elite standing, six distinct factions, all six starter rosters, faction-specific gates and live Human parity passed.")
 	quit(0 if _failures == 0 else 1)
 
 
@@ -130,7 +131,6 @@ func _check_orc_catalog() -> void:
 			"The Orc entry preserves its campaign name and separate field role: %s." % fixture[0])
 		_check(not Catalog.TYPES.has(fixture[0]) and not Catalog.can_promote(Catalog.HUMAN_INFANTRY, fixture[0], Unit.new()),
 			"No Orc prototype should become an art entry or a live Human promotion.")
-	_check(roster.units_for_faction(Roster.UNDEAD).is_empty(), "The unfilled Undead tree does not borrow entries.")
 	_check(not roster.has_label(regulars, Roster.ANTI_RIDING) and not roster.has_label(brace, Roster.RANGED)
 		and not roster.has_label(archers, Roster.ANTI_RIDING),
 		"Each specialist has an independent role rather than replacing all the regulars' jobs.")
@@ -295,6 +295,46 @@ func _check_dryad_catalog() -> void:
 	_check(roster.can_advance(loading, reserve, Callable(), trained)
 		and not roster.can_advance(loading, volunteers, Callable(), trained),
 		"The work-site reserve can qualify by training, the route escort also needs Melee.")
+
+
+func _check_undead_catalog() -> void:
+	var roster := Catalog.faction_roster()
+	var household := Catalog.UNDEAD_HOUSEHOLD_GUARD
+	var stair := Catalog.UNDEAD_STAIR_GUARD
+	var court := Catalog.UNDEAD_COURT_FOOT
+	_check(roster.units_for_faction(Roster.UNDEAD) == [household, stair, court],
+		"Only the three canonical foot formations are roster units, not living witnesses or court staff.")
+	for fixture: Array in [[household, "Household Guard"], [stair, "Stair Guard"], [court, "Court Foot"]]:
+		var id: StringName = fixture[0]
+		var entry := roster.unit(id)
+		_check(entry.get("display_name") == fixture[1] and entry.get("primary_family") == Roster.MELEE
+			and entry.get("secondary_tags", [Roster.CASTERS]).is_empty()
+			and not roster.has_label(id, Roster.ELITE_SUPPORT) and not Catalog.TYPES.has(id),
+			"An Undead foot unit does not imply a caster, elite standing or a model.")
+	# Melee, Charge & Brace, Formation Drill. Maxed Curse must not qualify a unit.
+	for fixture: Array in [
+		[[1, 0, 0], []],
+		[[3, 1, 2], []],
+		[[4, 0, 2], []],
+		[[4, 1, 1], []],
+		[[4, 1, 2], [stair]],
+		[[100, 5, 5], [stair]],
+	]:
+		var values: Array = fixture[0]
+		var soldier := Unit.new(Unit.STARTING_HP, {Unit.Damage.MELEE: values[0], Unit.Damage.CURSE: 100})
+		var platoon := Platoon.new([soldier], {
+			Platoon.Skill.CHARGE_BRACE: values[1], Platoon.Skill.FORMATION_DRILL: values[2],
+			Platoon.Skill.SCOUTING: 5,
+		})
+		_check(roster.eligible_advances(household, soldier.rating, platoon.rank) == fixture[1],
+			"Each Stair Guard gate is required and Curse alone does not qualify: %s." % str(values))
+		_check(roster.eligible_advances(court, soldier.rating, platoon.rank).is_empty()
+			and roster.eligible_advances(stair, soldier.rating, platoon.rank).is_empty()
+			and not roster.can_advance(household, court, soldier.rating, platoon.rank)
+			and not roster.can_advance(household, Catalog.DRUID_SHELF_GUARD, soldier.rating, platoon.rank),
+			"Neither high Curse nor any training buys court allegiance, a reverse edge or a Druid role.")
+	for faction in Roster.FACTIONS:
+		_check(not roster.units_for_faction(faction).is_empty(), "Each faction now has its own small roster source.")
 
 
 func _check(ok: bool, title: String) -> void:

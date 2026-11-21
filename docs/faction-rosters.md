@@ -19,7 +19,7 @@ Reference analogues, not Torn Asunder roster additions:
 
 `game/combat/faction_roster.gd` provides stable unit and role keys, label filtering, and explicit directed advancement links. An advancement only connects units of the same faction, requires at least one valid stat gate, and must be available from the currently selected unit. Every listed minimum on that specific edge must be met. Combat ratings and platoon training ranks are read separately from existing systems; consulting a branch neither alters the unit nor spends resources. The graph may have alternatives but not cycles. An unfilled branch is not a promised promotion.
 
-`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The Orc, Elf, Druid, and Dryad starter trees below add metadata only. The Undead tree is not authored here.
+`UnitCatalog.faction_roster()` classifies the existing Human Infantry, Heavy Infantry, and Human Archer. It reads the existing Melee 10 gate from the Heavy Infantry catalog entry; no balance, art, UI, save, skirmish, or promotion behavior changes. Human Archer already has volley behavior, but is not added to the model inventory. The other five starter rosters below add metadata only.
 
 ### Orc starter tree: Red Basin companies
 
@@ -68,5 +68,17 @@ The [Dryad campaign](campaigns/dryads.md) fields the **Loading Guard** for the g
 | `dryad_shelf_volunteers` | **Shelf Volunteers**, Melee | Melee **3** and Scouting **2** | Scout ahead of the next escorted group and screen its route to the terrace. A blocked path still needs a fresh route or escort; the volunteers cannot protect both groups in separate places. |
 
 These **provisional gates** do not change the fixed mission roster or unlock spellcasting, river engineering, or root crossings. The field troops protect the workers maintaining the feeder and the guides moving people along the pass. Neither branch grants authority to speak for another grove.
+
+### Undead starter roster: household and court foot
+
+The [Undead campaign](campaigns/undead.md) names the **Household Guard** and **Stair Guard** at the Cut and the **Court Foot** at the boundary post. The Household Foot at the post and the Court Escort at the terrace describe those contingents' assignments. Do not turn the court's power to send or recall troops into a training reward.
+
+| Unit key | Form and role | Advancement | Tradeoff to test later |
+|---|---|---|---|
+| `undead_household_guard` | **Household Guard**, Melee | Starting unit | Move between covered approaches at the Cut or protect the terrace after refusing the escort. Covering one lane leaves less help at the other. |
+| `undead_stair_guard` | **Stair Guard**, Melee | From Household Guard: Melee **4**, Charge & Brace **1**, and Formation Drill **2** | Hold a narrow stair and reform when called toward the record room. A fixed hold protects a choke, not the wider road or a moving courier. |
+| `undead_court_foot` | **Court Foot**, Melee | No advancement link; court-assigned | Screen a second lane while the court lends these troops. They may leave Sereth's command; a larger rating cannot buy or retain their allegiance. |
+
+These **provisional data** add no spells or special abilities, do not change the fixed campaign rosters, and reveal nothing about the voices at the Cut. Iren, the clerk, the witnesses and the court speaker are not troop entries. No rating, including Curse, supplies consent.
 
 Run `godot --headless --script tests/faction_roster.gd`.
