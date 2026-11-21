@@ -153,6 +153,27 @@ const _MAPS := {
 			{"from_id": "spanwater_lock", "to_id": "cairnspine_vault_road", "required_clear_id": "neris_spanwater_feeder"},
 		],
 	},
+	"sereth": {
+		"start": "still_kingdom_camp",
+		"waypoints": {
+			"still_kingdom_camp": {
+				"id": "still_kingdom_camp", "label": "Still Kingdom Camp", "kind": WaypointKind.CAMP,
+				"map_position": Vector2(0.84, 0.17),
+			},
+			"still_kingdom_cut": {
+				"id": "still_kingdom_cut", "label": "Still Kingdom Cut", "kind": WaypointKind.BATTLEFIELD,
+				"map_position": Vector2(0.76, 0.33), "mission_id": "sereth_voices_at_the_cut",
+			},
+			"cairnspine_boundary_post": {
+				"id": "cairnspine_boundary_post", "label": "Keeper Boundary Post", "kind": WaypointKind.REGION,
+				"map_position": Vector2(0.62, 0.46),
+			},
+		},
+		"routes": [
+			{"from_id": "still_kingdom_camp", "to_id": "still_kingdom_cut"},
+			{"from_id": "still_kingdom_cut", "to_id": "cairnspine_boundary_post", "required_clear_id": "sereth_voices_at_the_cut"},
+		],
+	},
 }
 
 var _campaign_id: String

@@ -104,6 +104,14 @@ const _DEPLOYMENTS := {
 		"battlefield_label": "SPANWATER LOCK · RAISED FEEDER PATH",
 		"orders": "Clear the inlet rack. Hold a platoon at the marked screen so town workers can fit the guide boards. If the release brings fresh debris, clear it before the crest. The town gauge must reach its mark: river stage alone is not enough.",
 	},
+	"sereth_voices_at_the_cut": {
+		"scene": preload("res://game/battlefield/sereth_cut_playtest.tscn"),
+		"dispatch": Beats.SERETH_CUT_DISPATCH,
+		"briefing_dispatch": true,
+		"debrief": Beats.SERETH_CUT_DEBRIEF,
+		"battlefield_label": "STILL KINGDOM CUT · CEMETERY STAIR AND RECORD ROOM",
+		"orders": "Hear Iren by the stair and relay her account to the village clerk. Carry the exposed bundle to the record room. If raiders take it, hold a guard to stall them and recover it before they reach the east exit.",
+	},
 }
 
 
