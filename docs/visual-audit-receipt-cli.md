@@ -27,6 +27,12 @@ Repeat `--file` for every proposed source, export, and dependency the review cov
 
 Keep the unaudited work and private evidence out of the repository. Do not create a placeholder PASS receipt: each field must describe the actual independent review. A hash mismatch needs a new review, not simply a rewritten digest.
 
+## Check changed art before merging
+
+Run `python3 -B -m tools.check_changed_art --base <base-commit>` in the checked-out proposal. The check matches new or changed **tracked** art payloads under `assets/` to new or updated exact PASS receipts in `docs/audits/`. It checks the source model, exported art, textures and relevant imports; deleted payloads alone do not need a fresh receipt. Adding a file to a Git diff does not substitute for the required private review **before** publication.
+
+This check cannot decide edge cases such as a new placement of unchanged art, material or effects generated in gameplay code, or whether all previously shipped assets pass. Review those in their actual game context. The deployment report tracks the current known scope separately.
+
 ## Read-only deployment art report
 
 From the repository root, run `python3 -B -m tools.report_deployment_art` for a JSON inventory of the authored campaigns' registered deployments and shared Godot battlefields. It cross-checks the mission catalog and deployment registry and follows each scene's explicit `battlefield_scene` reference. It recognizes their current authored declaration forms rather than evaluating GDScript.
