@@ -13,7 +13,7 @@ Six campaign specs cover 18 planned missions across ten battlefield layouts. For
 | Layout and status | Mission IDs | Shared geography or implementation focus |
 |---|---|---|
 | **Year One Mine** · Mara and Sova reachable from campaign map; Orc view standalone | `mara_mine_escort`, `orc_mine_witness`, `sova_mine_tunnels` | One map and opening clash. Haul road and east pass for the bridle; ridge approaches for coverage and interception; tunnel, outlet and western trail for the miners. The Orc rally is separate from Druid safety. |
-| **Marches crossing** · Graybox exists; scenario planned | `mara_grain_crossing` | Two carts at a road fork; short exposed bridge and screened ford lead to separate receiving yards. |
+| **Marches crossing** · Standalone logistics playtest; campaign combat planned | `mara_grain_crossing` | Two carts at a road fork; short exposed bridge and screened ford lead to separate receiving yards. |
 | **Moonwash harbor** · Graybox exists; scenarios planned | `mara_moonwash_quay`, `ilyra_moonwash_rescue` | One post-rise layout. Exposed walls, moorings, lower quay, stairs and upper exit stay fixed. Humans withdraw uphill while Elves transfer crews at water level. |
 | **Moonwash survey shore** · Planned | `ilyra_coast_survey` | Ancestral stone and working inlet; beach and headland signal points serve the cutter's loop. Separate from the battle at the harbor. |
 | **Red Basin well road** · Planned | `orc_well_road` | Open salt road and winding wash offer different cover and charge lanes for the well carts. |
@@ -24,6 +24,8 @@ Six campaign specs cover 18 planned missions across ten battlefield layouts. For
 | **Cairnspine boundary post** · Planned | `sereth_pass_writ` | Road and sunken track lead to a Keeper boundary post; a courier and mounted reserve make this a separate approach, not a second vault map. |
 
 ## Shared-event checks
+
+For in-battle conditions, see the [mission event authoring guide](mission-events.md).
 
 - **Mine:** The bridle exits east in Human custody; Druids evacuate the miners through the tunnels; one miner voluntarily goes with Raska once the others clear the outlet. Pickup and departure, worker safety, and the witness's agreement are separate objective states.
 - **Moonwash:** The same rising harbor displaces the ships. The Human upper exit never requires completing the Elven rescue, and the Elven receiving deck never requires blocking or fighting the Human withdrawal.
