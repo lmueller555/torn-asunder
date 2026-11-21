@@ -37,6 +37,10 @@ jobs:
           "$RUNNER_TEMP/godot" --version
       - name: Import project headlessly
         run: '"$RUNNER_TEMP/godot" --headless --import'
+      - name: Cross-check opened battlefield perimeters
+        run: |
+          "$RUNNER_TEMP/godot" --headless --no-header --script tools/inventory_deployment_visuals.gd > "$RUNNER_TEMP/opening-art.json"
+          python3 -B -m tools.report_deployment_art --opening-inventory "$RUNNER_TEMP/opening-art.json" > /dev/null
       - name: Run campaign, battlefield and combat smoke tests
         run: |
           for test in campaign_missions mara_greyhollow_rescue mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap sector_camera minimap_route_overlay ilyra_headland_relay_skin cairnspine_perimeter_march battle_points; do

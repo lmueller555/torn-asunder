@@ -22,6 +22,22 @@ class Kit:
     file_count: int
 
 
+@dataclass(frozen=True)
+class PerimeterReview:
+    name: str
+    deployment: str
+    battlefield: str
+    perimeter: str
+    receipt: str
+    receipt_sha256: str
+    file_count: int
+
+
+# Pin an independent review per mission: a shared scene can play differently
+# with a different camera, objective or other deployment-specific bindings.
+PERIMETER_REVIEWS: dict[str, PerimeterReview] = {}
+
+
 # Reviewed placements, not a list of production-ready maps.
 KITS = (
     Kit("Mine timber portal and connected shoulders (V10)", "docs/audits/mine-timber-portal-v10.json",
@@ -139,6 +155,48 @@ def _battlefield(root: Path, deployment: str) -> str:
     if not (root / paths[0]).is_file():
         raise ValueError(f"{deployment}: missing battlefield {paths[0]}")
     return paths[0]
+
+
+def _perimeter(root: Path, deployment: str) -> str | None:
+    scene = (root / deployment).read_text(encoding="utf-8")
+    declarations = re.findall(r"^[ \t]*battlefield_perimeter[ \t]*=[ \t]*([^\n]*)$", scene, re.M)
+    if not declarations:
+        return None
+    nodes = re.split(r"^\[node [^\n]*\]\n", scene, maxsplit=2, flags=re.M)
+    root_block = nodes[1] if len(nodes) >= 2 else ""
+    root_declarations = re.findall(r"^battlefield_perimeter = ([^\n]+)$", root_block, re.M)
+    if len(declarations) != 1 or declarations != root_declarations:
+        raise ValueError(f"{deployment}: expected one explicit perimeter binding on the deployment root")
+    if declarations == ["null"]:
+        return None
+    selected = re.fullmatch(r'ExtResource\("([^"]+)"\)', declarations[0])
+    paths = [path for path, key in PACKED_RESOURCE.findall(nodes[0]) if selected and selected[1] == key]
+    if len(paths) != 1 or not re.fullmatch(rf"game/battlefields/{ID}\.tscn", paths[0]):
+        raise ValueError(f"{deployment}: expected a supported PackedScene perimeter resource")
+    if not (root / paths[0]).is_file():
+        raise ValueError(f"{deployment}: missing perimeter {paths[0]}")
+    return paths[0]
+
+
+def _verify_perimeters(root: Path, deployments: dict[str, str], battlefields: dict[str, str],
+                       perimeters: dict[str, str | None]) -> dict[str, dict]:
+    for mission in sorted(PERIMETER_REVIEWS.keys() | {key for key, value in perimeters.items() if value}):
+        review = PERIMETER_REVIEWS.get(mission)
+        if review is None:
+            raise ValueError(f"{mission}: active perimeter has no pinned independent visual review")
+        if (deployments.get(mission), battlefields.get(mission), perimeters.get(mission)) != (
+            review.deployment, review.battlefield, review.perimeter,
+        ):
+            raise ValueError(f"{mission}: perimeter binding does not match the pinned review")
+    verified = {}
+    for mission, review in PERIMETER_REVIEWS.items():
+        _pinned_receipt(root, review.receipt, review.receipt_sha256)
+        verified[mission] = _receipt_record(
+            root, review.name, review.receipt, review.file_count,
+            {review.deployment, review.battlefield, review.perimeter},
+            "mission_perimeter", review.deployment,
+        )
+    return verified
 
 
 def _verify_kit(root: Path, kit: Kit) -> dict:
@@ -349,6 +407,8 @@ def _receipt_record(root: Path, name: str, receipt: str, file_count: int, requir
 def build_report(root: Path) -> dict:
     deployments = _deployments(root)
     battlefields = {mission: _battlefield(root, scene) for mission, scene in deployments.items()}
+    perimeters = {mission: _perimeter(root, scene) for mission, scene in deployments.items()}
+    verified_perimeters = _verify_perimeters(root, deployments, battlefields, perimeters)
     verified = {}
     for kit in KITS:
         if kit.battlefield not in battlefields.values():
@@ -369,8 +429,10 @@ def build_report(root: Path) -> dict:
                 "mission_id": mission,
                 "deployment_scene": scene,
                 "battlefield_scene": battlefields[mission],
+                "battlefield_perimeter": perimeters[mission],
                 "art_status": DEVELOPMENT,
                 "verified_kit_receipts": verified.get(battlefields[mission], [])
+                + ([verified_perimeters[mission]] if mission in verified_perimeters else [])
                 + ([spillway_wheel] if mission == WHEEL_MISSION else [])
                 + ([beach_stand, headland_relay] if mission == BEACH_MISSION else [])
                 + ([quay_threshold] if mission == QUAY_MISSION else [])
@@ -382,15 +444,37 @@ def build_report(root: Path) -> dict:
     }
 
 
+def _check_opening_inventory(report: dict, inventory_path: Path) -> None:
+    data = json.loads(inventory_path.read_text(encoding="utf-8"))
+    rows = data.get("deployments") if isinstance(data, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError("opening inventory must list every deployment")
+    expected = {row["mission_id"]: row["battlefield_perimeter"] for row in report["deployments"]}
+    seen = set()
+    for row in rows:
+        mission = row.get("mission_id") if isinstance(row, dict) else None
+        if not isinstance(mission, str) or mission not in expected or mission in seen:
+            raise ValueError(f"opening inventory has an unknown or duplicate mission: {mission!r}")
+        seen.add(mission)
+        if "battlefield_perimeter" not in row or row["battlefield_perimeter"] != expected[mission]:
+            raise ValueError(f"{mission}: declared and opened perimeter differ")
+    if seen != expected.keys():
+        raise ValueError(f"opening inventory is missing missions: {', '.join(sorted(expected.keys() - seen))}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--require-release-ready", action="store_true",
         help="reject the registered campaign deployments if any lack full visual approval",
     )
+    parser.add_argument("--opening-inventory", type=Path,
+                        help="cross-check perimeter bindings against a full Godot opening census")
     args = parser.parse_args(argv)
     try:
         report = build_report(Path(__file__).resolve().parents[1])
+        if args.opening_inventory:
+            _check_opening_inventory(report, args.opening_inventory)
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Deployment art report rejected: {error}", file=sys.stderr)
         return 1

@@ -45,10 +45,14 @@ func _run() -> void:
 			await process_frame
 			var items: Array[Dictionary] = []
 			_walk(instance, instance, scene.resource_path, items)
+			var perimeter: Variant = _mounted_perimeter(instance, mission.id)
 			if items.is_empty():
 				push_error("No renderable nodes in %s." % mission.id)
 				_failed = true
-			rows.append({"mission_id": mission.id, "deployment": scene.resource_path, "nodes": items})
+			rows.append({
+				"mission_id": mission.id, "deployment": scene.resource_path,
+				"battlefield_perimeter": perimeter, "nodes": items,
+			})
 			instance.queue_free()
 			await process_frame
 	if rows.is_empty() or _failed:
@@ -62,6 +66,27 @@ func _run() -> void:
 		"deployments": rows,
 	}))
 	quit(0)
+
+
+func _mounted_perimeter(mission: Node, mission_id: String) -> Variant:
+	if not "battlefield_perimeter" in mission:
+		return null
+	var perimeter: PackedScene = mission.get("battlefield_perimeter")
+	if perimeter == null:
+		return null
+	var field: PackedScene = mission.get("battlefield_scene")
+	var matches := 0
+	if field != null and not perimeter.resource_path.is_empty():
+		for child in mission.get_children():
+			if child.scene_file_path != field.resource_path:
+				continue
+			for mount in child.get_children():
+				if mount is Node3D and mount.scene_file_path == perimeter.resource_path:
+					matches += 1
+	if matches != 1:
+		push_error("%s: expected one configured Node3D perimeter under the opened battlefield." % mission_id)
+		_failed = true
+	return perimeter.resource_path.trim_prefix("res://")
 
 
 func _walk(node: Node, mission: Node, host: String, rows: Array[Dictionary]) -> void:
