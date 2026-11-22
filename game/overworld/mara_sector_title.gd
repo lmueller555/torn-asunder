@@ -17,19 +17,23 @@ var _prepared_for := ""
 var _normal_rollout := false
 var _ilyra_presenter: RefCounted
 var _sova_presenter: RefCounted
+var _sereth_presenter: RefCounted
 var _neris_presenter: RefCounted
 var _neris_resume_played_pending:=false
 
 
 func _prepare_campaign(campaign: Dictionary) -> void:
 	_neris_resume_played_pending=false
-	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested() or NormalNerisEntry.requested()):
+	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested() or NormalNerisEntry.requested() or NormalSerethEntry.requested()):
 		if _neris_presenter:
 			_neris_presenter.close()
 			_neris_presenter=null
 		if _ilyra_presenter:
 			_ilyra_presenter.close()
 			_ilyra_presenter = null
+		if _sereth_presenter:
+			_sereth_presenter.close()
+			_sereth_presenter = null
 		if _sova_presenter:
 			_sova_presenter.close()
 			_sova_presenter = null
@@ -56,6 +60,10 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 			_sova_presenter = NormalSovaEntry.open_presenter(self)
 			if _sova_presenter:
 				_development_overworld_factory = _sova_presenter.choose_map
+		if campaign.id == "sereth" and NormalSerethEntry.requested():
+			_sereth_presenter = NormalSerethEntry.open_presenter(self)
+			if _sereth_presenter:
+				_development_overworld_factory = _sereth_presenter.choose_map
 		if campaign.id=="neris" and NormalNerisEntry.requested():
 			_neris_presenter=NormalNerisEntry.open_presenter(self)
 			if _neris_presenter:
@@ -71,6 +79,8 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 		_neris_resume_played_pending=true
 		return
 	super._prepare_campaign(campaign)
+	if get_tree().current_scene == self and campaign.id == "sereth" and NormalSerethEntry.requested() and not _sereth_presenter:
+		_report_sereth_fallback()
 	if get_tree().current_scene==self and campaign.id=="neris" and NormalNerisEntry.requested() and not _neris_presenter and _campaign_warning.is_empty():
 		_campaign_warning=NormalMaraEntry.FALLBACK_MESSAGE
 	if get_tree().current_scene == self and campaign.id == "sova" and NormalSovaEntry.requested() and not _sova_presenter:
@@ -91,7 +101,22 @@ func _report_sova_fallback() -> void:
 		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
 
 
+func _report_sereth_fallback() -> void:
+	if _campaign_warning.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+
+
+func _disable_sereth_fallback() -> void:
+	if _sereth_presenter:
+		_sereth_presenter.close()
+		_sereth_presenter = null
+	_development_overworld_factory = Callable()
+	_report_sereth_fallback()
+
+
 func _on_waypoint_arrived(id: String) -> void:
+	if _sereth_presenter and _sereth_presenter.on_local_arrival():
+		return
 	if _neris_presenter and _neris_presenter.on_local_arrival():
 		return
 	if _sova_presenter and _sova_presenter.on_local_arrival():
@@ -163,6 +188,12 @@ func _neris_map_failed() -> void:
 
 
 func _add_development_overworld() -> bool:
+	if _sereth_presenter and _campaign_world.campaign_id() == "sereth":
+		if not super._add_development_overworld():
+			_disable_sereth_fallback()
+			return false
+		_sereth_presenter.on_mounted(_stage.get_child(0))
+		return true
 	if _neris_presenter and _campaign_world.campaign_id()=="neris":
 		if not _neris_presenter.is_prepared():
 			return _neris_presenter.schedule_local_mount()
@@ -348,6 +379,10 @@ func _drop_prepared() -> void:
 
 
 func _show_title() -> void:
+	if _sereth_presenter:
+		_sereth_presenter.close()
+		_sereth_presenter = null
+		_development_overworld_factory = Callable()
 	if _neris_presenter:
 		_neris_presenter.close()
 		_neris_presenter=null

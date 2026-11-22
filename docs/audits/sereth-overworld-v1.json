@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-22",
+  "scope": "Sereth’s original Camp, Cut, Year Four Keeper Boundary Post, and neutral Year Five Valley Assembly approach at the reviewed authored overworld lenses and travel states. No battlefield assets, broader geography, optional missions, or target hardware performance.",
+  "author": "Torn Asunder Still Kingdom overworld environment and integration author",
+  "reviewer": "Independent Torn Asunder overworld release reviewer",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility at 1120 × 630 using ordinary title and scoped native controls. Initial Camp/Cut close frames show the reviewed unchanged environment before the route tint adjustment; the paired after-free-cursor and after-travel frames show the final muted guidance and live gold distinction.",
+    "close_up": "Weathered canvas and grounded yard, slate Cut bank and grave approach, Keeper precinct and lower sheep track, original empty civic Assembly court.",
+    "motion": "The live gold dotted tether does not compete with the muted route beads. The miniature walks the measured Camp–Cut route; local motion commits the arrival once. Named later transfers don't invent paths across separate landscapes.",
+    "reproduction": "Run tests/sereth_overworld_normal_title.gd or tests/sereth_overworld_normal_capture.gd after import. The retail workflow separately verifies exact neutral inputs before export and four cold ordinary-title profiles, including real briefings and Quit.",
+    "measurements": "303.958 m Camp–Cut with 537 / 537 contact rays; Keeper west road 285.509 m with 569 / 569, plus 1,122 grounded context contacts; final Assembly approach passed all 140 rays and court fit retained 205 contacts. Source fixtures verify saving and results rather than representing manual victories."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Individual rooted copses distinguish the camp, and supported stone breaks and wear provide readable entrances at the Cut and Keeper. The empty Year Five court has a clear stable silhouette."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Worn slate and dyed cloth are distinct in the site composition. Green muted route beads and live gold signals do not compete; layered Keeper relief avoids a hard cut."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Approaches and mission pins are not hidden from the reviewed cameras. The updated stick legend and transport state are readable without changing the station."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "The ordinary title proof distinguishes freely moving cursor, visible marching formation, canceled travel and saved arrival; real year phases remain independently gated."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "The boundary shelves keep original geometry and save IDs. Shared neutral materials/geometry are pinned separately; no foreign progression, vault branch or added battlefield effects."
+    }
+  },
+  "files": {
+    "docs/audits/evidence/sereth-after-free-cursor.jpg": "d916c7cdc24760ec97d438641b7404e6c641c947b44f5527398617217ad1968a",
+    "docs/audits/evidence/sereth-after-travel.jpg": "9ed84d1a469ac77920aeeaa142b6fd4a66bc37bf9c2a41e2e6a20fad92a66b75",
+    "docs/audits/evidence/sereth-assembly-near.jpg": "c204e0f936b0a4f0573dd1a409e26ef315ffc3723e2d750327e9744c7bad9b43",
+    "docs/audits/evidence/sereth-assembly-regional.jpg": "4c29038a65671b7a7656f431f3fbdc4890497621b851ec534145ccfb6e306ee7",
+    "docs/audits/evidence/sereth-camp-near.jpg": "0ce392a27531f27d901b96d63e1a10aaf4c1ac23c322372b639abd6016e9926e",
+    "docs/audits/evidence/sereth-cut-near.jpg": "873bc9bd93a6d114b9f79ee90175a7285c6db1e59b7aeeec7d4e8c7a21f27213",
+    "docs/audits/evidence/sereth-keeper-near.jpg": "54766cbf51dec00399ecd5540f34f71593b24f62eca6554c70a757580e8b39c8",
+    "docs/audits/evidence/sereth-keeper-regional.jpg": "7fccb385b883dcb75ab582fa07cf34578e858db6b37e9dbc1f63b738794e0b01",
+    "docs/audits/sereth-neutral-assembly.sha256": "b31ce99772418c65a472eb28a4dbb6cb8119fd2e063641118dc71f03de1f291d",
+    "game/overworld/sereth/cut_copse.gd": "6e9dfa655168e5d4a45b5b668ad4419a4b25ecc79f9cb3efafeedb54829c1fd7",
+    "game/overworld/sereth/cut_copse.gdshader": "067dd3585838719b8dfb7e8416ac83329d7ddd3f03e48f9b7c969b4c268fbd74",
+    "game/overworld/sereth/cut_ground.gdshader": "9c2d816c6913b2304da928f273e31a06744de3b1ced398d64b408f0ea455e36c",
+    "game/overworld/sereth/cut_landmark_art.gd": "8d241733f657bd976af6399244d22c1d1756732c7e92775e50989f679559cf77",
+    "game/overworld/sereth/cut_landmark_weather.gdshader": "7f067616afcc98d730aa1cafb090f8689f65e5b61b8e892dcbff7511292264ac",
+    "game/overworld/sereth/cut_opening_map.gd": "b58642a4d9b8d8010fdce9ce9d7820c4615e327b5d7a78454c58be4f281ad3d7",
+    "game/overworld/sereth/cut_passage_map.gd": "ad7d956a05fd08ffd2b43118fd27791ec829752d78fb39a529c3b45e3030eb86",
+    "game/overworld/sereth/cut_relief.gd": "3ee30729b87b1249661ea82aeb442f6783599145a93821e90dd99bb1aade8be3",
+    "game/overworld/sereth/cut_relief.tscn": "7952487a9bc20a8dcb5fb60c93141e81966fd33561c0b94fbf58332ceb8530b4",
+    "game/overworld/sereth/cut_yard.gdshader": "ec5b265a0789e0de69b42c20bb2ab6152c7f933154f0bf3404cc6f166f2d89e9",
+    "game/overworld/sereth/keeper_context.gd": "b093f530e85151b19c545c88eb672a044b2f050ed03adf1b901019bf7e97948f",
+    "game/overworld/sereth/keeper_context.gdshader": "90f5c89c2a88fb77bf7739f341f7d76f572405f486ea3099b129b81baf1a5798",
+    "game/overworld/sereth/keeper_ground.gdshader": "c4a3a1596636475a4b1e85b10c1284fff4f881004ea12c5f2b9dd6be61d89c22",
+    "game/overworld/sereth/keeper_horizon_ground.gdshader": "9161f477ba2b3f41129858cfcc23588f7658d20e09d9ead01b67717678e61571",
+    "game/overworld/sereth/keeper_relief.gd": "71062010aad5b831c88d5a3d9e1bba95dbc5dce9ca91d6fe6adce9d473e4e4a7",
+    "game/overworld/sereth/keeper_relief.tscn": "9f6654a9d1d1f153cb359dc696dc31717aabf3b890559d3a3e49f7d6df62ae27",
+    "game/overworld/sereth/keeper_sector_map.gd": "d7044dc76737adf27e528cb1a7794252f1d15213b66fc1eb1e86b3f873ed2be1",
+    "game/overworld/sereth/keeper_surface.gdshader": "5f0ad5c537839c49b88d932bb2b96447caff53755c8299c5603c3b34ad4836fe",
+    "game/overworld/sereth/keeper_view.gd": "5d0a4212183d284585ebdaf56579df0ab47de4b91efb6d0e8a4d1d58f7aadff7",
+    "game/overworld/sereth/keeper_work.gd": "47c8f9ca2221d2bc1bfe782c7810fee4996ab72632a1b09c26aca7fa61c1b2d2",
+    "game/overworld/sereth/keeper_yard.gdshader": "5f1f592b0e4b7437474d97dd32b5cc25dbbf86e8388d5c9fc52d0a6f7391b778",
+    "game/overworld/sereth/sereth_assembly_passage.gd": "419f645e704dcf91e678ceb975d6ac981bf9179225cb99441e5aa6a25516cd3d",
+    "game/overworld/sereth/sereth_normal_presenter.gd": "54b7342035e3b748587752f6cf71828e5bbb82376f803179daebb85e897354fe",
+    "game/overworld/sereth/sereth_passage.gd": "c21f34fb9ab0bf84ac2096e052199630f26f1dabe6e2a9209be43daa5668b544",
+    "game/overworld/sereth/sereth_y5_relief.gd": "89626e806a3ae6c7c1d3115364373a979a3a6f6e9c8abc3ee4340e8076d260a5",
+    "game/overworld/sereth/sereth_y5_renderer.gd": "d17e3b2ab3c9ab0f1ba020ba0dff40815d15389dde3f26a88cedc4e9b8b3dc02",
+    "game/overworld/sereth/sereth_y5_renderer.tscn": "78beff1e6648aad70db64ee24837e2f0c92f8063a360d808c8935534c07fedb2",
+    "game/overworld/sereth/sereth_y5_view.gd": "8a86c892a74bbdfbae42372d41b663cb947dc8d163ca0d7f7c96c0e6d5cd23cc"
+  }
+}
