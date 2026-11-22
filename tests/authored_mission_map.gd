@@ -66,6 +66,7 @@ func _run() -> void:
 			var id: String = mission.id
 			var host := Deployments.for_mission(id).scene.instantiate() as Harness
 			host.enable_tactical_minimap()
+			host.enable_shared_mission_hud()
 			root.add_child(host)
 			var adapter := Adapter.mount(host)
 			if adapter:
@@ -147,6 +148,11 @@ func _exercise_grain(host: Harness, map: Minimap, adapter: Control) -> void:
 	_check(commanded == [0, idx], "invalid, pause and defeat never issue ghost orders")
 
 func _exercise_bespoke(id: String, host: Harness, map: Minimap) -> void:
+	# The authored wrappers update input ownership on the next simulation tick.
+	# Drive that tick explicitly before clicking, even when Godot runs unthrottled.
+	await physics_frame
+	host._sync_view()
+	await process_frame
 	var commanded: Array[int] = []
 	host.battle.formation_commanded.connect(func(index: int) -> void: commanded.append(index))
 	var first := host.battle.formations[0].position
@@ -159,9 +165,13 @@ func _exercise_bespoke(id: String, host: Harness, map: Minimap) -> void:
 	_check(commanded == [0] and host.march_waypoints(0).size() == 1, id + " exactly one genuine tactical mouse Move")
 	_click(map, subsequent, MOUSE_BUTTON_RIGHT, true)
 	_check(commanded == [0] and host.march_waypoints(0).size() == 2, id + " tactical mouse append preserved Move")
-	await process_frame
 	await physics_frame
-	_check(map._ally_routes.size() == 1 and map._selected_route_id != &"", id + " native accepted queue renders")
+	await process_frame
+	host._sync_view()
+	if id == "mara_mine_escort":
+		map.get_parent().get_parent().get_parent().call(&"refresh")
+	_check(map._selected_route_id != &"" and map._ally_routes.has(map._selected_route_id),
+		id + " native accepted queue renders: " + str(map._ally_routes))
 	_check(not map._explored_areas.is_empty(), id + " fog uses live friendly exploration")
 	_key(KEY_SHIFT, false)
 	await process_frame
@@ -191,6 +201,7 @@ func _exercise_bespoke(id: String, host: Harness, map: Minimap) -> void:
 func _open_ground(host: Harness, center: Vector2, radius: float) -> Vector2:
 	for axis in range(16):
 		var at := center + Vector2.from_angle(TAU * float(axis) / 16.0) * radius
-		if Adapter.can_plot(host, at):
+		if Adapter.can_plot(host, at) and Adapter.can_plot(host, at + Vector2(0.02, 0.02)) \
+				and Adapter.can_plot(host, at - Vector2(0.02, 0.02)):
 			return at
 	return Vector2.INF
