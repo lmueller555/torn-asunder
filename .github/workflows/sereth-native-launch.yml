@@ -55,6 +55,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          "$RUNNER_TEMP/godot" --headless --import
+          "$RUNNER_TEMP/godot" --headless --script res://tests/sereth_overworld_normal_title.gd
+          "$RUNNER_TEMP/godot" --headless --script res://tests/sereth_neutral_release_contract.gd
           python3 - <<'PYCI'
           from pathlib import Path
           path = Path("project.godot")
@@ -65,9 +68,6 @@ jobs:
               assert text.count(f"{id}_3d_overworld=true") == 1, id
           path.write_text(text.replace(marker, marker+'NativeSerethSmoke="*res://tests/native_sereth_release_smoke.gd"\n'))
           PYCI
-          "$RUNNER_TEMP/godot" --headless --import
-          "$RUNNER_TEMP/godot" --headless --script res://tests/sereth_overworld_normal_title.gd
-          "$RUNNER_TEMP/godot" --headless --script res://tests/sereth_neutral_release_contract.gd
           mkdir -p "$RUNNER_TEMP/sereth-bin" "$RUNNER_TEMP/sereth-away"
           "$RUNNER_TEMP/godot" --headless --export-release "Linux x86_64" "$RUNNER_TEMP/sereth-bin/torn-asunder.x86_64"
           test -x "$RUNNER_TEMP/sereth-bin/torn-asunder.x86_64"
