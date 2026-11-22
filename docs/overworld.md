@@ -1,6 +1,6 @@
 # Vareth 3D overworld
 
-Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign, Sova’s Druid campaign, and Raska’s Orc campaign also use 3D from the ordinary title. Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign, Sova’s Druid campaign, and Raska’s Orc campaign also use 3D from the ordinary title. Neris’s Dryad campaign also uses the authored 3D map. Sereth retains his existing presentation until the remaining route passes release checks. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
 
 For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
@@ -52,6 +52,12 @@ At the Assembly, choose the original **Let Them Walk Out** briefing. After the h
 New Game keeps Raska’s original first scene and deploys **One Person to Ask** at Greyhollow directly. After battle, Continue, or Load, the 3D map presents the correct campaign stage. Use the named local crossings to travel between Basin Camp, the Greyhollow west shelf, and Basin Well Road. Raska’s own Mine Witness clear opens the Well Road crossing; his own **The Second Bucket** clear opens the way to Spanwater. These crossings save before switching sectors, and Cancel leaves the previous station and save intact.
 
 The Year Four arrival for **River, Not Sea** is on Spanwater’s **north causeway**. It does not use Ilyra’s south landing, her evacuation gates, or her rescue outcome. [Scoped four-sector visual audit](audits/raska-overworld-v1.json).
+
+## Neris’s Grove Road
+
+New Game opens Neris’s existing opening and deploys **What We Planted Here** directly. After battle, Continue, or Load, the Grove Camp and Isolated Grove nursery are reached by their authored forest road. An existing Grove victory unlocks the route to the Cairnspine Boundary Post and **Where the Road Goes**. Neris’s own Survey clear opens a named, reversible crossing into her Year Three Greyhollow approach and **Before They Reach It**. Neris’s save remains separate from Mara’s, Raska’s, and Sova’s use of the mine.
+
+The packaged Grove and Boundary relief share 54 indexed terrain tiles; two Boundary overrides are separate. The loading panel reports real preparation progress. Cancel restores the prior screen or station without advancing the save. A missing or invalid map package falls back to the canonical chart rather than using unreviewed terrain. [Scoped visual audit](audits/neris-overworld-v1.json).
 
 ## Extension checks
 
