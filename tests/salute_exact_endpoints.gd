@@ -15,8 +15,7 @@ func _check() -> void:
 	root.add_child(model)
 	_player = model.find_children("*","AnimationPlayer",true,false)[0]
 	_rig = model.find_children("*","Skeleton3D",true,false)[0]
-	assert(not _player.has_animation(&"Death Fall"))
-	var durations := {CHEER:1.4}
+	var durations := {CHEER:1.4, &"Death Fall":1.2}
 	for a: StringName in durations:
 		if not _player.has_animation(a):
 			push_error("missing clip " + a)
@@ -53,7 +52,7 @@ func _check() -> void:
 				errs+=1
 				break
 	if errs==0:
-		print("One-shot 1.40s duration, stationary root, two exact ready joins, and both weapon/shield sockets verified at 240 Hz.")
+		print("One-shot 1.40s salute and 1.20s defeat, stationary roots, both salute ready joins, and weapon/shield sockets verified at 240 Hz.")
 	quit(errs)
 
 func at(clip:StringName,t:float) -> void:

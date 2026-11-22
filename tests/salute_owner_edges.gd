@@ -28,7 +28,7 @@ func _run()->void:
 	other.victory_cheers=B.VICTORY_CHEERS
 	var player:AnimationPlayer=v._players[0]
 	var opponent:AnimationPlayer=v._players[32]
-	assert(not player.has_animation(&"Death Fall"))
+	assert(player.has_animation(&"Death Fall") and player.assigned_animation == READY)
 	v._sync_models(0)
 	assert(player.assigned_animation==READY and opponent.assigned_animation==READY)
 	b.winner=0
@@ -47,8 +47,10 @@ func _run()->void:
 	actor.unit.receive_damage(actor.unit.hp)
 	v._sync_models(0)
 	assert(player.assigned_animation==READY and not v._markers[0].visible)
+	# An expired, explicitly injected corpse is not a genuine defeat episode.
 	actor.state=B.State.DEAD
-	v._sync_models(0)
+	actor.time=B.DURATIONS[B.State.DEAD]
+	v._sync_models(1.0/60.0)
 	assert(not v._models[0].visible and not v._markers[0].visible)
-	print("Owner guards: live reserve with positive queue, wrong team, zero queue, draw, nonliving stale CHEER, and stock DEAD hide; real winner transition from same CHEER reroutes.")
+	print("Owner guards: live reserve with positive queue, wrong team, zero queue, draw, nonliving stale CHEER, and expired DEAD hide; real winner transition from same CHEER reroutes.")
 	quit()

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "scope": "Human Heavy Infantry defeat presentation V04b, exact registered AI Infantry Skirmish on #308. No change to combat rules, unit catalog, troop size, campaign encounters or ordinary Infantry defeat.",
+  "author": "Heavy Infantry animation and presentation author",
+  "reviewer": "Independent native character-art reviewer",
+  "reviewed_on": "2026-11-22",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Godot 4.7.2, 1280x720, Compatibility, X11 Mesa llvmpipe. Same existing field, light, camera and authoritative contact owner. Native registered natural 64 and 256-slot prepared contact stress matched the corrected art reference across 54 frames and 251 game-state ticks. An additional unassisted 256 first-death study compared the original same-frame field at about 55 m.",
+    "close_up": "Near side/front captures follow the full grounded fall, then fading fabric, shield and sword against the original field shadow. Corrected command views at 33–56 m still read armor color, shield rim and boss, footwear and weapon. Same-pose 28.5–33 m threshold sweeps showed slight local contours and stipple differences without major palette, prop or ground-contact pop.",
+    "reproduction": "Use the normally registered title menu Unit Test > AI Skirmish. Set a platoon to Level 10 with Melee Power 10, select Heavy Infantry, then start. Run tests/heavy_infantry_skirmish_menu.gd and tests/heavy_defeat_retirement.gd after import. The stress case uses 256 legal setup slots staged alive and already approaching contact; the stock solver itself resolves 256 hits and 252 losses, rather than injecting dead actors.",
+    "measurements": "Prepared 252 deaths at +72 / 35.21 m: 681 draws and 1,823,324 submitted primitives instead of the held full-geometry candidate's 1,932 and 3,994,134. First hidden +114: 35 and 63,130, matching the prior hidden-body policy in this test. Ordinary natural 64 full detail added six draws and about 14,600 submitted primitives for the first defeat. For scale, existing regular maximum-size all-living Heavy mirror at tick 600 submitted 2,197 draws and 2,402,426 primitives in the same environment. The bounded command baseline passes; no FPS or hardware throughput claim.",
+    "motion": "The exact 1.20 s owner-timed fall reaches its ground-contact frame, holds for 0.40 s and dissolves over 0.30 s. Mixed 121-tick real reciprocal losses, Pause, Retry and invalid command donor fallback pass. The original 20 runtime clips including winner-only salute, gameplay state/markers and regular bodies stay intact."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "reason": "Original close silhouette and full author rig remain. Weighted command shell preserves exact source vertices and weights for gloves, blade, guard, shield handle and boots; both bodies use the same live skeleton. Representative grounded and moving poses were examined independently."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "reason": "Corrected authored UV coordinates preserve approved PBR appearance. The dissolve uses one shared lossless cutout whose RGB remains exact; the actual stock light, normal and metallic/roughness sources are unchanged. The bad intermediary UV candidate was rejected."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "reason": "Native near, tactical and measured camera handoffs distinguish defeat from knockdown and show the real shield and sword. Near keeps full art. A short patterned fade clears the field instead of leaving a pile or invisibly jumping at the first defeat."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "reason": "The fall is authored on the existing rig and sampled from its own real contact clock; boot and gear support were checked. Pausing holds pose and fade, and real Retry clears all eligible states and restores living markers."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "reason": "Registered and independently compared on the actual Godot renderer, exact playable package imports and tests. Reduced mesh is one shared weighted surface on the live rig, not another actor; opaque and reduced do not submit together. Maximum staged transient is under the existing fully living native comparator. Missing command content reverts to the prior Heavy hide instead of spending the held full-wave budget."
+    }
+  },
+  "files": {
+    "assets/models/heavy_infantry/armor_normal.png": "6c3eea07d81ce11919eef676addf42432c2a867d6a7100977b4c62127e32a53e",
+    "assets/models/heavy_infantry/armor_normal.png.import": "259b48f2bacf9fb5d4dff745f83553b2d0af46966b0250907d5b91fba0a1879c",
+    "assets/models/heavy_infantry/painted_base_color.png": "60cbc8aa025c94b39cb0ba85ed8ec9f258699f5ce38ab47bc4e568c61ff0887d",
+    "assets/models/heavy_infantry/painted_base_color.png.import": "3b3153ebb8ee8b5415ccb8dbf923d5dc079060cd0f678f387eab4a0ba99b00dd",
+    "assets/models/heavy_infantry/painted_roughness_metallic.png": "ae260d19f2578f851e089866daceee9c063993212e1de5b7cbe9aafafe5f8d45",
+    "assets/models/heavy_infantry/painted_roughness_metallic.png.import": "1e50ec8abdaa9e78c89fae78c8788ef5a9e87ad168bf83c3f0e481f3643f0cb0",
+    "assets/models/heavy_infantry/retirement_cutout.png": "6b5298cfe712d919311224444f390341e9fbd99cd53775cd22490d4af4fa9292",
+    "assets/models/heavy_infantry/retirement_cutout.png.import": "7c7610bbbecc446340dec75566ea40509fda553936905742eb786e2f1c5c814b",
+    "assets/models/human_heavy_infantry.glb": "38da5063331a25eb242fe033447732c77420b0fe125d59f0d3213ed1c9f801d7",
+    "assets/models/human_heavy_infantry.glb.import": "99c85163e36ae28bebafa84e99cc983a6545ef889994a93f0faa71ddaa148a95",
+    "assets/models/human_heavy_infantry_defeat_command.glb": "9b06e94c3723fcc25f31da05578ebafec922ee8c48ece97e65530317433fb666",
+    "assets/models/human_heavy_infantry_defeat_command.glb.import": "c5622e1bb5fe024d21b41998069c26facd806fa71e6c31da36e7f96f25ed1af9",
+    "assets/source/human_heavy_infantry_game.blend": "ed9030455513ffcb43075235128d0dd156edc51ffac354b9cc24709b01a84c7d",
+    "game/combat/heavy_defeat_retirement_view.gd": "d4d4e98ac84ee31f1785507e2cef43eb8496fb3d6ada417939b27b4afb1a54b2",
+    "game/combat/heavy_stagger_contact_modifier.gd": "04f0c7cad7cb09a9277c2c12f675b8bfff2081a334e5e03b49bf2db1273f7df5",
+    "game/combat/heavy_stagger_sole.gd": "8cefe933bf49ae5ce203e5262930ec913b25c587bc8c8d1e423611529fe43097",
+    "game/combat/infantry_skirmish.gd": "16f7300d5d3ae84ed163b4a1a429af62e032c5023ab41bc03d0725c2ede3507d",
+    "game/combat/infantry_skirmish_defeat_view.gd": "75b3a3e3c27f970606fb0f32e72ec70ae0ebd01672fa0d508544f984f90c7148",
+    "game/combat/infantry_skirmish_view.gd": "82b70c53e16b0f72f0c4173a7fad86d2232c213f1b799b91158d50abc5b1ed5f",
+    "game/combat/infantry_skirmish_view.tscn": "de82ed7bd0e65e83b50c06b9ff1f443ed2988c56ae887e38ca0bd6f79b3d82a8",
+    "game/combat/skirmish_setup.gd": "a41bcb8a5307173130cb15abf20c8aafdeda51381d830cdcc795974275b5c627",
+    "game/combat/unit_catalog.gd": "3391f150da523c3f1f853694b090fb7ce68bf0a74c536d5f1c38d0b419e5edde",
+    "game/title_screen.gd": "b6920954c62cf39a48049a8daf02a8dda77be581be557e0a3b3b007ee1b76e7a",
+    "project.godot": "1ba983350087c2eb542078cbf64dd165d58adbc10a39b0ba2b20d5d4f359bc54",
+    "tests/heavy_defeat_retirement.gd": "5c078ae656926ecb2e8d1cda279fb98505bf1a73978325b2014bb10646d051cd",
+    "tests/heavy_infantry_skirmish_menu.gd": "f77210c67d6eeaf4fa4db1ae8e9ef73c3a4ac0c64b639bcdb831194e2c012da2",
+    "tests/salute_owner_edges.gd": "b02538e0b9ba2d203c27fa6f5a0d133900e553a7e3e03aefdd7a4e19c96b04fe"
+  }
+}
