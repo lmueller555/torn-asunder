@@ -17,10 +17,16 @@ var _prepared_for := ""
 var _normal_rollout := false
 var _ilyra_presenter: RefCounted
 var _sova_presenter: RefCounted
+var _neris_presenter: RefCounted
+var _neris_resume_played_pending:=false
 
 
 func _prepare_campaign(campaign: Dictionary) -> void:
-	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested()):
+	_neris_resume_played_pending=false
+	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested() or NormalNerisEntry.requested()):
+		if _neris_presenter:
+			_neris_presenter.close()
+			_neris_presenter=null
 		if _ilyra_presenter:
 			_ilyra_presenter.close()
 			_ilyra_presenter = null
@@ -50,7 +56,23 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 			_sova_presenter = NormalSovaEntry.open_presenter(self)
 			if _sova_presenter:
 				_development_overworld_factory = _sova_presenter.choose_map
+		if campaign.id=="neris" and NormalNerisEntry.requested():
+			_neris_presenter=NormalNerisEntry.open_presenter(self)
+			if _neris_presenter:
+				_development_overworld_factory=_neris_presenter.choose_map
+	# Resume is cancellable before the saved-world presentation exists.
+	# Leave the real New/Vault and all other campaigns on the stock path.
+	if _neris_presenter and _page in [Page.TITLE,Page.LOAD]:
+		_forward_camp_return=null
+		_opening_replay_return=null
+		_active_campaign=campaign
+		_campaign_world=null
+		_campaign_warning=""
+		_neris_resume_played_pending=true
+		return
 	super._prepare_campaign(campaign)
+	if get_tree().current_scene==self and campaign.id=="neris" and NormalNerisEntry.requested() and not _neris_presenter and _campaign_warning.is_empty():
+		_campaign_warning=NormalMaraEntry.FALLBACK_MESSAGE
 	if get_tree().current_scene == self and campaign.id == "sova" and NormalSovaEntry.requested() and not _sova_presenter:
 		_report_sova_fallback()
 	if get_tree().current_scene == self and campaign.id == "ilyra" and NormalIlyraEntry.requested() and not _ilyra_presenter \
@@ -70,6 +92,8 @@ func _report_sova_fallback() -> void:
 
 
 func _on_waypoint_arrived(id: String) -> void:
+	if _neris_presenter and _neris_presenter.on_local_arrival():
+		return
 	if _sova_presenter and _sova_presenter.on_local_arrival():
 		return
 	if _ilyra_presenter and _ilyra_presenter.on_local_arrival():
@@ -101,7 +125,51 @@ func _build_sector(where: String) -> MarchesView:
 	return null
 
 
+func _complete_neris_map() -> void:
+	if not _neris_presenter or _page!=Page.WORLD_MAP:
+		return
+	if not _add_development_overworld():
+		_neris_map_failed()
+		return
+	_complete_neris_resume_played()
+
+
+func _complete_neris_resume_played() -> void:
+	if not _neris_resume_played_pending:
+		return
+	_neris_resume_played_pending=false
+	if _profile.mark_played("neris")!=OK:
+		_campaign_warning="The campaign selection could not be saved."
+		_show_campaign_warning()
+
+
+func _cancel_neris_resume_played() -> void:
+	if _neris_resume_played_pending:
+		_campaign_world=null
+	_neris_resume_played_pending=false
+
+
+func _neris_map_failed() -> void:
+	if _neris_presenter:
+		_neris_presenter.close()
+		_neris_presenter=null
+	_development_overworld_factory=Callable()
+	if _campaign_warning.is_empty():
+		_campaign_warning=NormalMaraEntry.FALLBACK_MESSAGE
+	# The optional chart load has not moved the real campaign or marked it
+	# played. Preserve the saved waypoint and sort order on package failure.
+	_neris_resume_played_pending=false
+	_show_world_map()
+
+
 func _add_development_overworld() -> bool:
+	if _neris_presenter and _campaign_world.campaign_id()=="neris":
+		if not _neris_presenter.is_prepared():
+			return _neris_presenter.schedule_local_mount()
+		if not super._add_development_overworld():
+			return false
+		_neris_presenter.on_mounted(_stage.get_child(0))
+		return true
 	if _sova_presenter and _campaign_world.campaign_id() == "sova":
 		if not super._add_development_overworld():
 			_sova_presenter.close()
@@ -280,6 +348,10 @@ func _drop_prepared() -> void:
 
 
 func _show_title() -> void:
+	if _neris_presenter:
+		_neris_presenter.close()
+		_neris_presenter=null
+		_development_overworld_factory=Callable()
 	if _sova_presenter:
 		_sova_presenter.close()
 		_sova_presenter = null
