@@ -120,6 +120,8 @@ In the **Mine replay loadout test**, the existing approved Heavy Infantry model 
 
 References for the design pattern only: [*Kingdom Under Fire: Heroes* manual, pp. 20–25](https://manuals.plus/m/77bff80c4c8a7cc0c78419ed521a33be6d31fa0b7551d7ecba9d3abc949bc5a2.pdf) for skill-gated jobs and [official Human unit guide](https://www.kufheroes.com/eng/characters/unit_human.asp) for the slower heavy armor role. Torn Asunder uses its own combat profile and has no additional Lightning modifier for this promotion.
 
+In normal **Get Them Out** at Greyhollow, Shield Infantry keeps its 32-member formation. The eight soldiers in the leading rank use the existing Sword Slash on a melee attack; the other 24 stay ready. The fitted contact pose follows the encounter’s existing hit or whiff, not a second damage event. Move or Hold cancels the presentation, including after Retry. The Heavy replay and other missions are unchanged. Verify with `godot --headless --script tests/mara_greyhollow_shield_slash.gd`.
+
 ## Human Archer prototype
 
 `HumanArcherVolley` is the ranged combat component used by Mara’s prototype Archer formation. It is not a skirmish roster entry or a model. An archer trades staying power for a **3.5–52 m** firing band: **960 starting HP**, **52 base Ranged damage**, **0.70 s** to draw and **1.90 s** to reload. It cannot fire while engaged in melee; getting pinned after starting the draw interrupts it and forces a reload. These numbers are provisional. Mara’s encounter uses 248 proxy HP for Archers against 310 proxy HP for Shield Infantry; its placeholder Archers stay put when ordered to attack.

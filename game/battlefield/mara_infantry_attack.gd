@@ -21,6 +21,21 @@ var attacker: Unit
 var _base_damage: float
 var phase := Phase.APPROACH
 var _remaining := 0.0
+# Read-only receipts for presentation. Increment on a consumed swing (hit
+# or whiff), even if a lethal contact resets the gameplay phase to APPROACH.
+var contact_serial: int:
+	get:
+		return _contact_serial
+var _contact_serial := 0
+
+
+func phase_progress() -> float:
+	match phase:
+		Phase.WINDUP:
+			return clampf(1.0 - _remaining / WINDUP_TIME, 0.0, 1.0)
+		Phase.RECOVERY:
+			return clampf(1.0 - _remaining / RECOVERY_TIME, 0.0, 1.0)
+	return 0.0
 
 
 
@@ -78,6 +93,7 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 				# Consume this windup once, even if it missed or the target had cover.
 				phase = Phase.RECOVERY
 				_remaining = RECOVERY_TIME
+				_contact_serial += 1
 				if distance <= REACH and (distance == 0.0 or direction.dot(group.heading) >= MIN_FORWARD_DOT) \
 					and clear_contact.call(group.position, target):
 					var lost := enemy.receive_hit(attacker, {Unit.Damage.MELEE: _base_damage})
