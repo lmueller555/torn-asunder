@@ -1,0 +1,34 @@
+[gd_scene load_steps=6 format=3]
+[ext_resource type="Script" path="res://game/overworld/sereth/keeper_relief.gd" id="1"]
+[ext_resource type="Script" path="res://game/overworld/sereth/keeper_context.gd" id="2"]
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.27,0.38,0.49,1)
+sky_horizon_color = Color(0.53,0.57,0.57,1)
+ground_horizon_color = Color(0.53,0.57,0.57,1)
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+[sub_resource type="Environment" id="air"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.74,0.81,0.87,1)
+ambient_light_energy = 0.47
+fog_enabled = true
+fog_light_color = Color(0.52,0.57,0.58,1)
+fog_density = 0.00071
+[node name="KeeperYearFour" type="Node3D"]
+script = ExtResource("1")
+[node name="Camera" type="Camera3D" parent="."]
+far = 780.0
+[node name="Party" type="Node3D" parent="."]
+[node name="Air" type="WorldEnvironment" parent="."]
+environment = SubResource("air")
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-45,-39,0)
+light_color = Color(1.0,0.91,0.78,1.0)
+light_energy = 0.82
+shadow_enabled = true
+directional_shadow_max_distance = 185.0
+
+[node name="KeeperContext" type="Node3D" parent="."]
+script = ExtResource("2")
