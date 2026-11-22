@@ -3,6 +3,7 @@ extends RefCounted
 const World := preload("res://game/campaign_world.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
+const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
 const LeadAllocation := preload("res://game/combat/campaign_stat_allocation.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
@@ -15,6 +16,8 @@ const MISSION_RESULTS := "mission_results"
 const CAMPAIGN_INTERMISSIONS := "campaign_intermissions"
 const SUBORDINATE_TRAINING := "subordinate_training"
 const MARA_SHIELD_DRILL := "mara_shield_infantry_formation_drill"
+const SUBORDINATE_STAT_ALLOCATIONS := "subordinate_stat_allocations"
+const MARA_SHIELD_MELEE := "mara_shield_infantry_melee_point"
 const LEAD_TRAINING := "lead_training"
 const MARA_LEAD_MELEE := "mara_mine_melee_point"
 const MARA := "mara"
@@ -25,6 +28,22 @@ const SETTINGS := "settings"
 const ILYRA := "ilyra"
 
 enum MaraLeadMeleeStatus { LOCKED, AVAILABLE, INVESTED, UNAVAILABLE }
+enum MaraShieldMeleeStatus { LOCKED, AVAILABLE, INVESTED, UNAVAILABLE }
+
+
+class MaraShieldBarracksState:
+	var error: Error = OK
+	var confirmed_clears := PackedStringArray()
+	var training: Training
+	var heavy_authorized := false
+	var reveal_completed := false
+	var total_xp := 0
+	var level := 1
+	var xp_in_level := 0
+	var next_level_xp := Unit.FIRST_LEVEL_XP
+	var melee_rating := Unit.MIN_RATING
+	var remaining_melee_points := 0
+	var melee_status := MaraShieldMeleeStatus.LOCKED
 
 var _config := ConfigFile.new()
 var _path: String
@@ -148,6 +167,67 @@ func _mara_training_plan(config: ConfigFile) -> Training:
 	if purchased is bool and purchased:
 		plan.train_formation_drill(Training.SHIELD_INFANTRY_SLOT)
 	return plan
+
+
+## Detached barracks state for the one supported campaign slot. The clear,
+## drill rank, and spent point come from one fresh read, so a briefing cannot
+## authorize a stale branch or rating on deploy.
+func mara_shield_barracks_state() -> MaraShieldBarracksState:
+	var latest := ConfigFile.new()
+	var read := latest.load(_path)
+	var state := _mara_shield_barracks_state(latest if read == OK else ConfigFile.new())
+	state.error = read
+	if read not in [OK, ERR_FILE_NOT_FOUND]:
+		state.melee_status = MaraShieldMeleeStatus.UNAVAILABLE
+	return state
+
+
+## Spend the Mine rescue's one Shield Infantry point on Melee Power. Callers
+## cannot name a different slot, rating, or amount. This is not drill credit.
+func invest_mara_shield_melee_point() -> Error:
+	var latest := ConfigFile.new()
+	var read := latest.load(_path)
+	if read != OK:
+		return ERR_UNAUTHORIZED if read == ERR_FILE_NOT_FOUND else read
+	match _mara_shield_barracks_state(latest).melee_status:
+		MaraShieldMeleeStatus.AVAILABLE:
+			return _set_values({SUBORDINATE_STAT_ALLOCATIONS: {MARA_SHIELD_MELEE: true}}, latest)
+		MaraShieldMeleeStatus.INVESTED:
+			return ERR_ALREADY_IN_USE
+		MaraShieldMeleeStatus.UNAVAILABLE:
+			return ERR_INVALID_DATA
+	return ERR_UNAUTHORIZED
+
+
+func _mara_shield_barracks_state(config: ConfigFile) -> MaraShieldBarracksState:
+	var state := MaraShieldBarracksState.new()
+	state.confirmed_clears = _confirmed_missions(config, MARA)
+	state.training = _mara_training_plan(config)
+	state.heavy_authorized = state.training.qualifies_for_branch(Training.SHIELD_INFANTRY_SLOT, Training.BRANCH_UNIT)
+	var reveal: Variant = config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, "")
+	# The archived escort used this same clear ID. Without the rescue's own
+	# typed reveal record, preserve its drill entitlement but award no new XP.
+	if not state.confirmed_clears.has(MARA_MINE) or not reveal is bool:
+		return state
+	state.reveal_completed = not reveal
+	state.total_xp = LeadProgress.XP_PER_FIRST_CLEAR
+	var progress := Unit.new()
+	progress.award_experience(state.total_xp)
+	state.level = progress.level
+	state.xp_in_level = progress.experience
+	state.next_level_xp = progress.experience_for_next_level()
+	if reveal or progress.stat_points < 1:
+		return state
+	var invested: Variant = config.get_value(SUBORDINATE_STAT_ALLOCATIONS, MARA_SHIELD_MELEE, false)
+	if not invested is bool:
+		state.melee_status = MaraShieldMeleeStatus.UNAVAILABLE
+		return state
+	if invested:
+		progress.spend_stat_point(Unit.Damage.MELEE)
+	state.melee_rating = progress.rating(Unit.Damage.MELEE)
+	state.remaining_melee_points = progress.stat_points
+	state.melee_status = MaraShieldMeleeStatus.INVESTED if invested else MaraShieldMeleeStatus.AVAILABLE
+	return state
 
 
 ## Read the current saved choice without granting it or trusting a cached clear.

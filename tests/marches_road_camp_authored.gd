@@ -92,8 +92,31 @@ func _exercise(profile: Profile) -> bool:
 	if _title._page != Title.Page.STATION or _button("Operations") or _button("Read Dispatch") \
 			or _button("Confirm Deployment") or not _button("Barracks") or not _button("Training Grounds"):
 		return _fail("Forward camp must expose its station services without inventing Operations.")
-	if not _press("Barracks") or _title._page != Title.Page.BARRACKS or not _press("Back") \
-			or _title._page != Title.Page.STATION:
+	if not _press("Barracks") or _title._page != Title.Page.BARRACKS:
+		return _fail("The arrived forward camp must offer Barracks.")
+	var heavy := _title._stage.find_child("JobHeavyInfantry", true, false) as Button
+	var drill := _title._stage.find_child("BarracksJobAction", true, false) as Button
+	if not heavy or not drill:
+		return _fail("The Barracks did not supply the Heavy job and its contextual action.")
+	heavy.pressed.emit()
+	if not drill.visible:
+		return _fail("The recorded reveal did not enable the training review.")
+	var revoked := ConfigFile.new()
+	if revoked.load(_path) != OK:
+		return _fail("Could not read the Road Camp save fixture.")
+	revoked.erase_section_key(Profile.MISSION_RESULTS, Profile.GREYHOLLOW_REVEAL_PENDING)
+	if revoked.save(_path) != OK:
+		return _fail("Could not revoke the reveal in the stale Road Camp fixture.")
+	var stale_save := FileAccess.get_file_as_string(_path)
+	drill.pressed.emit()
+	if _title._page != Title.Page.BARRACKS or FileAccess.get_file_as_string(_path) != stale_save:
+		return _fail("A retained Road Camp menu cannot open training after its saved reveal is revoked.")
+	var restore := FileAccess.open(_path, FileAccess.WRITE)
+	if not restore:
+		return _fail("Could not restore the Road Camp fixture.")
+	restore.store_string(save)
+	restore.close()
+	if not _press("Back") or _title._page != Title.Page.STATION:
 		return _fail("Forward camp Barracks must return to the same station.")
 	if not _press("Training Grounds") or _title._page != Title.Page.STATION_TRAINING \
 			or not _button("Combat Drills") or not _press("Unit Progression") or _title._page != Title.Page.UNIT_PROGRESSION \

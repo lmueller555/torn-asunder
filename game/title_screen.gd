@@ -58,7 +58,7 @@ enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
 	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
-	MARA_LEAD_MELEE, MARA_WATER_REQUEST_RECOVERY, STATION, STATION_TRAINING, BARRACKS,
+	MARA_LEAD_MELEE, MARA_WATER_REQUEST_RECOVERY, STATION, STATION_TRAINING, BARRACKS, MARA_SHIELD_MELEE,
 }
 
 const MARA_HOME_STATION := "marches_camp"
@@ -66,6 +66,7 @@ var _station_map_stage: Control
 var _station_hidden_map_controls: Array[Control] = []
 var _station_label := ""
 var _station_training_origin := false
+var _station_drill_origin := false
 var _station_stick := Vector2i.ZERO
 
 const MARA_LEAD_MELEE_ENTRY := "Lead Melee Training"
@@ -279,7 +280,12 @@ func _go_back() -> void:
 			_back_from_practice("Combat Drills")
 		Page.UNIT_PROGRESSION:
 			_back_from_practice("Unit Progression")
+		Page.MARA_SHIELD_MELEE:
+			_show_station_barracks("melee")
 		Page.MARA_SHIELD_DRILL:
+			if _station_drill_origin and is_instance_valid(_station_map_stage):
+				_show_station_barracks("drill")
+				return
 			_show_briefing()
 			var drill := _stage.get_node_or_null("Shield Infantry Drill") as Button
 			if drill:
@@ -607,20 +613,93 @@ func _show_station_training(focus := "") -> void:
 	(progress if focus == "Unit Progression" else drills).grab_focus()
 
 
-func _show_station_barracks() -> void:
-	if not is_instance_valid(_station_map_stage):
+func _show_station_barracks(restore := "") -> void:
+	if not _owns_mara_station():
 		return
-	_open_page(Page.BARRACKS)
-	var plan := _profile.mara_shield_infantry_training()
+	_station_drill_origin = false
+	var snapshot := _profile.mara_shield_barracks_state()
+	var plan := snapshot.training
 	var slot := MaraTraining.SHIELD_INFANTRY_SLOT
+	var notice := ""
+	if snapshot.error not in [OK, ERR_FILE_NOT_FOUND]:
+		notice = "Campaign progression could not be read. No changes can be made."
+	_open_page(Page.BARRACKS)
 	var barracks := HumanBarracks.new()
 	barracks.configure({
 		"shield_drill_rank": plan.formation_drill_rank(slot),
 		"shield_drill_credit": plan.available_drill_credit(slot) > 0,
-		"heavy_replay_eligible": plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT),
+		"heavy_replay_eligible": snapshot.heavy_authorized,
+		"allow_training": snapshot.error == OK,
+		"notice": notice,
+		"shield": {
+			"level": snapshot.level,
+			"total_xp": snapshot.total_xp,
+			"xp_in_level": snapshot.xp_in_level,
+			"next_level_xp": snapshot.next_level_xp,
+			"remaining_melee_points": snapshot.remaining_melee_points,
+			"can_allocate_melee": snapshot.melee_status == ProfileStore.MaraShieldMeleeStatus.AVAILABLE,
+			"ratings": {"Melee Power": snapshot.melee_rating},
+		},
 	})
 	barracks.back_requested.connect(_go_back)
+	barracks.training_requested.connect(_open_barracks_drill)
+	barracks.melee_allocation_requested.connect(_show_barracks_melee)
 	_stage.add_child(barracks)
+	if restore == "melee":
+		barracks.focus_shield_action()
+	elif restore == "drill":
+		barracks.focus_heavy_job()
+
+
+func _owns_mara_station() -> bool:
+	if not is_instance_valid(_station_map_stage) or not _has_mara_shield_drill() \
+			or _station_map_stage.get_child_count() < 1:
+		return false
+	var map := _station_map_stage.get_child(0)
+	if _forward_camp_return:
+		var current := _profile.mara_shield_barracks_state()
+		return current.error == OK and current.reveal_completed \
+			and _campaign_world.current_waypoint_id() == _forward_camp_return.junction_id \
+			and map.call("can_open_camp_at", _forward_camp_return.id)
+	return _campaign_world.current_waypoint_id() == MARA_HOME_STATION \
+		and map.call("can_open_camp_at", MARA_HOME_STATION)
+
+
+func _open_barracks_drill() -> void:
+	if _page != Page.BARRACKS or not _owns_mara_station():
+		return
+	var snapshot := _profile.mara_shield_barracks_state()
+	if snapshot.error != OK or snapshot.training.available_drill_credit(MaraTraining.SHIELD_INFANTRY_SLOT) == 0:
+		return
+	_station_drill_origin = true
+	_show_mara_shield_drill()
+
+
+func _show_barracks_melee() -> void:
+	if _page != Page.BARRACKS or not _owns_mara_station():
+		return
+	var snapshot := _profile.mara_shield_barracks_state()
+	if snapshot.melee_status != ProfileStore.MaraShieldMeleeStatus.AVAILABLE:
+		return
+	_open_page(Page.MARA_SHIELD_MELEE)
+	var back := _heading("Shield Infantry Ratings", _station_label)
+	_label(_stage, "Melee Power  %d  →  %d" % [snapshot.melee_rating, snapshot.melee_rating + 1],
+		Rect2(76, 245, 960, 64), 39, IVORY, DISPLAY_FACE)
+	var detail := _label(_stage, "Spend one earned Shield Infantry stat point. This rating applies to both infantry jobs on Greyhollow Mine replays. It does not spend drill credit or Battle Points.",
+		Rect2(76, 322, 850, 108), 25, MUTED)
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var confirm := _button("Confirm Melee Power (1 point)", Rect2(76, 478, 465, 58), _confirm_barracks_melee)
+	_link_cycle([back, confirm], SIDE_TOP, SIDE_BOTTOM)
+	back.grab_focus()
+
+
+func _confirm_barracks_melee() -> void:
+	if _page != Page.MARA_SHIELD_MELEE or not _owns_mara_station():
+		return
+	if _profile.invest_mara_shield_melee_point() != OK:
+		_show_notice("The Melee point could not be saved. No change was made.")
+		return
+	_show_station_barracks("melee")
 
 
 func _back_from_practice(focus: String) -> void:
@@ -639,6 +718,7 @@ func _leave_station() -> void:
 	var previous := _station_map_stage
 	_station_map_stage = null
 	_station_training_origin = false
+	_station_drill_origin = false
 	_station_label = ""
 	_forward_camp_return = null
 	_replace_stage(Page.WORLD_MAP)
@@ -660,6 +740,7 @@ func _discard_station_context() -> void:
 	_station_map_stage = null
 	_station_hidden_map_controls.clear()
 	_station_training_origin = false
+	_station_drill_origin = false
 	_station_label = ""
 	_forward_camp_return = null
 
@@ -841,11 +922,13 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	_show_campaign_warning()
 
 
-func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confirmed_clears: PackedStringArray) -> bool:
-	return (campaign_id == MaraTraining.CAMPAIGN_ID and mission_id == MaraTraining.QUALIFYING_CLEAR
-		and _has_mara_shield_drill() and confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR)
-		and _profile.mara_shield_infantry_training().qualifies_for_branch(
-			MaraTraining.SHIELD_INFANTRY_SLOT, MaraTraining.BRANCH_UNIT))
+func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confirmed_clears: PackedStringArray,
+		shield_state: ProfileStore.MaraShieldBarracksState = null) -> bool:
+	if campaign_id != MaraTraining.CAMPAIGN_ID or mission_id != MaraTraining.QUALIFYING_CLEAR \
+			or not _has_mara_shield_drill() or not confirmed_clears.has(MaraTraining.QUALIFYING_CLEAR):
+		return false
+	var current := shield_state if shield_state else _profile.mara_shield_barracks_state()
+	return current.error == OK and current.heavy_authorized
 
 
 func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
@@ -868,7 +951,10 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 		return
 	# The briefing's button is not authorization. Recheck against the current
 	# campaign record immediately before configuring this one attempt.
-	var authorize_heavy := use_heavy and _mine_replay_heavy_available(campaign_id, mission_id, confirmed_clears)
+	var shield_state: ProfileStore.MaraShieldBarracksState
+	if campaign_id == MaraTraining.CAMPAIGN_ID and mission_id == MaraTraining.QUALIFYING_CLEAR:
+		shield_state = _profile.mara_shield_barracks_state()
+	var authorize_heavy := use_heavy and _mine_replay_heavy_available(campaign_id, mission_id, confirmed_clears, shield_state)
 	if use_heavy and not authorize_heavy:
 		_show_notice("Heavy Infantry requires a confirmed Mine clear and Shield Infantry Drill Rank 2.")
 		return
@@ -887,6 +973,8 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
 		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
 		mission.configure_campaign_lead_melee(confirmed_clears.has(mission_id) and _profile.mara_lead_melee_invested())
+		mission.configure_campaign_shield_melee(shield_state != null and shield_state.error == OK \
+			and shield_state.melee_status == ProfileStore.MaraShieldMeleeStatus.INVESTED)
 	if mission.has_method(&"enable_tactical_minimap"):
 		mission.call(&"enable_tactical_minimap")
 	var authored_hud := mission.has_method(&"enable_shared_mission_hud")
@@ -1078,7 +1166,7 @@ func _has_mara_shield_drill() -> bool:
 func _show_mara_shield_drill() -> void:
 	if not _has_mara_shield_drill():
 		return
-	var plan := _profile.mara_shield_infantry_training()
+	var plan := _profile.mara_shield_barracks_state().training
 	var slot := MaraTraining.SHIELD_INFANTRY_SLOT
 	var rank := plan.formation_drill_rank(slot)
 	var credit := plan.available_drill_credit(slot)
@@ -1113,7 +1201,8 @@ func _show_mara_shield_drill() -> void:
 
 
 func _purchase_mara_shield_drill() -> void:
-	if _page != Page.MARA_SHIELD_DRILL or not _has_mara_shield_drill():
+	if _page != Page.MARA_SHIELD_DRILL or not _has_mara_shield_drill() \
+			or (_station_drill_origin and not _owns_mara_station()):
 		return
 	var result := _profile.purchase_mara_shield_infantry_drill()
 	if result == OK:

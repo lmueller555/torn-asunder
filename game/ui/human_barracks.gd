@@ -98,6 +98,11 @@ func focus_shield_action() -> void:
 			_action.grab_focus()
 
 
+func focus_heavy_job() -> void:
+	if is_node_ready():
+		_nodes[HEAVY].grab_focus()
+
+
 func _ready() -> void:
 	name = "Human Barracks"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -285,7 +290,7 @@ func _update_detail() -> void:
 			elif _eligible():
 				_detail_scope.text = "To field this job, choose Replay with Heavy Infantry at Greyhollow’s briefing."
 			elif _can_train():
-				action_text = "Confirm Training (1 drill credit)"
+				action_text = "Review Formation Drill"
 			elif bool(_snapshot.get("shield_drill_credit", false)):
 				_detail_scope.text = "One drill credit available. Spend it under Shield Infantry Drill in Camp Operations."
 			else:
