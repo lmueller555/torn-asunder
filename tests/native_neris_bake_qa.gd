@@ -17,12 +17,14 @@ var failed:=0
 func _ready()->void:
 	mode=OS.get_environment("NERIS_BAKE_QA")
 	if not mode.is_empty():
-		seed_fixture(mode)
-		run.call_deferred()
+		if seed_fixture(mode):
+			run.call_deferred()
+		else:
+			finish.call_deferred()
 
-func seed_fixture(which:String)->void:
+func seed_fixture(which:String)->bool:
 	if which=="legacy":
-		return
+		return true
 	# Only disposable profile roots in the runner.
 	var stored:=ConfigFile.new()
 	stored.set_value(Profile.CAMPAIGNS,"mara",3)
@@ -31,7 +33,7 @@ func seed_fixture(which:String)->void:
 	stored.set_value(Profile.CAMPAIGN_WAYPOINTS,NERIS, MINE if which in ["transfer","greyproof"] else (CAMP if which=="camp" else POST))
 	stored.set_value(Profile.MISSION_PROGRESS,NERIS,PackedStringArray([] if which=="camp" else ["neris_failing_grove",CLEAR]))
 	stored.set_value(Profile.SETTINGS,"fullscreen",false)
-	assert(stored.save(Profile.PATH)==OK)
+	return check(stored.save(Profile.PATH)==OK,"persist isolated QA profile even in a nondebug executable")
 
 func check(ok:bool,what:String)->bool:
 	if ok:
@@ -182,6 +184,8 @@ func photo_small(name:String)->void:
 
 func verify_digest()->void:
 	var renderer=map()._renderer
+	if not check(renderer.baked_terrain.size()==56,"all 56 typed terrain tiles mounted"):
+		return
 	var expected:=JSON.parse_string(FileAccess.get_file_as_string("res://assets/overworld/neris/bake-v1/index.json")) as Dictionary
 	var hashes:Dictionary={}
 	for e:Dictionary in expected["pieces"]: hashes[e["file"]]=e["buffers"]
@@ -195,8 +199,9 @@ func verify_digest()->void:
 			var buffer:PackedByteArray=surface.get(key,PackedByteArray())
 			bytes.append_array(buffer)
 		var h:=HashingContext.new()
-		assert(h.start(HashingContext.HASH_SHA256)==OK)
-		assert(h.update(bytes)==OK)
+		if h.start(HashingContext.HASH_SHA256)!=OK or h.update(bytes)!=OK:
+			check(false,"hash actual mounted tile "+name)
+			return
 		if not check(h.finish().hex_encode()==hashes[name],"actual mounted tile buffers SHA "+name):
 			return
 	var curve:Curve3D=renderer.boundary_contract()
