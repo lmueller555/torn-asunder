@@ -1,0 +1,52 @@
+name: Neris native overworld launch
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/neris-native-launch.yml'
+      - 'project.godot'
+      - 'export_presets.cfg'
+      - 'game/title_screen.gd'
+      - 'game/campaign_dialogue.gd'
+      - 'game/profile_store.gd'
+      - 'game/campaign_*.gd'
+      - 'game/overworld/**'
+      - 'assets/overworld/marches/**'
+      - 'assets/overworld/neris/bake-v1/**'
+      - 'tests/native_neris_release_smoke.gd'
+      - 'tests/native_neris_bake_qa.gd'
+      - 'tests/run-native-neris-smoke.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GODOT_RELEASE: 4.7.2-stable
+      EDITOR_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+      TEMPLATES_SHA256: f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011
+    steps:
+      - name: Check out proposed merge
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install verified Godot engine and retail Linux template
+        run: |
+          asset="https://github.com/godotengine/godot-builds/releases/download/$GODOT_RELEASE/Godot_v$GODOT_RELEASE"
+          curl --fail --silent --show-error --location --retry 2 --max-time 180 "$asset"_linux.x86_64.zip -o "$RUNNER_TEMP/editor.zip"
+          curl --fail --silent --show-error --location --retry 2 --max-time 420 "$asset"_export_templates.tpz -o "$RUNNER_TEMP/templates.tpz"
+          printf '%s  %s\n' "$EDITOR_SHA256" "$RUNNER_TEMP/editor.zip" "$TEMPLATES_SHA256" "$RUNNER_TEMP/templates.tpz" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/editor.zip" -d "$RUNNER_TEMP"
+          install -m 0755 "$RUNNER_TEMP/Godot_v${GODOT_RELEASE}_linux.x86_64" "$RUNNER_TEMP/godot"
+          export_dir="$HOME/.local/share/godot/export_templates/${GODOT_RELEASE/-/.}"
+          mkdir -p "$export_dir"
+          unzip -p "$RUNNER_TEMP/templates.tpz" templates/linux_release.x86_64 > "$export_dir/linux_release.x86_64"
+          test -s "$export_dir/linux_release.x86_64"
+          chmod 0755 "$export_dir/linux_release.x86_64"
+          rm "$RUNNER_TEMP/editor.zip" "$RUNNER_TEMP/templates.tpz"
+      - name: Test the original title in the disposable nondebug executable
+        run: NERIS_DISPOSABLE_STAGE=1 bash tests/run-native-neris-smoke.sh "$PWD" "$RUNNER_TEMP/godot" "$RUNNER_TEMP/neris-smoke"
