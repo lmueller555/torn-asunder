@@ -1,6 +1,6 @@
 # Vareth 3D overworld
 
-Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign, Sova’s Druid campaign, and Raska’s Orc campaign also use 3D from the ordinary title. Neris’s Dryad campaign also uses the authored 3D map. Sereth retains his existing presentation until the remaining route passes release checks. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign, Sova’s Druid campaign, and Raska’s Orc campaign also use 3D from the ordinary title. Neris’s Dryad campaign also uses the authored 3D map. Sereth’s Still Kingdom campaign completes the six normal 3D campaign maps. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
 
 For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
@@ -58,6 +58,12 @@ The Year Four arrival for **River, Not Sea** is on Spanwater’s **north causewa
 New Game opens Neris’s existing opening and deploys **What We Planted Here** directly. After battle, Continue, or Load, the Grove Camp and Isolated Grove nursery are reached by their authored forest road. An existing Grove victory unlocks the route to the Cairnspine Boundary Post and **Where the Road Goes**. Neris’s own Survey clear opens a named, reversible crossing into her Year Three Greyhollow approach and **Before They Reach It**. Neris’s save remains separate from Mara’s, Raska’s, and Sova’s use of the mine.
 
 The packaged Grove and Boundary relief share 54 indexed terrain tiles; two Boundary overrides are separate. The loading panel reports real preparation progress. Cancel restores the prior screen or station without advancing the save. A missing or invalid map package falls back to the canonical chart rather than using unreviewed terrain. [Scoped visual audit](audits/neris-overworld-v1.json).
+
+## Sereth’s Still Kingdom and the Valley Assembly
+
+New Game keeps Sereth’s opening dialogue and deploys the first mission directly. After returning from battle, or using Continue or Load, the authored road connects the Still Kingdom Camp and the Cut. Only Sereth’s own Cut clear opens the named crossing to the Year Four Keeper Boundary Post and **An Audience, Not a Seizure**.
+
+Once his own Pass Writ is cleared, Sereth can take the named crossing to the quiet western approach at the Valley Assembly in Year Five and open **The Lamp in the Window**. The court is the same geographic site that appears in Sova’s campaign; Sereth’s version has no Sova events, no Vault road, and no inherited outcomes. Battlefield deployment is still a separate confirmation. [Scoped visual audit](audits/sereth-overworld-v1.json).
 
 ## Extension checks
 
