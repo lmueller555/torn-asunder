@@ -28,7 +28,7 @@ func _ready()->void:
 	mode=OS.get_environment("NERIS_PRIVATE_QA")
 	if mode!="":
 		shipping_default=Entry.requested()
-		if mode=="off": ProjectSettings.set_setting(Entry.SWITCH,false)
+		if mode=="off": ProjectSettings.set_setting(Entry.FLAG,false)
 		run.call_deferred()
 
 func check(value:bool,label:String)->bool:
