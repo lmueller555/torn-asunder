@@ -67,13 +67,21 @@ jobs:
         run: |
           set -o pipefail
           cd "$RUNNER_TEMP/away-from-source"
-          for mode in new continue; do
-            echo "::group::$mode"
-            xvfb-run -a env XDG_DATA_HOME="$RUNNER_TEMP/mara-nocache" \
-              XDG_CONFIG_HOME="$RUNNER_TEMP/mara-nocache" LIBGL_ALWAYS_SOFTWARE=1 \
-              MESA_SHADER_CACHE_DISABLE=true TORN_RELEASE_SMOKE_MODE="$mode" \
-              timeout 90s "$RUNNER_TEMP/mara-native/torn-asunder.x86_64" --audio-driver Dummy --windowed --resolution 960x540 \
-              2>&1 | tee "$RUNNER_TEMP/mara-$mode.log"
-            grep -F "Native Mara release smoke ($mode): PASS" "$RUNNER_TEMP/mara-$mode.log"
-            echo "::endgroup::"
-          done
+          app="$RUNNER_TEMP/mara-native/torn-asunder.x86_64"
+          export XDG_DATA_HOME="$RUNNER_TEMP/mara-nocache" XDG_CONFIG_HOME="$RUNNER_TEMP/mara-nocache"
+          export LIBGL_ALWAYS_SOFTWARE=1 MESA_SHADER_CACHE_DISABLE=true
+
+          # Exercise the ordinary, animated march in real time, independent of
+          # software-renderer frame starvation on a two-core hosted runner.
+          echo "::group::new, full-speed travel"
+          TORN_RELEASE_SMOKE_MODE=new timeout 90s "$app" --headless 2>&1 | tee "$RUNNER_TEMP/mara-new.log"
+          grep -F 'Native Mara release smoke (new): PASS' "$RUNNER_TEMP/mara-new.log"
+          echo "::endgroup::"
+
+          # A separate graphical release process must reconstruct the 3D view
+          # from the saved waypoint and render it outside the source directory.
+          echo "::group::continue, rendered window"
+          TORN_RELEASE_SMOKE_MODE=continue xvfb-run -a timeout 90s "$app" --audio-driver Dummy --windowed --resolution 960x540 \
+            2>&1 | tee "$RUNNER_TEMP/mara-continue.log"
+          grep -F 'Native Mara release smoke (continue): PASS' "$RUNNER_TEMP/mara-continue.log"
+          echo "::endgroup::"

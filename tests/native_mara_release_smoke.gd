@@ -43,6 +43,14 @@ func _run() -> void:
 		await get_tree().process_frame
 		_check(_title._active_campaign.get("id") == MARA and _at(MINE), "Continue reconstructed authored 3D Mine anchor")
 		_check(Profile.new().completed_missions(MARA).is_empty(), "no unearned victory after reopening")
+		_check(DisplayServer.get_name() != "headless", "Continue ran with a real renderer")
+		if DisplayServer.get_name() != "headless":
+			await RenderingServer.frame_post_draw
+			var view := _map()
+			if view:
+				var texture := view.render_viewport.get_texture()
+				var capture := texture.get_image()
+				_check(capture != null and not capture.is_empty(), "3D viewport rendered actual pixels")
 		_finish()
 		return
 	if not _check(_mode == "new" and _press("New Game"), "normal New Game clicked"):
@@ -66,6 +74,11 @@ func _run() -> void:
 	while Time.get_ticks_msec() < travel_timeout and not _at(MINE):
 		await get_tree().process_frame
 	if not _check(_at(MINE), "native confirmed movement reached Greyhollow"):
+		var current := _map()
+		if current:
+			printerr("Travel debug: site ", current._world.current_waypoint_id(),
+				", travelling ", current._navigation.is_travelling(),
+				", party ", current._party.position, ", camera current ", current._camera.is_current())
 		_finish()
 		return
 	_check(Profile.new().load_campaign_world(MARA).current_waypoint_id() == MINE, "arrival durably saved")
