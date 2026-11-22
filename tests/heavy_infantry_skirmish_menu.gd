@@ -117,12 +117,12 @@ func _check_models(view: View) -> bool:
 		Battle.State.RAISE: &"Shield Raise",
 		Battle.State.GUARD: &"Shield Guard",
 		Battle.State.LOWER: &"Shield Lower",
-		Battle.State.RECOIL: &"Shield-Ready Idle",
-		Battle.State.BLOCKED: &"Shield-Ready Idle",
-		Battle.State.STAGGER: &"Shield-Ready Idle",
-		Battle.State.KNOCKDOWN: &"Shield-Ready Idle",
-		Battle.State.DOWN: &"Shield-Ready Idle",
-		Battle.State.GET_UP: &"Shield-Ready Idle",
+		Battle.State.RECOIL: &"Sword Recoil",
+		Battle.State.BLOCKED: &"Blocked Hit Stagger",
+		Battle.State.STAGGER: &"Hit Stagger",
+		Battle.State.KNOCKDOWN: &"Backward Knockdown",
+		Battle.State.DOWN: &"Backward Knockdown",
+		Battle.State.GET_UP: &"Get Up",
 		Battle.State.CHEER: &"Shield-Ready Idle",
 	}):
 		return false
@@ -139,8 +139,8 @@ func _check_models(view: View) -> bool:
 	heavy.unit.receive_damage(heavy.unit.hp)
 	heavy.state = Battle.State.DEAD
 	view._sync_models(1.0 / 60.0)
-	if view._models[n].visible or view._markers[n].visible or not view._models[0].visible:
-		return _fail("A Heavy corpse with no death clip did not hide safely.")
+	if not view._models[n].visible or view._markers[n].visible or not view._models[0].visible 			or heavy_player.assigned_animation != &"Death Fall":
+		return _fail("The registered Heavy view did not route fresh defeat to its own clip while hiding only its live marker.")
 	return true
 
 
