@@ -33,6 +33,8 @@ const HEAVY_CLIPS := {
 	Battle.State.RECOIL: &"Sword Recoil",
 	Battle.State.BLOCKED: &"Blocked Hit Stagger",
 	Battle.State.STAGGER: &"Hit Stagger",
+	Battle.State.KNOCKDOWN: &"Backward Knockdown",
+	Battle.State.GET_UP: &"Get Up",
 }
 const CLIPS_BY_TYPE := {
 	Catalog.HUMAN_INFANTRY: CLIPS,
@@ -209,6 +211,14 @@ func _sync_models(delta: float) -> void:
 			var clip := _valid_clip(player, clips, soldier.state)
 			# Heavy Infantry has no death clip; do not leave a standing corpse on the field.
 			model.visible = soldier.state != Battle.State.DEAD or not clip.is_empty()
+			if hold_down and soldier.unit_type == Catalog.HUMAN_HEAVY_INFANTRY:
+				# V03 is a matched pair: DOWN holds the exact terminal fall pose.
+				# The previous displayed physics sample can be one tick short.
+				var fall := _valid_clip(player, clips, Battle.State.KNOCKDOWN)
+				if player.assigned_animation != fall:
+					player.play(fall, 0.0)
+					player.advance(0.0)
+				player.seek(player.get_animation(fall).length, true)
 			if player and not hold_down and model.visible:
 				var speed := 1.0
 				if clip.is_empty():

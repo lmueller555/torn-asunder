@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "scope": "Heavy Infantry V03 backward knockdown, held DOWN and get-up in AI Infantry Skirmish on top of #306; exact two clips and state mapping only. Mine, defeat and cheer unchanged.",
+  "author": "Heavy Infantry animation and presentation author",
+  "reviewer": "Independent native character-art reviewer",
+  "reviewed_on": "2026-11-22",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Matched exact #306 control and this candidate in Godot 4.7.2 native Compatibility, 1280×720, Mesa llvmpipe. 18 same-camera ordinary 64/256 postdraw pairs; old hook remains active only in its original phase.",
+    "close_up": "61 paired native postdraw samples in fixed 4.25 m near profiles and front, genuine original-contact seed 9 in staged pre-contact context to resolve boots/weapon/axes without crowd occlusion. Hold native t78–93, rise and handoff observed.",
+    "reproduction": "Run tests/fall_exact_endpoints.gd, then tests/fall_native_states.gd at default and HEAVY_FALL_PLATOONS=4 after importing. For normal visual reproduction set each Skirmish side to Level 10 with nine Melee points and select Heavy; compare one and four standard platoons per side. View live contact, stable DOWN and return, and review side/front at first recovery.",
+    "measurements": "Actual 256 tick 213, 11 other old catch hooks, 904 draws / 3,270,808 submitted primitives near and 2,168 / 2,386,910 tactical matched. Ordinary t386 near culls differently (-4 calls, +19,620 primitives), unchanged model. Both legal counts checked with identical outcomes over 600 physics ticks; not sustained 256 performance or hardware FPS.",
+    "motion": "Native fall, side settle, exact held terminal key, gathered boot rise, brace to ready. Actual repeat preserves V02, real resulting knockdown disables the old hook and shows the new fall; lethal still hides without V04."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "reason": "Weight and scale read in matched native front/side and ordinary crowd. Helmet/shield settle to authored down; boots and both gripped objects retained with no observed new gear/body/floor intersections at the isolated checked angles."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "reason": "Mesh, original maps and import unchanged, as verified in the same near and tactical game light."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "reason": "Held-down body is distinct from surviving ready or the previous upright placeholder; next rise goes through gathered boots and brace. Crowd can temporarily occlude limbs without hiding the phase from all native views."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "reason": "Authentic real fall, exact terminal DOWN then rise; consecutive hold, repeat and lethal interruption checked. No new HP or effects. Unchanged old death hide, rebound/stagger, pivot and battle clocks remain separate."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "reason": "Legal 64/256 seeded battle outcomes match on all 600 ticks each; native snapshots and repeat/interrupt render/state pair data. Maximum tested actual 256 held views have unchanged submitted work; some normal pose/culling cost varies. No sustained 256 or target-device FPS approval."
+    }
+  },
+  "files": {
+    "assets/models/heavy_infantry/armor_normal.png": "6c3eea07d81ce11919eef676addf42432c2a867d6a7100977b4c62127e32a53e",
+    "assets/models/heavy_infantry/painted_base_color.png": "60cbc8aa025c94b39cb0ba85ed8ec9f258699f5ce38ab47bc4e568c61ff0887d",
+    "assets/models/heavy_infantry/painted_roughness_metallic.png": "ae260d19f2578f851e089866daceee9c063993212e1de5b7cbe9aafafe5f8d45",
+    "assets/models/human_heavy_infantry.glb": "a7eaaf3980ee5089d4abd68129efb65ebe23ea2b8d261b132c426df58af8e3b5",
+    "assets/models/human_heavy_infantry.glb.import": "99c85163e36ae28bebafa84e99cc983a6545ef889994a93f0faa71ddaa148a95",
+    "assets/source/human_heavy_infantry_game.blend": "a12f9d13f0bedd2eb91a306fdc60c93535f31931ff6a4b3feb3ea27d5f94bf79",
+    "game/combat/heavy_stagger_contact_modifier.gd": "04f0c7cad7cb09a9277c2c12f675b8bfff2081a334e5e03b49bf2db1273f7df5",
+    "game/combat/heavy_stagger_sole.gd": "8cefe933bf49ae5ce203e5262930ec913b25c587bc8c8d1e423611529fe43097",
+    "game/combat/infantry_skirmish.gd": "16f7300d5d3ae84ed163b4a1a429af62e032c5023ab41bc03d0725c2ede3507d",
+    "game/combat/infantry_skirmish_view.gd": "1e7ff413566d2296a20f6e3b811266a6358710848cba375281d189d7d289ac1d",
+    "tests/fall_exact_endpoints.gd": "a2fdf9427e56f3b3edc47f55efc7345163c6d3f4110129cf9f84f0e1ae60a262",
+    "tests/fall_native_states.gd": "066f092f68f76e19888ff6d24d88fef3a4e45bde7e0fc195951b4da36de419a6"
+  }
+}
