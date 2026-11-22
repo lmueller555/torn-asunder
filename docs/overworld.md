@@ -1,6 +1,6 @@
 # Vareth 3D overworld
 
-Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign and Sova’s Druid campaign also use 3D from the ordinary title. Raska, Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign, Sova’s Druid campaign, and Raska’s Orc campaign also use 3D from the ordinary title. Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
 
 For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
@@ -46,6 +46,12 @@ New Game keeps Sova’s original opening scene and deploys **The Workers’ Way 
 At the Assembly, choose the original **Let Them Walk Out** briefing. After the hearing is cleared, travel the upper road to the existing Year Four Godbridle handover. The handover opens on arrival, or on a cold resume if it was left unread, and does not replay after a successful acknowledgement. The short final road leads to the closed Cairnspine Vault entrance and the Year Five **No New Command** briefing. Travel and save actions do not grant victories.
 
 [Scoped Cairnspine visual audit](audits/sova-overworld-v1.json). No additional optional missions or battlefield assets are installed by this rollout.
+
+## Raska’s Basin and North Spanwater
+
+New Game keeps Raska’s original first scene and deploys **One Person to Ask** at Greyhollow directly. After battle, Continue, or Load, the 3D map presents the correct campaign stage. Use the named local crossings to travel between Basin Camp, the Greyhollow west shelf, and Basin Well Road. Raska’s own Mine Witness clear opens the Well Road crossing; his own **The Second Bucket** clear opens the way to Spanwater. These crossings save before switching sectors, and Cancel leaves the previous station and save intact.
+
+The Year Four arrival for **River, Not Sea** is on Spanwater’s **north causeway**. It does not use Ilyra’s south landing, her evacuation gates, or her rescue outcome. [Scoped four-sector visual audit](audits/raska-overworld-v1.json).
 
 ## Extension checks
 
