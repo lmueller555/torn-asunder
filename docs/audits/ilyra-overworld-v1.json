@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-22",
+  "scope": "Ilyra’s Moonwash Camp, pre-rescue Harbor, Survey Shore, and Spanwater south landing: authored near and regional overworld views in their stated Year Three and Year Four settings. Not gameplay assets, Raska’s north shore use, optional encounters, non-reviewed cameras, or device performance.",
+  "author": "Torn Asunder Moonwash, Survey and Spanwater environment and integration authors",
+  "reviewer": "Independent Torn Asunder route and environment reviewers",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility. Actual campaign-host previews at 1280 by 720 for Moonwash and stock title cold Load at 960 by 540 for the exact final Spanwater composition. See evidence/ilyra-moonwash-survey.jpg and evidence/ilyra-spanwater-south.jpg.",
+    "close_up": "Weathercloth camp shelter and worn approach; intact masonry, grounded stranded ship, receiving vessel and idle paired fittings; quiet strand and elevated survey landmarks; the separated low timber berth and north lock.",
+    "motion": "Real 3D coast travel uses grounded authored curves; a sector transfer saves the destination before presenting the mount and supports cancel, failure rollback, and safe reverse. Rescue dressing disappears only after the recorded rescue clear. No premade line crossing or release animation before briefing.",
+    "reproduction": "Open the regular Godot title from the project directory, choose Ilyra, and use both camera distances at each destination. For cold load and release package coverage, use tests/native_ilyra_release_smoke.gd via the Ilyra native overworld launch workflow.",
+    "measurements": "302 m opener, all 418 route samples grounded; 350 m Survey leg with 2,106 successful terrain samples; 290 Survey landmark footing checks. Spanwater placement, view, content separation and save lifecycle tested in the same campaign. No graphics hardware performance claim."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Two distinct camp cloth tiers and landing materials, different stranded and receiving hulls, three distinct survey forms, separate berth and lock silhouettes."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Weathered cloth and timber tie into compacted approach pads; the Survey tread blends into its grounded platform; closed Spanwater cut uses local shale detail and remains distinct from the main river."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Offset labels retain their true pick anchors and leave key structures visible at both audited camera distances. Spanwater uses Ilyra’s original south-landing context."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Measured route follows actual terrain; correct campaign outcomes unlock Survey and Spanwater, and any static rigging and ship state are kept distinct from the played mission."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Audited normal and private preview scenes mount under the existing title and save authority; tier exclusivity and phase separation tested; no new gameplay colliders or off-campaign asset mounting."
+    }
+  },
+  "files": {
+    "docs/audits/evidence/ilyra-moonwash-survey.jpg": "7779ed65c6f8094ae9ee9c7d418b7f146bc23fb882d104a26f3f29345f6430bb",
+    "docs/audits/evidence/ilyra-spanwater-south.jpg": "85ae64bc2b51e15b118d6a4e49287afed2abd8aefc777fdfa60b1c9dd85f20e1",
+    "game/overworld/moonwash/ilyra_camp_pad.gdshader": "8b86a5d638ab6886ff73a39ade1a44efde6782163fd0b1c590c895cf766d285c",
+    "game/overworld/moonwash/ilyra_camp_surfaces.gdshader": "b8c5bd6370199deed92bc6b9cefc91c7f0e048227a48c8e2700f136ff9baaf0f",
+    "game/overworld/moonwash/ilyra_harbor_rescue_dressing.gd": "f031901e6128810ed28cc2454848d610090102930ceea41dcb8ab33798697494",
+    "game/overworld/moonwash/ilyra_opener_map.gd": "0e41ce5ce780b0561e40ef98dfa014ddda6ea6e6582ebd39fc25a352a293def5",
+    "game/overworld/moonwash/ilyra_opener_renderer.gd": "4d65d6b003b92a2892f49b851bd9fed2a92c72c52911141001f7bf969d5a8f4c",
+    "game/overworld/moonwash/ilyra_opener_renderer.tscn": "4857a0d49ec37ebc042cce2a51d0ca18073b48e41eae3f815be94b6518139a67",
+    "game/overworld/moonwash/ilyra_opener_route.gd": "a26b88261179f76c8cbb3a42fb7aadc9aebd8ac1a53069a137be6432ad165258",
+    "game/overworld/moonwash/ilyra_scout_camp.gd": "c50d1643cc0bd29cf14c9f0630caf7ef54b925282a1839abe59e9eae05766fa3",
+    "game/overworld/moonwash/ilyra_survey_landmarks.gd": "9aa5d4daaf84f8d16ce10495386519bb93b6dfc3b6c61d6a8d4c285c583d5f34",
+    "game/overworld/moonwash/ilyra_survey_material.gdshader": "6fc0a9fb74ce1dcc47f5a064accb8f381aa4ae48bebaa2a5367633ce1c7d2d0f",
+    "game/overworld/moonwash/ilyra_survey_route.gd": "442538155cdff0c34c4dc8ede80c51c8027f2a643de0de2831941111c7052073",
+    "game/overworld/moonwash/ilyra_survey_tread.gdshader": "f68a5ce3b509335443f5ea99518bdec62418f0cd2a806d58af41caa97aaef664",
+    "game/overworld/spanwater/closed_cut_stone.gd": "98119b28f8125f678abff4da77b3cfa02594186e6f7e71995c90a853d731c154",
+    "game/overworld/spanwater/closed_cut_stone.gdshader": "1656d9b1004acf59af0fd4d859d74e2524e63910f2bec6a63e5bfbd248afe2ed",
+    "game/overworld/spanwater/context_biomes.gdshader": "3f56fa274dbce545d4e7c075c23445875f7b86be5eb84827e2f6badbb728bff3",
+    "game/overworld/spanwater/context_ridges.gdshader": "fa66b630fa12850ee2510956820adf9e56b8e68613a70098d24f243ac31275b0",
+    "game/overworld/spanwater/ilyra_spanwater_map.gd": "9f5ac8050dc2b546441548f5eb7be961a2d8f1f82e3d242a86e7eb6eeabcbfda",
+    "game/overworld/spanwater/ilyra_spanwater_renderer.gd": "fe7dbe2763eea267fc81b10f6303cf00946a114af0c785c607753c63a8850a96",
+    "game/overworld/spanwater/ilyra_spanwater_renderer.tscn": "9c01dd2c8f0d25138fef51e9ee35320959e8f2adde285016b707b1e572e9f2ac",
+    "game/overworld/spanwater/landing_addon.gd": "43ee17438c070c589b179dc8569490331e1b95f54ecbc8a66ddab41733c7a571",
+    "game/overworld/spanwater/landing_silt.gdshader": "561e27c2530b8ce6baf7b33d7a56f2a86edd815dfae66b95294535d20ed662ea",
+    "game/overworld/spanwater/landing_weather.gdshader": "912a1e0516467a8b98ea8e9a06801af1fc26122c72c9acd2d8e2ee921f18ec1f",
+    "game/overworld/spanwater/lock_weathering.gdshader": "79fa30961b82d8e84da6a73601122809049a7a24feb35dbd28508d65d1c2897a",
+    "game/overworld/spanwater/spanwater_context.gd": "9720db78bbf1d1f2de30be688fa55216224b2efcc53599ebbd1b0f96092d89dd",
+    "game/overworld/spanwater/spanwater_relief.gd": "fa9a5427f607629955f01476cdea2b682a0ebcac91be8a28210bc992e4b130b7",
+    "game/overworld/spanwater/spanwater_relief.tscn": "e327b58cf4189ac1e7f2f6510101d95f4c8dc1023de617ac36269a3ee96d7fb0",
+    "game/overworld/spanwater/spanwater_surface.gdshader": "0b91cb198b02d68c1007a8c8cf1ce9ff8028536845a23b9622a5472b63605d83"
+  }
+}

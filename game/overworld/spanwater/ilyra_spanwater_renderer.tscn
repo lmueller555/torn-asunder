@@ -1,0 +1,35 @@
+[gd_scene load_steps=7 format=3]
+[ext_resource type="Script" path="res://game/overworld/spanwater/ilyra_spanwater_renderer.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/overworld/spanwater/spanwater_relief.tscn" id="2"]
+[ext_resource type="Script" path="res://game/overworld/spanwater/landing_addon.gd" id="3"]
+[ext_resource type="Script" path="res://game/overworld/spanwater/spanwater_context.gd" id="4"]
+[ext_resource type="Script" path="res://game/overworld/spanwater/closed_cut_stone.gd" id="5"]
+[sub_resource type="CylinderMesh" id="PartyMesh"]
+top_radius = 1.0
+bottom_radius = 1.33
+height = 1.0
+[node name="IlyraSouthBank" type="Node3D"]
+script = ExtResource("1")
+[node name="SpanwaterRelief" parent="." instance=ExtResource("2")]
+[node name="Camera" type="Camera3D" parent="."]
+far = 1250.0
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-45,-36,0)
+light_color = Color(1,0.882,0.663,1)
+light_energy = 0.96
+shadow_enabled = true
+directional_shadow_max_distance = 680.0
+[node name="Party" type="Node3D" parent="."]
+[node name="Marker" type="MeshInstance3D" parent="Party"]
+position = Vector3(0,0.5,0)
+mesh = SubResource("PartyMesh")
+
+[node name="SouthBankStagingDressing" type="Node3D" parent="."]
+script = ExtResource("3")
+
+[node name="PrivateBankContext" type="Node3D" parent="."]
+script = ExtResource("4")
+
+[node name="DryClosedCutStrata" type="Node3D" parent="."]
+script = ExtResource("5")

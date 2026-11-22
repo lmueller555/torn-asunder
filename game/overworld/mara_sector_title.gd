@@ -15,11 +15,15 @@ var _origin_view: MarchesView
 var _prepared_map: MarchesView
 var _prepared_for := ""
 var _normal_rollout := false
+var _ilyra_presenter: RefCounted
 
 
-func _open_campaign(campaign: Dictionary) -> void:
-	if NormalMaraEntry.requested() and get_tree().current_scene == self:
-		_normal_rollout = campaign.id == "mara"
+func _prepare_campaign(campaign: Dictionary) -> void:
+	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested()):
+		if _ilyra_presenter:
+			_ilyra_presenter.close()
+			_ilyra_presenter = null
+		_normal_rollout = campaign.id == "mara" and NormalMaraEntry.requested()
 		_development_overworld_factory = Callable()
 		_development_mara_water_gate = false
 		_normal_mara_fallback = ""
@@ -31,7 +35,29 @@ func _open_campaign(campaign: Dictionary) -> void:
 				_development_mara_water_gate = true
 			else:
 				push_warning(_normal_mara_fallback)
-	super._open_campaign(campaign)
+		if campaign.id == "ilyra" and NormalIlyraEntry.requested():
+			var presenter := NormalIlyraEntry.open_presenter(self)
+			if presenter:
+				_ilyra_presenter = presenter
+				_development_overworld_factory = presenter.choose_map
+			else:
+				push_warning("Ilyra map package could not open.")
+	super._prepare_campaign(campaign)
+	if get_tree().current_scene == self and campaign.id == "ilyra" and NormalIlyraEntry.requested() and not _ilyra_presenter \
+			and _campaign_warning.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+
+
+func _report_ilyra_fallback() -> void:
+	if _campaign_warning.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+		_show_campaign_warning()
+
+
+func _on_waypoint_arrived(id: String) -> void:
+	if _ilyra_presenter and _ilyra_presenter.on_local_arrival():
+		return
+	super._on_waypoint_arrived(id)
 
 
 func install_overworld_playtest() -> void:
@@ -59,6 +85,16 @@ func _build_sector(where: String) -> MarchesView:
 
 
 func _add_development_overworld() -> bool:
+	if _ilyra_presenter and _campaign_world.campaign_id() == "ilyra":
+		if not super._add_development_overworld():
+			_ilyra_presenter.close()
+			_ilyra_presenter = null
+			_development_overworld_factory = Callable()
+			if _campaign_warning.is_empty():
+				_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+			return false
+		_ilyra_presenter.on_mounted(_stage.get_child(0))
+		return true
 	if not super._add_development_overworld():
 		if _normal_rollout and _campaign_world.campaign_id() == "mara":
 			_report_mara_fallback("The current authored sector could not open.")
@@ -218,6 +254,10 @@ func _drop_prepared() -> void:
 
 
 func _show_title() -> void:
+	if _ilyra_presenter:
+		_ilyra_presenter.close()
+		_ilyra_presenter = null
+		_development_overworld_factory = Callable()
 	if _sector_token != 0:
 		_sector_transfer.cancel(_sector_token)
 	_sector_token = 0

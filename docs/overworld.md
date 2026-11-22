@@ -1,6 +1,6 @@
 # Vareth 3D overworld
 
-Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. The other five campaigns retain their existing presentation until their regions are authored and reviewed. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign also uses 3D from the ordinary title. Raska, Sova, Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
 
 For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
@@ -9,7 +9,7 @@ godot --headless --editor --import
 godot --path . --script res://game/overworld/marches_overworld_playtest.gd
 ```
 
-Choose New Game and Mara. Arrow keys, D-pad, or mouse select visible sites. Enter, controller A, or the contextual button confirms the selection. Escape or B cancels travel (returning to the previous committed site) or goes back when idle. Z, shoulder buttons, or the wheel switch between regional and landmark views. Ordinary campaign play uses the existing profile and saved waypoints; no migration is required.
+Choose New Game and Mara to see the opening and play Greyhollow. After the opening battle, or on Continue or Load, use the campaign map. Arrow keys, D-pad, or mouse select visible sites. Enter, controller A, or the contextual button confirms the selection. Escape or B cancels travel (returning to the previous committed site) or goes back when idle. Z, shoulder buttons, or the wheel switch between regional and landmark views. Ordinary campaign play uses the existing profile and saved waypoints; no migration is required.
 
 ## Western Marches corridor
 
@@ -22,6 +22,12 @@ After clearing Grain on Credit, select **Road to Moonwash** at Marches Crossing 
 The original Water Request opens after the Road arrival is saved. Finish or intentionally skip the dialogue, then follow the existing coast road to the Harbor's high land gate. Harbor's stock briefing and deployment still require separate confirmation. Returning to the Marches or revisiting the Coast does not replay an acknowledged dialogue. A failed arrival write leaves the party at the previous location; a failed dialogue acknowledgment leaves the gate in place and offers Retry Save.
 
 The references are the original [Xbox manual pp. 20–21](https://www.manualslib.com/manual/378779/Games-Microsoft-Xbox-Kingdom-Under-Fire-Heroes.html?page=11) and captured Heroes gameplay showing the [tilted route view](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=800s), [settlement interface](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=10560s), and [optional battle branch](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=10920s). Torn Asunder's terrain, buildings, user interface and navigation assets are original. The useful patterns are map-first composition, clear road/destination states, place-specific services and a separate briefing.
+
+## Ilyra’s Moonwash and Spanwater
+
+New Game opens Ilyra’s introductory scene and deploys her directly into **Hulls on Stone** at Moonwash Harbor. After the battle, the overworld connects the Harbor to the Moonwash scout camp. Her rescue clear opens the grounded route to Survey Shore and its existing **Two Shorelines** briefing. Her own Survey clear then opens a reversible sector transfer to Spanwater’s **south landing**. Selecting the berth and confirming deployment still opens the original Year Four evacuation. Transferring does not launch a mission or grant a victory. Ilyra’s Harbor result and saved waypoints are independent of Mara’s Upper Quay and Raska’s north-bank approach.
+
+The Linux native launch check exercises an old Harbor save, actual coast navigation, cold Load at the south berth, cargo persistence, and a separate Mara Upper Quay load. [Scoped visual audit](audits/ilyra-overworld-v1.json).
 
 ## Extension checks
 
