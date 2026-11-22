@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "scope": "Heavy Infantry winner-only Sword Cheer, V04a, exact AI Infantry Skirmish on #307. Keeps existing Heavy/regular death behavior; no Heavy Death Fall art or use in this file.",
+  "author": "Heavy Infantry animation and presentation author",
+  "reviewer": "Independent native character-art reviewer",
+  "reviewed_on": "2026-11-22",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Exact #307 control versus this candidate in Godot 4.7.2 native Compatibility, 1280×720, same Mesa software renderer and arena. 27 matched postdraw observations; true natural 64 victory with 12 winners; separate staged legal 256 case where the real resolver produced 128 live winners and 128 stock-hidden losses.",
+    "close_up": "Paired unobscured near winner frames for grounded boot, hand grip, raised sword, lowered shield and neighbors. Live reserve/first Heavy death/Retry matched stock pixels from the near lens. Supplemental whole field uses exactly the same camera on both variants.",
+    "reproduction": "After importing run tests/salute_exact_endpoints.gd and tests/salute_owner_edges.gd. In AI Infantry Skirmish choose Level 10 and nine Melee points for Heavy with one platoon per side, seek actual victory vs active reserve and Retry. Match both lenses; the 128 active salute workload is a deliberately prepared stock solver end, not a claim of full natural 256 replay.",
+    "measurements": "64 native scenes had submitted draw and primitive parity, including victory. Prepared maximum apex tick 73 parity, tick 74 near +0/-3,312 draws/primitives and tactical +1/-228; full-footprint tick 121 -1/-2,256. No material added draw work in the examined window; no sustained throughput or hardware FPS claim.",
+    "motion": "Authentic 64 winner group completes 36 salutes across three stock repeat beats; prepared 128 winners complete 384. Native frames confirm standing stance and high sword beat, not live guard idle or false victory; safe original hide/Retry and old attack/grounded recoveries unchanged."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "reason": "Preserved approved rig, mesh, armor, shield and sword. Actual 64 and prepared 128 active winner bodies were visually distinct and grounded with no new obvious grip, shield or neighboring gear issue in the reviewed native views."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "reason": "All original maps, mesh and import retained. Matched native control and candidate use exact stock light and camera."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "reason": "Genuine 64 winners show a readable sword raise; live reserves stay ready and original hidden Heavy losses do not appear. Near/ordinary tactical confirmation separately includes a full-field stress sample."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "reason": "One grounded salute joins old ready exactly. Real ongoing and winner ownership, repeat, draws, lethal visibility, and reset read as before except true victory presentation. No death clip or new effect."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "reason": "27 matched native checkpoints, natural 64 submission parity and only slight pose culling deltas in a bounded prepared 256 test with 128 active saluters. No natural late full max or sustained/hardware FPS inference."
+    }
+  },
+  "files": {
+    "assets/models/heavy_infantry/armor_normal.png": "6c3eea07d81ce11919eef676addf42432c2a867d6a7100977b4c62127e32a53e",
+    "assets/models/heavy_infantry/painted_base_color.png": "60cbc8aa025c94b39cb0ba85ed8ec9f258699f5ce38ab47bc4e568c61ff0887d",
+    "assets/models/heavy_infantry/painted_roughness_metallic.png": "ae260d19f2578f851e089866daceee9c063993212e1de5b7cbe9aafafe5f8d45",
+    "assets/models/human_heavy_infantry.glb": "63350c48e949cb18cf99f8df365d7d1a1c647dfb43a9ea8b68143a550e928add",
+    "assets/models/human_heavy_infantry.glb.import": "99c85163e36ae28bebafa84e99cc983a6545ef889994a93f0faa71ddaa148a95",
+    "assets/source/human_heavy_infantry_game.blend": "6f5693498482430860a3c87f19693dfc09fc67a2e3858c7a0e4de86cad14db22",
+    "game/combat/heavy_stagger_contact_modifier.gd": "04f0c7cad7cb09a9277c2c12f675b8bfff2081a334e5e03b49bf2db1273f7df5",
+    "game/combat/heavy_stagger_sole.gd": "8cefe933bf49ae5ce203e5262930ec913b25c587bc8c8d1e423611529fe43097",
+    "game/combat/infantry_skirmish.gd": "16f7300d5d3ae84ed163b4a1a429af62e032c5023ab41bc03d0725c2ede3507d",
+    "game/combat/infantry_skirmish_view.gd": "82b70c53e16b0f72f0c4173a7fad86d2232c213f1b799b91158d50abc5b1ed5f",
+    "tests/salute_exact_endpoints.gd": "7d4e3b5218021e2a4e5876bb138b296b147fda3382317b0ae61c7c36c1adf364",
+    "tests/salute_owner_edges.gd": "06f3e2d3fd5a04455c4ec519c90f64eb4979c78562aa70d81972a23a63ade523"
+  }
+}

@@ -35,12 +35,14 @@ const HEAVY_CLIPS := {
 	Battle.State.STAGGER: &"Hit Stagger",
 	Battle.State.KNOCKDOWN: &"Backward Knockdown",
 	Battle.State.GET_UP: &"Get Up",
+	Battle.State.CHEER: &"Sword Cheer",
 }
 const CLIPS_BY_TYPE := {
 	Catalog.HUMAN_INFANTRY: CLIPS,
 	Catalog.HUMAN_HEAVY_INFANTRY: HEAVY_CLIPS,
 }
 const HEAVY_RUN_CLIP_SPEED := 2.2
+const HEAVY_WIN_SALUTE_DISPLAY := 100
 
 signal updated
 
@@ -206,9 +208,17 @@ func _sync_models(delta: float) -> void:
 		_markers[index].visible = soldier.unit.is_alive()
 		# Only hold a downed pose when the rig actually has a knockdown animation.
 		var hold_down := soldier.state == Battle.State.DOWN and not _valid_clip(player, clips, Battle.State.KNOCKDOWN).is_empty()
-		if _displayed[index] != soldier.state:
-			_displayed[index] = soldier.state
+		var heavy := soldier.unit_type == Catalog.HUMAN_HEAVY_INFANTRY
+		# CHEER also serves reserves during live fighting. Only the declared winning
+		# side's existing terminal celebration queue owns this new Heavy salute.
+		var heavy_win_salute := heavy and soldier.state == Battle.State.CHEER and soldier.unit.is_alive() \
+			and battle.winner == soldier.team and soldier.victory_cheers > 0
+		var display_state := HEAVY_WIN_SALUTE_DISPLAY if heavy_win_salute else int(soldier.state)
+		if _displayed[index] != display_state:
+			_displayed[index] = display_state
 			var clip := _valid_clip(player, clips, soldier.state)
+			if heavy and soldier.state == Battle.State.CHEER and not heavy_win_salute:
+				clip = &""
 			# Heavy Infantry has no death clip; do not leave a standing corpse on the field.
 			model.visible = soldier.state != Battle.State.DEAD or not clip.is_empty()
 			if hold_down and soldier.unit_type == Catalog.HUMAN_HEAVY_INFANTRY:
