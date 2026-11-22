@@ -24,8 +24,9 @@ var _remaining := 0.0
 
 
 
-func _init(hp := PROTOTYPE_HP, base_damage := BASE_DAMAGE) -> void:
-	attacker = Unit.new(hp)
+func _init(hp := PROTOTYPE_HP, base_damage := BASE_DAMAGE, melee_invested := false) -> void:
+	var ratings := {Unit.Damage.MELEE: Unit.MIN_RATING + 1} if melee_invested else {}
+	attacker = Unit.new(hp, ratings)
 	_base_damage = base_damage
 
 

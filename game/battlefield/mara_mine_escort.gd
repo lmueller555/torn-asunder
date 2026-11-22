@@ -49,6 +49,7 @@ var objective := Escort.new()
 var encounter: Encounter
 var _launch_lead_level := 1
 var _launch_lead_melee_invested := false
+var _launch_shield_melee_invested := false
 var _heavy_replay_loadout := false
 var _pickup: Marker3D
 var _exit: Marker3D
@@ -99,6 +100,14 @@ func configure_campaign_lead_melee(invested: bool) -> void:
 	if not is_inside_tree() and not is_node_ready() and battlefield_scene \
 			and battlefield_scene.resource_path == CAMPAIGN_MINE:
 		_launch_lead_melee_invested = invested
+
+
+## Fixed roster slot. The saved investment is sampled before spawn and held
+## through local Retry, independent of this attempt's Infantry job.
+func configure_campaign_shield_melee(invested: bool) -> void:
+	if not is_inside_tree() and not is_node_ready() and battlefield_scene \
+			and battlefield_scene.resource_path == CAMPAIGN_MINE:
+		_launch_shield_melee_invested = invested
 
 
 ## Local proof hook only. A later deployment caller must authorize both a
@@ -542,7 +551,11 @@ func _reset_encounter() -> void:
 	var guard_marker := battlefield_marker(road_guard_spawn)
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
-	var infantry: InfantryAttack = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE) if _heavy_replay_loadout else null
+	var infantry: InfantryAttack
+	if _heavy_replay_loadout:
+		infantry = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE, _launch_shield_melee_invested)
+	elif _launch_shield_melee_invested:
+		infantry = InfantryAttack.new(InfantryAttack.PROTOTYPE_HP, InfantryAttack.BASE_DAMAGE, true)
 	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane,
 		_launch_lead_level, infantry, _launch_lead_melee_invested, _enemy_title()) \
 		if opposition_enabled and guard_marker else null

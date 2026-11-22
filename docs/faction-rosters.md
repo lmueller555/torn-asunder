@@ -96,6 +96,15 @@ These **provisional data** add no spells or special abilities, do not change the
 
 The missing values are rating points or training ranks to meet existing thresholds, not an XP, Battle Point, or funding quote. Reading a plan does not spend points, change a composition, make a promotion playable, or add a class to skirmish.
 
+
+### Campaign Barracks
+
+At the arrived Marches Camp or the story-unlocked Marches Road Camp, choose **Barracks** from the station menu. Shield Infantry and Archers are the Mine's actual subordinate assignments, independent of Mara and his officers. The job tree lists distinct requirements for the same slot's Heavy Infantry replay option and for practice/skirmish. Marches Longbows remain inspectable but not fieldable; the ranged slot does not spend points in this release.
+
+A genuine first Greyhollow rescue contributes 100 XP to the stable Shield Infantry slot once. Completing its reveal makes that slot's one earned point available. Preview **Melee Power 1 → 2**, then confirm to save it; closing the preview spends nothing. The point affects the same slot's combat proxy on Mine replays, with either regular or Heavy Infantry. It does not give the fixed Mine proxy level-driven HP, modify Mara or the Archers, or carry over to other missions. The one-time Formation Drill credit is separate. Gold and Battle Points are not costs for these actions. After buying the drill, select **Replay with Heavy Infantry** from the Mine briefing, not from a distant station. Local Retry retains the attempt; Confirm Deployment still chooses regular Shield Infantry. Old escort clears keep their previous drill eligibility without acquiring the rescue-only XP.
+
 From the five non-Human campaigns' **Camp Operations → Unit Progression**, choose **Preview Advancement**. It uses the current practice unit’s ratings and a sample rank you can raise or lower for all platoon skills. In Mara's **Unit Progression**, choose **Preview Longbows** beside **Back**. It uses the practice unit’s Ranged Power and a separate sample Formation Drill rank, even if you have not trained the Shield Infantry in the campaign. Locked gaps and sample eligibility are read-only. Opening a preview spends no points, sample ranks are not training purchases, and qualifying does not make an unimplemented unit playable. Mara's Heavy Infantry promotion and 3D model inspection remain separate practice actions.
 
 Run `godot --headless --script tests/faction_roster.gd`, `godot --headless --script tests/roster_advancement_inspection.gd`, and `godot --headless --script tests/roster_preview_menu.gd`.
+
+Station and live Barracks checks: `tests/mara_station_title.gd`, `tests/human_barracks.gd`, `tests/mara_shield_barracks_profile.gd`, and `tests/mara_barracks_campaign.gd`.
