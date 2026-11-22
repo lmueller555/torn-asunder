@@ -1,0 +1,151 @@
+extends Node3D
+## Private Raska arrival view. Exact shared exterior and no launchable battlefield here.
+const ASSETS := "res://assets/overworld/marches/"
+const ANCHOR := Vector3(0.0,36.0,-70.0)
+const GROVE_SAMPLES := [Vector3(5, -34, 4), Vector3(26, -22, 2), Vector3(69, -21, 7)]
+var arrival_ground:=Vector3.INF
+var ground: MeshInstance3D
+var mine: Node3D
+
+
+func _ready() -> void:
+	if not prepare_exact_exterior():
+		return
+	ground.create_trimesh_collision()
+	_detail()
+	_illuminate()
+	$Camera.position = ANCHOR + Vector3(55,54,66)
+	$Camera.look_at(ANCHOR + Vector3(0,5,-4))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_groves()
+
+
+func prepare_exact_exterior()->bool:
+	if ground and mine:
+		return arrival_ground.is_finite()
+	var corridor:=_mount("marches-corridor.glb",Vector3.ZERO)
+	mine=_mount("greyhollow-mine.glb",ANCHOR)
+	if not corridor or not mine:
+		return false
+	ground=corridor.find_child("MarchesGround",true,false) as MeshInstance3D
+	if not ground:
+		return false
+	for piece:MeshInstance3D in corridor.find_children("*","MeshInstance3D",true,false):
+		if piece!=ground:
+			piece.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	arrival_ground=_floor_from_mesh(Vector2(-34.,-46.))
+	return arrival_ground.is_finite() and mine.find_children("*","MeshInstance3D",true,false).size()>0
+
+func _floor_from_mesh(p:Vector2)->Vector3:
+	# Detached CPU ray against the actual imported ground triangles, not the height of a prop.
+	var transform_to_sector:=Transform3D.IDENTITY
+	var current:Node3D=ground
+	while current!=self:
+		transform_to_sector=current.transform*transform_to_sector
+		current=current.get_parent() as Node3D
+		if not current: return Vector3.INF
+	var query_top:=Vector3(p.x,260.,p.y)
+	var query_bottom:=Vector3(p.x,-110.,p.y)
+	var local_from_world:=transform_to_sector.affine_inverse()
+	var a:=local_from_world*query_top
+	var b:=local_from_world*query_bottom
+	var outline:=ground.mesh.get_faces()
+	var nearest:=Vector3.INF
+	for i in range(0,outline.size(),3):
+		var point:Variant=Geometry3D.segment_intersects_triangle(a,b,outline[i],outline[i+1],outline[i+2])
+		if point is Vector3:
+			var world:Vector3=transform_to_sector*point
+			if not nearest.is_finite() or world.y>nearest.y:
+				nearest=world
+	return nearest
+
+
+
+func _mount(name: String, at: Vector3) -> Node3D:
+	var packed := load(ASSETS+name) as PackedScene
+	if not packed:
+		return null
+	var view := packed.instantiate() as Node3D
+	if view:
+		add_child(view)
+		view.position=at
+	return view
+
+
+func _detail() -> void:
+	var mat := ground.get_active_material(0) as StandardMaterial3D
+	if not mat or not mat.albedo_texture:
+		return
+	var tile := preload("res://assets/overworld/marches/detail/marches-surface-detail.png").get_image()
+	if tile.is_compressed():
+		tile.decompress()
+	if not tile.has_mipmaps():
+		tile.generate_mipmaps()
+	var detail := ShaderMaterial.new()
+	detail.shader=preload("res://assets/overworld/marches/detail/marches_surface.gdshader")
+	detail.set_shader_parameter("macro_map",mat.albedo_texture)
+	detail.set_shader_parameter("detail_map",ImageTexture.create_from_image(tile))
+	detail.set_shader_parameter("detail_strength",.64)
+	detail.set_shader_parameter("silt_pixel_depth",.058)
+	detail.set_shader_parameter("rock_pixel_depth",.19)
+	ground.set_surface_override_material(0,detail)
+
+
+func _groves() -> void:
+	for entry: Vector3 in GROVE_SAMPLES:
+		var at:=_floor(entry.x,entry.y)
+		if at.is_finite():
+			var cover:=_mount("marches-copse-near.glb",at+Vector3.DOWN*.48)
+			if cover: _enable_native_tree_pigment(cover)
+
+
+func _floor(x:float,z:float) -> Vector3:
+	var q:=PhysicsRayQueryParameters3D.create(Vector3(x,260,z),Vector3(x,-100,z))
+	var hit:=get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.position if not hit.is_empty() else Vector3.INF
+
+
+func _illuminate() -> void:
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color=Color("#647e8c")
+	sky_mat.sky_horizon_color=Color("#bfb79c")
+	sky_mat.ground_bottom_color=Color("#525246")
+	sky_mat.ground_horizon_color=Color("#bfb79c")
+	var sky:=Sky.new()
+	sky.sky_material=sky_mat
+	var env := Environment.new()
+	env.background_mode=Environment.BG_SKY
+	env.sky=sky
+	env.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color=Color("#cccfbb")
+	env.ambient_light_energy=.67
+	env.fog_enabled=true
+	env.fog_density=.001
+	env.fog_light_color=Color("#b7bdad")
+	var w:=WorldEnvironment.new()
+	w.environment=env
+	add_child(w)
+	var light:=DirectionalLight3D.new()
+	light.rotation_degrees=Vector3(-51,-34,0)
+	light.light_color=Color("#ffe5b9")
+	light.light_energy=1.16
+	light.shadow_enabled=true
+	light.directional_shadow_max_distance=260
+	add_child(light)
+
+
+
+func _enable_native_tree_pigment(model:Node3D)->void:
+	var materials:Dictionary={}
+	for mesh:MeshInstance3D in model.find_children("*","MeshInstance3D",true,false):
+		for slot in mesh.get_surface_override_material_count():
+			var source:=mesh.get_active_material(slot) as StandardMaterial3D
+			if not source:
+				continue
+			var key:=source.get_instance_id()
+			if not materials.has(key):
+				var native_color:=source.duplicate() as StandardMaterial3D
+				native_color.vertex_color_use_as_albedo=true
+				materials[key]=native_color
+			mesh.set_surface_override_material(slot,materials[key])
