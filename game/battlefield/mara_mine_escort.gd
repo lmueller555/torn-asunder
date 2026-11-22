@@ -125,9 +125,13 @@ func _ready() -> void:
 		_special_pad_down = GameplayBindings.axis(_input_device, JOY_AXIS_TRIGGER_RIGHT) >= SPECIAL_PRESS
 	_bind_objective()
 	_restart_button.pressed.connect(restart_mission)
+	if _mission_hud:
+		$ObjectiveHUD.hide()
+		$CombatHUD.hide()
 	_build_combat_visuals()
 	_reset_encounter()
 	_refresh_objective_view(hero_world_position())
+	_present_mission_hud()
 
 
 func _bind_objective() -> void:
@@ -154,6 +158,7 @@ func _physics_process(delta: float) -> void:
 	var feet := hero_world_position()
 	_advance_objective(feet, delta)
 	_refresh_objective_view(feet)
+	_present_mission_hud()
 	if _finished():
 		if encounter:
 			_refresh_sundering_readout(team_battle_points_frame())
@@ -427,6 +432,7 @@ func restart_mission() -> void:
 	_sync_infantry_animation(true)
 	_reset_encounter()
 	_refresh_objective_view(hero_world_position())
+	_present_mission_hud()
 
 
 func _reset_objective() -> void:
@@ -610,6 +616,8 @@ func _refresh_combat_view() -> void:
 		"TARGET: " if target_selected else "", _enemy_title().to_upper(), ceili(encounter.enemy.hp),
 	]
 	_enemy_status.modulate = Color("#ff9e8a") if _enemy_warning.visible else Color.WHITE
+	if _mission_hud:
+		_enemy_status.hide()
 	var attack_phase := encounter.defense.attack_phase
 	var special := encounter.defense.attack_kind == Attack.Attack.SUNDERING_STRIKE
 	match attack_phase:
@@ -664,6 +672,61 @@ func _refresh_combat_view() -> void:
 	else:
 		_combat_tell.text = "%s %d / %d HP" % [_enemy_title(), ceili(encounter.enemy.hp), roundi(encounter.enemy.max_hp)]
 
+
+
+func _mission_hud_state() -> Dictionary:
+	var state := super._mission_hud_state()
+	if not _goal_label.text.is_empty() and String(state.objective).is_empty():
+		state.objective = _goal_label.text
+		state.objective_visible = true
+	if not _instructions_label.text.is_empty() and String(state.context).is_empty():
+		state.context = _instructions_label.text
+	if not encounter:
+		return state
+	var bp := team_battle_points_frame()
+	state.bp = bp.balance
+	state.bp_max = bp.capacity
+	state.hero_hp = encounter.hero.hp
+	state.hero_max_hp = encounter.hero.max_hp
+	var infantry := encounter.infantry_attack.attacker
+	var archers := encounter.archer_attack.attacker
+	var hero := {
+		"name": _mission_hero_name if not _mission_hero_name.is_empty() else "Mara Halden",
+		"level": bp.lead_level,
+		"hp": encounter.hero.hp,
+		"max_hp": encounter.hero.max_hp,
+		"selected": selected_index == Battle.LEAD_INDEX,
+		"engaged": battle.lead_engaged,
+	}
+	state.roster = [
+		hero,
+		_mission_hud_entry(InfantryAttack.INFANTRY_INDEX, infantry.hp, infantry.max_hp),
+		_mission_hud_entry(ArcherAttack.ARCHER_INDEX, archers.hp, archers.max_hp),
+	]
+	var enemy_anchor := _mission_hud_enemy_anchor()
+	if enemy_anchor.is_finite():
+		state.enemy = {"name": _enemy_title(), "level": 1, "hp": encounter.enemy.hp, "max_hp": encounter.enemy.max_hp}
+		state.enemy_anchor = enemy_anchor
+	if _finished():
+		state.feedback = _instructions_label.text
+	elif _enemy_warning.visible:
+		state.feedback = _combat_tell.text
+	elif not encounter.active_feedback().is_empty():
+		state.feedback = encounter.active_feedback()
+	return state
+
+
+func _mission_hud_enemy_contact() -> bool:
+	return _mission_hud_enemy_anchor().is_finite()
+
+
+func _mission_hud_enemy_anchor() -> Vector2:
+	if not encounter or not encounter.enemy.is_alive() or not _enemy_visual.visible \
+			or not battle.lead_engaged or not hero_combat_active():
+		return Vector2.INF
+	if _terrain and not _terrain.clear_melee_contact(battle.hero_position, encounter.enemy_position):
+		return Vector2.INF
+	return _mission_hud_project(_enemy_visual.to_global(Vector3.UP * 1.12))
 
 
 func _enemy_reserve_readout() -> String:

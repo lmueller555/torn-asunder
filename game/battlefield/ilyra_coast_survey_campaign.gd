@@ -5,6 +5,10 @@ extends "res://game/battlefield/command_harness.gd"
 signal mission_cleared(result: StringName)
 
 const Survey := preload("res://game/battlefield/ilyra_coast_survey.gd")
+const Chart := preload("res://game/ui/authored_mission_map.gd")
+const COAST_MAP_PAINT := {"road": ["Geometry/Coast/LongCoastLane", "Geometry/Coast/HeadlandInlandTrack",
+	"Geometry/Headlands/HighDeckRoad"],
+	"water": ["Geometry/Sea/WaterSurface", "Geometry/Shoal/ShoalWaterTint"]}
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const CHART_CIRCULATED := &"chart_circulated"
 const BEACH := Survey.SignalSite.BEACH
@@ -66,6 +70,10 @@ var _beach_billboards: Array[RelayBillboard] = []
 var _beach_billboard_opacity := -1.0
 var _headland_billboards: Array[RelayBillboard] = []
 var _headland_billboard_opacity := -1.0
+var _map_exploration := Chart.Exploration.new()
+var _map_orders: Control
+var _chart_source: Node3D
+var _chart_bounds := Rect2()
 
 @onready var _chart: Label = $ObjectiveHUD/Panel/Margin/Readout/Chart
 @onready var _shore: Label = $ObjectiveHUD/Panel/Margin/Readout/Shore
@@ -160,20 +168,34 @@ func _sync_view() -> void:
 	super._sync_view()
 	if not _minimap:
 		return # The registered scene opts in with a passive HUD node.
-	var active := command_view and objective.phase not in [Survey.Phase.SUCCEEDED, Survey.Phase.FAILED]
+	if not _minimap.tactical_style and tactical_minimap_enabled:
+		var title := _minimap_panel.get_node(^"Margin/Readout/Title") as Label
+		var legend := _minimap_panel.get_node(^"Margin/Readout/Key") as Label
+		_minimap.custom_minimum_size = Vector2.ZERO
+		_minimap.configure_tactical_panel(_minimap_panel, [title, legend])
+		_map_orders = Chart.bind_existing_controls(self, _minimap)
+	var active := (command_view or tactical_minimap_enabled) and objective.phase not in [Survey.Phase.SUCCEEDED, Survey.Phase.FAILED]
 	if _minimap_panel.visible != active:
 		_minimap_panel.visible = active
 		if not active:
 			_minimap.show_frame(null)
 	if not active:
 		return
+	if _minimap.tactical_style and (_chart_source != _field or _chart_bounds != battle.bounds):
+		_chart_source = _field
+		_chart_bounds = battle.bounds
+		_minimap.terrain_texture = Chart.build_terrain(self, COAST_MAP_PAINT)
 	_minimap.set_field_bounds(battle.bounds)
 	var frame := Minimap.Frame.new()
 	frame.hero = Minimap.Marker.new(&"ilyra", battle.hero_position, battle.hero_heading)
+	var friends := PackedVector2Array([battle.hero_position])
 	var detachment := battle.formations[0]
 	if detachment.can_receive_orders():
 		frame.allies.append(Minimap.Marker.new(&"shore_detachment", detachment.position, detachment.heading))
-		frame.selected_ally = &"shore_detachment"
+		if selected_index == 0:
+			frame.selected_ally = &"shore_detachment"
+		Chart.add_order_route(frame, self, 0, &"shore_detachment")
+		friends.append(detachment.position)
 	for index in _reading_points.size():
 		if objective.has_reading((index + 1) as Survey.Reading):
 			_add_map_pin(frame, READING_PINS[index], _reading_points[index], Minimap.ObjectiveKind.PICKUP)
@@ -183,6 +205,9 @@ func _sync_view() -> void:
 		for index in _signal_points.size():
 			_add_map_pin(frame, RELAY_PINS[index], _signal_points[index], Minimap.ObjectiveKind.EXIT)
 	frame.camera_footprint = _minimap_footprint()
+	if _map_orders:
+		frame.command_cursor = _map_orders.call(&"command_cursor")
+		frame.explored_areas = _map_exploration.update(battle, friends)
 	_minimap.show_frame(frame)
 
 

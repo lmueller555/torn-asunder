@@ -15,6 +15,10 @@ const LeadAction := preload("res://game/battlefield/mara_lead_action_camera.gd")
 const ShieldFollow := preload("res://game/battlefield/mara_shield_follow_camera.gd")
 const RouteOverlay := preload("res://game/battlefield/minimap_route_overlay.gd")
 
+const Chart := preload("res://game/ui/authored_mission_map.gd")
+const NORTH_UP_MINE := preload("res://game/battlefield/greyhollow_tactical_map.res")
+const EXACT_MINE_FIELD := "res://game/battlefields/year_one_mine_campaign.tscn"
+
 const SIGHT_RANGE := 48.0
 const GROUND := Plane(Vector3.UP, 0.0)
 const SOLID_MASK := 1
@@ -51,6 +55,8 @@ var _map_axes: Dictionary[int, float] = {}
 var _captured_buttons: Dictionary[int, bool] = {}
 var _captured_keys: Dictionary[int, bool] = {}
 var _legend := ""
+var _map_expanded := false
+var _map_exploration := Chart.Exploration.new()
 
 @onready var map: Minimap = $Margin/Readout/Map
 @onready var _status: Label = $Margin/Readout/Status
@@ -59,9 +65,15 @@ var _legend := ""
 
 
 func _ready() -> void:
+	if _mission.tactical_minimap_enabled:
+		map.configure_tactical_panel(self, [_status, _key])
+		map.tooltip_text = "In command: N / LT + D-pad Up to open. Right-click / A sets a waypoint; Ctrl + right-click / RB appends. Click a platoon / X to switch."
+		if _mission.battlefield_scene and _mission.battlefield_scene.resource_path == EXACT_MINE_FIELD:
+			map.terrain_texture = NORTH_UP_MINE
 	map.right_click_to_move = true
-	map.point_requested.connect(_focus_map_point)
+	map.point_requested.connect(_pick_map_point)
 	map.move_requested.connect(_move_from_map)
+	map.append_requested.connect(_append_map_point)
 	_legend = _key.text
 	# A deployment can be instantiated and freed without entering the tree.
 	# Only allocate Controls once their parent can own them.
@@ -78,6 +90,18 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_controller_connection)
 
 
+func _pick_map_point(point: Vector2) -> void:
+	if map.tactical_style:
+		if not (_map_expanded or _draft_battle) or Chart.select_platoon_at(_mission, map, point):
+			return
+	_focus_map_point(point)
+
+
+func _append_map_point(point: Vector2) -> void:
+	if map.tactical_style and (_map_expanded or _draft_battle) and _can_open_controller():
+		_append_waypoint(point)
+
+
 func _focus_map_point(point: Vector2) -> void:
 	if not _mission.command_view or not _mission._sector:
 		return
@@ -89,6 +113,17 @@ func _focus_map_point(point: Vector2) -> void:
 
 
 func _move_from_map(point: Vector2) -> bool:
+	if map.tactical_style:
+		if not (_map_expanded or _draft_battle) or not _can_open_controller():
+			return false
+		_sending_route_order = true
+		var result := _routes.issue(_route_battle, _mission.selected_index, point, false,
+			func(at: Vector2) -> bool: return Chart.can_plot(_mission, at))
+		_sending_route_order = false
+		if result == Queue.Result.ACCEPTED:
+			_focus_map_point(point)
+			return true
+		return false
 	if not _mission.command_view or not _mission._terrain or not _mission._sector:
 		return false
 	# This is the existing mouse rule, now also used for confirmed controller
@@ -105,6 +140,16 @@ func _move_from_map(point: Vector2) -> bool:
 func _input(event: InputEvent) -> void:
 	event = GameplayBindings.translate(event)
 	if not _mission.is_node_ready():
+		return
+	if map.tactical_style and event is InputEventKey and event.physical_keycode == KEY_SHIFT \
+			and not event.pressed and not _mission._l2_down:
+		_map_expanded = false
+		_refresh_controller_overlay()
+	if map.tactical_style and visible and event is InputEventKey and _can_open_controller() \
+			and Minimap.is_tactical_toggle(event):
+		_map_expanded = not _map_expanded
+		_refresh_controller_overlay()
+		get_viewport().set_input_as_handled()
 		return
 	_bind_route_battle()
 	if _shield_follow.active and _input_leaves_follow(event):
@@ -160,12 +205,20 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 			_append_waypoint(_mission.cursor)
 			return true
 		return false
+	# The campaign shell, not map aim, owns Pause and Options.
+	if map.tactical_style and button not in [JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_RIGHT_SHOULDER,
+			JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]:
+		return false
 	if event.pressed:
 		_captured_buttons[button] = true
 		match button:
 			JOY_BUTTON_A: _confirm_controller()
 			JOY_BUTTON_RIGHT_SHOULDER: _append_minimap_waypoint()
 			JOY_BUTTON_B: _close_controller()
+			JOY_BUTTON_X:
+				if map.tactical_style:
+					_draft_index = posmod(_mission.selected_index + 2, _mission.battle.formations.size() + 1) - 1
+					_mission._select_relative(1)
 			JOY_BUTTON_DPAD_UP: _step_draft(Vector2.UP * CURSOR_NUDGE)
 			JOY_BUTTON_DPAD_DOWN: _step_draft(Vector2.DOWN * CURSOR_NUDGE)
 			JOY_BUTTON_DPAD_LEFT: _step_draft(Vector2.LEFT * CURSOR_NUDGE)
@@ -215,6 +268,8 @@ func _capture_key(event: InputEventKey) -> bool:
 		if not event.pressed and not _mission._l2_down:
 			_close_controller()
 		return false
+	if map.tactical_style and key == KEY_ESCAPE:
+		return false
 	if event.pressed and not event.echo:
 		_captured_keys[key] = true
 		match key:
@@ -224,7 +279,8 @@ func _capture_key(event: InputEventKey) -> bool:
 
 
 func _can_open_controller() -> bool:
-	return _mission.command_view and not _mission._finished() \
+	return _mission.command_view and not _mission._finished() and not get_tree().paused \
+		and _mission.battle.is_valid_command_index(_mission.selected_index) \
 		and _mission.battle.formation_at(_mission.selected_index).can_receive_orders()
 
 
@@ -314,6 +370,8 @@ func _append_waypoint(point: Vector2) -> void:
 
 
 func _waypoint_fits(point: Vector2) -> bool:
+	if map.tactical_style:
+		return Chart.can_plot(_mission, point)
 	if not _mission.battle.clamp_to_field(point).is_equal_approx(point) or not _mission._terrain:
 		return false
 	if _mission._terrain.destination_from_ray(Vector3(point.x, 30.0, point.y), Vector3(point.x, -12.0, point.y)) == null:
@@ -376,7 +434,7 @@ func _refresh_selected_route() -> void:
 	# controller draft and enemy intelligence are separate from accepted orders.
 	var index := _mission.selected_index
 	var pending := pending_waypoints(index)
-	_route_overlay.visible = _can_open_controller() and not pending.is_empty()
+	_route_overlay.visible = not map.tactical_style and _can_open_controller() and not pending.is_empty()
 	if not _route_overlay.visible:
 		_route_overlay.clear_route()
 		return
@@ -388,8 +446,10 @@ func _refresh_selected_route() -> void:
 
 
 func _refresh_controller_overlay() -> void:
+	if map.tactical_style:
+		map.set_tactical_expanded(_map_expanded or _draft_battle != null)
 	_refresh_selected_route()
-	_reticle.visible = _draft_battle != null
+	_reticle.visible = not map.tactical_style and _draft_battle != null
 	if _draft_battle:
 		_reticle.pixel = map.project(_draft_point)
 		_reticle.queue_redraw()
@@ -460,20 +520,37 @@ func refresh() -> void:
 		_close_controller()
 	if map.click_to_focus != _mission.command_view:
 		map.click_to_focus = _mission.command_view
-		map.tooltip_text = "Left click: inspect sector. Right click: move the selected platoon." if _mission.command_view else ""
+		if not map.tactical_style:
+			map.tooltip_text = "Left click: inspect sector. Right click: move the selected platoon." if _mission.command_view else ""
 	var battle := _mission.battle
 	var objective := _mission.objective
 	var encounter := _mission.encounter
+	if map.tactical_style:
+		# The shared upper-right target card takes priority only in real direct
+		# combat, using the same live enemy + hero combat rule as its presenter.
+		var shows_target := _mission.hero_combat_active() and encounter != null and encounter.enemy.is_alive()
+		if shows_target and _mission.has_method(&"_mission_hud_enemy_contact"):
+			shows_target = _mission.call(&"_mission_hud_enemy_contact") == true
+		visible = not shows_target
+		if not _mission.command_view:
+			_map_expanded = false
+		if not map.terrain_texture:
+			map.terrain_texture = Chart.build_terrain(_mission)
 	map.set_field_bounds(battle.bounds)
 	var frame := Minimap.Frame.new()
 	if not encounter or encounter.hero.is_alive():
 		frame.hero = Minimap.Marker.new(&"Mara", battle.hero_position, battle.hero_heading)
+		frame.selected_hero = _mission.selected_index == Battle.LEAD_INDEX
+		Chart.add_order_route(frame, _mission, Battle.LEAD_INDEX, &"Mara")
+	var friends := PackedVector2Array([battle.hero_position])
 	for index in range(battle.formations.size()):
 		var formation := battle.formations[index]
 		if formation.order == Battle.Order.DEFEATED:
 			continue
 		var id := StringName(formation.title)
 		frame.allies.append(Minimap.Marker.new(id, formation.position, formation.heading))
+		Chart.add_order_route(frame, _mission, index, id)
+		friends.append(formation.position)
 		if index == _mission.selected_index:
 			frame.selected_ally = id
 	if _mission.command_view:
@@ -503,6 +580,12 @@ func refresh() -> void:
 			if encounter.enemy_phase != Encounter.EnemyPhase.AT_RESERVE and _spot_guard(battle, encounter):
 				frame.visible_enemies.append(Minimap.Marker.new(&"Orc guard", encounter.enemy_position))
 				_status.text = "EAST PASS  /  ORC IN SIGHT"
+	if map.tactical_style:
+		frame.explored_areas = _map_exploration.update(battle, friends)
+		if _draft_battle:
+			frame.command_cursor = _draft_point
+		elif _map_expanded:
+			frame.command_cursor = map.unproject(map.get_local_mouse_position())
 	map.show_frame(frame)
 	_refresh_controller_overlay()
 

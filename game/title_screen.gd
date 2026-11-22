@@ -2,6 +2,8 @@ extends Control
 
 const GameplayBindings := preload("res://game/settings/control_bindings.gd")
 const PauseMenu := preload("res://game/settings/pause_menu.gd")
+const ObjectiveFeed := preload("res://game/ui/authored_objective_feed.gd")
+const AuthoredMissionMap := preload("res://game/ui/authored_mission_map.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const CampaignMissions := preload("res://game/campaign_missions.gd")
 const CampaignDeployments := preload("res://game/campaign_deployments.gd")
@@ -616,15 +618,22 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
 		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
 		mission.configure_campaign_lead_melee(confirmed_clears.has(mission_id) and _profile.mara_lead_melee_invested())
+	if mission.has_method(&"enable_tactical_minimap"):
+		mission.call(&"enable_tactical_minimap")
+	var authored_hud := mission.has_method(&"enable_shared_mission_hud")
+	if authored_hud:
+		mission.set("_mission_hero_name", _active_campaign.name)
+		mission.set("_mission_lead_level", LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
+		mission.call(&"enable_shared_mission_hud")
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
 		mission.connect(&"mission_cleared", _on_campaign_result.bind(mission, campaign_id, mission_id))
 	else:
 		mission.connect(&"mission_finished", _on_campaign_battle_finished.bind(mission, campaign_id, mission_id))
 	_stage.add_child(mission)
-	var pause := _button("Pause", Rect2(1079, 735, 330, 48), _pause_game)
-	pause.name = "PauseBattle"
-	pause.focus_mode = Control.FOCUS_NONE
+	if authored_hud:
+		mission.set("_mission_objective_feed", ObjectiveFeed.mount(mission, mission_id))
+	AuthoredMissionMap.mount(mission)
 	for hint in mission.find_children("*", "Label", true, false):
 		if hint.is_in_group("gameplay_tutorial"):
 			hint.set_meta(&"tutorial_hidden", true)
