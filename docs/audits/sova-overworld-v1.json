@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-22",
+  "scope": "Sova’s Cairnspine Camp, Assembly court and adjacent pines, and closed Vault doorstep at both authored overworld cameras. Includes the intact stock Greyhollow mine in its Sova framing. Not tactical assets, optional missions, unauthored geography, or hardware performance.",
+  "author": "Torn Asunder Cairnspine environment and title integration author",
+  "reviewer": "Independent Torn Asunder overworld release reviewer",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility, 960 × 540 ordinary Continue on separate legal Sova saves at Camp, Assembly and Vault. All six frames use the shipped shared cursor.",
+    "close_up": "Weathered field canopies with rigging and worn ground pads, a fitted open civic court, and a recessed stone Vault leaf legible in the real ridge shadow.",
+    "motion": "The local army follows measured curves. The Mine–Assembly crossing is a named save-first transfer, not a road through unbuilt terrain. The handover and Vault use the original story state.",
+    "reproduction": "Run tests/sova_overworld_normal_title.gd after import. For native frames set SOVA_NORMAL_CAPTURE_STATION to camp, assembly or vault in a 960 × 540 window running tests/sova_overworld_normal_capture.gd with isolated user data.",
+    "measurements": "199.871 m opening curved route, 1,203 native hits, 348 camp contacts. Assembly-to-road 286.140 m with 1,722 hits; road-to-Vault 40.013 m with 246 hits. 205 fitted court and 302 exact Vault footings. This is not a hardware performance benchmark."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Canvas shelter tiers, open civic court and segmented Vault entrance have distinct, grounded silhouettes."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Worn paving and cap courses shape the court. Mineral reflectance and oblique composition reveal the closed Vault leaf without altered lights or terrain shadows."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Real labels have visible station anchors and leave the distinctive landmark shapes readable at both authored lenses."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Measured routes preserve the proper arrivals, return, and cold load. Handover and Vault deployments remain separate from travel."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Original geometry and existing world IDs remain authoritative. Non-colliding court and entry details introduce no tactical outcome or new passage, and ordinary title fixtures cover the relevant saved states."
+    }
+  },
+  "files": {
+    "docs/audits/evidence/sova-assembly-close.jpg": "b45961430c6c85d1db1740ab759ee3bc2848727eaa1a64bc154ef28dc712b6ca",
+    "docs/audits/evidence/sova-assembly-regional.jpg": "158b14679dc50587321842c32dccc60c872f1726f7c15f7fffcd9323a952368e",
+    "docs/audits/evidence/sova-camp-close.jpg": "738ec3c6b41d9eeb1fc0876c1b3d33e3eff8c7cc9e2dd3253b10f3862872be46",
+    "docs/audits/evidence/sova-camp-regional.jpg": "106aac5521ba4b11268ed4ad45197d371f98c269e1730c5c9e78cf7bf6060732",
+    "docs/audits/evidence/sova-vault-close.jpg": "f50a92b48d08c93976418dfe6c6e5f3192a59162c22709c052b08852e2af20bb",
+    "docs/audits/evidence/sova-vault-regional.jpg": "072c61957d7cb552ef95432045cec997200f47db7a80a3612da9029213480d7e",
+    "game/overworld/cairnspine/pass_ground.gdshader": "a074d54f7e09491f2f4c1a4447b5c589b6f6741cb2cb53cc15a5483be0fd7a63",
+    "game/overworld/cairnspine/pass_relief.gd": "4b26c8704e74d6e9e2a92f3410f02836591c3852fbc8b3e3f04daa4d7b598048",
+    "game/overworld/cairnspine/sova_assembly_court.gd": "9ac9ebab402c640b658b68b74ab4f58a55895e0271c87582225cf472354e0ea7",
+    "game/overworld/cairnspine/sova_assembly_map.gd": "8f3a46cd7d25eb1b795dfe0b4c6efb40b3da0e037444f33cba6db8e04e19e939",
+    "game/overworld/cairnspine/sova_assembly_relief.gd": "61c5ad31bb8b6033f6fdb84a6e54c738a07e63f845e4248341a91277410db748",
+    "game/overworld/cairnspine/sova_assembly_renderer.gd": "c934c359c91496eb342e428903f1f27cc76e98a7fc3340525670416944a5f9b4",
+    "game/overworld/cairnspine/sova_assembly_renderer.tscn": "51f4c68fe7d51a75a8654df6411b5d06e960130c05dcf23a7ce26a5e254f0d63",
+    "game/overworld/cairnspine/sova_assembly_stone.gdshader": "02814a78a0805a8b7db5d0dcb1baf0a5fc2f64ca9ff7a31b1d860b0660f4b72d",
+    "game/overworld/cairnspine/sova_normal_presenter.gd": "4e3e5c7b3481fd519d2731173b842181759b5e87a0afd61827f12a65b4c246e6",
+    "game/overworld/cairnspine/sova_opener_camp.gd": "56c077195274d597de4bf5e87afa149869e9adafe7da1c8780066536838b4faf",
+    "game/overworld/cairnspine/sova_opener_camp.gdshader": "ad368b5e1f21cc7fef8b6a3baaa629341def0fd5402fafb5a27dd4d28c1581ac",
+    "game/overworld/cairnspine/sova_opener_ground.gdshader": "d0dcb7138a7b6af2c8b92f207f1ee510a22f8429458fb19c898a308c0616ef45",
+    "game/overworld/cairnspine/sova_opener_map.gd": "490db40fcdeae826430fe94477b386411a0952b5baa6b743f2ff3186d9e8d207",
+    "game/overworld/cairnspine/sova_opener_renderer.gd": "25d3be719cb49c279a90533a5e49e58e42e319b24021a6443e53f2264a88185b",
+    "game/overworld/cairnspine/sova_opener_renderer.tscn": "681462f01e1953b24fb205d6586a3f57f3a7b50134dfaac05b7933d6c37242df",
+    "game/overworld/cairnspine/sova_opener_route.gd": "7237d83704776ac33bea9dcf253525495fe0d4598a265674ebf788560f71249e",
+    "game/overworld/cairnspine/sova_vault_apron.gdshader": "928290009ac3d04e891cf3c28eff91e015519957f6d1027a74835f59478344d2",
+    "game/overworld/cairnspine/sova_vault_map.gd": "1255dbb99840fff6340d26e04376b2fabb094757c5ec4a3540f36d460b76a9cc",
+    "game/overworld/cairnspine/sova_vault_relief.gd": "dbc1bfae37fc9ab8e6ff0c0a49593bf430e15cfcb8a80bf084c16eea7bcb0c51",
+    "game/overworld/cairnspine/sova_vault_renderer.gd": "7a0115bba369e745a6d52333234436c3ae3c840047bfe7e0ef0b20889b24420b",
+    "game/overworld/cairnspine/sova_vault_renderer.tscn": "068b2e0b0db84c8ffc1497405f5007b5e63d3e6a6bcbe4483587a58815d0fe34",
+    "game/overworld/cairnspine/sova_vault_routes.gd": "fd4077d4474b6f81c72e443abfa7110bc08073e6ae0ee845d92a3a13eb256387",
+    "game/overworld/cairnspine/sova_vault_stone.gdshader": "8639abf770eea96e6a8c0e50b623cc0d2a959868e1b7ddd1311f0f8f3e0d35e8",
+    "game/overworld/cairnspine/sova_vault_threshold.gd": "3ebf138190a48bd0ae1ee040e0afdf941ef46b81f630495153708129231094ff"
+  }
+}
