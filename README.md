@@ -24,11 +24,13 @@ For the other side of Greyhollow, choose Neris in the Campaign Vault. The Dryad 
 
 For the other leaders, see the [campaign implementation index](docs/campaigns/implementation-index.md) for the current overworld routes and which missions still require standalone development playtests. **Continue** and **Load** restore the last arrived waypoint and mission progress for that campaign, independent of the other leaders. Current playtests can include [unapproved placeholder art](docs/visual-audit-inventory.md). Settings saves fullscreen and reduced-motion preferences.
 
-Open **Combat Drills** from Camp Operations or a leader's practice briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
+In Mara’s campaign, arrive at **Marches Camp** or the **Marches Road Camp** and confirm the current marker to open the station menu. The Road Camp opens after the Greyhollow rescue and reveal. **Training Grounds** contains practice options, and **Main Gate** returns you to the same map position. The Barracks preview does not change your campaign army.
+
+Open **Combat Drills** from Training Grounds or a leader's practice briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 
 Open **Unit Progression** to award XP to a practice unit, inspect its HP growth, and spend the points it earns.
 
-After the first Mine clear in Mara’s campaign, return to **Marches Camp → Camp Operations → Lead Melee Training** to optionally raise the lead’s Melee Power from 1 to 2 on Mine replays. This one-time investment is separate from Shield Infantry Drill and does not spend practice points or change the BP pool.
+After the first Mine clear in Mara’s campaign, return to **Marches Camp → Operations → Lead Melee Training** to optionally raise the lead’s Melee Power from 1 to 2 on Mine replays. This one-time investment is separate from Shield Infantry Drill and does not spend practice points or change the BP pool.
 
 In King Mara Halden’s **Unit Progression** practice session, raise Melee Power to 10 to try Heavy Infantry without changing your campaign save. **Inspect 3D Model** opens the current practice unit in the studio. Select **Face** for a close-up. The editable Blender source is in `assets/source`, and Godot uses the exported GLBs in `assets/models`.
 

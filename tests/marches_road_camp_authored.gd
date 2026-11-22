@@ -77,7 +77,8 @@ func _exercise(profile: Profile) -> bool:
 	if not map.select_waypoint(Camp.ROAD_CAMP):
 		return _fail("The available forward camp was not selectable.")
 	map.confirm_selection()
-	if not map.is_at_forward_camp(Camp.ROAD_CAMP) or _title._campaign_world.current_waypoint_id() != Camp.ROAD \
+	if _title._page != Title.Page.WORLD_MAP or not map.is_at_forward_camp(Camp.ROAD_CAMP) \
+			or _title._campaign_world.current_waypoint_id() != Camp.ROAD \
 			or not story_arrivals.is_empty() or FileAccess.get_file_as_string(_path) != save:
 		return _fail("Optional camp arrival must keep the canonical Road and leave the profile untouched.")
 	if not map.select_waypoint(MINE):
@@ -88,12 +89,18 @@ func _exercise(profile: Profile) -> bool:
 	if not map.select_waypoint(Camp.ROAD_CAMP):
 		return _fail("Expected to reselect the current camp.")
 	map.confirm_selection()
-	if _title._page != Title.Page.BRIEFING or _button("Read Dispatch") or _button("Confirm Deployment") \
-			or not _button("Combat Drills") or not _button("Unit Progression"):
-		return _fail("Forward camp should expose only its existing services.")
-	if not _press("Unit Progression") or _title._page != Title.Page.UNIT_PROGRESSION or not _press("Back") \
-			or not _button("Combat Drills") or not _press("Back") or not _map().is_at_forward_camp(Camp.ROAD_CAMP):
-		return _fail("Back through a camp service must return to the same local camp.")
+	if _title._page != Title.Page.STATION or _button("Operations") or _button("Read Dispatch") \
+			or _button("Confirm Deployment") or not _button("Barracks") or not _button("Training Grounds"):
+		return _fail("Forward camp must expose its station services without inventing Operations.")
+	if not _press("Barracks") or _title._page != Title.Page.BARRACKS or not _press("Back") \
+			or _title._page != Title.Page.STATION:
+		return _fail("Forward camp Barracks must return to the same station.")
+	if not _press("Training Grounds") or _title._page != Title.Page.STATION_TRAINING \
+			or not _button("Combat Drills") or not _press("Unit Progression") or _title._page != Title.Page.UNIT_PROGRESSION \
+			or not _press("Back") or _title._page != Title.Page.STATION_TRAINING or not _press("Back") \
+			or _title._page != Title.Page.STATION or not _press("Main Gate") or _map() != map \
+			or not _map().is_at_forward_camp(Camp.ROAD_CAMP):
+		return _fail("Back through camp services and Main Gate must return to the same local camp.")
 	map = _map()
 	if not map.select_waypoint(Camp.ROAD):
 		return _fail("The spur lost its canonical return edge.")

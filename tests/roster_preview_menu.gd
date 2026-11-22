@@ -182,19 +182,23 @@ func _check_marches_longbows() -> bool:
 
 
 func _open_practice(campaign_id: String) -> bool:
+	# This fixture deliberately uses the CampaignMap fallback for all leaders.
+	ProjectSettings.set_setting(Title.NormalRaskaEntry.SWITCH, false)
 	CampaignFlow.resume_at_map(_title, campaign_id)
-	return _press("ConfirmTravel") and _press("Unit Progression")
+	return _press("ConfirmTravel") and (campaign_id != "mara" or _press("Training Grounds")) and _press("Unit Progression")
 
 
 func _return_title() -> bool:
-	_key(KEY_ESCAPE) # Practice to Camp Operations.
-	_key(KEY_ESCAPE) # Camp to campaign map.
+	_key(KEY_ESCAPE) # Practice to Camp Operations or Training Grounds.
+	_key(KEY_ESCAPE) # Camp to campaign map or Training Grounds to Station.
+	if _title._page == Title.Page.STATION:
+		_key(KEY_ESCAPE) # Station to campaign map.
 	_joy(JOY_BUTTON_B) # Map to title.
 	return _title._page == Title.Page.TITLE or _fail("Back did not return through the existing campaign screens.")
 
 
 func _button(node_name: String) -> Button:
-	return _title.find_child(node_name, true, false) as Button
+	return _title._stage.find_child(node_name, true, false) as Button
 
 
 func _label(node_name: String) -> Label:

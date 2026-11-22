@@ -82,6 +82,13 @@ func select_waypoint(waypoint_id: String) -> bool:
 	return true
 
 
+## The host can recheck a service request without trusting the caller's signal.
+func can_open_camp_at(id: String) -> bool:
+	return _world != null and not _is_travelling and _selected_id == id \
+		and _world.current_waypoint_id() == id \
+		and _world.waypoint(id).get("kind") == World.WaypointKind.CAMP
+
+
 func confirm_selection() -> void:
 	if _is_travelling or _selected_id.is_empty():
 		return
@@ -202,7 +209,7 @@ func _refresh_selection() -> void:
 			_confirm_button.disabled = false
 		elif selected.kind == World.WaypointKind.CAMP:
 			_detail.text = "Visit camp for dispatch and preparations, or select a connected waypoint to travel."
-			_confirm_button.text = "Open Camp Operations"
+			_confirm_button.text = "Enter Station" if _world.campaign_id() == "mara" else "Open Camp Operations"
 			_confirm_button.disabled = false
 		else:
 			_detail.text = "Your party is here. Select a connected waypoint to travel."
