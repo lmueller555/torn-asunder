@@ -489,6 +489,7 @@ class HeroesPrompts extends Translation:
 		["Hold L2 / Shift", "Back / hold Shift"],
 		["L2 / Shift", "Back / Shift"],
 		["L2 + D-pad Up", "Back, then D-pad Up"],
+		["LT + D-pad Up", "Back, then D-pad Up"],
 		["Square / right click: move", "Cross / right click: move"],
 		["Square / right-click: move", "Cross / right-click: move"],
 		["Square / right click: Move", "Cross / right click: Move"],
