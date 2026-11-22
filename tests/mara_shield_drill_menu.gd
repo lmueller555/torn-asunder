@@ -67,6 +67,7 @@ func _exercise_training_menu() -> bool:
 	if not _focused("Read Dispatch"):
 		return _fail("The original dispatch action lost its directional focus.")
 	_tap_key(KEY_ESCAPE)
+	_tap_key(KEY_ESCAPE) # Station to the same map waypoint.
 
 	if not await _deploy_mine(1, 700):
 		return false
@@ -121,6 +122,7 @@ func _exercise_training_menu() -> bool:
 		return _fail("Reopening trained status applied a second purchase.")
 	_tap_key(KEY_ESCAPE)
 	_tap_key(KEY_ESCAPE)
+	_tap_key(KEY_ESCAPE)
 	if not await _deploy_mine(2, 720, true):
 		return false
 	mission = _title._campaign_battle as Mission
@@ -159,6 +161,8 @@ func _exercise_training_menu() -> bool:
 		return _fail("A direct Heavy request bypassed the Mine-only scope at another Human battle.")
 	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
+	# This fixture follows CampaignMap controls rather than the shipping Raska 3D presenter.
+	ProjectSettings.set_setting(Title.NormalRaskaEntry.SWITCH, false)
 	CampaignFlow.resume_at_map(_title, "raska")
 	if not _map() or _title._campaign_world.campaign_id() != "raska":
 		return _fail("Foreign comparison did not open Raska's live campaign.")
@@ -180,6 +184,10 @@ func _exercise_training_menu() -> bool:
 
 func _open_drill(controller: bool) -> bool:
 	_tap_joy(JOY_BUTTON_A)
+	var operations := _button("Operations")
+	if _title._page != Title.Page.STATION or not operations:
+		return _fail("Expected the Station at Marches Camp.")
+	operations.pressed.emit()
 	if _title._page != Title.Page.BRIEFING or not _focused("Back"):
 		return _fail("Camp Operations did not open with its existing Back focus.")
 	if controller:

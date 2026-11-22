@@ -74,13 +74,14 @@ func _flow() -> bool:
 	if not _on_map(CAMP) or _button("Confirm Deployment"):
 		return _fail("A new save did not resume at the camp on the overworld.")
 	_joy(JOY_BUTTON_A)
-	if _title._page != Title.Page.BRIEFING or _mine_briefing_label() or not _button("Unit Progression") or not _press("Read Dispatch"):
+	if _title._page != Title.Page.STATION or not _press("Operations") \
+			or _title._page != Title.Page.BRIEFING or _mine_briefing_label() or not _button("Unit Progression") or not _press("Read Dispatch"):
 		return _fail("Camp Operations did not offer practice and the dispatch.")
 	if not _is_dialogue(Beats.MARA_MINE_DISPATCH) or not _no_pre_rescue_reveal(_title._stage):
 		return _fail("Camp Operations did not start the rescue dispatch without disclosing the artifact.")
 	if not _read_rescue_dispatch():
 		return false
-	if not _button("Read Dispatch") or not _press("Back") or not _on_map(CAMP):
+	if not _button("Read Dispatch") or not _press("Back") or not _press("Main Gate") or not _on_map(CAMP):
 		return _fail("Finishing the dispatch did not return through camp to the map.")
 
 	_map().select_waypoint(ROAD)
@@ -831,7 +832,7 @@ func _axis(code: JoyAxis, value: float) -> void:
 
 
 func _button(name: String) -> Button:
-	return _title.find_child(name, true, false) as Button
+	return _title._stage.find_child(name, true, false) as Button
 
 
 func _press(name: String) -> bool:

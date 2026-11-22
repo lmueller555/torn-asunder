@@ -57,8 +57,15 @@ enum Page {
 	TITLE, VAULT, LOAD, SETTINGS, QUIT, BRIEFING, DRILLS, UNIT_PROGRESSION, UNIT_MODEL,
 	UNIT_TEST, SKIRMISH_SETUP, SKIRMISH, BATTLE_POINTS_DRILL,
 	WORLD_MAP, CAMPAIGN_DIALOGUE, MISSION_BRIEFING, CAMPAIGN_BATTLE, ROSTER_REQUIREMENTS, MARA_SHIELD_DRILL,
-	MARA_LEAD_MELEE, MARA_WATER_REQUEST_RECOVERY,
+	MARA_LEAD_MELEE, MARA_WATER_REQUEST_RECOVERY, STATION, STATION_TRAINING, BARRACKS,
 }
+
+const MARA_HOME_STATION := "marches_camp"
+var _station_map_stage: Control
+var _station_hidden_map_controls: Array[Control] = []
+var _station_label := ""
+var _station_training_origin := false
+var _station_stick := Vector2i.ZERO
 
 const MARA_LEAD_MELEE_ENTRY := "Lead Melee Training"
 const MARA_COAST_ROAD := "moonwash_road"
@@ -206,6 +213,9 @@ func _input(event: InputEvent) -> void:
 		_using_controller = false
 		_update_hint()
 
+	if _page in [Page.STATION, Page.STATION_TRAINING, Page.BARRACKS] and event is InputEventJoypadMotion:
+		_move_station_focus(event)
+
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		if _page == Page.UNIT_TEST or _page == Page.SKIRMISH_SETUP:
@@ -217,22 +227,57 @@ func _input(event: InputEvent) -> void:
 		_go_back()
 
 
+func _move_station_focus(event: InputEventJoypadMotion) -> void:
+	if event.axis not in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y]:
+		return
+	var horizontal := event.axis == JOY_AXIS_LEFT_X
+	var prior := _station_stick.x if horizontal else _station_stick.y
+	if absf(event.axis_value) < 0.35:
+		if horizontal:
+			_station_stick.x = 0
+		else:
+			_station_stick.y = 0
+		return
+	if absf(event.axis_value) < 0.65 or prior != 0:
+		return
+	get_viewport().set_input_as_handled()
+	var direction := 1 if event.axis_value > 0.0 else -1
+	if horizontal:
+		_station_stick.x = direction
+	else:
+		_station_stick.y = direction
+	var focused := get_viewport().gui_get_focus_owner()
+	if not focused or not _stage.is_ancestor_of(focused):
+		return
+	var side := (SIDE_RIGHT if direction > 0 else SIDE_LEFT) if horizontal else (SIDE_BOTTOM if direction > 0 else SIDE_TOP)
+	var next := focused.find_valid_focus_neighbor(side)
+	if next and _stage.is_ancestor_of(next):
+		next.grab_focus()
+
+
 func _go_back() -> void:
 	match _page:
 		Page.TITLE:
 			_show_quit()
+		Page.STATION:
+			_leave_station()
+		Page.STATION_TRAINING:
+			_show_station("Training Grounds")
+		Page.BARRACKS:
+			_show_station("Barracks")
 		Page.BRIEFING:
-			if _campaign_world:
+			if is_instance_valid(_station_map_stage):
+				_show_station("Operations")
+			elif _campaign_world:
 				_show_world_map()
 			else:
 				_show_title()
 		Page.MISSION_BRIEFING:
 			_show_world_map()
 		Page.DRILLS:
-			_show_briefing()
+			_back_from_practice("Combat Drills")
 		Page.UNIT_PROGRESSION:
-			_show_briefing()
-			_stage.get_node("Unit Progression").grab_focus()
+			_back_from_practice("Unit Progression")
 		Page.MARA_SHIELD_DRILL:
 			_show_briefing()
 			var drill := _stage.get_node_or_null("Shield Infantry Drill") as Button
@@ -262,6 +307,7 @@ func _go_back() -> void:
 
 
 func _show_title() -> void:
+	_discard_station_context()
 	_open_page(Page.TITLE)
 	_label(_stage, "TORN", Rect2(86, 111, 520, 112), 103, IVORY, DISPLAY_FACE)
 	_label(_stage, "ASUNDER", Rect2(89, 204, 540, 96), 75, GOLD, DISPLAY_FACE)
@@ -335,7 +381,7 @@ func _begin_selected() -> void:
 
 
 func _prepare_campaign(campaign: Dictionary) -> void:
-	_forward_camp_return = null
+	_discard_station_context()
 	_opening_replay_return = null
 	_active_campaign = campaign
 	var result := _profile.mark_played(campaign.id)
@@ -422,7 +468,7 @@ func _show_world_map() -> void:
 	var map: CampaignMap = CAMPAIGN_MAP_SCENE.instantiate()
 	map.configure(_campaign_world, _profile.completed_missions(_active_campaign.id), _profile.setting("reduced_motion"))
 	map.return_requested.connect(_show_title)
-	map.camp_operations_requested.connect(_show_briefing)
+	map.camp_operations_requested.connect(_open_canonical_camp.bind(map))
 	map.waypoint_arrived.connect(_on_waypoint_arrived)
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
@@ -437,7 +483,7 @@ func _add_normal_raska_overworld() -> bool:
 		_campaign_warning = NormalRaskaEntry.FALLBACK_MESSAGE
 		return false
 	map.return_requested.connect(_show_title)
-	map.camp_operations_requested.connect(_show_briefing)
+	map.camp_operations_requested.connect(_open_canonical_camp.bind(map))
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	map.world_committed.connect(_on_raska_world_committed)
 	_stage.add_child(map)
@@ -470,36 +516,145 @@ func _add_development_overworld() -> bool:
 	_forward_camp_return = null
 	map.forward_camp_operations_requested.connect(_open_forward_camp.bind(map))
 	map.return_requested.connect(_show_title)
-	map.camp_operations_requested.connect(_show_briefing)
+	map.camp_operations_requested.connect(_open_canonical_camp.bind(map))
 	map.waypoint_arrived.connect(_on_waypoint_arrived)
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
 	return true
 
 
+func _open_canonical_camp(map: Control) -> void:
+	if _page != Page.WORLD_MAP or map.get_parent() != _stage or not _campaign_world:
+		return
+	var id := _campaign_world.current_waypoint_id()
+	if not map.call("can_open_camp_at", id):
+		return
+	if _campaign_world.campaign_id() != "mara" or id != MARA_HOME_STATION:
+		_show_briefing()
+		return
+	_enter_station(_campaign_world.waypoint(id).label)
+
+
 func _open_forward_camp(camp_id: String, map: DevelopmentOverworld) -> void:
-	if _page != Page.WORLD_MAP or map.get_parent() != _stage or not map.is_at_forward_camp(camp_id):
+	if _page != Page.WORLD_MAP or map.get_parent() != _stage or not map.is_at_forward_camp(camp_id) \
+			or not map.can_open_camp_at(camp_id):
 		return
 	var camp := map.active_forward_camp()
-	if _campaign_world.current_waypoint_id() != camp.junction_id:
+	var available := ForwardCamp.available_for(_campaign_world.campaign_id(),
+		_profile.completed_missions(_campaign_world.campaign_id()), _profile.greyhollow_reveal_completed())
+	if not available or available.id != camp.id or _campaign_world.current_waypoint_id() != camp.junction_id:
 		return
 	_forward_camp_return = camp
-	_show_forward_camp_operations(camp)
+	_enter_station(camp.label)
 
 
-func _show_forward_camp_operations(camp: ForwardCamp.Definition) -> void:
-	_open_page(Page.BRIEFING)
-	var back := _heading(camp.label, "Camp Operations")
+func _enter_station(label: String) -> void:
+	# Keep the committed map instance as the background; neither Main Gate nor
+	# moving between services requires a new travel or profile write.
+	_station_map_stage = _stage
+	_station_map_stage.process_mode = Node.PROCESS_MODE_DISABLED
+	_station_hidden_map_controls.clear()
+	var map := _station_map_stage.get_child(0) as DevelopmentOverworld
+	if map:
+		for child in map.get_children():
+			if child is Control and child != map.map_surface and child.visible:
+				_station_hidden_map_controls.append(child)
+				child.hide()
+	_stage = null
+	_station_label = label
+	_station_stick = Vector2i.ZERO
+	_show_station()
+
+
+func _show_station(focus := "") -> void:
+	if not is_instance_valid(_station_map_stage):
+		return
+	_station_training_origin = false
+	_replace_stage(Page.STATION)
+	_station_map_stage.show()
+	var shade := _color_rect(_stage, Rect2(0, 0, 1440, 810), Color(0.025, 0.032, 0.03, 0.74))
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	_label(_stage, _station_label, Rect2(76, 86, 1288, 74), 57, IVORY, DISPLAY_FACE)
+	_label(_stage, "Friendly station", Rect2(80, 158, 640, 38), 24, GOLD)
+	_rule(Rect2(76, 212, 580, 1), HAIRLINE)
 	var services: Array[Button] = []
-	for service in camp.services:
-		var action := _show_drills if service == ForwardCamp.Service.COMBAT_DRILLS else _show_unit_progression
-		var label := "Combat Drills" if service == ForwardCamp.Service.COMBAT_DRILLS else "Unit Progression"
-		var button := _button(label, Rect2(76 + services.size() * 310, 265, 286, 58), action)
-		_link_focus(button, SIDE_TOP, back)
-		services.append(button)
-	_link_focus(back, SIDE_BOTTOM, services[0])
-	_link_cycle(services, SIDE_LEFT, SIDE_RIGHT)
+	if not _forward_camp_return:
+		services.append(_station_service("Operations", services.size(), _show_briefing))
+	services.append(_station_service("Barracks", services.size(), _show_station_barracks))
+	services.append(_station_service("Training Grounds", services.size(), _show_station_training))
+	services.append(_station_service("Main Gate", services.size(), _leave_station))
+	_link_cycle(services, SIDE_TOP, SIDE_BOTTOM)
+	_hint = _label(_stage, "", Rect2(76, 745, 1120, 45), 18, IVORY)
+	_update_hint()
+	var prior := _stage.get_node_or_null(focus) as Button if not focus.is_empty() else null
+	(prior if prior else services[0]).grab_focus()
+
+
+func _station_service(label: String, index: int, action: Callable) -> Button:
+	return _button(label, Rect2(76, 243 + index * 76, 425, 58), action)
+
+
+func _show_station_training(focus := "") -> void:
+	if not is_instance_valid(_station_map_stage):
+		return
+	_station_training_origin = true
+	_open_page(Page.STATION_TRAINING)
+	var back := _heading("Training Grounds", "Practice only. XP and ratings here do not change the campaign.")
+	var drills := _station_service("Combat Drills", 0, _show_drills)
+	var progress := _station_service("Unit Progression", 1, _show_unit_progression)
+	_link_cycle([back, drills, progress], SIDE_TOP, SIDE_BOTTOM)
+	(progress if focus == "Unit Progression" else drills).grab_focus()
+
+
+func _show_station_barracks() -> void:
+	if not is_instance_valid(_station_map_stage):
+		return
+	_open_page(Page.BARRACKS)
+	var back := _heading("Barracks", _station_label)
+	_label(_stage, "Shield Infantry and Archers", Rect2(76, 249, 800, 54), 38, IVORY, DISPLAY_FACE)
+	_label(_stage, "Campaign job changes are not available here yet.", Rect2(76, 319, 800, 52), 24, MUTED)
 	back.grab_focus()
+
+
+func _back_from_practice(focus: String) -> void:
+	if _station_training_origin and is_instance_valid(_station_map_stage):
+		_show_station_training(focus)
+	else:
+		_show_briefing()
+		var button := _stage.get_node_or_null(focus) as Button
+		if button:
+			button.grab_focus()
+
+
+func _leave_station() -> void:
+	if not is_instance_valid(_station_map_stage):
+		return
+	var previous := _station_map_stage
+	_station_map_stage = null
+	_station_training_origin = false
+	_station_label = ""
+	_forward_camp_return = null
+	_replace_stage(Page.WORLD_MAP)
+	remove_child(_stage)
+	_stage.queue_free()
+	_stage = previous
+	_stage.show()
+	_stage.process_mode = Node.PROCESS_MODE_INHERIT
+	for control in _station_hidden_map_controls:
+		if is_instance_valid(control):
+			control.show()
+	_station_hidden_map_controls.clear()
+
+
+func _discard_station_context() -> void:
+	if is_instance_valid(_station_map_stage):
+		remove_child(_station_map_stage)
+		_station_map_stage.queue_free()
+	_station_map_stage = null
+	_station_hidden_map_controls.clear()
+	_station_training_origin = false
+	_station_label = ""
+	_forward_camp_return = null
 
 
 func _on_waypoint_arrived(_id: String) -> void:
@@ -867,9 +1022,6 @@ func _show_campaign_warning() -> void:
 
 
 func _show_briefing() -> void:
-	if _forward_camp_return:
-		_show_forward_camp_operations(_forward_camp_return)
-		return
 	var campaign := _active_campaign
 	_open_page(Page.BRIEFING)
 	var back := _heading("Camp Operations" if _campaign_world else "Campaign Briefing", campaign.opening)
@@ -1637,6 +1789,8 @@ func _replace_stage(page: Page) -> void:
 
 
 func _open_page(page: Page) -> void:
+	if is_instance_valid(_station_map_stage):
+		_station_map_stage.hide()
 	_replace_stage(page)
 	var is_title := page == Page.TITLE
 	var background := _texture(

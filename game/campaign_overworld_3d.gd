@@ -171,6 +171,13 @@ func _snap_focus(id: String, reframe := true) -> bool:
 	return true
 
 
+## A selected camp is actionable only after the party has reached it.
+func can_open_camp_at(id: String) -> bool:
+	return _navigation != null and _has_focus and not _navigation.is_travelling() \
+		and _navigation.selected_waypoint_id() == id and _world.current_waypoint_id() == id \
+		and _navigation.action() == Navigation.Action.CAMP
+
+
 func confirm_selection() -> void:
 	if not _navigation or not _has_focus:
 		return
@@ -348,7 +355,7 @@ func _refresh() -> void:
 	var can_confirm := false
 	match action:
 		Navigation.Action.CAMP:
-			text = "Open Camp Operations"
+			text = "Enter Station" if _world.campaign_id() == "mara" else "Open Camp Operations"
 			can_confirm = true
 		Navigation.Action.BRIEFING:
 			text = "Open Battlefield Briefing"

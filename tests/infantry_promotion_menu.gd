@@ -29,7 +29,7 @@ func _check_menu() -> void:
 
 func _run_flow() -> bool:
 	CampaignFlow.resume_at_map(_title, "mara")
-	if not _press_all(["ConfirmTravel"]):
+	if not _press_all(["ConfirmTravel", "Training Grounds"]):
 		return false
 	if _title._profile.record_mission_clear("mara", "mara_mine_escort") != OK:
 		return _fail("Could not prepare the fixture campaign save.")
@@ -110,13 +110,15 @@ func _run_flow() -> bool:
 		return _fail("Closing the heavy inspector discarded the equipped profile or progress.")
 	_joy(JOY_BUTTON_B)
 	if root.gui_get_focus_owner() != _button("Unit Progression") or not _press_all(["Unit Progression"]):
-		return _fail("Back did not return to the briefing's Unit Progression control.")
+		return _fail("Back did not return to the Training Grounds' Unit Progression control.")
 	if _title._training_unit_id != Catalog.HUMAN_INFANTRY or _title._training_unit.level != 1 \
 			or not _button("Promote to Heavy Infantry").disabled:
 		return _fail("Opening a new practice session did not reset the temporary promotion.")
 	if before != FileAccess.get_file_as_bytes(_profile_path):
 		return _fail("Promotion practice changed the existing campaign save.")
 
+	if not _press_all(["Back", "Back", "Main Gate"]):
+		return false
 	CampaignFlow.resume_at_map(_title, "sova")
 	if not _press_all(["ConfirmTravel", "Unit Progression"]):
 		return false
@@ -131,7 +133,7 @@ func _studio() -> Studio:
 
 
 func _button(node_name: String) -> Button:
-	return _title.find_child(node_name, true, false) as Button
+	return _title._stage.find_child(node_name, true, false) as Button
 
 
 func _press_all(names: Array) -> bool:

@@ -47,6 +47,7 @@ func _exercise_training_menu() -> bool:
 	if not _focused("Shield Infantry Drill"):
 		return _fail("The separate Shield Drill lost its position in the focus chain.")
 	_tap_key(KEY_ESCAPE)
+	_tap_key(KEY_ESCAPE) # Station to the same map waypoint.
 	if not await _deploy_mine_at_rating(1, 700) or not _win_rescue():
 		return false
 	await process_frame
@@ -96,6 +97,7 @@ func _exercise_training_menu() -> bool:
 		return _fail("Reopening after a profile reload must not spend again.")
 	_tap_key(KEY_ESCAPE)
 	_tap_key(KEY_ESCAPE)
+	_tap_key(KEY_ESCAPE)
 	if not await _deploy_mine_at_rating(2, 720):
 		return false
 	var before_retry := FileAccess.get_file_as_bytes(_profile_path)
@@ -107,6 +109,8 @@ func _exercise_training_menu() -> bool:
 		return _fail("Retry did not retain Mara's rating, normal Shield loadout, fresh objective, and invested save.")
 	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
+	# This fixture follows CampaignMap controls rather than the shipping Raska 3D presenter.
+	ProjectSettings.set_setting(Title.NormalRaskaEntry.SWITCH, false)
 	CampaignFlow.resume_at_map(_title, "raska")
 	if not _map():
 		return _fail("Could not open a neighboring campaign to check isolation.")
@@ -119,6 +123,10 @@ func _exercise_training_menu() -> bool:
 
 func _open_training() -> bool:
 	_tap_joy(JOY_BUTTON_A)
+	var operations := _button("Operations")
+	if _title._page != Title.Page.STATION or not operations:
+		return false
+	operations.pressed.emit()
 	if not _focused("Back"):
 		return false
 	await _capture("camp")
