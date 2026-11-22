@@ -33,6 +33,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.025, 0.033, 0.034, 1)
 
 [torn_asunder]
+neris_3d_overworld=true
 
 mara_3d_overworld=true
 ilyra_3d_overworld=true

@@ -11,6 +11,7 @@ const CampaignDeployments := preload("res://game/campaign_deployments.gd")
 const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const DevelopmentOverworld := preload("res://game/campaign_overworld_3d.gd")
+const NormalNerisEntry := preload("res://game/overworld/neris_normal_entry.gd")
 const NormalIlyraEntry := preload("res://game/overworld/ilyra_normal_entry.gd")
 const NormalSovaEntry := preload("res://game/overworld/sova_normal_entry.gd")
 const NormalMaraEntry := preload("res://game/overworld/mara_normal_entry.gd")
@@ -157,7 +158,7 @@ func _ready() -> void:
 	_apply_fullscreen()
 	_show_title()
 	if scene_file_path == NormalMaraEntry.TITLE and get_script().resource_path == NormalMaraEntry.TITLE_SCRIPT \
-			and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested()):
+			and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested() or NormalNerisEntry.requested()):
 		_boot_normal_mara_title.call_deferred()
 
 
