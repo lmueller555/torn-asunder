@@ -16,13 +16,17 @@ var _prepared_map: MarchesView
 var _prepared_for := ""
 var _normal_rollout := false
 var _ilyra_presenter: RefCounted
+var _sova_presenter: RefCounted
 
 
 func _prepare_campaign(campaign: Dictionary) -> void:
-	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested()):
+	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested()):
 		if _ilyra_presenter:
 			_ilyra_presenter.close()
 			_ilyra_presenter = null
+		if _sova_presenter:
+			_sova_presenter.close()
+			_sova_presenter = null
 		_normal_rollout = campaign.id == "mara" and NormalMaraEntry.requested()
 		_development_overworld_factory = Callable()
 		_development_mara_water_gate = false
@@ -42,7 +46,13 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 				_development_overworld_factory = presenter.choose_map
 			else:
 				push_warning("Ilyra map package could not open.")
+		if campaign.id == "sova" and NormalSovaEntry.requested():
+			_sova_presenter = NormalSovaEntry.open_presenter(self)
+			if _sova_presenter:
+				_development_overworld_factory = _sova_presenter.choose_map
 	super._prepare_campaign(campaign)
+	if get_tree().current_scene == self and campaign.id == "sova" and NormalSovaEntry.requested() and not _sova_presenter:
+		_report_sova_fallback()
 	if get_tree().current_scene == self and campaign.id == "ilyra" and NormalIlyraEntry.requested() and not _ilyra_presenter \
 			and _campaign_warning.is_empty():
 		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
@@ -54,7 +64,14 @@ func _report_ilyra_fallback() -> void:
 		_show_campaign_warning()
 
 
+func _report_sova_fallback() -> void:
+	if _campaign_warning.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+
+
 func _on_waypoint_arrived(id: String) -> void:
+	if _sova_presenter and _sova_presenter.on_local_arrival():
+		return
 	if _ilyra_presenter and _ilyra_presenter.on_local_arrival():
 		return
 	super._on_waypoint_arrived(id)
@@ -85,6 +102,15 @@ func _build_sector(where: String) -> MarchesView:
 
 
 func _add_development_overworld() -> bool:
+	if _sova_presenter and _campaign_world.campaign_id() == "sova":
+		if not super._add_development_overworld():
+			_sova_presenter.close()
+			_sova_presenter = null
+			_development_overworld_factory = Callable()
+			_report_sova_fallback()
+			return false
+		_sova_presenter.on_mounted(_stage.get_child(0))
+		return true
 	if _ilyra_presenter and _campaign_world.campaign_id() == "ilyra":
 		if not super._add_development_overworld():
 			_ilyra_presenter.close()
@@ -254,6 +280,10 @@ func _drop_prepared() -> void:
 
 
 func _show_title() -> void:
+	if _sova_presenter:
+		_sova_presenter.close()
+		_sova_presenter = null
+		_development_overworld_factory = Callable()
 	if _ilyra_presenter:
 		_ilyra_presenter.close()
 		_ilyra_presenter = null

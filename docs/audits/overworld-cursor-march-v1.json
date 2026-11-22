@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-22",
+  "scope": "Original authored 3D overworld cursor, waypoint treatment, and map-scale marching formation at shipped camera distances for the Human and Elven campaigns. The full game, other campaigns, the battle minimap, and hardware performance are not reviewed here.",
+  "author": "Torn Asunder overworld interface and map-marker author",
+  "reviewer": "Independent Torn Asunder release and input reviewers",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility in a native 1120 × 630 window. Ilyra screenshots show the stationary reference, hover state and mid-route marching. The formation detail image uses an explicit closer inspection lens, not a player camera.",
+    "close_up": "Five staggered ranks with separate steel helmet highlights, dark garment silhouettes, shields, and a campaign-colored standard. An independent reviewer also inspected the ordinary mid-route view at native size.",
+    "motion": "The bright separated gold dots link free cursor and fixed station. Green route beads and chevrons remain a different signal. The marching formation follows the baked road tangent and returns to the prior station on cancel.",
+    "reproduction": "Run tests/overworld_compass.gd in Godot (headless or windowed); set TORN_COMPASS_PROOF to an existing directory for native image capture. Start Mara or Ilyra from the normal title to try left-stick navigation, live hover, Cancel Travel, and arrival.",
+    "measurements": "28 focused headless and 28 native checks; independent ordinary-title checks in both Mara and Ilyra tested real input dispatch, both camera lenses, and disk persistence. Local road movement is 0.75–3 seconds with reduced-motion instant arrival."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "The ring, station, and chevron are different silhouettes. The marching banner and tight formation read separately from the road beads."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Dark garments, warm metal edges and the faction-colored cloth are legible at camera scale without a competing floating travel icon."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Separated yellow dots remain clear in both lenses, available green pins are distinct, and real hover does not pull the target away."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "The formation crosses the exact local path before arrival, including reverse travel; cancel and reduced-motion states are distinct."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "Pure authored 3D presentation; no new collision bodies, save IDs, progression or battle content. Shared routing remains authoritative and the five silhouettes are confined to travel."
+    }
+  },
+  "files": {
+    "docs/audits/evidence/overworld-army-detail.jpg": "f0abd60b97855846dd3cea394b644e16d512c0cc64311ad21d9e5cab7caf1139",
+    "docs/audits/evidence/overworld-army-march.jpg": "400c9d9470ab343ea1ba228d026cfab9c8cb86227d48e84254aa4845bb7ae8d5",
+    "docs/audits/evidence/overworld-cursor-free.jpg": "0e48e4fbdb9d50386ad17e8f06c8439e0fdcda0a2262f0243fc674aa590a3289",
+    "docs/audits/evidence/overworld-cursor-preview.jpg": "582c2799016f6cd95b689de829a4b3e99d0aef4cce04adadf57c9f478beb5723",
+    "game/campaign_overworld_3d.gd": "9c78ebab7d4abd1b2225c2803499621968e567852690413b2d14842486a7540e",
+    "game/overworld/campaign_compass.gd": "97845e05e343a549f377a11f305fd9e79c29ec9e413efcd16605e38d00ea8777",
+    "game/overworld/campaign_march_marker.gd": "ac716b1ec5c3ccca5f19be31daecaeb6f45756a15309b5c810d7611e80f7dcc6",
+    "game/overworld/marches_overworld_renderer.gd": "9b7168d32e23a7b5a8db94471847b7a2adcc9ae536dacad25e7ca4588f3c1324",
+    "game/overworld/marches_overworld_view.gd": "f8854a6ee1af86f3e0afdba491250cfb85925c969a7eb212728a2fd099439ecf"
+  }
+}

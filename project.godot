@@ -36,3 +36,5 @@ environment/defaults/default_clear_color=Color(0.025, 0.033, 0.034, 1)
 
 mara_3d_overworld=true
 ilyra_3d_overworld=true
+
+sova_3d_overworld=true

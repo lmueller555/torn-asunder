@@ -94,6 +94,16 @@ func _process(delta: float) -> void:
 		_pins.queue_redraw()
 
 
+## Keep authored regional bounds: steering outward in a near lens returns to
+## its regional lens instead of panning the camera past finished scenery.
+func _browse_camera_edge(point: Vector2, stick: Vector2) -> void:
+	if not is_instance_valid(_renderer) or not _renderer._zoomed or not _points.has(_world.current_waypoint_id()):
+		return
+	if (stick.x < -0.35 and point.x < 36.0) or (stick.x > 0.35 and point.x > size.x - 36.0) \
+			or (stick.y < -0.35 and point.y < 36.0) or (stick.y > 0.35 and point.y > size.y - 36.0):
+		_renderer.toggle_zoom(_points[_world.current_waypoint_id()])
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or _navigation==null:
 		return
@@ -128,7 +138,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _update_party() -> void:
 	super._update_party()
 	if is_instance_valid(_renderer):
-		_renderer.show_party_state(_navigation.is_travelling(),_navigation.selected_waypoint_id())
+		_renderer.show_party_state(_navigation.is_travelling(), _camera_focus_id)
 	if is_instance_valid(_pins):
 		_pins.queue_redraw()
 
@@ -190,7 +200,7 @@ func _build_controls() -> void:
 	dock.add_child(controls)
 	status_label=_line(controls,"",16,BODY)
 	status_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	var legend:=_line(controls,"D-pad / arrows   Select    ·    Z / shoulder   Zoom",14,SECONDARY)
+	var legend:=_line(controls,"Stick / mouse   Browse   ·   D-pad / arrows   Select   ·   Z / LB / RB   Zoom",14,SECONDARY)
 	legend.vertical_alignment=VERTICAL_ALIGNMENT_CENTER
 	confirm_button=Button.new()
 	confirm_button.custom_minimum_size.x=175
@@ -200,11 +210,11 @@ func _build_controls() -> void:
 	controls.add_child(back_button)
 
 
-func _select_at(point: Vector2) -> bool:
+func _pick_at(point: Vector2) -> String:
 	for id: String in _pins.label_regions:
 		if _pins.label_regions[id].has_point(point):
-			return select_waypoint(id)
-	return super._select_at(point)
+			return id
+	return super._pick_at(point)
 
 
 func marker_styles() -> Dictionary:
@@ -232,8 +242,7 @@ func _choose_boundary() -> void:
 	if _boundary_pending or _world.current_waypoint_id() != _boundary_origin:
 		return
 	_boundary_error = ""
-	_navigation.select(_boundary_destination)
-	_refresh()
+	_snap_focus(_boundary_destination, false)
 
 
 func set_boundary_pending(active: bool, message := "") -> void:
@@ -243,7 +252,7 @@ func set_boundary_pending(active: bool, message := "") -> void:
 
 
 func confirm_selection() -> void:
-	if _boundary_pending:
+	if _boundary_pending or not _has_focus:
 		return
 	if _boundary_button and _world.current_waypoint_id() == _boundary_origin and _navigation.selected_waypoint_id() == _boundary_destination:
 		if _navigation.action() == Navigation.Action.TRAVEL:
@@ -267,7 +276,7 @@ func _refresh() -> void:
 	var active := here == _boundary_origin and not _navigation.is_travelling()
 	_boundary_button.visible = active
 	_boundary_button.disabled = _boundary_pending
-	if not active or _navigation.selected_waypoint_id() != _boundary_destination:
+	if not active or not _has_focus or _navigation.selected_waypoint_id() != _boundary_destination:
 		return
 	if _boundary_pending:
 		confirm_button.disabled = true
@@ -313,6 +322,8 @@ class Pins extends Control:
 			var kind: String = map.marker_styles()[id]
 			var locked: bool = id=="marches_road" and map._renderer._link_locked("year_one_mine",id)
 			var color:=Color("#c5b8a9") if locked else Color("#e3c77f")
+			if map.is_reachable_pin(id):
+				color = Color("#9acb81")
 			draw_circle(point,10,map.PANEL)
 			if locked:
 				draw_polyline(PackedVector2Array([point+Vector2(0,-9),point+Vector2(9,0),point+Vector2(0,9),point+Vector2(-9,0),point+Vector2(0,-9)]),color,2,true)
@@ -337,7 +348,7 @@ class Pins extends Control:
 			draw_string(_face,pos+Vector2(8,32),site.label,HORIZONTAL_ALIGNMENT_LEFT,-1,16,map.BODY)
 		if not map._navigation.is_travelling():
 			_draw_offscreen_connections(projected)
-		if map._navigation.is_travelling():
+		if map._navigation.is_travelling() and not (is_instance_valid(map._march) and map._march.visible):
 			var vp := Vector2(map.render_viewport.size)
 			var party_world: Vector3 = map._party.global_position+Vector3.UP*5.0
 			if vp.x>0 and vp.y>0 and not map._camera.is_position_behind(party_world):

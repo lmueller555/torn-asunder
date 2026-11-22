@@ -1,0 +1,106 @@
+name: Sova native overworld launch
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/sova-native-launch.yml'
+      - 'tests/native_sova_release_smoke.gd'
+      - 'project.godot'
+      - 'export_presets.cfg'
+      - 'game/title_screen.gd'
+      - 'game/profile_store.gd'
+      - 'game/campaign_*.gd'
+      - 'game/overworld/**'
+      - 'assets/overworld/**'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GODOT_RELEASE: 4.7.2-stable
+      EDITOR_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+      TEMPLATES_SHA256: f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011
+    steps:
+      - name: Check out the proposed merge
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install verified matching Godot editor and Linux templates
+        run: |
+          asset="https://github.com/godotengine/godot-builds/releases/download/$GODOT_RELEASE/Godot_v$GODOT_RELEASE"
+          curl --fail --silent --show-error --location --retry 2 --max-time 180 "$asset"_linux.x86_64.zip -o "$RUNNER_TEMP/editor.zip"
+          curl --fail --silent --show-error --location --retry 2 --max-time 420 "$asset"_export_templates.tpz -o "$RUNNER_TEMP/templates.tpz"
+          printf '%s  %s\n' "$EDITOR_SHA256" "$RUNNER_TEMP/editor.zip" "$TEMPLATES_SHA256" "$RUNNER_TEMP/templates.tpz" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/editor.zip" -d "$RUNNER_TEMP"
+          install -m 0755 "$RUNNER_TEMP/Godot_v${GODOT_RELEASE}_linux.x86_64" "$RUNNER_TEMP/godot"
+          export_dir="$HOME/.local/share/godot/export_templates/${GODOT_RELEASE/-/.}"
+          mkdir -p "$export_dir"
+          for flavor in debug release; do
+            unzip -p "$RUNNER_TEMP/templates.tpz" "templates/linux_$flavor.x86_64" > "$export_dir/linux_$flavor.x86_64"
+            test -s "$export_dir/linux_$flavor.x86_64"
+            chmod 0755 "$export_dir/linux_$flavor.x86_64"
+          done
+          rm "$RUNNER_TEMP/editor.zip" "$RUNNER_TEMP/templates.tpz"
+          "$RUNNER_TEMP/godot" --version
+      - name: Build a disposable release executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Add only the disposable QA autoload; stock scene and flag are identical.
+          python3 - <<'PYCI'
+          from pathlib import Path
+          p = Path("project.godot")
+          raw = p.read_text()
+          autoload = "[autoload]\n"
+          assert raw.count(autoload) == raw.count("sova_3d_overworld=true") == 1
+          p.write_text(raw.replace(autoload, autoload + 'NativeSovaSmoke="*res://tests/native_sova_release_smoke.gd"\n'))
+          PYCI
+          "$RUNNER_TEMP/godot" --headless --import
+          mkdir -p "$RUNNER_TEMP/sova-bin" "$RUNNER_TEMP/sova-away"
+          "$RUNNER_TEMP/godot" --headless --export-release "Linux x86_64" "$RUNNER_TEMP/sova-bin/torn-asunder.x86_64"
+          test -x "$RUNNER_TEMP/sova-bin/torn-asunder.x86_64"
+          test ! -e "$RUNNER_TEMP/sova-bin/torn-asunder.pck"
+      - name: Run exported executable outside source; preserve one profile across cold launches
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/sova-away"
+          export LIBGL_ALWAYS_SOFTWARE=1 MESA_SHADER_CACHE_DISABLE=true LP_NUM_THREADS=2
+          app="$RUNNER_TEMP/sova-bin/torn-asunder.x86_64"
+          seed() {
+            export XDG_DATA_HOME="$1" XDG_CONFIG_HOME="$1"
+            p="$XDG_DATA_HOME/godot/app_userdata/Torn Asunder/profile.cfg"
+            mkdir -p "$(dirname "$p")"
+            cat > "$p" <<'CFG'
+          [campaigns]
+          sova=1
+          [campaign_waypoints]
+          sova="cairnspine_assembly"
+          [mission_progress]
+          sova=PackedStringArray("sova_mine_tunnels", "sova_public_record")
+          [settings]
+          fullscreen=false
+          reduced_motion=false
+          CFG
+          }
+          one() {
+            local mode="$1" log="$RUNNER_TEMP/sova-$1.log"
+            SOVA_NATIVE_MODE="$mode" timeout 130s "$app" --headless --audio-driver Dummy 2>&1 | tee "$log"
+            grep -F "Native Sova executable smoke ($mode): PASS" "$log"
+            if grep -E '^(FAIL:|SCRIPT ERROR:|ERROR:)' "$log"; then exit 1; fi
+          }
+          seed "$RUNNER_TEMP/sova-default-off"
+          one off
+          seed "$RUNNER_TEMP/sova-live"
+          one arrival
+          one unread
+          one vault
+          log="$RUNNER_TEMP/sova-rendered.log"
+          SOVA_NATIVE_MODE=rendered xvfb-run -a timeout 130s "$app" --audio-driver Dummy --windowed --resolution 960x540 2>&1 | tee "$log"
+          grep -F "Native Sova executable smoke (rendered): PASS" "$log"
+          if grep -E '^(FAIL:|SCRIPT ERROR:|ERROR:)' "$log"; then exit 1; fi
