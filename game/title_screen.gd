@@ -18,6 +18,7 @@ const NormalSovaEntry := preload("res://game/overworld/sova_normal_entry.gd")
 const NormalMaraEntry := preload("res://game/overworld/mara_normal_entry.gd")
 const NormalRaskaEntry := preload("res://game/overworld/raska/raska_normal_entry.gd")
 const ForwardCamp := preload("res://game/overworld/forward_campaign_camp.gd")
+const HumanBarracks := preload("res://game/ui/human_barracks.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
@@ -610,10 +611,16 @@ func _show_station_barracks() -> void:
 	if not is_instance_valid(_station_map_stage):
 		return
 	_open_page(Page.BARRACKS)
-	var back := _heading("Barracks", _station_label)
-	_label(_stage, "Shield Infantry and Archers", Rect2(76, 249, 800, 54), 38, IVORY, DISPLAY_FACE)
-	_label(_stage, "Campaign job changes are not available here yet.", Rect2(76, 319, 800, 52), 24, MUTED)
-	back.grab_focus()
+	var plan := _profile.mara_shield_infantry_training()
+	var slot := MaraTraining.SHIELD_INFANTRY_SLOT
+	var barracks := HumanBarracks.new()
+	barracks.configure({
+		"shield_drill_rank": plan.formation_drill_rank(slot),
+		"shield_drill_credit": plan.available_drill_credit(slot) > 0,
+		"heavy_replay_eligible": plan.qualifies_for_branch(slot, MaraTraining.BRANCH_UNIT),
+	})
+	barracks.back_requested.connect(_go_back)
+	_stage.add_child(barracks)
 
 
 func _back_from_practice(focus: String) -> void:

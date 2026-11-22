@@ -153,9 +153,10 @@ func _exercise_services() -> bool:
 	_joy(JOY_BUTTON_A)
 	if _title._page != Title.Page.BARRACKS:
 		return _fail("The Barracks must open its own page.")
-	for button: Button in _title._stage.find_children("*", "Button", true, false):
-		if not button.disabled and button.name != &"Back":
-			return _fail("The first Barracks shell must not expose an active training or roster action.")
+	var job_action := _button("BarracksJobAction")
+	if not _button("JobShieldInfantry") or not _button("JobMarchesLongbows") \
+			or not job_action or job_action.visible:
+		return _fail("The station must open an inspectable tree without inventing a live job action.")
 	_joy(JOY_BUTTON_B)
 	if not _station_shell() or not _focused("Barracks"):
 		return _fail("Controller Back from Barracks must restore the station and its originating focus.")
