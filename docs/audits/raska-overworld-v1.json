@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "reviewed_on": "2026-11-22",
+  "scope": "Raska’s original Basin Camp, stock Greyhollow context, Basin Well Road and north Spanwater, at both authored overworld lenses; no claim for Ilyra’s south side, optional encounters, tactical assets or device performance.",
+  "author": "Torn Asunder Raska environment and campaign integration author",
+  "reviewer": "Independent Torn Asunder overworld release reviewer",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 Compatibility; eight 960 × 540 near/regional views from actual normal title Load with separate Raska profiles. Eight normalized final frames match the independently reviewed site captures byte for byte.",
+    "close_up": "Grounded Basin perimeter and weathered operations hardstand; existing Mine in neutral after-rescue framing; contrasting Well Road yards; stepped, dry north retaining works and worn track.",
+    "motion": "Local troops follow exact portal approach curves. Named sector transfer is a distinct save-first operation. The new remote horizon is decorative, not terrain that can be traveled.",
+    "reproduction": "Run tests/raska_normal_overworld.gd after project import. The linked native release workflow exercises actual Load, Y/A, persisted travel, and a rendered Well Road window.",
+    "measurements": "51 native normalized title checks. Basin: 1,401 compound rays and 360 route points. Well: 1,755 context contacts and 800 route points. North: 911 approach support and 162 route/shoulder checks. No target performance claim.",
+    "capture_encoding": "Each .jpg.base64 is a lossless text transport of the exact reviewed JPEG, not a changed image. Decode with base64 --decode < capture.jpg.base64 > capture.jpg. The digest below applies to the decoded JPEG; the outer files digest pins the tracked text.",
+    "decoded_capture_sha256": {
+      "docs/audits/evidence/raska-basin-camp-near.jpg.base64": "8bc4b0596e558faee7db7bb9f52bf020be6b010fa07b2c498f059227b8263658",
+      "docs/audits/evidence/raska-basin-camp-regional.jpg.base64": "bd54f44397982d39682539dadc6a0d1f1d41bac57f46afb954a0ff5237d2e893",
+      "docs/audits/evidence/raska-basin-well-road-near.jpg.base64": "8f0edf0c66ee3593193a7f760ce9209ec896e525b9755e37ce1022ee9f2d20d2",
+      "docs/audits/evidence/raska-basin-well-road-regional.jpg.base64": "faca613e3edf6cd3cdb7a546f08ffb5ea62016d2e375490ec3feabbc8ba8a461",
+      "docs/audits/evidence/raska-spanwater-lock-near.jpg.base64": "17ce17c1b53378d424f1281fa11514a3765ccb993047d4c982b48bc00caec9ae",
+      "docs/audits/evidence/raska-spanwater-lock-regional.jpg.base64": "fee20c4363d40ec571380609bd031cf996bcf8b13a0e365a46e7dd29ed32de90",
+      "docs/audits/evidence/raska-year-one-mine-near.jpg.base64": "02ec2cc42be8a30be1a63dda094ce2ba53defaec0daf22a7f19f100737a93de3",
+      "docs/audits/evidence/raska-year-one-mine-regional.jpg.base64": "60ab5f98c1f079dbc03a8daef82e5bb5a6cd5f9d26dd41c7588f69d76373dfe0"
+    }
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "finding": "Basin enclosure reads as an occupied compound, Well Road’s yards differ in profile, and north terraces bracket the bridge and gate."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "finding": "Dust, hardstand and gravel fold into native terrain. Near Spanwater stayed byte-identical when the contrasted far horizon was moved behind the actual bank relief."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "finding": "Roads and stations remain legible in both zooms; the new layered far bank has no clipped pale wedge. Each site keeps the proper Raska year and mission identity."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "finding": "Grounded local paths and reversible canonical crossings are distinct. The north boundary does not show an Ilyra arrival or prematurely unlock a mission."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "finding": "New visual context is decorative and non-colliding. Actual title fixtures verify the normalized package and reuse the existing profile/mission authority."
+    }
+  },
+  "files": {
+    "game/overworld/raska/basin_camp.gd": "81f088170eb391a17ec422bbd2abbe3b93f4053e7cb24bec4fedaecb030cc36c",
+    "game/overworld/raska/basin_camp.tscn": "f151e9d746cccbf22a7fe3b8361fe3bd9c63a54a7ba5bfb2c7713e2381a5e036",
+    "game/overworld/raska/basin_cloth.gdshader": "6c17eeb75b7d742dc9f9a125857015764d4e110b394265b8cc86c2e7eba6a224",
+    "game/overworld/raska/basin_stone.gdshader": "91997ad99912bc16f25f3756fec17b0c6962cf8daf144ed82ddf6fa796fb7673",
+    "game/overworld/raska/compound_stone.gdshader": "9b406e1d1f2546f1c6c3b6d93cf3f08cdac63e2e02e3de4af9fe35761c2960cf",
+    "game/overworld/raska/compound_surface.gdshader": "0baa140c63847600be6f748529b1f556192bee69caffcf0c820ab06027e6d315",
+    "game/overworld/raska/greyhollow_context.gd": "1e2696f82f963b66201c2fb1ca0243c64208e501bcef21c69957e528fe8eff7f",
+    "game/overworld/raska/greyhollow_context.tscn": "87c1d084f0a69a9b2c42e49b6fa1ba3d406b5be6a0f74dc1c0c7292455f728b1",
+    "game/overworld/raska/landscape.gdshader": "6dcbccf419ba083a3b789caa7b0bee77d04a31a0bb786b12fa6b0f3c398c1d07",
+    "game/overworld/raska/later_transfer.gd": "9d317bdb563f03ca8ae2cf3706db0a343bb6afcb540519b1f2d6e6d9cd40cf16",
+    "game/overworld/raska/lock_weathering.gdshader": "79fa30961b82d8e84da6a73601122809049a7a24feb35dbd28508d65d1c2897a",
+    "game/overworld/raska/north_approach.gd": "72a64a862791351326bb9d3b81871050776217d8a7134504ac782ef8bb82d9bd",
+    "game/overworld/raska/north_gravel.gdshader": "a13dfebc5441980524b1505ca21264e35d87b0da98863b6ee946ce4b9fd0aa00",
+    "game/overworld/raska/north_valley.gd": "42113953a8cfc35c5cfdbd4f98641def7c1f8aa2e46146b8da6c1b7fea0f6322",
+    "game/overworld/raska/north_valley_ground.gdshader": "4c0e14439c3099ecaf5cb88a71f3292615ef8daa5d2acb1bb4b9b26192c616e0",
+    "game/overworld/raska/north_weather.gdshader": "31f5b97640b195833956887bb49c0a03318b5760a3242f5e9a0945b45cc6565e",
+    "game/overworld/raska/operations_compound.gd": "9fca6d1bd5d003e5ecb0688d9436de39fb363b526badc4d0e2895aead9206d8f",
+    "game/overworld/raska/raska_normal_entry.gd": "2d92631713342661b385b06088d27736554aa86839117855310d19357ca43e93",
+    "game/overworld/raska/raska_shared.gd": "b02da46dc25067c1945494ea4a8350c52d17bdefc6f655d02ca08231d1c9f1da",
+    "game/overworld/raska/raska_transfer.gd": "edb6adeac2905d7ed97ce8d17a9142b8cdd2791dce62487025fcfd41460dd028",
+    "game/overworld/raska/seam_floor.gd": "f66cbeb355cdf9ba3b01f12c31800bd6586320dd83d910262b90eee9fbebd344",
+    "game/overworld/raska/spanwater_north.gd": "38a33fa1560d596f56d49090693d214cbf5b35eb29885f2d91b934d1039e4b16",
+    "game/overworld/raska/spanwater_north.tscn": "3d6bea18574e62ddd035857bd3bcf36e2e745e5078fbd4994911945eb309fd60",
+    "game/overworld/raska/spanwater_relief.gd": "f44bf5a11dff8721c3cdb2b5620be02a04c66a64cc63ffac55a6cfb3437bcc2e",
+    "game/overworld/raska/spanwater_surface.gdshader": "0b91cb198b02d68c1007a8c8cf1ce9ff8028536845a23b9622a5472b63605d83",
+    "game/overworld/raska/valley_horizon.gd": "75c1bb305b983ce6210f4672d8290e0dc88d9f12a80f19e84a31a3a2d319dca0",
+    "game/overworld/raska/valley_horizon.gdshader": "095fbcbbb506024b058ae6e9b8883eec3ac7f03c49b67a6373755aad79968088",
+    "game/overworld/raska/well_context.gd": "ad4499506ac92d7ab17828965c67bf715dffea2910a32f81b61c2917e4057161",
+    "game/overworld/raska/well_road.gd": "cedd46fad1661407ab93e0dd7449cfe4230218d6355d18af32f4cbe608fb11f6",
+    "game/overworld/raska/well_road.tscn": "0dd856421f381b304a48fc85876acacf207a22caf98f0c3812847a67cb47a2ce",
+    "docs/audits/evidence/raska-basin-camp-near.jpg.base64": "614185687eed8761a6e317c0ec1c076a22ca931c8ff5e4696341c323bea8f503",
+    "docs/audits/evidence/raska-basin-camp-regional.jpg.base64": "31f7513bd5e8873fb23c10135a4cdad49d4f110820fe4ac2effcf0c57f6532bc",
+    "docs/audits/evidence/raska-basin-well-road-near.jpg.base64": "0bf1d1530bff39629ef8424a8bc87d32099c74f0eaf408b8102e33656178f620",
+    "docs/audits/evidence/raska-basin-well-road-regional.jpg.base64": "9a3f5d53b23731110074bca63bed520e790f9cfd00eac36d3b4e9f792fcb942a",
+    "docs/audits/evidence/raska-spanwater-lock-near.jpg.base64": "7b89c25971f279fb0ae8fd833c472c3491d00b3d727d94cb0bf2f8585efc5ff7",
+    "docs/audits/evidence/raska-spanwater-lock-regional.jpg.base64": "40ea2bb4fa34dc719cdbe1607afa539932c5bb2d08eaafbe8663b83fd3b9b321",
+    "docs/audits/evidence/raska-year-one-mine-near.jpg.base64": "a0b8fa340304e0e7912d630f7e953060cdc679b8ad0655183a2ab6545063754f",
+    "docs/audits/evidence/raska-year-one-mine-regional.jpg.base64": "a12d3f98094548354aa36b5cbd9549cedc6ffff725448a55d826d63aca96ac92"
+  }
+}
