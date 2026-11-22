@@ -3,6 +3,7 @@ extends SceneTree
 ## order; both portraits and plans are sourced from the real deployment.
 const Adapter := preload("res://game/ui/authored_mission_map.gd")
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
+const Bindings := preload("res://game/settings/control_bindings.gd")
 const Catalog := preload("res://game/campaign_missions.gd")
 const Deployments := preload("res://game/campaign_deployments.gd")
 const Harness := preload("res://game/battlefield/command_harness.gd")
@@ -81,6 +82,8 @@ func _run() -> void:
 				continue
 			_check(map.terrain_texture != null, id + " real terrain")
 			_check(map.size == Minimap.TACTICAL_COMPACT_SIZE, id + " compact size " + str(map.size))
+			if id in ["mara_mine_escort", "sereth_voices_at_the_cut", "mara_grain_crossing"]:
+				_check_tooltip_presets(id, map)
 			_key(KEY_SHIFT, true)
 			_check(host.command_view, id + " enters command")
 			await process_frame
@@ -101,6 +104,19 @@ func _run() -> void:
 	_check(deployment_count == 18, "all normal campaign deployments")
 	print("%d/%d authored tactical map checks passed." % [checks - failures, checks])
 	quit(1 if failures else 0)
+
+## The three missions represent the Mine, Cut and shared authored chart tooltip owners.
+func _check_tooltip_presets(id: String, map: Minimap) -> void:
+	var source := map.tooltip_text
+	var classic := "In command: N / LT + D-pad Up to open."
+	var heroes := "In command: N / Back, then D-pad Up to open."
+	_check(source.begins_with(classic), id + " stock Classic chart hint")
+	Bindings.set_layout(Bindings.Layout.HEROES, "")
+	_check(Bindings.heroes_active() and TranslationServer.translate(source) == source.replace(classic, heroes),
+		id + " Heroes opening hint changes without altering keyboard or waypoint hints")
+	Bindings.set_layout(Bindings.Layout.CLASSIC, "")
+	_check(TranslationServer.translate(map.tooltip_text) == source, id + " Classic hint returns on same chart")
+
 
 func _exercise_grain(host: Harness, map: Minimap, adapter: Control) -> void:
 	var commanded: Array[int] = []
