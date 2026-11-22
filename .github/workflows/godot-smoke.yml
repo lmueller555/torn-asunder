@@ -37,13 +37,19 @@ jobs:
           "$RUNNER_TEMP/godot" --version
       - name: Import project headlessly
         run: '"$RUNNER_TEMP/godot" --headless --import'
+      - name: Verify ordinary first-run title shuts down normally
+        run: |
+          export XDG_DATA_HOME="$RUNNER_TEMP/title-quit-data"
+          export XDG_CONFIG_HOME="$RUNNER_TEMP/title-quit-config"
+          mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+          timeout 35s "$RUNNER_TEMP/godot" --headless --quit-after 12
       - name: Cross-check opened battlefield perimeters
         run: |
           "$RUNNER_TEMP/godot" --headless --no-header --script tools/inventory_deployment_visuals.gd > "$RUNNER_TEMP/opening-art.json"
           python3 -B -m tools.report_deployment_art --opening-inventory "$RUNNER_TEMP/opening-art.json" > /dev/null
       - name: Run campaign, battlefield and combat smoke tests
         run: |
-          for test in campaign_opening pause_menu_flow campaign_missions mara_greyhollow_rescue mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap sector_camera minimap_route_overlay overworld_compass sova_overworld_normal_title ilyra_headland_relay_skin cairnspine_perimeter_march battle_points; do
+          for test in campaign_opening heroes_layout pause_menu_flow campaign_missions mara_greyhollow_rescue mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap sector_camera minimap_route_overlay overworld_compass sova_overworld_normal_title ilyra_headland_relay_skin cairnspine_perimeter_march battle_points; do
             echo "::group::$test"
             "$RUNNER_TEMP/godot" --headless --script "res://tests/$test.gd"
             echo "::endgroup::"
