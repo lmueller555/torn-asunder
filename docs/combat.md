@@ -122,6 +122,8 @@ References for the design pattern only: [*Kingdom Under Fire: Heroes* manual, pp
 
 In normal **Get Them Out** at Greyhollow, Shield Infantry keeps its 32-member formation. The eight soldiers in the leading rank use the existing Sword Slash on a melee attack; the other 24 stay ready. The fitted contact pose follows the encounter’s existing hit or whiff, not a second damage event. Move or Hold cancels the presentation, including after Retry. The Heavy replay and other missions are unchanged. Verify with `godot --headless --script tests/mara_greyhollow_shield_slash.gd`.
 
+In **AI Infantry Skirmish**, Heavy Infantry now uses fitted open-hit stagger, shield-block stagger, and sword recoil. The stagger presentation follows the real anchor travel and replants the supporting boot; it does not change a hit, order, combat movement, or the timing of the strike. This scope does not change the Mine replay or add knockdown, get-up, defeat, or celebration animations. [Independent native review](audits/human-heavy-infantry-reactions-v02.json).
+
 ## Human Archer prototype
 
 `HumanArcherVolley` is the ranged combat component used by Mara’s prototype Archer formation. It is not a skirmish roster entry or a model. An archer trades staying power for a **3.5–52 m** firing band: **960 starting HP**, **52 base Ranged damage**, **0.70 s** to draw and **1.90 s** to reload. It cannot fire while engaged in melee; getting pinned after starting the draw interrupts it and forces a reload. These numbers are provisional. Mara’s encounter uses 248 proxy HP for Archers against 310 proxy HP for Shield Infantry; its placeholder Archers stay put when ordered to attack.
