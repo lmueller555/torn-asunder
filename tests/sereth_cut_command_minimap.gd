@@ -64,13 +64,15 @@ func _run() -> void:
 		and root.get_camera_3d() == _mission._command_camera, "Existing L2 opens the command camera and panel.")
 	_check(_hud_fits(), "Panel, map and hint must fit without touching the existing objective HUD.")
 	_check(_map._glyphs.size() == 3 and _glyph(&"sereth").position == _mission.battle.hero_position
-		and _glyph(&"formation_0").selected and not _glyph(&"formation_1").selected
+		and _glyph(&"sereth").selected and not _glyph(&"formation_0").selected and not _glyph(&"formation_1").selected
 		and not _mission._raider.visible, "Initial live friendly markers and only one selection, no reserve.")
 	_check(not _map.sector_pixels().is_empty() and Geometry2D.is_point_in_polygon(
 		_map.project(_mission.battle.hero_position), _map.sector_pixels()[0]),
 		"Actual orthographic sector contains the initial hero position.")
 	await _capture_image("command-over-hero-sector")
 
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_check(_glyph(&"formation_0").selected, "The first D-pad press selects the Household Guard.")
 	_button(JOY_BUTTON_DPAD_RIGHT)
 	_check(_glyph(&"formation_1").selected and not _glyph(&"formation_0").selected,
 		"Existing D-pad changes the real selected platoon and highlight.")
@@ -156,6 +158,7 @@ func _controller_draft() -> void:
 	_tap(JOY_BUTTON_DPAD_UP)
 	_check(hud._draft_battle == null, "D-pad Up in hero never opens an aim.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_button(JOY_BUTTON_DPAD_RIGHT) # Select Household Guard after restart.
 	_axis(JOY_AXIS_LEFT_X, 0.88)
 	var world_cursor := _mission.cursor
 	var sector := _mission._sector.focus
@@ -246,10 +249,8 @@ func _hero_waypoints() -> void:
 	_orders.clear()
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
 	_tick() # Let the lead model settle at the authored spawn after restart.
-	_key(KEY_Z)
-	_tick()
 	_check(_mission.selected_index == lead_index and _mission.march_mode() and _mission._march_beam.is_visible_in_tree()
-		and not _map.is_visible_in_tree(), "Keyboard selects Sereth's lead and the hero-view marker, not the command map.")
+		and not _map.is_visible_in_tree(), "Restart selects Sereth's lead and the hero-view marker.")
 	var first := _point("Routes/ApproachRoadWest")
 	var before: Vector2 = _mission.march_marker
 	var yaw: float = _mission._hero_yaw
@@ -294,6 +295,7 @@ func _hero_waypoints() -> void:
 		"Sereth physically traverses all three legs and holds at the junction with no queued points.")
 	_mission.restart_mission()
 
+	_tap(JOY_BUTTON_DPAD_RIGHT) # Select Household Guard after restart.
 	# Isolate the late-lane terrain from the long approach and keep the actual
 	# selected Household Guard, marker input, and physical Cut collision.
 	var guard := _mission.battle.formations[0]
@@ -356,6 +358,7 @@ func _waypoint_queue() -> void:
 	_orders.clear()
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
 	_key_event(KEY_SHIFT, true)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
 	_key(KEY_G)
 	_key_event(KEY_SHIFT, false)
@@ -438,6 +441,7 @@ func _waypoint_queue() -> void:
 	var old_battle := _mission.battle
 	_tap(JOY_BUTTON_START)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(first))
 	_key(KEY_G)
 	old_battle.order_hold(0)
@@ -461,6 +465,7 @@ func _blocked_queue() -> void:
 	_orders.clear()
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_tap(JOY_BUTTON_DPAD_RIGHT)
 	for point in [first, second, roof]:
 		_mouse_map(MOUSE_BUTTON_LEFT, _map.project(point))
 		_key(KEY_G)
@@ -612,6 +617,7 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	_check(_mission.command_view and _map.tactical_style and _map.is_visible_in_tree() and _hud_fits(),
 		"Test live Pause in active command rather than before opening the tactical map.")
 	var road := _point("Routes/ApproachRoadWest")
+	_button(JOY_BUTTON_DPAD_RIGHT)
 	_key(KEY_N)
 	_tick()
 	await process_frame

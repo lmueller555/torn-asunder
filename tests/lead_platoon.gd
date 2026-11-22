@@ -127,9 +127,8 @@ func _check_waypoint_marker() -> void:
 	root.add_child(harness)
 	await physics_frame
 	var battle: Battle = harness.battle
-	_button(JOY_BUTTON_DPAD_LEFT)
 	await _frames(2)
-	_check(harness.selected_index == Battle.LEAD_INDEX and harness.march_mode(), "D-pad left selects the leader's platoon and the stick drives the waypoint marker.")
+	_check(harness.selected_index == Battle.LEAD_INDEX and harness.march_mode(), "Deployment selects the leader’s platoon and the stick drives its waypoint marker.")
 	var hero := battle.hero_position
 	var start: Vector2 = harness.march_marker
 	_check(start.distance_to(battle.lead.position) <= harness.MARKER_START + 0.01, "The marker starts just ahead of the selected platoon.")
@@ -225,6 +224,9 @@ func _check_waypoint_marker() -> void:
 	battle.lead_engaged = false
 	await _frames(2)
 	_check(harness.selected_index == 0, "Otherwise the platoon selected before combat comes back afterwards.")
+	harness.restart_battle()
+	_check(harness.selected_index == Battle.LEAD_INDEX and harness._marker_owner == Battle.LEAD_INDEX,
+		"Restart selects the leader’s platoon and resets its waypoint marker.")
 	harness.queue_free()
 	await process_frame
 

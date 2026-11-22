@@ -50,6 +50,7 @@ func _run() -> void:
 		var prior_hp := fight.enemy.hp
 		var prior_bp := fight.points.balance
 		_axis(1.0)
+		_button(JOY_BUTTON_DPAD_RIGHT) # Select Shield Infantry.
 		mission.cursor = fight.enemy_position
 		_key(KEY_K)
 		_check(group.order == Battle.Order.ATTACK, mode + ": actual command accepted")
@@ -143,6 +144,7 @@ func _exercise_retry_hold() -> void:
 	fight.enemy.receive_damage(fight.enemy.hp - 20.0)
 	mission._sync_view()
 	_axis(1.0)
+	_button(JOY_BUTTON_DPAD_RIGHT) # Retry starts on the lead platoon.
 	mission.cursor = fight.enemy_position
 	_key(KEY_K)
 	_check(group.order == Battle.Order.ATTACK, "after Retry, actual attack accepted")

@@ -126,7 +126,11 @@ func _map_context(pins: Array[StringName]) -> bool:
 			or not detachment.is_equal_approx(map.project(side.position)):
 		return false
 	for glyph in map._glyphs:
-		if glyph.icon == Minimap.Icon.ENEMY or (glyph.id == &"shore_detachment" and not glyph.selected):
+		if glyph.icon == Minimap.Icon.ENEMY:
+			return false
+		if glyph.id == &"ilyra" and glyph.selected != (_mission.selected_index == Battle.LEAD_INDEX):
+			return false
+		if glyph.id == &"shore_detachment" and glyph.selected != (_mission.selected_index == 0):
 			return false
 	for pin in pins:
 		var marker: Variant = map.marker_pixel(pin)

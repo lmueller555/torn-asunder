@@ -369,6 +369,8 @@ func _win_finale(finale: FinaleScene, route: Finale.Route, unchanged: String) ->
 
 func _command_household(finale: FinaleScene, ids: Array) -> bool:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	if finale.selected_index == Battle.LEAD_INDEX:
+		_joy(JOY_BUTTON_DPAD_RIGHT)
 	var guard := finale.battle.formations[FinaleScene.HOUSEHOLD]
 	for id: String in ids:
 		var target := finale._route(id)

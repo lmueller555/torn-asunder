@@ -188,6 +188,7 @@ func _sync_view() -> void:
 	_minimap.set_field_bounds(battle.bounds)
 	var frame := Minimap.Frame.new()
 	frame.hero = Minimap.Marker.new(&"ilyra", battle.hero_position, battle.hero_heading)
+	frame.selected_hero = selected_index == Battle.LEAD_INDEX
 	var friends := PackedVector2Array([battle.hero_position])
 	var detachment := battle.formations[0]
 	if detachment.can_receive_orders():

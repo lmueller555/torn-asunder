@@ -409,6 +409,8 @@ func _place_detachment(path: Array) -> bool:
 	for segment: String in path:
 		var waypoint := _local_xz(_point(segment))
 		_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+		if _field_mission.selected_index == Battle.LEAD_INDEX:
+			_joy(JOY_BUTTON_DPAD_RIGHT)
 		_field_mission.cursor = waypoint
 		_joy(JOY_BUTTON_X)
 		_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
@@ -456,7 +458,8 @@ func _rescue(with_cargo: bool) -> bool:
 		return false
 	var marines: Battle.Formation = _mission.battle.formations[Mission.MARINES]
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
-	_joy(JOY_BUTTON_DPAD_RIGHT)
+	for _step in range(_mission.selected_index, Mission.MARINES):
+		_joy(JOY_BUTTON_DPAD_RIGHT)
 	_mission.cursor = _local_xz(_point("Routes/OpenMooring"))
 	_joy(JOY_BUTTON_X)
 	if marines.order != Battle.Order.MOVE or not _wait(func() -> bool:

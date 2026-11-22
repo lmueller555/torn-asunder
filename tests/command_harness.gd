@@ -34,8 +34,7 @@ func _run() -> void:
 	_check(_harness.command_view and root.get_camera_3d().name == &"CommandCamera", "L2 activates the command camera.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 0.40)
 	_check(_harness.command_view, "Trigger hysteresis prevents flicker.")
-	_button(JOY_BUTTON_DPAD_LEFT)
-	_check(_harness.selected_index == Battle.LEAD_INDEX, "D-pad selection reaches the leader's own platoon.")
+	_check(_harness.selected_index == Battle.LEAD_INDEX, "The leader’s platoon is selected from deployment.")
 	var march_to := battle.hero_position + Vector2(3.0, -2.0)
 	_harness.cursor = march_to
 	_button(JOY_BUTTON_X)

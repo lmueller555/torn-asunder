@@ -7,6 +7,8 @@ const Missions := preload("res://game/campaign_missions.gd")
 const Deployments := preload("res://game/campaign_deployments.gd")
 const Dialogue := preload("res://game/campaign_dialogue.gd")
 const Profile := preload("res://game/profile_store.gd")
+const Harness := preload("res://game/battlefield/command_harness.gd")
+const Battle := preload("res://game/battlefield/command_battle.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 
 var _title: Title
@@ -62,6 +64,9 @@ func _verify() -> bool:
 				or saved.load_campaign_world(campaign.id).mission_at_current_waypoint() != mission_id \
 				or not saved.completed_missions(campaign.id).is_empty():
 			return _fail("%s did not deploy at the correct opening waypoint without a clear." % campaign.id)
+		var harness := _title._campaign_battle as Harness
+		if not harness or harness.selected_index != Battle.LEAD_INDEX:
+			return _fail("%s did not start with the hero’s platoon selected." % campaign.id)
 		if not PauseTest.leave_battle(_title) or _title._page != Title.Page.WORLD_MAP:
 			return _fail("%s did not return to its map after abandoning the opening." % campaign.id)
 		_title._show_title()

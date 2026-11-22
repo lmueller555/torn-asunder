@@ -499,6 +499,7 @@ func _win_high_quay(quay: HighQuay) -> bool:
 			return false
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_joy(JOY_BUTTON_RIGHT_STICK)
+	_joy(JOY_BUTTON_DPAD_RIGHT) # Select Royal Vanguard.
 	var front := quay.battle.formations[0]
 	for id: String in ["Routes/UpperStairFoot", "Routes/UpperStairLanding"]:
 		if not _march_quay(quay, front, id):
@@ -626,6 +627,7 @@ func _win_both_grain(grain: GrainScene) -> bool:
 		return false
 	_grain_dispatch(grain, Grain.Cart.SEED)
 	_key(KEY_SHIFT)
+	_key(KEY_X) # Select the supporting infantry for the ford screen.
 	var formation: Battle.Formation = grain.battle.formations[0]
 	for id: String in ["ReserveFork", "ShelteredTurn", "FordApproachWest", "FordWestBank", "FordShallows", "FordEastBank", "StoreApproach"]:
 		var point := grain.battlefield_marker(NodePath("Markers/Routes/" + id)).global_position
@@ -679,7 +681,8 @@ func _win_rescue() -> bool:
 	# Place the Archers, use their real attack order, and stop after the first
 	# contact. The living Dryad pursues Mara while she gets the crew out.
 	_key(KEY_SHIFT)
-	_key(KEY_X)
+	_key(KEY_X) # Lead to Shield Infantry.
+	_key(KEY_X) # Shield Infantry to Archers.
 	mission.cursor = Vector2(-77, 19)
 	_joy(JOY_BUTTON_X)
 	_key(KEY_SHIFT, false)

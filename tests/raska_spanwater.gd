@@ -45,6 +45,7 @@ func _run() -> void:
 		"Raska cannot open the still-contested spillway by interacting early.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_RIGHT_STICK)
+	_button(JOY_BUTTON_DPAD_RIGHT) # Select Basin Regulars.
 	var regulars := _mission.battle.formations[0]
 	for path in ["Routes/UpstreamApproach", "Routes/ServiceCauseway", "Routes/LockApron", "Objectives/SpillwayWheel"]:
 		_order_at(_point(path))

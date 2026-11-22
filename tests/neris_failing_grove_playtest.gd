@@ -90,6 +90,7 @@ func _exercise() -> void:
 		"Actual tactical input immediately restores both original captions at full opacity.")
 	_button(JOY_BUTTON_RIGHT_STICK)
 	_button(JOY_BUTTON_DPAD_RIGHT)
+	_button(JOY_BUTTON_DPAD_RIGHT) # Select the guard that holds the track.
 	var guard := _mission.battle.formations[1]
 	_order_at(_marker("Routes/LoadingScreenHold"))
 	_wait(func() -> bool: return guard.order != Battle.Order.MOVE, 500)

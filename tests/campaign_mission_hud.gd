@@ -6,6 +6,7 @@ const Profile := preload("res://game/profile_store.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const Missions := preload("res://game/campaign_missions.gd")
 const World := preload("res://game/campaign_world.gd")
+const Battle := preload("res://game/battlefield/command_battle.gd")
 const Harness := preload("res://game/battlefield/command_harness.gd")
 
 var failures := 0
@@ -62,6 +63,14 @@ func _run() -> void:
 					_check(not mission.get_node("HUD/Panel").is_visible_in_tree(), row.id + " old command panel hidden")
 					var data := mission._mission_hud_state()
 					_check(data.roster.size() >= 1 and data.roster[0].name == campaign.name, row.id + " lead roster name")
+					_check(data.roster.size() >= 1 and data.roster[0].selected,
+						row.id + " hero selected at deployment")
+					if mission.battle.lead_platoon_enabled:
+						_check(mission.selected_index == Battle.LEAD_INDEX and mission._marker_owner == Battle.LEAD_INDEX,
+							row.id + " initial march marker belongs to the hero’s platoon")
+					else:
+						_check(row.id == "neris_cairnspine_survey" and mission.hero_combat_active(),
+							row.id + " solo scout starts under direct control")
 					_check(String(data.get("objective", "")).strip_edges() != "", row.id + " live objective text")
 					_check(title._stage.get_node_or_null("PauseBattle") == null, row.id + " old pause card removed")
 					if row.id == "mara_mine_escort":

@@ -70,7 +70,7 @@ const MARKER_BEAM_HEIGHT := 9.0
 
 var battle := Battle.new()
 var command_view := false
-var selected_index := 0
+var selected_index := Battle.LEAD_INDEX
 var cursor := Vector2.ZERO
 
 var _shared_mission_hud_enabled := false
@@ -190,7 +190,7 @@ func _ready() -> void:
 		_l2_down = _axis(JOY_AXIS_TRIGGER_LEFT) >= L2_PRESS
 	battle.lead_platoon_enabled = lead_platoon_enabled
 	routes.reset(battle)
-	selected_index = 0
+	_select_starting_platoon()
 	_configure_formation_roles()
 	_configure_field()
 	_build_placeholders()
@@ -999,7 +999,7 @@ func restart_battle() -> void:
 		_placed_spread[index] = -1.0
 	_camera_pivot = Vector3.INF
 	_calm_seconds = 0.0
-	selected_index = 0
+	_select_starting_platoon()
 	cursor = Vector2.ZERO
 	_mouse_cursor_active = false
 	if _sector:
@@ -1015,6 +1015,11 @@ func restart_battle() -> void:
 	_reset_march_marker()
 	_update_cameras()
 	_update_mode()
+
+
+func _select_starting_platoon() -> void:
+	selected_index = Battle.LEAD_INDEX if battle.lead_platoon_enabled else 0
+	_pre_combat_index = selected_index
 
 
 func _place_at_spawns() -> void:

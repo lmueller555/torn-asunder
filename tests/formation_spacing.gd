@@ -77,7 +77,9 @@ func _check_harness() -> void:
 	var members: Array = harness._formation_members[0]
 	await _frames(2)
 	var normal_width := _width(members)
-	_check(harness.march_mode() and harness.selected_index == 0, "The harness starts marching with the infantry selected.")
+	_check(harness.march_mode() and harness.selected_index == Battle.LEAD_INDEX, "The harness starts with the lead platoon selected.")
+	_button(JOY_BUTTON_DPAD_RIGHT)
+	_check(harness.selected_index == 0, "D-pad right selects the supporting infantry.")
 	_check(harness._controls_label.text.contains("L1 / I: tighter formation") and harness._controls_label.text.contains("R2 / O: wider formation"),
 		"The marching controls list the formation buttons.")
 	_button(JOY_BUTTON_LEFT_SHOULDER)

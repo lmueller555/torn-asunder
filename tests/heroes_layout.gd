@@ -37,6 +37,10 @@ func _check_tactics_and_command() -> void:
 	var battle: Battle = harness.battle
 	var infantry := battle.formations[0]
 	_check(Bindings.heroes_active() and harness.march_mode(), "A battlefield turns the Heroes layout on, starting in Tactics mode.")
+	_check(harness.selected_index == Battle.LEAD_INDEX, "Heroes layout starts with the lead platoon selected.")
+	_trigger(JOY_AXIS_TRIGGER_RIGHT, true)
+	_trigger(JOY_AXIS_TRIGGER_RIGHT, false)
+	_check(harness.selected_index == 0, "The first RT press selects the supporting infantry.")
 	# LT / RT change the selected troop.
 	_trigger(JOY_AXIS_TRIGGER_RIGHT, true)
 	_trigger(JOY_AXIS_TRIGGER_RIGHT, false)

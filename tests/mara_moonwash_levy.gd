@@ -80,6 +80,7 @@ func _run() -> void:
 	var group := _mission.battle.formations[1]
 	_command()
 	_joy(JOY_BUTTON_DPAD_RIGHT)
+	_joy(JOY_BUTTON_DPAD_RIGHT) # Select Royal Rear Guard.
 	_order(group, "Spawns/LocalLevy")
 	_joy(JOY_BUTTON_RIGHT_STICK)
 	_tick(8)
@@ -255,6 +256,8 @@ func _run_bypass() -> void:
 	var vanguard := _mission.battle.formations[0]
 	var rear := _mission.battle.formations[1]
 	_command()
+	if _mission.selected_index == Battle.LEAD_INDEX:
+		_joy(JOY_BUTTON_DPAD_RIGHT)
 	_order(vanguard, "Routes/InlandBypass")
 	_joy(JOY_BUTTON_DPAD_RIGHT)
 	_order(rear, "Routes/QuaySafeTurn")

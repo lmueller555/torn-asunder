@@ -43,6 +43,7 @@ func _run() -> void:
 		and _mission._route.text.contains("cracking"), "The actual foot/slab approach warns visibly before closure.")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_button(JOY_BUTTON_RIGHT_STICK)
+	_button(JOY_BUTTON_DPAD_RIGHT) # Select Royal Vanguard.
 	_march(vanguard, "Routes/UpperStairFoot")
 	_march(vanguard, "Routes/UpperStairLanding")
 	_button(JOY_BUTTON_A)

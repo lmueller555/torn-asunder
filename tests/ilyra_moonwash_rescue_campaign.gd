@@ -213,7 +213,7 @@ func _go_stranded() -> bool:
 
 func _screen_mooring() -> bool:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
-	if _mission.selected_index == 0:
+	for _step in range(_mission.selected_index, Mission.MARINES):
 		_joy(JOY_BUTTON_DPAD_RIGHT)
 	var target := _point("Routes/OpenMooring")
 	_mission.cursor = _local_xz(target)

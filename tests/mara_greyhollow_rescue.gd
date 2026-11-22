@@ -63,7 +63,8 @@ func _run() -> void:
 	# for the guard or the rest of the army to arrive.
 	var yard := _mission.encounter.enemy_position
 	_key(KEY_SHIFT)
-	_key(KEY_X)
+	_key(KEY_X) # Lead to Shield Infantry.
+	_key(KEY_X) # Shield Infantry to Archers.
 	_mission.cursor = Vector2(-77, 19)
 	_joy_button(JOY_BUTTON_X)
 	_key(KEY_SHIFT, false)
