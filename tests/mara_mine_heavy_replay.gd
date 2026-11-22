@@ -88,8 +88,8 @@ func _check_loadout(heavy: bool) -> bool:
 			or _mission.team_battle_points_frame().capacity != (720 if heavy else 700):
 		return _fail("Loadout did not keep the real two formations, correct HP/speed, default Archer, Hero or BP.")
 	var name := "HeavyInfantryModel" if heavy else "HumanInfantryModel"
-	if _mission._formation_members[0].size() != PlatoonSize.REGULAR_MELEE \
-			or _mission._infantry_animators.size() != PlatoonSize.REGULAR_MELEE:
+	if _mission._formation_members[0].size() != PlatoonSize.PLATOON_WITH_LEADER \
+			or _mission._infantry_animators.size() != PlatoonSize.PLATOON_WITH_LEADER:
 		return _fail("Expected one checked native rig and animator for every regular melee member.")
 	for member: Node3D in _mission._formation_members[0]:
 		var model := member.get_node_or_null(name) as Node3D
@@ -147,7 +147,7 @@ func _capture_carry_and_rig() -> bool:
 	await _checkpoint("01-heavy-hero-carry")
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tick()
-	if root.get_camera_3d() != _mission._command_camera or _framed_members(5.0) != PlatoonSize.REGULAR_MELEE \
+	if root.get_camera_3d() != _mission._command_camera or _framed_members(5.0) != PlatoonSize.PLATOON_WITH_LEADER \
 			or not _case_projects(true):
 		return _fail("The unchanged tactical view lost the Heavy rig or the approved carry LOD.")
 	await _checkpoint("02-heavy-tactical-carry")

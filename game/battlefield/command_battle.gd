@@ -2,6 +2,7 @@ extends RefCounted
 ## Shared simulation. Neither camera owns or recreates the field or its orders.
 
 const PlatoonSize := preload("res://game/combat/platoon_size.gd")
+const CombatUnit := preload("res://game/combat/combat_unit.gd")
 
 enum Order { HOLD, MOVE, BLOCKED, ATTACK, DEFEATED, EXTRACTED }
 enum FormationRole { UNSPECIFIED, REGULAR_MELEE, RANGED, SUPPORT }
@@ -19,7 +20,10 @@ const SPREAD_RATE := 1.4
 const NO_FORMATION_WORDS: PackedStringArray = ["archer", "bow", "sling", "refugee", "witness", "civilian", "miner"]
 
 const LEGACY_AUTHORED_MEMBERS := 12
-const AUTHORED_MELEE_FILES := 8
+const AUTHORED_MELEE_FILES := PlatoonSize.REGULAR_MELEE_COLUMNS
+
+## The two officers flank the hero; the thirty escorts are behind them.
+const LEAD_OFFICER_OFFSETS := [Vector2(-1.5, -0.4), Vector2(1.5, -0.4)]
 
 
 ## An indexed deployment slot shared by feet, extraction and presentation.
@@ -28,10 +32,14 @@ class Member:
 	var index: int
 	var offset: Vector2
 	var crossed := false
+	var is_leader: bool
+	# Assigned by a scene's existing grouped melee resolver, not a second HP ledger.
+	var combatant: CombatUnit
 
-	func _init(member_index: int, file_offset: Vector2) -> void:
+	func _init(member_index: int, file_offset: Vector2, leader := false) -> void:
 		index = member_index
 		offset = file_offset
+		is_leader = leader
 
 ## Explicit Move/Hold requests, not the Hold produced by reaching a destination.
 signal formation_commanded(index: int)
@@ -56,6 +64,7 @@ class Formation:
 	var move_speed := FORMATION_SPEED
 	var role := FormationRole.UNSPECIFIED
 	var members: Array[Member] = []
+	var leader: Member
 	var member_footprint_check := Callable()
 	var footprint_padding := Vector2(0.44, 0.40)
 	var spacing := Spacing.NORMAL
@@ -75,22 +84,39 @@ class Formation:
 		configure_role(FormationRole.UNSPECIFIED)
 
 
-	func configure_role(formation_role: FormationRole, melee_files := AUTHORED_MELEE_FILES, melee_spacing := Vector2(0.85, 0.78), melee_trailing_bias := 0.0) -> void:
+	func configure_role(formation_role: FormationRole, _legacy_files := AUTHORED_MELEE_FILES, melee_spacing := Vector2(0.85, 0.78), melee_trailing_bias := 0.0) -> void:
 		role = formation_role
-		var melee := role == FormationRole.REGULAR_MELEE
-		var count := PlatoonSize.count_for(LEGACY_AUTHORED_MEMBERS, melee)
-		var files := AUTHORED_MELEE_FILES if melee and melee_files != 4 else 4
-		var rows := ceili(float(count) / float(files))
-		var spacing := melee_spacing if melee else Vector2(0.85, 0.78)
-		var bias := melee_trailing_bias if melee else 0.0
-		footprint_padding = Vector2(0.44, 0.40) if spacing.x >= 0.85 else Vector2(0.26, 0.34)
+		leader = null
 		members.clear()
-		for file in range(files):
-			for row in range(rows):
-				if members.size() == count:
-					break
-				members.append(Member.new(members.size(),
-					Vector2((file - (files - 1) * 0.5) * spacing.x, (row - (rows - 1) * 0.5) * spacing.y + bias)))
+		var spacing := melee_spacing if role == FormationRole.REGULAR_MELEE else Vector2(0.85, 0.78)
+		footprint_padding = Vector2(0.44, 0.40) if spacing.x >= 0.85 else Vector2(0.26, 0.34)
+		if role == FormationRole.REGULAR_MELEE:
+			# Keep the existing command pivot in the regular block for wayfinding,
+			# formation checks and extracting the whole platoon.
+			var first_rank := melee_trailing_bias - (PlatoonSize.REGULAR_MELEE_RANKS - 1) * spacing.y * 0.5
+			_append_regular_ranks(spacing, first_rank)
+			leader = Member.new(members.size(), Vector2(0.0, first_rank - spacing.y), true)
+			members.append(leader)
+			return
+		for file in 4:
+			for row in 3:
+				members.append(Member.new(members.size(), Vector2((file - 1.5) * spacing.x, (row - 1.0) * spacing.y)))
+
+
+	func _append_regular_ranks(spacing: Vector2, first_rank: float) -> void:
+		for file in PlatoonSize.REGULAR_MELEE_COLUMNS:
+			for row in PlatoonSize.REGULAR_MELEE_RANKS:
+				var x := (file - (PlatoonSize.REGULAR_MELEE_COLUMNS - 1) * 0.5) * spacing.x
+				members.append(Member.new(members.size(), Vector2(x, first_rank + row * spacing.y)))
+
+
+	## The lead still follows the hero's existing group orders. Only its regular
+	## slots are members; the two officers and the hero do not count as soldiers.
+	func configure_officer_escort() -> void:
+		role = FormationRole.REGULAR_MELEE
+		leader = null
+		members.clear()
+		_append_regular_ranks(Vector2(0.85, 0.78), 1.55)
 
 
 	## A soldier's place in the platoon, gathered in or fanned out by the formation.

@@ -66,7 +66,7 @@ const TYPES: Dictionary = {
 		"tint": Color(0.92, 0.58, 0.42), "scale": 1.14, "speed": 2.8,
 	},
 	&"march_riders": {
-		"name": "March Riders", "faction": "Humans", "role": Role.MELEE,
+		"name": "March Riders", "faction": "Humans", "role": Role.MELEE, "mounted": true,
 		"hp_scale": 1.15, "attack": {D.MELEE: 40.0}, "primary": [D.MELEE],
 		"heavy_chance": 0.5, "tint": Color(0.86, 0.80, 1.0), "scale": 1.04, "speed": 4.6,
 	},
@@ -270,10 +270,15 @@ static func definition(type_id: StringName) -> Dictionary:
 	return HEROES.get(type_id, {})
 
 
-## Regular melee has a uniform platoon headcount; other roles stay authored.
-static func platoon_count(type_id: StringName, authored_count: int) -> int:
+## The formation rule applies to foot melee, not every unit that fights in melee.
+static func is_regular_melee(type_id: StringName) -> bool:
 	var info := definition(type_id)
-	return PlatoonSize.count_for(authored_count, info.get("role", -1)==Role.MELEE)
+	return info.get("role", -1) == Role.MELEE and not info.get("mounted", false)
+
+
+## Other roles and mounted units keep their authored headcount.
+static func platoon_count(type_id: StringName, authored_count: int) -> int:
+	return PlatoonSize.count_for(authored_count, is_regular_melee(type_id))
 
 
 ## Builds one unit at a level. Earned points go to the type's primary ratings in turn.

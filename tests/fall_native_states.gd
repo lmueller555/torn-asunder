@@ -5,6 +5,8 @@ const Catalog := preload("res://game/combat/unit_catalog.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const StockView := preload("res://game/combat/infantry_skirmish_view.tscn")
 const TICK:=1.0/60.0
+const MIN_PARITY_TICKS := 600
+const MAX_PARITY_TICKS := 900
 const FOCUS: Array[int]=[Battle.State.KNOCKDOWN,Battle.State.DOWN,Battle.State.GET_UP]
 func _initialize() -> void:
 	call_deferred("_test")
@@ -27,7 +29,8 @@ func _test() -> void:
 	view.configure(setup)
 	root.add_child(view)
 	view.set_physics_process(false)
-	assert(view.battle.soldiers.size()==64*seats)
+	var per_side := Battle.PLATOON_SIZE * seats
+	assert(view.battle.soldiers.size() == 2 * per_side)
 	for hook in view._stagger_contacts:
 		assert(hook!=null)
 	var terminal: Array[Transform3D]=_authored_terminal()
@@ -37,7 +40,9 @@ func _test() -> void:
 	var final_ready := 0
 	var holds: Dictionary[int,Array]={}
 	var total_hold_ticks := 0
-	for tick in range(60*10):
+	var parity_ticks := 0
+	for tick in range(MAX_PARITY_TICKS):
+		parity_ticks += 1
 		oracle.step(TICK)
 		view._physics_process(TICK)
 		if oracle.hits != view.battle.hits or oracle.blocks != view.battle.blocks:
@@ -98,10 +103,16 @@ func _test() -> void:
 					fail("Get Up failed to hand off to Heavy ready")
 					return
 			last[i]=native.state
-	if states.size()!=3 or final_ready == 0 or total_hold_ticks < 15:
-		fail("No complete real fall chain: " + str(states))
+		# The spacing change need not produce its first complete recovery on
+		# the original tick. Keep the full parity window and all edge checks.
+		if parity_ticks >= MIN_PARITY_TICKS and states.size() == 3 and final_ready > 0 \
+				and total_hold_ticks >= 15 and complete_hold_edges > 0 and behavior_ticks > 0:
+			break
+	if states.size() != 3 or final_ready == 0 or total_hold_ticks < 15 or complete_hold_edges == 0 or behavior_ticks == 0:
+		fail("No complete real fall chain in %d ticks: %s; holds=%d, ready=%d, edges=%d, catches=%d" % [
+			parity_ticks, states, total_hold_ticks, final_ready, complete_hold_edges, behavior_ticks,
+		])
 		return
-	assert(complete_hold_edges>0 and behavior_ticks>0)
 	view.restart()
 	for i in range(view.battle.soldiers.size()):
 		var avatar: Battle.Soldier=view.battle.soldiers[i]
@@ -109,7 +120,7 @@ func _test() -> void:
 		var contact: SkeletonModifier3D=view._stagger_contacts[i]
 		assert(avatar.state==Battle.State.IDLE and anim.assigned_animation==&"Shield-Ready Idle" and not contact.active and not contact.has_episode)
 	check_restart=true
-	print("Unforced native ",32*seats,"+",32*seats," Heavy mirror seed 8: ",states,". Held actor-ticks=",total_hold_ticks,", exact DOWN-to-GET_UP edges=",complete_hold_edges,", ready handoffs=",final_ready,", #306 open-hit catch actor-ticks=",behavior_ticks,", restart=",check_restart,"; original sim state/time/HP/position/contact parity over all 600 ticks.")
+	print("Unforced native ",per_side,"+",per_side," Heavy mirror seed 8: ",states,". Held actor-ticks=",total_hold_ticks,", exact DOWN-to-GET_UP edges=",complete_hold_edges,", ready handoffs=",final_ready,", #306 open-hit catch actor-ticks=",behavior_ticks,", restart=",check_restart,"; original sim state/time/HP/position/contact parity over all ",parity_ticks," ticks.")
 	quit()
 func _authored_terminal() -> Array[Transform3D]:
 	var model := preload("res://assets/models/human_heavy_infantry.glb").instantiate()

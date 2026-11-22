@@ -8,6 +8,7 @@
 
 [node name="MaraGrainCrossingCampaign" instance=ExtResource("1_base")]
 battlefield_scene = ExtResource("2_marches")
+lead_has_officer_escort = true
 
 [node name="NorthBridgeVisual" type="Node" parent="."]
 script = ExtResource("3_bridge")

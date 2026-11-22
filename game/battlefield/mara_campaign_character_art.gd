@@ -15,7 +15,6 @@ const ASSETS := [
 	"res://assets/models/campaign/humans/aldric_thorne.glb",
 	"res://assets/models/campaign/humans/longbow_lieutenant.glb",
 ]
-const OFFICER_SLOTS := [0, 6] # Front of each existing lead platoon flank.
 const TACTICAL_RANGE := 24.0
 const NAME := &"MaraCampaignCharacterArt"
 const IDLE := &"Idle"
@@ -192,8 +191,8 @@ static func attach(host: Node3D) -> void:
 
 func _mount(scenes: Array[PackedScene]) -> bool:
 	var hero_anchor := _host.get("_hero") as Node3D
-	var members: Array = _host.get("_lead_members")
-	if hero_anchor == null or members.size() <= OFFICER_SLOTS[-1]:
+	var officers: Array = _host.get("_lead_officers")
+	if hero_anchor == null or officers.size() != 2:
 		return false
 	var rigs: Array[Rig] = []
 	for index in scenes.size():
@@ -214,8 +213,8 @@ func _mount(scenes: Array[PackedScene]) -> bool:
 			child.hide()
 			child.process_mode = Node.PROCESS_MODE_DISABLED
 	hero_anchor.add_child(_hero.visual)
-	for index in OFFICER_SLOTS.size():
-		var member: Node3D = members[OFFICER_SLOTS[index]]
+	for index in officers.size():
+		var member: Node3D = officers[index]
 		for child in member.get_children():
 			if child is Node3D:
 				child.hide()

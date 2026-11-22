@@ -90,6 +90,7 @@ func initialize(setup: Setup, back_button: BaseButton, rating_names: Dictionary)
 	for type: Unit.Damage in Unit.Damage.values():
 		_add_rating(type, rating_names[type])
 	_summary = _label("", Rect2(0, 467, 894, 53), 22, MUTED)
+	_summary.name = "RosterSummary"
 	_start = _button("StartSkirmish", "Start Skirmish", Rect2(1008, 466, 280, 54),
 		func() -> void: start_requested.emit(), 26)
 	_refresh()
@@ -238,7 +239,9 @@ func _refresh(fallback: Button = null) -> void:
 		_rating_labels[type].text = str(build.rating(type))
 		_rating_less[type].disabled = invested == 0
 		_rating_more[type].disabled = remaining == 0 or build.rating(type) >= Unit.MAX_RATING
-	_summary.text = "%d platoons  ·  %d soldiers per platoon  ·  %d soldiers" % [total, Skirmish.PLATOON_SIZE, total * Skirmish.PLATOON_SIZE]
+	_summary.text = "%d platoons  ·  %d rank and file + 1 leader each  ·  %d fighters total" % [
+		total, Skirmish.PLATOON_LEADER_INDEX, total * Skirmish.PLATOON_SIZE,
+	]
 	_update_focus(previous, fallback)
 
 

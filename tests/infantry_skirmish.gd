@@ -582,8 +582,8 @@ func _check_full_matches() -> bool:
 				return _fail("The skirmish did not spawn Infantry with 1,200 HP.")
 			if soldier.position.abs().x > Battle.ARENA_LIMIT.x or soldier.position.abs().y > Battle.ARENA_LIMIT.y:
 				return _fail("An opening rank spawned outside the arena.")
-		if roster_counts != [32, 32]:
-			return _fail("The skirmish did not spawn 32 soldiers per side.")
+		if roster_counts != [31, 31]:
+			return _fail("The skirmish did not spawn 30 infantry and one leader per side.")
 		for tick in range(60 * 240):
 			battle.step(TICK)
 			for engagement in battle.engagements:
@@ -593,7 +593,7 @@ func _check_full_matches() -> bool:
 				break
 		if battle.winner == Battle.LIVE or battle.hits == 0 or battle.blocks == 0:
 			return _fail("An autonomous skirmish failed to resolve with hits and blocks.")
-		print("Verified 32v32 seed %d in %.1fs with %d hits and %d blocks." % [
+		print("Verified 31v31 seed %d in %.1fs with %d hits and %d blocks." % [
 			seed_value, battle.elapsed, battle.hits, battle.blocks,
 		])
 	return true

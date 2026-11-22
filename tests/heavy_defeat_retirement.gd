@@ -8,6 +8,7 @@ const Catalog := preload("res://game/combat/unit_catalog.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Setup := preload("res://game/combat/skirmish_setup.gd")
 const DT := 1.0 / 60.0
+const FIRST_AMBER := B.PLATOON_SIZE
 var failed := false
 
 
@@ -72,7 +73,7 @@ func _run() -> void:
 					seen_tiers.append(record.tier)
 			Display.Stage.RETIRED:
 				_require(not record.root.visible and not authored.command_meshes[0].visible
-					and authored._models[32].visible and base._models[32].visible,
+					and authored._models[FIRST_AMBER].visible and base._models[FIRST_AMBER].visible,
 					"Only the retired Heavy, not regular corpses, should disappear")
 		if record.phase in [Display.Stage.FALL, Display.Stage.SETTLE, Display.Stage.TAPER] and record.phase not in paused_phases:
 			paused_phases.append(record.phase)
@@ -85,7 +86,7 @@ func _run() -> void:
 			authored.paused = false
 	_require(first_steps == [-1, 0, 72, 96, 114] and seen_tiers == [0,1,2,3,4,5,6,7,8,9,10,11],
 		"Heavy fade boundaries/tiers changed: %s, %s" % [first_steps, seen_tiers])
-	_require(authored.retirement_slots.size() == 32 and authored.command_meshes.size() == 32, "Mixed team mesh scope")
+	_require(authored.retirement_slots.size() == B.PLATOON_SIZE and authored.command_meshes.size() == B.PLATOON_SIZE, "Mixed team mesh scope")
 	authored.restart()
 	_require(record.root.visible and authored._markers[0].visible and not authored.command_meshes[0].visible
 		and record.phase == Display.Stage.LIVE and authored._players[0].assigned_animation == &"Shield-Ready Idle",
@@ -101,13 +102,13 @@ func _run() -> void:
 
 func _prepare(view: Stock) -> void:
 	for actor: B.Soldier in view.battle.soldiers:
-		if actor.battle_index not in [0, 32]:
+		if actor.battle_index not in [0, FIRST_AMBER]:
 			actor.unit.receive_damage(actor.unit.hp)
 			actor.state = B.State.DEAD
 			actor.time = B.DURATIONS[B.State.DEAD]
-	for index in [0, 32]:
+	for index in [0, FIRST_AMBER]:
 		var actor: B.Soldier = view.battle.soldiers[index]
-		var opponent: B.Soldier = view.battle.soldiers[32 - index]
+		var opponent: B.Soldier = view.battle.soldiers[FIRST_AMBER if index == 0 else 0]
 		actor.position = Vector2(0, -0.55 if index == 0 else 0.55)
 		actor.facing = Vector2.DOWN if index == 0 else Vector2.UP
 		actor.target = opponent.battle_index
@@ -144,6 +145,6 @@ func _check_missing_donor(setup: Setup) -> void:
 		and view.command_meshes.is_empty() and view.retirement_palette.is_empty() and view.retirement_cutout == null,
 		"An invalid command donor must disable the costly full-wave defeat presentation")
 	_require(view.battle.hits == 2 and view.battle.winner == B.DRAW and not view._models[0].visible
-		and not view._markers[0].visible and view._models[32].visible,
+		and not view._markers[0].visible and view._models[FIRST_AMBER].visible,
 		"Failed donor must preserve both resolver outcomes, markers and regular corpse")
 	view.queue_free()

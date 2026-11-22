@@ -8,6 +8,7 @@ extends RefCounted
 const Unit := preload("res://game/combat/combat_unit.gd")
 const CombatPlatoon := preload("res://game/combat/platoon.gd")
 const Aggro := preload("res://game/combat/enemy_aggro.gd")
+const Size := preload("res://game/combat/platoon_size.gd")
 const Units := preload("res://game/mission/mission_units.gd")
 
 enum State { IDLE, WALK, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER, DODGE, CAST }
@@ -75,6 +76,7 @@ class Fighter:
 	var unit: Unit
 	var team: int
 	var platoon := -1
+	var is_platoon_leader := false
 	var slot := Vector2.ZERO
 	var position: Vector2
 	var facing := Vector2.UP
@@ -363,36 +365,43 @@ func _spawn_squad(squad: Squad) -> void:
 	squad.spawned = true
 	var entry := squad.definition
 	var authored_count: int = entry.get("count", 1 if squad.info.get("role") == Units.Role.HERO else 16)
-	var count := Units.platoon_count(squad.type_id,authored_count)
-	var columns: int = entry.get("columns", clampi(ceili(sqrt(authored_count * 1.4)), 1, 8))
-	var regular_melee: bool = squad.info.get("role",-1)==Units.Role.MELEE
-	var collision_radius := BODY_RADIUS*float(squad.info.get("scale",1.0))
-	var formation_origin := _free_point(squad.anchor) if regular_melee else Vector2.ZERO
+	var count := Units.platoon_count(squad.type_id, authored_count)
+	var regular_melee := Units.is_regular_melee(squad.type_id)
+	var columns: int = Size.REGULAR_MELEE_COLUMNS if regular_melee else entry.get(
+		"columns", clampi(ceili(sqrt(authored_count * 1.4)), 1, 8))
+	var right := Vector2(-squad.facing.y, squad.facing.x)
+	var slots := PackedVector2Array()
+	for i in range(count):
+		var is_leader := regular_melee and i == Size.REGULAR_MELEE
+		slots.append(Vector2(0.0, SLOT_SPACING) if is_leader else _placement_slot(i, columns))
+
 	var reserved := PackedVector2Array()
 	if regular_melee:
+		var origin := _free_point(squad.anchor)
+		var radius := BODY_RADIUS * float(squad.info.get("scale", 1.0))
 		for i in range(count):
-			var j := _placement_slot(i,columns)
-			var point := squad.anchor+Vector2(-squad.facing.y,squad.facing.x)*j.x+squad.facing*j.y
-			point+=Vector2(_random.randf_range(-0.2,0.2),_random.randf_range(-0.2,0.2))
-			var seat := _regular_spawn_point(point,formation_origin,collision_radius,reserved)
+			var slot := slots[i]
+			var desired := squad.anchor + right * slot.x + squad.facing * slot.y
+			var seat := _regular_spawn_point(desired, origin, radius, reserved)
 			if not seat.is_finite():
 				# No silently reduced or half-spawned platoon.
-				squad.spawned=false
-				push_error("No distinct walkable placement for %s member %d." % [squad.id,i+1])
+				squad.spawned = false
+				push_error("No distinct walkable placement for %s member %d." % [squad.id, i + 1])
 				return
 			reserved.append(seat)
 	var roster: Array[Unit] = []
-	var right := Vector2(-squad.facing.y, squad.facing.x)
 	for i in range(count):
-		var slot := _placement_slot(i,columns)
-		var spawn := squad.anchor + right * slot.x + squad.facing * slot.y
+		var slot := slots[i]
+		var spawn: Vector2
 		if regular_melee:
-			spawn=reserved[i]
+			spawn = reserved[i]
 		else:
-			spawn+=Vector2(_random.randf_range(-0.2,0.2),_random.randf_range(-0.2,0.2))
-			spawn=_free_point(spawn)
-		var fighter := _add_fighter(squad.type_id,squad.info,squad.team,squad.level,spawn)
+			spawn = squad.anchor + right * slot.x + squad.facing * slot.y
+			spawn += Vector2(_random.randf_range(-0.2, 0.2), _random.randf_range(-0.2, 0.2))
+			spawn = _free_point(spawn)
+		var fighter := _add_fighter(squad.type_id, squad.info, squad.team, squad.level, spawn)
 		fighter.platoon = squad.index
+		fighter.is_platoon_leader = regular_melee and i == Size.REGULAR_MELEE
 		fighter.slot = slot
 		fighter.facing = squad.facing
 		if squad.info.get("role") == Units.Role.HERO:

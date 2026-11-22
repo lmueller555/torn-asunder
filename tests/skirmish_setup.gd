@@ -105,24 +105,44 @@ func _check_battle() -> bool:
 	setup.sides[1][2].set_points(Unit.Damage.MELEE, 17)
 	var battle := Battle.new(42, setup)
 	var n := Battle.PLATOON_SIZE
-	if battle.soldiers.size() != 5 * n or battle.team_size(0) != 2 * n or battle.team_size(1) != 3 * n:
+	if n != 31 or battle.soldiers.size() != 5 * n or battle.team_size(0) != 2 * n or battle.team_size(1) != 3 * n:
 		return _fail("The simulator ignored an asymmetric roster.")
+	var units := {}
 	for index in range(battle.soldiers.size()):
 		var soldier := battle.soldiers[index]
 		var team := 0 if index < 2 * n else 1
 		var platoon := floori(float(index) / n)
 		var slot := platoon if team == 0 else platoon - 2
 		var build: Setup.PlatoonBuild = setup.sides[team][slot]
-		if soldier.team != team or soldier.platoon_index != platoon or soldier.roster_index != index % n:
-			return _fail("A soldier's force, platoon or local roster index is wrong.")
+		if soldier.team != team or soldier.platoon_index != platoon or soldier.roster_index != index % n \
+				or soldier.battle_index != index or soldier.is_platoon_leader != (index % n == 30):
+			return _fail("A soldier's force, platoon, local or battle index, or leader role is wrong.")
+		if units.has(soldier.unit.get_instance_id()):
+			return _fail("Two battle soldiers share the same combat unit.")
+		units[soldier.unit.get_instance_id()] = true
+		var direction := 1.0 if team == 0 else -1.0
+		var leader := battle.soldiers[platoon * n + 30]
+		var side_count: int = setup.sides[team].size()
+		var center := (slot - (side_count - 1) * 0.5) * Battle.PLATOON_SPACING
+		if soldier.is_platoon_leader:
+			if not is_equal_approx(soldier.position.x, center):
+				return _fail("The leader is not centered on the platoon.")
+		else:
+			var file := soldier.roster_index % 5 - 2
+			var rank := floori(float(soldier.roster_index) / 5)
+			var offset := Vector2(file * Battle.FILE_SPACING, -direction * (rank + 1) * Battle.RANK_SPACING)
+			if not soldier.position.is_equal_approx(leader.position + offset):
+				return _fail("Rank and file are not in a 5-by-6 grid one rank behind the leader.")
+		if not soldier.facing.is_equal_approx(Vector2(0, direction)):
+			return _fail("A platoon member does not face its opposing force.")
 		if soldier.unit.level != build.level or soldier.unit.stat_points != build.remaining_points():
 			return _fail("A soldier did not inherit its own platoon's level and budget.")
 		for rating: Unit.Damage in Unit.Damage.values():
 			if soldier.unit.rating(rating) != build.rating(rating):
 				return _fail("A soldier inherited a rating from the wrong platoon.")
-	# Trade lethal hits at the same local roster index in two non-leading platoons.
-	var blue_index := n + 3
-	var amber_index := 4 * n + 3
+	# The last roster member of each of two non-leading platoons trades a real hit.
+	var blue_index := 2 * n - 1
+	var amber_index := 5 * n - 1
 	var blue := battle.soldiers[blue_index]
 	var amber := battle.soldiers[amber_index]
 	blue.position = Vector2.ZERO
@@ -138,8 +158,9 @@ func _check_battle() -> bool:
 	var wounded := battle.soldiers[0].unit
 	wounded.receive_damage(wounded.max_hp * 0.5)
 	battle.step(TICK)
-	if blue.unit.is_alive() or amber.unit.is_alive() or battle.survivors(0) != 2 * n - 1 or battle.survivors(1) != 3 * n - 1:
-		return _fail("A strike injured the wrong platoon when local roster indices repeated.")
+	if battle.hits != 2 or blue.state != Battle.State.DEAD or amber.state != Battle.State.DEAD \
+			or blue.unit.is_alive() or amber.unit.is_alive() or battle.survivors(0) != 2 * n - 1 or battle.survivors(1) != 3 * n - 1:
+		return _fail("Front leaders did not exchange lethal hits in their own platoons.")
 	var first_platoon_wounds := 0.5 / n
 	if not is_equal_approx(battle.platoons[0].health_fractions().y, first_platoon_wounds):
 		return _fail("The wounded soldier was recorded against the wrong health bar.")
@@ -154,13 +175,26 @@ func _check_battle() -> bool:
 	battle.step(TICK)
 	if battle.winner != Battle.LIVE:
 		return _fail("Losing the first platoon incorrectly eliminated an entire force.")
+	var last_enemy := battle.soldiers[4 * n - 1]
 	for soldier in battle.soldiers:
-		if soldier.team == 1:
+		if soldier.team == 1 and soldier != last_enemy:
 			soldier.unit.receive_damage(soldier.unit.hp)
 	battle.step(TICK)
-	if battle.winner != 0 or battle.survivors(1) != 0:
-		return _fail("The battle did not end after the last enemy platoon fell.")
-	print("An asymmetric battle preserves builds, routes damage to local rosters, and wins across all platoons.")
+	if battle.winner != Battle.LIVE or battle.survivors(1) != 1 or not last_enemy.is_platoon_leader:
+		return _fail("Losing all rank and file ended the battle while a platoon leader was still alive.")
+	var final_attacker := battle.soldiers[n]
+	final_attacker.position = Vector2.ZERO
+	final_attacker.facing = Vector2.RIGHT
+	final_attacker.target = last_enemy.battle_index
+	last_enemy.position = Vector2.RIGHT
+	last_enemy.unit.receive_damage(last_enemy.unit.hp - 1.0)
+	battle._set_state(last_enemy, Battle.State.IDLE)
+	battle._set_state(final_attacker, Battle.State.ATTACK)
+	final_attacker.time = Battle.CONTACT - TICK * 0.5
+	battle.step(TICK)
+	if battle.winner != 0 or battle.survivors(1) != 0 or last_enemy.state != Battle.State.DEAD:
+		return _fail("The battle did not end after the last enemy leader fell.")
+	print("Asymmetric 5-by-6 formations preserve builds, route leaders' strikes and defeat correctly, and wait for the final leader.")
 	return true
 
 
@@ -171,9 +205,15 @@ func _check_largest_roster() -> bool:
 	var battle := Battle.new(14, setup)
 	if battle.soldiers.size() != 2 * Setup.MAX_PLATOONS * Battle.PLATOON_SIZE:
 		return _fail("The largest supported battle lost soldiers.")
+	var opening_positions: Array[Vector2] = []
 	for soldier in battle.soldiers:
 		if absf(soldier.position.x) > battle.arena_limit.x or absf(soldier.position.y) > battle.arena_limit.y:
 			return _fail("The largest formation spawned a soldier outside the arena.")
+		opening_positions.append(soldier.position)
+	battle.step(0.0)
+	for soldier in battle.soldiers:
+		if not soldier.position.is_equal_approx(opening_positions[soldier.battle_index]):
+			return _fail("The opening update clamped or separated a formation before anyone moved.")
 		soldier.unit.receive_damage(soldier.unit.hp)
 	battle.step(TICK)
 	if battle.winner != Battle.DRAW:

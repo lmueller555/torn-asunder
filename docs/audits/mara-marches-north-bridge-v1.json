@@ -42,7 +42,7 @@
     "assets/source/marches_crossing/marches_north_timber_bridge_sector.blend": "208d1c3e9d83958b5e1eda71aa59ffac8c8cba55f65267f27e2a6db7ce458177",
     "game/battlefield/mara_grain_bridge_visual.gd": "7ac2bf79cbe7c369eb51f1ebae22303d01904b310924556fd594d0416d7a1f31",
     "game/battlefield/mara_grain_bridge_visual.gd.uid": "0ac5cfbc9e31ae014551fa5667a008c4bdabce620cff17ad6731c93e858d4aaa",
-    "game/battlefield/mara_grain_crossing_campaign.tscn": "13f4ffeda09aebd545262d663a338400a9b5e752a2c09f85feb3572a632c4e33",
+    "game/battlefield/mara_grain_crossing_campaign.tscn": "7e33a1ae52201d2804c0a40be0e54d2960077a77ec89caf08ef815221a100778",
     "game/battlefields/marches_crossing.tscn": "1b0764e0449aa659072895b4621a6a34307e7253168c8773c61634442b8fda17"
   },
   "integration_scope": {
@@ -81,5 +81,17 @@
       89.53
     ],
     "hardware_fps_claim": false
+  },
+  "deployment_continuity": {
+    "reviewed_on": "2026-11-22",
+    "reviewer": "Dot, independent gameplay deployment continuity review",
+    "result": "PASS",
+    "previous_receipt_sha256": "4bf4aab76d632b0ed50791e0bd8c6f6746fa58aa8af83a7fa5525cf6f9a339c4",
+    "deployment": "game/battlefield/mara_grain_crossing_campaign.tscn",
+    "previous_deployment_sha256": "13f4ffeda09aebd545262d663a338400a9b5e752a2c09f85feb3572a632c4e33",
+    "reviewed_deployment_sha256": "7e33a1ae52201d2804c0a40be0e54d2960077a77ec89caf08ef815221a100778",
+    "change": "One gameplay setting opts the registered mission into the new Human lead size. Registry, inherited crossing, bridge placement, camera/LOD binding, assets, and collisions are unchanged.",
+    "reproduction": "Godot 4.7.2 headless: tests/mara_grain_bridge_visual.gd. Verify original 10,696 near and 876 sector triangles, unchanged UVs, normals, materials, and albedo; one 384-triangle shared shadow; direct Shift/L2 handoff; unchanged native collision and standalone scope. The other nine reviewed files are byte-identical.",
+    "limits": "This continues the existing North Bridge placement receipt only. It does not claim the modified roster renders pixel-identically, approve new art, approve the entire scene, or extend the original cost measurements."
   }
 }
