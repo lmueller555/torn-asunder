@@ -28,10 +28,12 @@ func configure(source: Infantry, players: Array[AnimationPlayer], group: Battle.
 		return false
 	var front := INF
 	for member in group.members:
-		front = minf(front, member.offset.y)
+		if not member.is_leader:
+			front = minf(front, member.offset.y)
 	for index in range(players.size()):
 		var player := players[index]
-		if not is_equal_approx(group.members[index].offset.y, front):
+		var member := group.members[index]
+		if not member.is_leader and not is_equal_approx(member.offset.y, front):
 			_support.append(player)
 			continue
 		if not player.has_animation(CLIP):

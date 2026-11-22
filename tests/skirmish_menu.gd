@@ -24,6 +24,9 @@ func _check_menu() -> void:
 func _run_flow() -> bool:
 	if not _press_all(["Unit Test", "AI Skirmish", "BlueCountPlus", "BluePlatoon2", "LevelPlusTen", "LevelPlus"]):
 		return false
+	var summary := title.find_child("RosterSummary", true, false) as Label
+	if not summary or summary.text != "3 platoons  ·  30 rank and file + 1 leader each  ·  93 fighters total":
+		return _fail("Skirmish Setup did not show the 30 plus one leader composition or the total.")
 	if not _press_all(["RatingStep5", "FirePlus", "RatingStepAll", "IcePlus"]):
 		return false
 	if not _button("MeleePlus").disabled:
@@ -42,8 +45,12 @@ func _run_flow() -> bool:
 	var n := Battle.PLATOON_SIZE
 	if view.battle.team_size(0) != 2 * n or view.battle.team_size(1) != n or view._models.size() != 3 * n:
 		return _fail("The running scene ignored the selected roster sizes.")
-	var blue := view.battle.soldiers[n].unit
+	var blue_leader := view.battle.soldiers[2 * n - 1]
+	var leader_model := view._models[blue_leader.battle_index]
+	var blue := blue_leader.unit
 	var amber := view.battle.soldiers[2 * n].unit
+	if not blue_leader.is_platoon_leader or not leader_model.visible or not is_instance_valid(view._players[blue_leader.battle_index]):
+		return _fail("The deployed leader does not own a visible, animated soldier model.")
 	if blue.level != 12 or blue.rating(Unit.Damage.MELEE) != 3 or blue.rating(Unit.Damage.FIRE) != 6 or blue.stat_points != 4:
 		return _fail("The running scene lost Blue platoon 2's build.")
 	if amber.level != 2 or amber.rating(Unit.Damage.ICE) != 2 or amber.stat_points != 0 or view.battle.soldiers[0].unit.level != 1:
@@ -51,7 +58,7 @@ func _run_flow() -> bool:
 	blue.receive_damage(blue.max_hp)
 	if not _press_all(["Pause", "ResumeGame", "Restart"]):
 		return false
-	var restarted := view.battle.soldiers[n].unit
+	var restarted := view.battle.soldiers[2 * n - 1].unit
 	if view.paused or restarted == blue or restarted.hp != restarted.max_hp or restarted.level != 12:
 		return _fail("Restart did not restore the configured battle with fresh units.")
 	if view.battle.survivors(0) != 2 * n or restarted.rating(Unit.Damage.MELEE) != 3 or restarted.stat_points != 4:

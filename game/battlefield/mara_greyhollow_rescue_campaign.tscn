@@ -6,6 +6,7 @@
 
 [node name="MaraGreyhollowRescue" instance=ExtResource("1_mine")]
 script = ExtResource("2_rescue")
+lead_has_officer_escort = true
 battlefield_scene = ExtResource("3_valley")
 custody_case_scene = null
 hero_spawn = NodePath("Markers/Routes/QuarryTurn")

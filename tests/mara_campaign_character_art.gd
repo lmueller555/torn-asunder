@@ -2,6 +2,8 @@ extends SceneTree
 ## Smoke test for reviewed character mounts; gameplay, art and clocks are unchanged.
 const Deployments := preload("res://game/campaign_deployments.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const PlatoonSize := preload("res://game/combat/platoon_size.gd")
+const REGULAR_SCENE := "res://assets/models/human_infantry.glb"
 const Step := 1.0 / 60.0
 const MISSIONS := ["mara_mine_escort", "mara_grain_crossing", "mara_moonwash_quay"]
 var checks := 0
@@ -33,17 +35,21 @@ func _run() -> void:
 		var art = host.get_node_or_null("MaraCampaignCharacterArt")
 		var expected := not stock
 		_check((art != null) == expected, "%s registered presentation presence matches complete stock/asset set" % id)
-		_check(host._lead_members.size() == 12 and host.battle.formations.size() == 2,
-			"%s keeps 12 render slots, two command formations" % id)
+		_check(_valid_lead_roster(host) and host.battle.formations.size() == 2,
+			"%s deploys 30 real regular anchors, two separate officers, one hero and two unchanged subordinate platoons" % id)
+		var regular_ids := _anchor_ids(host._lead_members)
+		var officer_ids := _anchor_ids(host._lead_officers)
 		if art != null:
 			art.set_process(false)
 			art.set_physics_process(false)
-			_check(art._hero.visual.get_parent() == host._hero and art._officers[0].visual.get_parent() == host._lead_members[0]
-				and art._officers[1].visual.get_parent() == host._lead_members[6], "%s same hero anchor and exact existing front flank slots" % id)
-			for index in [0, 6]:
-				_check(host._lead_members[index].get_child_count() >= 2
-					and not host._lead_members[index].get_child(0).visible,
-					"%s replaced flank %d without leaving two visible art sets" % [id, index])
+			_check(art._hero.visual.get_parent() == host._hero and art._officers[0].visual.get_parent() == host._lead_officers[0]
+				and art._officers[1].visual.get_parent() == host._lead_officers[1], "%s mounts both distinct officer assets outside the regular roster" % id)
+			for index in 2:
+				var anchor: Node3D = host._lead_officers[index]
+				var visible_children := 0
+				for child: Node3D in anchor.get_children():
+					visible_children += int(child.visible)
+				_check(visible_children == 1, "%s officer %d has no visible duplicate" % [id, index])
 		_step(host, art, 5)
 		var spawn: Vector2 = host.battle.hero_position
 		var direction: Vector2 = host.battle.hero_heading
@@ -101,9 +107,18 @@ func _run() -> void:
 				correct_tiers = correct_tiers and officer.sector_body.visible and not officer.near_body.visible
 			_check(correct_tiers, "%s command camera selects only Sector body for all three rigs" % id)
 		await _capture(id + "-tactical", host)
+		for transition: int in [-1, 1, 1]:
+			_check(host.step_formation(transition), "%s lead spacing changes from command mode" % id)
+			host.battle.step(.5, Vector2.ZERO)
+			host._sync_lead_platoon()
+			_check(_valid_lead_roster(host), "%s all 32 escorts follow the same spacing and ground ownership" % id)
 		_key(KEY_SHIFT, false)
 		host.restart_mission()
 		host._sync_view()
+		host.restart_mission()
+		host._sync_view()
+		_check(_valid_lead_roster(host) and regular_ids == _anchor_ids(host._lead_members)
+			and officer_ids == _anchor_ids(host._lead_officers), "%s repeated Retry retains every exact anchor" % id)
 		if art != null:
 			art._physics_process(Step)
 			art._process(Step)
@@ -114,7 +129,8 @@ func _run() -> void:
 	if not stock:
 		var standalone = load("res://game/battlefield/mara_grain_crossing_playtest.tscn").instantiate()
 		root.add_child(standalone)
-		_check(not standalone.has_node("MaraCampaignCharacterArt"), "Standalone Grain remains stock even with three staged assets")
+		_check(not standalone.has_node("MaraCampaignCharacterArt") and standalone._lead_members.size() == 12
+			and standalone._lead_officers.is_empty(), "Standalone Grain preserves original non-campaign escort")
 		standalone.free()
 	if not output.is_empty():
 		var report := FileAccess.open(output.path_join("metrics.json"), FileAccess.WRITE)
@@ -122,6 +138,45 @@ func _run() -> void:
 			report.store_string(JSON.stringify(stats, "\t"))
 	print("Composition checks ", checks - fails, "/", checks, " successful (visual review separate)")
 	quit(1 if fails else 0)
+
+func _valid_lead_roster(host) -> bool:
+	var lead: Battle.Formation = host.battle.lead
+	if host._lead_members.size() != PlatoonSize.REGULAR_MELEE or lead.members.size() != PlatoonSize.REGULAR_MELEE \
+			or host._lead_officers.size() != 2 or host._hero.get_parent() == host._lead_model:
+		return false
+	var seen: Dictionary = {}
+	var files: Dictionary = {}
+	var ranks: Dictionary = {}
+	if lead.leader != null:
+		return false
+	for slot: Battle.Member in lead.members:
+		var regular: Node3D = host._lead_members[slot.index]
+		var expected := lead.member_offset(slot)
+		var local := Vector2(regular.position.x, regular.position.z)
+		if seen.has(expected) or not local.is_equal_approx(expected) or regular.get_child_count() != 1:
+			return false
+		if regular.get_child(0).scene_file_path != REGULAR_SCENE:
+			return false
+		seen[expected] = true
+		files[slot.offset.x] = true
+		ranks[slot.offset.y] = true
+	if files.size() != PlatoonSize.REGULAR_MELEE_COLUMNS or ranks.size() != PlatoonSize.REGULAR_MELEE_RANKS:
+		return false
+	for i in 2:
+		var officer: Node3D = host._lead_officers[i]
+		var expected: Vector2 = Battle.LEAD_OFFICER_OFFSETS[i] * lead.spread
+		if seen.has(expected) or not Vector2(officer.position.x, officer.position.z).is_equal_approx(expected):
+			return false
+		seen[expected] = true
+	return seen.size() == 32
+
+
+func _anchor_ids(anchors: Array[Node3D]) -> Array[int]:
+	var ids: Array[int] = []
+	for anchor: Node3D in anchors:
+		ids.append(anchor.get_instance_id())
+	return ids
+
 
 func _step(host, art, ticks: int) -> void:
 	for i in ticks:

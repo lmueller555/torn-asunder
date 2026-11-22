@@ -6,6 +6,7 @@ extends SceneTree
 const Deploy := preload("res://game/campaign_deployments.gd")
 const Mission := preload("res://game/battlefield/mara_greyhollow_rescue.gd")
 const Mine := preload("res://game/battlefield/mara_mine_escort.gd")
+const Size := preload("res://game/combat/platoon_size.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
 const Fight := preload("res://game/battlefield/mara_mine_encounter.gd")
 const Infantry := preload("res://game/battlefield/mara_infantry_attack.gd")
@@ -30,8 +31,9 @@ func _run() -> void:
 	var group := mission.battle.formations[0]
 	var archers := mission.battle.formations[1]
 	_check(mission.scene_file_path == "res://game/battlefield/mara_greyhollow_rescue_campaign.tscn", "registered campaign scene")
-	_check(group.members.size() == 32 and mission._infantry_animators.size() == 32
-		and archers.members.size() == 12, "original 32 shield and 12 Archer anchors")
+	_check(group.members.size() == Size.PLATOON_WITH_LEADER and mission._infantry_animators.size() == Size.PLATOON_WITH_LEADER
+		and group.leader != null and group.leader.is_leader and group.leader.index == Size.REGULAR_MELEE
+		and archers.members.size() == 12, "30 shield rankers, 1 leader and 12 Archer anchors")
 
 	for mode in ["hit", "whiff", "move_cancel", "hold_cancel", "lethal"]:
 		mission.restart_mission()
@@ -157,7 +159,7 @@ func _exercise_retry_hold() -> void:
 	var immediate_idle := true
 	for player in mission._infantry_animators:
 		immediate_idle = immediate_idle and player.assigned_animation == &"Idle" and player.root_motion_track.is_empty()
-	_check(immediate_idle, "all 32 cancel lethal tail immediately on stationary Hold after Retry")
+	_check(immediate_idle, "all 31 cancel lethal tail immediately on stationary Hold after Retry")
 	_check(fight.points.balance == bp and fight.infantry_attack.contact_serial == contact_number,
 		"visual cancellation changes no BP and cannot duplicate committed swings")
 	mission._physics_process(DT)
@@ -169,11 +171,12 @@ func _check_pose(stage: String, time := -1.0) -> void:
 	var group := mission.battle.formations[0]
 	var front := INF
 	for member in group.members:
-		front = minf(front, member.offset.y)
+		if not member.is_leader:
+			front = minf(front, member.offset.y)
 	var active := 0
 	for index in range(mission._infantry_animators.size()):
 		var player := mission._infantry_animators[index]
-		if not is_equal_approx(group.members[index].offset.y, front):
+		if not group.members[index].is_leader and not is_equal_approx(group.members[index].offset.y, front):
 			_check(player.assigned_animation == &"Idle", stage + ": rear rank still uses original ready clip")
 			continue
 		_check(player.assigned_animation == &"Sword Slash", stage + ": front rank uses exact slash clip")
@@ -196,7 +199,8 @@ func _check_pose(stage: String, time := -1.0) -> void:
 						_anchor_roots.append(root_pose)
 					elif _anchor_roots.size() >= active:
 						_check(root_pose.is_equal_approx(_anchor_roots[active - 1]), stage + ": Root bone actually stays put")
-	_check(active == 8, stage + ": exactly the eight front anchors act")
+	_check(active == Size.REGULAR_MELEE_COLUMNS + 1, stage + ": fighting leader and all five front rankers act")
+	_check(group.leader.combatant == mission.encounter.infantry_attack.attacker, stage + ": the fighting leader owns the existing aggregate damage actor")
 
 func _check(passed: bool, detail: String) -> void:
 	if not passed:

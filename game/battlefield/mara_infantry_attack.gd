@@ -69,6 +69,11 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 		_reset()
 		return 0.0
 	group.destination = target
+	# These authored encounters still resolve one contact for the entire
+	# platoon. Give its existing Unit to the new front actor, not extra damage.
+	if group.leader:
+		group.leader.combatant = attacker
+	var source := group.leader.combatant if group.leader else attacker
 	var offset := target - group.position
 	var distance := offset.length()
 	var direction := offset.normalized()
@@ -96,7 +101,7 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 				_contact_serial += 1
 				if distance <= REACH and (distance == 0.0 or direction.dot(group.heading) >= MIN_FORWARD_DOT) \
 					and clear_contact.call(group.position, target):
-					var lost := enemy.receive_hit(attacker, {Unit.Damage.MELEE: _base_damage})
+					var lost := enemy.receive_hit(source, {Unit.Damage.MELEE: _base_damage})
 					if not enemy.is_alive():
 						group.hold()
 						_reset()

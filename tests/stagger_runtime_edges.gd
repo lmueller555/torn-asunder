@@ -7,6 +7,7 @@ const Unit := preload("res://game/combat/combat_unit.gd")
 const View := preload("res://game/combat/infantry_skirmish_view.tscn")
 const Mod := preload("res://game/combat/heavy_stagger_contact_modifier.gd")
 const DT := 1.0/60.0
+const FIRST_AMBER := B.PLATOON_SIZE
 var _setup := Setup.new()
 var _results:=0
 var _world_updates:=0
@@ -37,7 +38,7 @@ func _run()->void:
 	root.add_child(view)
 	view.set_physics_process(false)
 	var hook:=view._stagger_contacts[0] as Mod
-	assert(hook!=null and view._stagger_contacts[32]==null)
+	assert(hook!=null and view._stagger_contacts[FIRST_AMBER]==null)
 	var rig:=hook.rig
 	var foreign_before:=ForeignShoulder.new()
 	foreign_before.joint=rig.find_bone("Hand.L")
@@ -143,16 +144,16 @@ func _find_seed(expected: int)->int:
 
 func _stage(b: B, seed: int, lethal_second: bool)->void:
 	var focus:=b.soldiers[0]
-	var a0:=b.soldiers[32]
-	var a1:=b.soldiers[33]
+	var a0:=b.soldiers[FIRST_AMBER]
+	var a1:=b.soldiers[FIRST_AMBER + 1]
 	for s: B.Soldier in b.soldiers:
-		if s.battle_index not in [0,32,33]:
+		if s.battle_index not in [0, FIRST_AMBER, FIRST_AMBER + 1]:
 			s.unit.receive_damage(s.unit.hp)
 			s.state=B.State.DEAD
 			s.time=B.DURATIONS[B.State.DEAD]
 	focus.position=Vector2(0,.55)
 	focus.facing=Vector2.UP
-	focus.target=32
+	focus.target=FIRST_AMBER
 	focus.state=B.State.IDLE
 	focus.time=0.0
 	focus.ready_in=10.0

@@ -7,6 +7,7 @@ const Unit:=preload("res://game/combat/combat_unit.gd")
 const View:=preload("res://game/combat/infantry_skirmish_view.tscn")
 const SALUTE:=&"Sword Cheer"
 const READY:=&"Shield-Ready Idle"
+const FIRST_AMBER := B.PLATOON_SIZE
 func _initialize()->void:
 	call_deferred("_run")
 func _run()->void:
@@ -21,13 +22,13 @@ func _run()->void:
 	v.set_physics_process(false)
 	var b:B=v.battle
 	var actor:=b.soldiers[0]
-	var other:=b.soldiers[32]
+	var other:=b.soldiers[FIRST_AMBER]
 	actor.state=B.State.CHEER
 	other.state=B.State.CHEER
 	actor.victory_cheers=B.VICTORY_CHEERS
 	other.victory_cheers=B.VICTORY_CHEERS
 	var player:AnimationPlayer=v._players[0]
-	var opponent:AnimationPlayer=v._players[32]
+	var opponent:AnimationPlayer=v._players[FIRST_AMBER]
 	assert(player.has_animation(&"Death Fall") and player.assigned_animation == READY)
 	v._sync_models(0)
 	assert(player.assigned_animation==READY and opponent.assigned_animation==READY)
@@ -35,7 +36,7 @@ func _run()->void:
 	v._sync_models(0)
 	assert(player.assigned_animation==SALUTE and opponent.assigned_animation==READY)
 	assert(not player.get_animation(SALUTE).loop_mode and is_equal_approx(player.get_animation(SALUTE).length,1.4))
-	assert(not v._stagger_contacts[0].active and not v._stagger_contacts[32].active)
+	assert(not v._stagger_contacts[0].active and not v._stagger_contacts[FIRST_AMBER].active)
 	actor.victory_cheers=0
 	v._sync_models(0)
 	assert(player.assigned_animation==READY)

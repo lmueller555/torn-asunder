@@ -25,10 +25,10 @@ func _initialize() -> void:
 	var slain := PackedStringArray()
 	for id in SPOILERS:
 		var hostile := battle.squad(id)
-		passed = passed and hostile.spawned and hostile.members.size() == PlatoonSize.REGULAR_MELEE
+		passed = passed and hostile.spawned and hostile.members.size() == PlatoonSize.PLATOON_WITH_LEADER
 		slain.append("%s:%d/%d" % [id, hostile.members.size() - hostile.alive_count(battle), hostile.members.size()])
 	for id in ["wardens", "valley", "keepers"]:
-		passed = passed and battle.squad(id).members.size() == PlatoonSize.REGULAR_MELEE
+		passed = passed and battle.squad(id).members.size() == PlatoonSize.PLATOON_WITH_LEADER
 	# Neutral departing Keepers are individuals, not enemies; the pilot cannot
 	# issue orders to them or witness/civilian squads.
 	passed = passed and battle.squad("keepers").team == Battle.NEUTRAL_TEAM and battle.squad("keepers").departed

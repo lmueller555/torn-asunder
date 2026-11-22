@@ -7,6 +7,7 @@ extends RefCounted
 ## objectives differ by campaign.
 
 const Aggro := preload("res://game/combat/enemy_aggro.gd")
+const Size := preload("res://game/combat/platoon_size.gd")
 const Units := preload("res://game/mission/mission_units.gd")
 const Maps := preload("res://game/mission/maps.gd")
 
@@ -101,11 +102,9 @@ static func _scale(value: Variant, k: float, key: String = "") -> Variant:
 static func _p(id: String, type: StringName, team: int, count: int, level: int, pos: Variant, extra: Dictionary = {}) -> Dictionary:
 	var entry := {"id": id, "type": type, "team": team, "count": count, "level": level, "pos": pos}
 	entry.merge(extra, true)
-	# Preserve authored frontage unless the author supplied explicit columns.
-	# Large regular platoons gain ranks without widening a narrow route.
-	if not entry.has("columns") and Units.platoon_count(type,count)!=count:
-		entry["columns"]=clampi(ceili(sqrt(count*1.4)),1,8)
-	entry["count"]=Units.platoon_count(type,int(entry.get("count",count)))
+	if Units.is_regular_melee(type):
+		entry["columns"] = Size.REGULAR_MELEE_COLUMNS
+	entry["count"] = Units.platoon_count(type, int(entry.get("count", count)))
 	return entry
 
 

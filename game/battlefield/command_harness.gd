@@ -18,6 +18,7 @@ const ORBIT_SPEED := 1.6
 const FLOOR := Plane(Vector3.UP, 0.0)
 ## A hostile this close to the leader or their platoon starts combat.
 const LEAD_ENGAGE_RADIUS := 8.0
+const HUMAN_ESCORT_SOLDIER_MODEL := "res://assets/models/human_infantry.glb"
 ## Combat ends once every hostile is beyond this range for LEAD_RELEASE_SECONDS.
 const LEAD_RELEASE_RADIUS := 12.0
 const LEAD_RELEASE_SECONDS := 1.5
@@ -52,7 +53,7 @@ const MARKER_BEAM_HEIGHT := 9.0
 @export var formation_spawns: Array[NodePath] = []
 ## Explicit metadata for authored slots; absent declarations retain legacy size.
 @export var formation_roles: Array[Battle.FormationRole] = []
-## A cramped authored deployment can keep the same soldiers in more ranks.
+## Legacy scene values are accepted; regular melee now uses five files everywhere.
 @export var regular_melee_slot_files: PackedInt32Array
 ## Measured feet spacing for scenes that still use only their stock 0.49m troops.
 @export var regular_melee_spacing := Vector2(0.85, 0.78)
@@ -64,6 +65,8 @@ const MARKER_BEAM_HEIGHT := 9.0
 
 ## Off restores the free-walking leader for scenes that model their own hero platoon.
 @export var lead_platoon_enabled := true
+## Campaigns with a distinct hero and two officers can field a full regular escort.
+@export var lead_has_officer_escort := false
 
 var battle := Battle.new()
 var command_view := false
@@ -87,6 +90,7 @@ var _command_pitch := deg_to_rad(59.0)
 var _hero: Node3D
 var _lead_model: Node3D
 var _lead_members: Array[Node3D] = []
+var _lead_officers: Array[Node3D] = []
 var _lead_banner: Label3D
 var _calm_seconds := 0.0
 ## The waypoint marker steered with the stick outside combat (battlefield XZ).
@@ -951,6 +955,8 @@ func _configure_field() -> void:
 
 
 func _configure_formation_roles() -> void:
+	if lead_has_officer_escort:
+		battle.lead.configure_officer_escort()
 	for index in range(battle.formations.size()):
 		var group := battle.formations[index]
 		var role := formation_roles[index] if index < formation_roles.size() else Battle.FormationRole.UNSPECIFIED
@@ -961,10 +967,14 @@ func _configure_formation_roles() -> void:
 
 
 func _regular_melee_footprint_fits(group: Battle.Formation, center: Vector2) -> bool:
-	var near_slot := group.members.front() as Battle.Member
-	var far_slot := group.members.back() as Battle.Member
-	var feet_half_size := (group.member_offset(far_slot) - group.member_offset(near_slot)) * 0.5
-	var layout_center := (group.member_offset(near_slot) + group.member_offset(far_slot)) * 0.5
+	var low := Vector2.INF
+	var high := -Vector2.INF
+	for member in group.members:
+		var offset := group.member_offset(member)
+		low = low.min(offset)
+		high = high.max(offset)
+	var feet_half_size := (high - low) * 0.5
+	var layout_center := (low + high) * 0.5
 	var half_size := feet_half_size + group.footprint_padding
 	var side := Vector2(-group.heading.y, group.heading.x)
 	var back := -group.heading
@@ -1105,25 +1115,26 @@ func _build_lead_platoon(troop: Mesh, equipment: Mesh) -> void:
 	add_child(_lead_model)
 	var uniform := _material(Color("#d9a85a"))
 	var trim := _material(Color("#f2dcae"))
-	var art := _lead_member_scene()
+	# The independent lead keeps its regular Infantry even when the subordinate
+	# Shield Infantry slot equips Heavy Infantry for a Mine replay.
+	var art := load(HUMAN_ESCORT_SOLDIER_MODEL) as PackedScene if lead_has_officer_escort else _lead_member_scene()
 	_lead_members.clear()
-	for side in [-1.0, 1.0]:
-		for row in range(3):
-			for file in range(2):
-				var member := Node3D.new()
-				member.position = Vector3(side * (1.5 + file * 0.85), 0.0, -0.4 + row * 0.85)
-				_lead_model.add_child(member)
-				_lead_members.append(member)
-				var model: Node3D = art.instantiate() as Node3D if art and art.can_instantiate() else null
-				if model:
-					model.rotate_y(PI)
-					member.add_child(model)
-					var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
-					if player and player.has_animation(&"Idle"):
-						player.play(&"Idle")
-				else:
-					_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
-					_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+	_lead_officers.clear()
+	if lead_has_officer_escort:
+		for slot in battle.lead.members:
+			var anchor := _make_lead_member(slot.offset, troop, equipment, uniform, trim, art)
+			anchor.name = "LeadSoldier%02d" % (slot.index + 1)
+			_lead_members.append(anchor)
+		for offset: Vector2 in Battle.LEAD_OFFICER_OFFSETS:
+			var officer := _make_lead_member(offset, troop, equipment, uniform, trim, null)
+			officer.name = "LeadOfficer%02d" % (_lead_officers.size() + 1)
+			_lead_officers.append(officer)
+	else:
+		for side: float in [-1.0, 1.0]:
+			for row in range(3):
+				for file in range(2):
+					var offset := Vector2(side * (1.5 + file * 0.85), -0.4 + row * 0.85)
+					_lead_members.append(_make_lead_member(offset, troop, equipment, uniform, trim, art))
 	_lead_banner = Label3D.new()
 	_lead_banner.text = battle.lead.title
 	_lead_banner.position = Vector3(0.0, 2.4, 0.4)
@@ -1131,6 +1142,23 @@ func _build_lead_platoon(troop: Mesh, equipment: Mesh) -> void:
 	_lead_banner.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_lead_banner.outline_size = 9
 	_lead_model.add_child(_lead_banner)
+
+
+func _make_lead_member(offset: Vector2, troop: Mesh, equipment: Mesh, uniform: Material, trim: Material, art: PackedScene) -> Node3D:
+	var member := Node3D.new()
+	member.position = Vector3(offset.x, 0.0, offset.y)
+	_lead_model.add_child(member)
+	var model: Node3D = art.instantiate() as Node3D if art and art.can_instantiate() else null
+	if model:
+		model.rotate_y(PI)
+		member.add_child(model)
+		var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+		if player and player.has_animation(&"Idle"):
+			player.play(&"Idle")
+	else:
+		_mesh(member, troop, uniform, Vector3(0.0, 0.60, 0.0))
+		_mesh(member, equipment, trim, Vector3(0.0, 0.70, -0.27))
+	return member
 
 
 func _build_march_marker() -> void:
@@ -1213,11 +1241,16 @@ func _sync_lead_platoon() -> void:
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
 	_lead_model.rotation.y = yaw
-	_apply_spread(_lead_members, battle.lead.spread)
+	_sync_lead_anchors(_lead_members, origin.y, yaw)
+	_sync_lead_anchors(_lead_officers, origin.y, yaw)
+
+
+func _sync_lead_anchors(anchors: Array[Node3D], origin_y: float, yaw: float) -> void:
+	_apply_spread(anchors, battle.lead.spread)
 	if _terrain:
-		for member in _lead_members:
+		for member in anchors:
 			var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, yaw)
-			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin.y
+			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin_y
 
 
 ## Gathers a platoon's soldiers in or fans them out as its formation changes.

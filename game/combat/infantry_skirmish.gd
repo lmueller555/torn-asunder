@@ -12,8 +12,13 @@ const Points := preload("res://game/combat/battle_points.gd")
 enum State { IDLE, RUN, ATTACK, RAISE, GUARD, LOWER, RECOIL, BLOCKED, STAGGER, KNOCKDOWN, DOWN, GET_UP, DEAD, CHEER }
 enum AbilityStatus { READY, BATTLE_ENDED, INVALID_CASTER, INVALID_TARGET, UNHURT_TARGET, STAT_REQUIREMENT, INSUFFICIENT_BP }
 
-const PLATOON_SIZE := PlatoonSize.REGULAR_MELEE
+const PLATOON_SIZE := PlatoonSize.PLATOON_WITH_LEADER
+const PLATOON_LEADER_INDEX := PlatoonSize.REGULAR_MELEE
 const FORMATION_COLUMNS := PlatoonSize.REGULAR_MELEE_COLUMNS
+const FORMATION_RANKS := PlatoonSize.REGULAR_MELEE_RANKS
+const FORMATION_FRONT := 4.6
+const FILE_SPACING := 1.55
+const RANK_SPACING := 1.36
 const PLATOON_SPACING := 13.5
 const MAX_ENGAGEMENTS := 3
 const LIVE := -2
@@ -44,7 +49,7 @@ const NEIGHBOR_OFFSETS: Array[Vector2i] = [
 const SLOT_DISTANCE := 1.22
 const SLOT_TOLERANCE := 0.48
 const SLOT_ANGLES := [0.0, -TAU / 3.0, TAU / 3.0]
-const ARENA_LIMIT := Vector2(9.0, 10.0)
+const ARENA_LIMIT := Vector2(9.0, FORMATION_FRONT + (FORMATION_RANKS - 1) * RANK_SPACING + BODY_SPACING)
 const VICTORY_CLEAR_TIME := 0.75
 const VICTORY_CHEERS := 3
 const KNOCKDOWN_RECOVERY_GRACE := 0.5
@@ -84,6 +89,9 @@ class Soldier:
 	var platoon_index: int
 	var roster_index: int
 	var battle_index: int
+	var is_platoon_leader: bool:
+		get:
+			return roster_index == PLATOON_LEADER_INDEX
 	var position: Vector2
 	var facing: Vector2
 	var knockback_direction := Vector2.ZERO
@@ -171,11 +179,12 @@ func _spawn_platoon(team: int, center: float, build: Setup.PlatoonBuild, trainin
 	for index in range(PLATOON_SIZE):
 		var unit := build.make_unit()
 		roster.append(unit)
-		var column := index % FORMATION_COLUMNS - (FORMATION_COLUMNS - 1) * 0.5
-		var row := floori(float(index) / FORMATION_COLUMNS)
-		var rank_offset := -0.23 if row % 2 == 0 else 0.23
-		var spawn := Vector2(center + column * 1.55 + rank_offset, side * (4.6 + row * 1.36))
-		spawn += Vector2(_random.randf_range(-0.12, 0.12), _random.randf_range(-0.10, 0.10))
+		# The leader is the last roster member but opens alone, one rank ahead.
+		var spawn := Vector2(center, side * (FORMATION_FRONT - RANK_SPACING))
+		if index != PLATOON_LEADER_INDEX:
+			var column := index % FORMATION_COLUMNS - (FORMATION_COLUMNS - 1) * 0.5
+			var row := floori(float(index) / FORMATION_COLUMNS)
+			spawn = Vector2(center + column * FILE_SPACING, side * (FORMATION_FRONT + row * RANK_SPACING))
 		var soldier := Soldier.new(unit, team, platoons.size(), index, spawn, build.unit_type)
 		soldier.ready_in = _random.randf_range(0.05, 0.50)
 		soldier.cheer_in = _cheer_random.randf_range(2.0, 5.0)
