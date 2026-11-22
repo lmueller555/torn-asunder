@@ -1,5 +1,5 @@
 extends "res://game/title_screen.gd"
-## Separate development playtest title. Ordinary launch still uses the campaign title.
+## Mara sector presenter for the normal title and standalone development preview.
 
 const MarchesView := preload("res://game/overworld/marches_overworld_view.gd")
 const CoastView := preload("res://game/overworld/moonwash/coast_map.gd")
@@ -14,6 +14,24 @@ var _sector_token := 0
 var _origin_view: MarchesView
 var _prepared_map: MarchesView
 var _prepared_for := ""
+var _normal_rollout := false
+
+
+func _open_campaign(campaign: Dictionary) -> void:
+	if NormalMaraEntry.requested() and get_tree().current_scene == self:
+		_normal_rollout = campaign.id == "mara"
+		_development_overworld_factory = Callable()
+		_development_mara_water_gate = false
+		_normal_mara_fallback = ""
+		if _normal_rollout:
+			# Do not load the art pack until the Human campaign is entered.
+			_normal_mara_fallback = NormalMaraEntry.package_issue()
+			if _normal_mara_fallback.is_empty():
+				_development_overworld_factory = _choose_map
+				_development_mara_water_gate = true
+			else:
+				push_warning(_normal_mara_fallback)
+	super._open_campaign(campaign)
 
 
 func install_overworld_playtest() -> void:
@@ -42,10 +60,17 @@ func _build_sector(where: String) -> MarchesView:
 
 func _add_development_overworld() -> bool:
 	if not super._add_development_overworld():
+		if _normal_rollout and _campaign_world.campaign_id() == "mara":
+			_report_mara_fallback("The current authored sector could not open.")
 		return false
 	var map := _stage.get_child(0) as MarchesView
 	if map == null:
 		return true
+	if _normal_rollout and not _sector_geometry_present(map):
+		_stage.remove_child(map)
+		map.queue_free()
+		_report_mara_fallback("The authored renderer could not mount its terrain.")
+		return false
 	map.process_mode = Node.PROCESS_MODE_INHERIT
 	map.show()
 	map._camera.make_current()
@@ -55,7 +80,40 @@ func _add_development_overworld() -> bool:
 		map.install_boundary_selector(CROSSING, COAST_ROAD, "Road to Moonwash")
 	map.boundary_requested.connect(_start_boundary.bind(map))
 	map.boundary_cancel_requested.connect(_cancel_boundary.bind(map))
+	if _normal_rollout:
+		_verify_active_sector.call_deferred(map)
 	return true
+
+
+func _verify_active_sector(map: MarchesView) -> void:
+	# Some renderer mounts run on their children's Ready or deferred foliage
+	# passes. Do not leave a half-mounted 3D view accepting travel.
+	for step in range(2):
+		await get_tree().physics_frame
+		if not is_instance_valid(map) or _page != Page.WORLD_MAP or map.get_parent() != _stage:
+			return
+	if _sector_geometry_present(map) and (not map is CoastView or (map._renderer as CoastRenderer).mounted_for_play()):
+		return
+	_report_mara_fallback("The current authored sector did not finish loading.")
+	_development_overworld_factory = Callable()
+	_show_world_map()
+
+
+func _sector_geometry_present(map: MarchesView) -> bool:
+	var renderer := map._renderer
+	if not is_instance_valid(renderer) or not is_instance_valid(map._camera) or not is_instance_valid(map._party) \
+			or not is_instance_valid(renderer._ground):
+		return false
+	return not map is CoastView or (renderer.has_node("MoonwashHarbor") and renderer.has_node("MoonwashShoulderReturns"))
+
+
+func _report_mara_fallback(detail: String) -> void:
+	# Preserve save warnings and completed/canonical route state.
+	if _normal_mara_fallback.is_empty():
+		_normal_mara_fallback = detail
+		push_warning(detail)
+	if _campaign_warning.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
 
 
 func _start_boundary(destination: String, map: MarchesView) -> void:

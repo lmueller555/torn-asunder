@@ -11,6 +11,7 @@ const CampaignDeployments := preload("res://game/campaign_deployments.gd")
 const CampaignWorld := preload("res://game/campaign_world.gd")
 const CampaignMap := preload("res://game/campaign_map.gd")
 const DevelopmentOverworld := preload("res://game/campaign_overworld_3d.gd")
+const NormalMaraEntry := preload("res://game/overworld/mara_normal_entry.gd")
 const ForwardCamp := preload("res://game/overworld/forward_campaign_camp.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
@@ -109,6 +110,7 @@ var _water_request_stage: Control
 var _water_request_world: CampaignWorld
 var _forward_camp_return: ForwardCamp.Definition
 var _campaign_warning := ""
+var _normal_mara_fallback := ""
 var _campaign_battle: Node3D
 var _pause_menu: PauseMenu
 var _victory_pending := false
@@ -150,6 +152,22 @@ func _ready() -> void:
 	_map_controller_button("ui_cancel", JOY_BUTTON_B)
 	_apply_fullscreen()
 	_show_title()
+	if scene_file_path == NormalMaraEntry.TITLE and get_script().resource_path == NormalMaraEntry.TITLE_SCRIPT \
+			and NormalMaraEntry.requested():
+		_boot_normal_mara_title.call_deferred()
+
+
+func _boot_normal_mara_title() -> void:
+	# Only the ordinary game's main scene installs the presenter. Standalone
+	# previews and tests can still instantiate or inject an explicit title.
+	if get_tree().current_scene != self or _page != Page.TITLE:
+		return
+	if ResourceLoader.exists(NormalMaraEntry.SECTOR_TITLE, "PackedScene"):
+		var scene := ResourceLoader.load(NormalMaraEntry.SECTOR_TITLE, "PackedScene") as PackedScene
+		if scene and get_tree().change_scene_to_packed(scene) == OK:
+			return
+	_normal_mara_fallback = "The authored map could not be opened."
+	push_warning(_normal_mara_fallback)
 
 
 func _map_controller_button(action: StringName, button: JoyButton) -> void:
@@ -316,6 +334,8 @@ func _open_campaign(campaign: Dictionary) -> void:
 	var result := _profile.mark_played(campaign.id)
 	_campaign_world = null
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
+	if campaign.id == "mara" and result == OK and not _normal_mara_fallback.is_empty():
+		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
 	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
 		if campaign.id == "mara" and _profile.greyhollow_reveal_pending():

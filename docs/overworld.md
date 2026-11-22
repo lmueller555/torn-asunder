@@ -1,13 +1,15 @@
-# Vareth overworld development playtest
+# Vareth 3D overworld
 
-This is a scoped opt-in Godot playtest, not a replacement for normal campaign startup. From the repository root:
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. The other five campaigns retain their existing presentation until their regions are authored and reviewed. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+
+For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
 ```sh
 godot --headless --editor --import
 godot --path . --script res://game/overworld/marches_overworld_playtest.gd
 ```
 
-Choose New Game and Mara. Arrow keys, D-pad, or mouse select visible sites. Enter, controller A, or the contextual button confirms the selection. Escape or B cancels travel (returning to the previous committed site) or goes back when idle. Z, shoulder buttons, or the wheel switch between regional and landmark views. The playtest uses a separate profile; normal save files and normal startup are unchanged.
+Choose New Game and Mara. Arrow keys, D-pad, or mouse select visible sites. Enter, controller A, or the contextual button confirms the selection. Escape or B cancels travel (returning to the previous committed site) or goes back when idle. Z, shoulder buttons, or the wheel switch between regional and landmark views. Ordinary campaign play uses the existing profile and saved waypoints; no migration is required.
 
 ## Western Marches corridor
 
@@ -22,6 +24,8 @@ The original Water Request opens after the Road arrival is saved. Finish or inte
 The references are the original [Xbox manual pp. 20–21](https://www.manualslib.com/manual/378779/Games-Microsoft-Xbox-Kingdom-Under-Fire-Heroes.html?page=11) and captured Heroes gameplay showing the [tilted route view](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=800s), [settlement interface](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=10560s), and [optional battle branch](https://www.youtube.com/watch?v=_zjlYq3E9DM&t=10920s). Torn Asunder's terrain, buildings, user interface and navigation assets are original. The useful patterns are map-first composition, clear road/destination states, place-specific services and a separate briefing.
 
 ## Extension checks
+
+The Linux export preset includes both loose route-data files as well as late-loaded scene resources. The **Mara native overworld launch** workflow verifies export and normal title travel from a release executable, away from the source checkout. It checks new and resumed Human play in an isolated profile.
 
 Keep the same world graph and save IDs when extending the 3D map. Verify all required routes, saves, and clean exported startup before making the 3D map the normal campaign view. A forward camp should materialize after its owning campaign's confirmed story condition. Optional encounters need a separate, idempotent rewards ledger and a meaningful camp spend that benefits the next mission, not a replay or fake story clear.
 
