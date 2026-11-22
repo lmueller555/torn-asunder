@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Profile := preload("res://game/profile_store.gd")
@@ -181,7 +182,8 @@ func _check_marches_longbows() -> bool:
 
 
 func _open_practice(campaign_id: String) -> bool:
-	return _press("New Game") and _press(campaign_id) and _press("ConfirmTravel") and _press("Unit Progression")
+	CampaignFlow.resume_at_map(_title, campaign_id)
+	return _press("ConfirmTravel") and _press("Unit Progression")
 
 
 func _return_title() -> bool:

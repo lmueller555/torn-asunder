@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -102,7 +103,8 @@ func _seed_other_saves(profile: Profile) -> bool:
 	return true
 
 func _begin_route() -> bool:
-	if not _press("New Game") or not _press("sereth") or not _on_map(CAMP) or _button("Confirm Deployment"):
+	CampaignFlow.resume_at_map(_title, "sereth")
+	if not _on_map(CAMP) or _button("Confirm Deployment"):
 		return _fail("Selecting Sereth did not open his own camp on the overworld.")
 	if not _press("ConfirmTravel") or not _press("Read Dispatch") or not _is_dialogue(Beats.SERETH_CUT_DISPATCH):
 		return _fail("Camp Operations did not show Sereth's authored orders.")

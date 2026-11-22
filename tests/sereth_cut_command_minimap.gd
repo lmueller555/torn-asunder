@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -573,8 +574,8 @@ func _campaign_pointer_return() -> void:
 	title._profile = profile
 	root.add_child(title)
 	await process_frame
-	await _press_at(title, "New Game")
-	await _press_at(title, "sereth")
+	CampaignFlow.resume_at_map(title, "sereth")
+	await process_frame
 	await _travel_and_return(title, profile)
 	title.queue_free()
 	await process_frame

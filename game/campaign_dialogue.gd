@@ -45,7 +45,7 @@ func _ready() -> void:
 
 
 # Call after adding the scene to the tree. A currently playing scene is not replaced.
-func present(beat_id: StringName, content: Dictionary, reduced_motion := false) -> bool:
+func present(beat_id: StringName, content: Dictionary, reduced_motion := false, skippable := false) -> bool:
 	if not is_node_ready() or _active or beat_id == &"" or not _valid_content(content):
 		return false
 	_beat_id = beat_id
@@ -66,6 +66,7 @@ func present(beat_id: StringName, content: Dictionary, reduced_motion := false) 
 			_build()
 	if _cinematic:
 		_configure_cinematic(content)
+	_back_button.text = "Skip Scene" if _cinematic or skippable else "Back"
 	_heading.text = content.title
 	_location.text = content.location
 	show()

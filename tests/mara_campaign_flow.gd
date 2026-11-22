@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -64,16 +65,14 @@ func _flow() -> bool:
 		return _fail("The campaign playtest notice leaked onto the title menu.")
 	if not _press("New Game") or _title._page != Title.Page.VAULT or not _has_playtest_notice():
 		return _fail("The Campaign Vault did not visibly identify its development playtests.")
-	if not _press("neris"):
-		return false
+	CampaignFlow.resume_at_map(_title, "neris")
 	if _title._page != Title.Page.WORLD_MAP or not _map() or _button("Confirm Deployment") \
 			or _title._campaign_world.campaign_id() != "neris":
 		return _fail("Selecting the Dryads borrowed Mara's map or deployed a battle prematurely.")
 	_joy(JOY_BUTTON_B)
-	if not _press("New Game") or not _press("mara"):
-		return false
+	CampaignFlow.resume_at_map(_title, "mara")
 	if not _on_map(CAMP) or _button("Confirm Deployment"):
-		return _fail("New Game did not start at the camp on the overworld.")
+		return _fail("A new save did not resume at the camp on the overworld.")
 	_joy(JOY_BUTTON_A)
 	if _title._page != Title.Page.BRIEFING or _mine_briefing_label() or not _button("Unit Progression") or not _press("Read Dispatch"):
 		return _fail("Camp Operations did not offer practice and the dispatch.")
@@ -580,7 +579,8 @@ func _fresh_bread_flow(path: String) -> bool:
 	if profile.record_world_waypoint(world) != OK:
 		return _fail("Could not seed an independent arrival on Marches Road.")
 	_title._show_title()
-	if not _press("New Game") or not _press("mara") or not _on_map(ROAD):
+	CampaignFlow.resume_at_map(_title, "mara")
+	if not _on_map(ROAD):
 		return _fail("Alternate profile did not open on its independently saved road.")
 	_map().select_waypoint(CROSSING)
 	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):

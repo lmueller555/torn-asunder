@@ -104,6 +104,7 @@ var _selection_region: Label
 var _selection_summary: Label
 var _active_campaign: Dictionary
 var _campaign_world: CampaignWorld
+var _opening_replay_return: CampaignWorld
 var _development_overworld_factory: Callable
 var _development_mara_water_gate := false
 var _water_request_stage: Control
@@ -288,7 +289,7 @@ func _show_vault(initial_index: int) -> void:
 		var campaign := Campaigns.ALL[index]
 		var card := _portrait(campaign, Rect2(76 + index * 217, 224, 203, 292))
 		card.focus_entered.connect(_select_portrait.bind(index))
-		card.pressed.connect(_open_campaign.bind(campaign))
+		card.pressed.connect(_start_campaign.bind(campaign))
 		_portraits.append(card)
 
 	_rule(Rect2(76, 547, 1288, 1), HAIRLINE)
@@ -325,17 +326,64 @@ func _select_portrait(index: int) -> void:
 
 
 func _begin_selected() -> void:
-	_open_campaign(Campaigns.ALL[_selected])
+	_start_campaign(Campaigns.ALL[_selected])
 
 
-func _open_campaign(campaign: Dictionary) -> void:
+func _prepare_campaign(campaign: Dictionary) -> void:
 	_forward_camp_return = null
+	_opening_replay_return = null
 	_active_campaign = campaign
 	var result := _profile.mark_played(campaign.id)
 	_campaign_world = null
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
 	if campaign.id == "mara" and result == OK and not _normal_mara_fallback.is_empty():
 		_campaign_warning = NormalMaraEntry.FALLBACK_MESSAGE
+
+
+func _start_campaign(campaign: Dictionary) -> void:
+	_prepare_campaign(campaign)
+	var campaign_id: String = campaign.id
+	var mission_id := CampaignMissions.first_unplayed_mission_id(campaign_id, PackedStringArray())
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	if deployment.is_empty():
+		_show_briefing()
+		_show_campaign_warning()
+		return
+
+	var world := CampaignWorld.new(campaign_id)
+	var camp := world.current_waypoint_id()
+	var clears := _profile.completed_missions(campaign_id)
+	for route in world.route_options(clears):
+		var destination: String = route.waypoint_id
+		if world.waypoint(destination).get("mission_id", "") != mission_id:
+			continue
+		if world.travel_to(destination, clears) == CampaignWorld.TravelResult.ARRIVED:
+			_campaign_world = world
+		break
+	if not _campaign_world:
+		_campaign_world = _profile.load_campaign_world(campaign_id)
+		_campaign_warning = "The opening battlefield could not be reached."
+		_show_world_map()
+		return
+
+	# A leader has one save. Replaying their opening must keep their later position.
+	var saved := _profile.load_campaign_world(campaign_id)
+	var saved_waypoint := saved.current_waypoint_id()
+	if saved_waypoint != world.current_waypoint_id() and (saved_waypoint != camp or clears.has(mission_id)):
+		_opening_replay_return = saved
+	_present_campaign_dialogue(deployment.dispatch, _deploy_opening_mission.bind(mission_id), true)
+
+
+func _deploy_opening_mission(mission_id: String) -> void:
+	if _page != Page.CAMPAIGN_DIALOGUE:
+		return
+	if not _opening_replay_return and _profile.record_world_waypoint(_campaign_world) != OK:
+		_campaign_warning = "The opening waypoint could not be saved."
+	_launch_campaign_mission(mission_id, false)
+
+
+func _open_campaign(campaign: Dictionary) -> void:
+	_prepare_campaign(campaign)
 	if not CampaignDeployments.opening_for_campaign(campaign.id).is_empty():
 		_campaign_world = _profile.load_campaign_world(campaign.id)
 		if campaign.id == "mara" and _profile.greyhollow_reveal_pending():
@@ -609,7 +657,13 @@ func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confi
 func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	if mission_id == MARA_COAST_QUAY and _maybe_show_required_water_request():
 		return
-	if _page != Page.MISSION_BRIEFING or not _campaign_world or _campaign_world.mission_at_current_waypoint() != mission_id:
+	if _page != Page.MISSION_BRIEFING:
+		return
+	_launch_campaign_mission(mission_id, use_heavy)
+
+
+func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
+	if not _campaign_world or _campaign_world.mission_at_current_waypoint() != mission_id:
 		return
 	var campaign_id: String = _active_campaign.id
 	var confirmed_clears := _profile.completed_missions(campaign_id)
@@ -702,7 +756,7 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 			saved = _profile.record_mission_clear(campaign_id, mission_id)
 	if saved != OK:
 		_campaign_warning = "The mission was completed, but its clear could not be saved."
-	elif _profile.record_world_waypoint(_campaign_world) != OK:
+	elif not _opening_replay_return and _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The mission cleared, but the current waypoint could not be saved."
 	_finish_campaign_battle.call_deferred(mission, debrief)
 
@@ -719,7 +773,14 @@ func _finish_greyhollow_reveal() -> void:
 	_return_from_campaign_debrief()
 
 
+func _restore_opening_replay_position() -> void:
+	if _opening_replay_return:
+		_campaign_world = _opening_replay_return
+		_opening_replay_return = null
+
+
 func _return_from_campaign_debrief() -> void:
+	_restore_opening_replay_position()
 	if not _show_waypoint_intermission():
 		_show_world_map()
 
@@ -749,16 +810,17 @@ func _leave_paused_game() -> void:
 
 func _return_from_campaign_battle() -> void:
 	if _page == Page.CAMPAIGN_BATTLE and not _victory_pending:
+		_restore_opening_replay_position()
 		_show_world_map()
 
 
-func _present_campaign_dialogue(beat: StringName, then: Callable) -> void:
+func _present_campaign_dialogue(beat: StringName, then: Callable, skippable := false) -> void:
 	_replace_stage(Page.CAMPAIGN_DIALOGUE)
 	var dialogue: CampaignDialogue = CAMPAIGN_DIALOGUE_SCENE.instantiate()
 	dialogue.completed.connect(func(_id: StringName) -> void: then.call())
 	dialogue.cancelled.connect(func(_id: StringName) -> void: then.call())
 	_stage.add_child(dialogue)
-	if not dialogue.present(beat, DialogueBeats.get_beat(beat), _profile.setting("reduced_motion")):
+	if not dialogue.present(beat, DialogueBeats.get_beat(beat), _profile.setting("reduced_motion"), skippable):
 		then.call()
 
 

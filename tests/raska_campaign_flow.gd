@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -76,7 +77,8 @@ func _seed_clear_and_position(profile: Profile, campaign_id: String, clear_id: S
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("raska") or not _on_map(CAMP):
+	CampaignFlow.resume_at_map(_title, "raska")
+	if not _on_map(CAMP):
 		return _fail("Raska did not open his own Basin Camp on the overworld.")
 	if not _press("ConfirmTravel") or not _press("Read Dispatch") or not _read_dialogue(Beats.RASKA_MINE_DISPATCH):
 		return _fail("Basin Camp Operations did not present Raska's dispatch.")

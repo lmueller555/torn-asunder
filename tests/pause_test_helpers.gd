@@ -2,10 +2,11 @@ extends RefCounted
 
 
 static func leave_battle(title: Node) -> bool:
-	var pause := title._stage.get_node_or_null("PauseBattle") as Button
-	if not pause or not pause.is_visible_in_tree():
-		return false
-	pause.pressed.emit()
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.physical_keycode = KEY_ESCAPE
+	escape.pressed = true
+	title.get_viewport().push_input(escape, true)
 	return confirm_leave(title._pause_menu)
 
 

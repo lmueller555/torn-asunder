@@ -4,7 +4,6 @@ extends Node
 const Title := preload("res://game/title_screen.gd")
 const Overworld := preload("res://game/campaign_overworld_3d.gd")
 const Profile := preload("res://game/profile_store.gd")
-const CAMP := "marches_camp"
 const MINE := "year_one_mine"
 const MARA := "mara"
 
@@ -62,36 +61,23 @@ func _run() -> void:
 	_check(hero != null and _title._portraits[_title._selected] == hero and _press("Begin Campaign"),
 		"choose the normal Human campaign")
 	await get_tree().process_frame
-	if not _check(_at(CAMP), "ordinary New Game opened real 3D Marches Camp"):
+	if not _check(_title._page == Title.Page.CAMPAIGN_DIALOGUE and _title._campaign_battle == null,
+			"ordinary New Game opened Mara's first cutscene"):
 		_finish()
 		return
-	var view := _map()
-	_check(view._renderer.find_child("MarchesGround", true, false) is MeshInstance3D and view._party.is_visible_in_tree(),
-		"live package mounted terrain and party")
-	_check(view.select_waypoint(MINE), "normal first destination selectable")
-	view.confirm_button.pressed.emit()
-	var travel_timeout := Time.get_ticks_msec() + 40000
-	while Time.get_ticks_msec() < travel_timeout and not _at(MINE):
-		await get_tree().process_frame
-	if not _check(_at(MINE), "native confirmed movement reached Greyhollow"):
-		var current := _map()
-		if current:
-			printerr("Travel debug: site ", current._world.current_waypoint_id(),
-				", travelling ", current._navigation.is_travelling(),
-				", party ", current._party.position, ", camera current ", current._camera.is_current())
+	if not _check(_press("Skip Scene") and _title._page == Title.Page.CAMPAIGN_BATTLE
+			and _title._campaign_battle != null, "opening cutscene deployed Greyhollow directly"):
 		_finish()
 		return
-	_check(Profile.new().load_campaign_world(MARA).current_waypoint_id() == MINE, "arrival durably saved")
-	var arrived := _map()
-	arrived.confirm_button.pressed.emit()
-	_check(_title._page == Title.Page.MISSION_BRIEFING and _title._campaign_battle == null,
-		"separate native mission confirmation")
-	_check(_press("Confirm Deployment") and _title._campaign_battle != null, "normal Greyhollow mission deployed")
+	_check(Profile.new().load_campaign_world(MARA).current_waypoint_id() == MINE, "opening arrival durably saved")
 	await get_tree().process_frame
 	_title._return_from_campaign_battle()
 	await get_tree().process_frame
 	_check(_at(MINE) and Profile.new().completed_missions(MARA).is_empty(),
-		"return from actual deployment preserves the anchor without a win")
+		"return from actual deployment opened the authored overworld without recording a win")
+	var view := _map()
+	_check(view != null and view._renderer.find_child("MarchesGround", true, false) is MeshInstance3D
+		and view._party.is_visible_in_tree(), "live package mounted terrain and party")
 	_finish()
 
 

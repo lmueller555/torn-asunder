@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -93,7 +94,8 @@ func _flow() -> bool:
 	if human_harbor.get("map_position") != elven_harbor.get("map_position") \
 			or human_harbor.get("mission_id") == elven_harbor.get("mission_id"):
 		return _fail("Shared Moonwash geography did not retain independent mission IDs.")
-	if not _press("New Game") or not _press("ilyra") or not _on_map(CAMP):
+	CampaignFlow.resume_at_map(_title, "ilyra")
+	if not _on_map(CAMP):
 		return _fail("Ilyra did not open in her own camp on the overworld.")
 	if not _press("ConfirmTravel") or not _press("Read Dispatch") or not _is_dialogue(Beats.ILYRA_MOONWASH_DISPATCH):
 		return _fail("Camp Operations did not present the authored rescue dispatch.")
@@ -190,17 +192,9 @@ func _survey_flow() -> bool:
 	var before_abort := FileAccess.get_file_as_string(_profile_path)
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	await process_frame
-	var back := _title._stage.get_node_or_null(^"PauseBattle") as Button
-	if not back or not survey._minimap.is_visible_in_tree() \
-			or back.get_global_rect().intersects(survey._minimap_panel.get_global_rect()):
-		return _fail("The passive map does not fit beside the campaign Pause button in active command.")
-	for pressed in [true, false]:
-		var click := InputEventMouseButton.new()
-		click.button_index = MOUSE_BUTTON_LEFT
-		click.position = back.get_global_rect().get_center()
-		click.pressed = pressed
-		root.push_input(click, true)
-	if not PauseTest.confirm_leave(_title._pause_menu) or not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
+	if not survey._minimap.is_visible_in_tree():
+		return _fail("The Survey tactical map did not open in command view.")
+	if not PauseTest.leave_battle(_title) or not _on_map(SHORE) or FileAccess.get_file_as_string(_profile_path) != before_abort:
 		return _fail("Aborting an incomplete survey wrote campaign progress.")
 	_map().select_waypoint(SPANWATER)
 	if not _map()._confirm_button.disabled or not _map()._detail.text.contains("Two Shorelines"):
@@ -244,8 +238,15 @@ func _spanwater_flow() -> bool:
 			or not _on_briefing(EVACUATION) or not _press("Read Dispatch") or not _is_dialogue(Beats.ILYRA_SPANWATER_DISPATCH):
 		return _fail("Continue or the route failed to expose Ilyra's own briefing and dispatch.")
 	_read_dialogue(Beats.get_beat(Beats.ILYRA_SPANWATER_DISPATCH).lines.size())
-	if not _on_briefing(EVACUATION) or not _press("Confirm Deployment"):
+	if not _on_briefing(EVACUATION):
 		return _fail("Reading the dispatch did not return to explicit deployment.")
+	var shows_playtest_notice := false
+	for label in _title._stage.find_children("*", "Label", true, false):
+		if label.is_visible_in_tree() and label.text.contains(Title.CAMPAIGN_PLAYTEST_NOTICE):
+			shows_playtest_notice = true
+			break
+	if not shows_playtest_notice or not _press("Confirm Deployment"):
+		return _fail("The finale briefing did not identify its development art and allow deployment.")
 	var arrived := FileAccess.get_file_as_string(_profile_path)
 	var evacuation := _title._campaign_battle as Evacuation
 	if not await _mount_evacuation(evacuation):
@@ -304,9 +305,6 @@ func _mount_evacuation(evacuation: Evacuation) -> bool:
 			or evacuation.objective.group_status(BoatRescue.Group.NEAR) != BoatRescue.GroupStatus.SHELTERED \
 			or evacuation.objective.group_status(BoatRescue.Group.FAR) != BoatRescue.GroupStatus.SHELTERED:
 		return _fail("The confirmed finale did not deploy a fresh Elven Spanwater scene.")
-	var prototype := evacuation.get_node_or_null("ObjectiveHUD/Panel/Margin/Readout/Prototype") as Label
-	if not prototype or not prototype.is_visible_in_tree() or not prototype.text.contains("DEVELOPMENT PLAYTEST"):
-		return _fail("The finale did not visibly retain its development-only visual label.")
 	_field_mission = evacuation
 	evacuation.set_physics_process(false)
 	await physics_frame

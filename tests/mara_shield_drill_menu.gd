@@ -38,10 +38,11 @@ func _run() -> void:
 
 
 func _exercise_training_menu() -> bool:
-	_tap_key(KEY_ENTER) # Title New Game
-	_tap_key(KEY_RIGHT)
-	_tap_key(KEY_RIGHT)
-	_tap_key(KEY_ENTER) # Vault: select Mara
+	if _title._profile.mark_played("mara") != OK:
+		return _fail("Could not seed an unplayed Mine at camp.")
+	_title._show_title()
+	_tap_key(KEY_DOWN)
+	_tap_key(KEY_ENTER) # Continue the camp save.
 	if not _on_map(CAMP):
 		return _fail("Keyboard did not reach Mara's actual world map.")
 	if not await _open_drill(false):
@@ -145,8 +146,7 @@ func _exercise_training_menu() -> bool:
 	if _heavy_active(mission) or mission.encounter.infantry_attack.attacker.max_hp != 310.0 \
 			or mission.battle.formations[0].title != "Shield Infantry" or FileAccess.get_file_as_string(_profile_path) != before_retry:
 		return _fail("The ordinary button did not reset to the regular roster after leaving the Heavy attempt.")
-	_tap_key(KEY_ESCAPE)
-	if not _on_map(MINE) or not _map().select_waypoint(ROAD):
+	if not PauseTest.leave_battle(_title) or not _on_map(MINE) or not _map().select_waypoint(ROAD):
 		return _fail("The previous Heavy replay did not return through the normal campaign route.")
 	_tap_joy(JOY_BUTTON_A)
 	if not _on_map(ROAD) or not _map().select_waypoint(CROSSING):
@@ -159,10 +159,7 @@ func _exercise_training_menu() -> bool:
 		return _fail("A direct Heavy request bypassed the Mine-only scope at another Human battle.")
 	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
-	_tap_key(KEY_ENTER)
-	for _offset in range(3):
-		_tap_joy(JOY_BUTTON_DPAD_RIGHT)
-	_tap_key(KEY_ENTER)
+	CampaignFlow.resume_at_map(_title, "raska")
 	if not _map() or _title._campaign_world.campaign_id() != "raska":
 		return _fail("Foreign comparison did not open Raska's live campaign.")
 	_tap_joy(JOY_BUTTON_A)

@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -79,7 +80,8 @@ func _run() -> void:
 
 
 func _exercise() -> bool:
-	if not _press("New Game") or not _press("neris") or not _on_map(CAMP):
+	CampaignFlow.resume_at_map(_title, "neris")
+	if not _on_map(CAMP):
 		return _fail("Neris did not open her own Grove Camp map.")
 	_map().select_waypoint(NURSERY)
 	if not _press("ConfirmTravel") or not _on_briefing():

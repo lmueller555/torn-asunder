@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
 const Pilot := preload("res://game/campaign_overworld_3d.gd")
@@ -51,16 +52,14 @@ func _run() -> void:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 	if passed:
-		print("Private overworld: title Begin, curved travel and cancel, gated road, saved arrival, explicit Greyhollow deployment, retreat, mandatory reload dialogue, reduced-motion, and 2D fallback passed.")
+		print("Private overworld: campaign resume, curved travel and cancel, gated road, saved arrival, explicit Greyhollow deployment, retreat, mandatory reload dialogue, reduced-motion, and 2D fallback passed.")
 	quit(0 if passed else 1)
 
 
 func _opening() -> bool:
-	if not _press("New Game") or not _button("mara"):
-		return _fail("New Game did not expose Mara's portrait.")
-	_button("mara").grab_focus()
-	if not _press("Begin Campaign") or not _on_pilot(CAMP):
-		return _fail("Actual title Begin did not start the injected Mara overworld.")
+	CampaignFlow.resume_at_map(_title, "mara")
+	if not _on_pilot(CAMP):
+		return _fail("Resume did not start the injected Mara overworld.")
 	await process_frame
 	var map := _pilot()
 	map.set_process(false)

@@ -1,5 +1,6 @@
 extends SceneTree
 
+const CampaignFlow := preload("res://tests/campaign_flow_helpers.gd")
 const PauseTest := preload("res://tests/pause_test_helpers.gd")
 const Title := preload("res://game/title_screen.gd")
 const TitleScene := preload("res://game/title_screen.tscn")
@@ -66,7 +67,8 @@ func _run() -> void:
 
 
 func _flow() -> bool:
-	if not _press("New Game") or not _press("sova") or not _on_map(CAMP):
+	CampaignFlow.resume_at_map(_title, "sova")
+	if not _on_map(CAMP):
 		return _fail("Sova did not open his own camp on the overworld.")
 	if not _press("ConfirmTravel") or not _press("Read Dispatch") or not _is_dialogue(Beats.SOVA_MINE_DISPATCH):
 		return _fail("Camp Operations did not present Sova's authored dispatch.")

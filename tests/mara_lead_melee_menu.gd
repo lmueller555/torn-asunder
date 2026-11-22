@@ -27,10 +27,11 @@ func _run() -> void:
 
 
 func _exercise_training_menu() -> bool:
-	_tap_key(KEY_ENTER)
-	_tap_key(KEY_RIGHT)
-	_tap_key(KEY_RIGHT)
-	_tap_key(KEY_ENTER)
+	if _title._profile.mark_played("mara") != OK:
+		return _fail("Could not seed an unplayed Mine at camp.")
+	_title._show_title()
+	_tap_key(KEY_DOWN)
+	_tap_key(KEY_ENTER) # Continue the camp save.
 	if not _on_map(CAMP) or not await _open_training():
 		return _fail("Keyboard and D-pad did not reach Mara's training from the real Camp Operations.")
 	var locked_save := FileAccess.get_file_as_bytes(_profile_path)
@@ -106,7 +107,8 @@ func _exercise_training_menu() -> bool:
 		return _fail("Retry did not retain Mara's rating, normal Shield loadout, fresh objective, and invested save.")
 	_tap_key(KEY_ESCAPE)
 	_tap_joy(JOY_BUTTON_B)
-	if not _press("New Game") or not _press("raska") or not _map():
+	CampaignFlow.resume_at_map(_title, "raska")
+	if not _map():
 		return _fail("Could not open a neighboring campaign to check isolation.")
 	_tap_joy(JOY_BUTTON_A)
 	_title._invest_mara_lead_melee()

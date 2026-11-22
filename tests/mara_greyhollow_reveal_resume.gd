@@ -27,7 +27,8 @@ func _run() -> void:
 
 func _interrupt_real_rescue_reveal() -> bool:
 	await _reopen_title()
-	if not _press("New Game") or not _press("mara") or not _on_map(CAMP):
+	CampaignFlow.resume_at_map(_title, "mara")
+	if not _on_map(CAMP):
 		return _fail("Could not start Mara with a fresh profile.")
 	_map().select_waypoint(MINE)
 	if not _press("ConfirmTravel") or not _on_briefing() or not _press("Confirm Deployment"):
