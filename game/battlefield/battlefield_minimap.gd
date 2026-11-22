@@ -104,6 +104,13 @@ class Glyph:
 		update_minimum_size()
 		queue_redraw()
 
+## Keep a direction cue without repeated motion when the campaign requests it.
+var animate_waypoint_chevron := true:
+	set(value):
+		animate_waypoint_chevron = value
+		_update_route_animation()
+		queue_redraw()
+
 @export var terrain_texture: Texture2D:
 	set(value):
 		terrain_texture = value
@@ -422,7 +429,8 @@ func _set_explored(areas: Array[Rect2]) -> void:
 
 
 func _update_route_animation() -> void:
-	set_process(tactical_style and is_visible_in_tree() and not _selected_route_id.is_empty())
+	set_process(tactical_style and animate_waypoint_chevron and is_visible_in_tree()
+		and not _selected_route_id.is_empty())
 
 
 func _process(delta: float) -> void:
@@ -455,7 +463,8 @@ func _draw_tactical() -> void:
 		for marker in _glyphs:
 			_draw_tactical_marker(marker, _project_to(marker.position, map), scale_factor)
 		if active_path:
-			_draw_chevron(route_chevron(active_path, _route_phase, scale_factor), scale_factor)
+			var phase := _route_phase if animate_waypoint_chevron else 0.5
+			_draw_chevron(route_chevron(active_path, phase, scale_factor), scale_factor)
 		if _is_expanded_face() and _command_cursor is Vector2:
 			_draw_cursor(_project_to(_command_cursor, map), scale_factor)
 	draw_rect(face.grow(-0.5), TACTICAL_EDGE, false, 1.0)

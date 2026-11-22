@@ -63,6 +63,11 @@ func _run() -> void:
 	_check(is_equal_approx(map._route_phase, 0.25), "consistent per-frame snap preserves animation")
 	map._process(0.375)
 	_check(is_zero_approx(map._route_phase), "full loop wraps at 0.5 seconds")
+	map.animate_waypoint_chevron = false
+	_check(not map.is_processing() and map._ally_routes.has(map._selected_route_id),
+		"reduced motion retains the selected route without processing an animation")
+	map.animate_waypoint_chevron = true
+	_check(map.is_processing(), "normal motion restores the selected route loop")
 	map.set_tactical_expanded(true)
 	_check(map.size.is_equal_approx(Map.TACTICAL_EXPANDED_SIZE) and map._ally_routes.size() == 2,
 		"expansion retains both current routes")

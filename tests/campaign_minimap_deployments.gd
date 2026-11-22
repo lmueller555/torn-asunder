@@ -66,6 +66,7 @@ func _run() -> void:
 					if _check(visible_charts.size() == 1, row.id + " one tactical minimap (got %d)" % visible_charts.size()):
 						var chart := visible_charts[0]
 						var pos := chart.get_global_rect()
+						_check(not chart.animate_waypoint_chevron, row.id + " honors saved reduced motion")
 						_check(chart.terrain_texture != null and chart.map_rect().has_area(), row.id + " chart uses terrain and valid projection")
 						_check(chart.size.is_equal_approx(BattlefieldMap.TACTICAL_COMPACT_SIZE),
 							row.id + " compact on entry: %s" % chart.size)

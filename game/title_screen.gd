@@ -4,6 +4,7 @@ const GameplayBindings := preload("res://game/settings/control_bindings.gd")
 const PauseMenu := preload("res://game/settings/pause_menu.gd")
 const ObjectiveFeed := preload("res://game/ui/authored_objective_feed.gd")
 const AuthoredMissionMap := preload("res://game/ui/authored_mission_map.gd")
+const TacticalMap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Campaigns := preload("res://game/campaigns.gd")
 const CampaignMissions := preload("res://game/campaign_missions.gd")
 const CampaignDeployments := preload("res://game/campaign_deployments.gd")
@@ -634,6 +635,10 @@ func _deploy_campaign_mission(mission_id: String, use_heavy := false) -> void:
 	if authored_hud:
 		mission.set("_mission_objective_feed", ObjectiveFeed.mount(mission, mission_id))
 	AuthoredMissionMap.mount(mission)
+	if _profile.setting("reduced_motion"):
+		for control in mission.find_children("*", "Control", true, false):
+			if control is TacticalMap:
+				control.animate_waypoint_chevron = false
 	for hint in mission.find_children("*", "Label", true, false):
 		if hint.is_in_group("gameplay_tutorial"):
 			hint.set_meta(&"tutorial_hidden", true)
