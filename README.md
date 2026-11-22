@@ -24,7 +24,7 @@ For the other side of Greyhollow, choose Neris in the Campaign Vault. The Dryad 
 
 For the other leaders, see the [campaign implementation index](docs/campaigns/implementation-index.md) for the current overworld routes and which missions still require standalone development playtests. **Continue** and **Load** restore the last arrived waypoint and mission progress for that campaign, independent of the other leaders. Current playtests can include [unapproved placeholder art](docs/visual-audit-inventory.md). Settings saves fullscreen and reduced-motion preferences.
 
-In Mara’s campaign, arrive at **Marches Camp** or the **Marches Road Camp** and confirm the current marker to open the station menu. The Road Camp opens after the Greyhollow rescue and reveal. **Training Grounds** contains practice options, and **Main Gate** returns you to the same map position. The Barracks preview does not change your campaign army.
+In Mara’s campaign, arrive at **Marches Camp** or the **Marches Road Camp** and confirm the current marker to open the station menu. The Road Camp opens after the Greyhollow rescue and reveal. **Training Grounds** contains practice options, and **Main Gate** returns you to the same map position. In **Barracks**, inspect Shield Infantry, Archers, and the connected advancement tree. A job preview does not equip the unit. Marches Longbows are not yet fieldable.
 
 Open **Combat Drills** from Training Grounds or a leader's practice briefing to compare the six platoon skills across training ranks and test Curse damage at different ratings. The **Battle Points Drill** lets you earn shared BP with practice charges and try casting Field Benediction with trained and untrained casters.
 
