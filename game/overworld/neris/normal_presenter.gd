@@ -99,19 +99,22 @@ func schedule_local_mount()->bool:
 	return true
 
 func _prepare_local(tag:int,state_id:int,travel_epoch:int,stage_id:int,id:String)->void:
+	# Cancel releases the host's presenter reference before the first frame.
+	# Retain this coroutine owner until its epoch checks and cleanup finish.
+	var pending:=self
 	# Do not allocate heavy scenery before the ordinary loading frame exists.
 	if DisplayServer.get_name()=="headless":
 		await _host.get_tree().process_frame
 	else:
 		await RenderingServer.frame_post_draw
 	_first_frame_ms=(Time.get_ticks_usec()-_first_requested_usec)/1000.
-	if not _valid_local(tag,state_id,travel_epoch,stage_id):
+	if not pending._valid_local(tag,state_id,travel_epoch,stage_id):
 		_resume_after_stale(tag,stage_id)
 		return
 	var scene:PackedScene=MINE if id==Transfer.MINE else (BOUNDARY if _is_boundary_view(id) else START)
 	var candidate:=scene.instantiate() as Node3D
 	var staged:Node3D=await _stage_candidate(candidate,tag)
-	if not _valid_local(tag,state_id,travel_epoch,stage_id):
+	if not pending._valid_local(tag,state_id,travel_epoch,stage_id):
 		if is_instance_valid(staged): staged.free()
 		_resume_after_stale(tag,stage_id)
 		return
@@ -125,12 +128,12 @@ func _prepare_local(tag:int,state_id:int,travel_epoch:int,stage_id:int,id:String
 	_last_ready_ms=(Time.get_ticks_usec()-_first_requested_usec)/1000.
 
 func _resume_after_stale(tag:int,stage_id:int)->void:
-	if tag==_epoch and stage_id==_host._stage.get_instance_id() and _host._page==Title.Page.WORLD_MAP:
+	if tag==_epoch and is_instance_valid(_host) and stage_id==_host._stage.get_instance_id() and _host._page==Title.Page.WORLD_MAP:
 		_drop_panel()
 		_host.call("_show_world_map")
 
 func _valid_local(tag:int,state_id:int,travel_epoch:int,stage_id:int)->bool:
-	if tag!=_epoch or _host._page!=Title.Page.WORLD_MAP or stage_id!=_host._stage.get_instance_id():
+	if tag!=_epoch or not is_instance_valid(_host) or _host._page!=Title.Page.WORLD_MAP or stage_id!=_host._stage.get_instance_id():
 		return false
 	var current:=_host._campaign_world
 	return current!=null and current.get_instance_id()==state_id and current.travel_epoch()==travel_epoch
