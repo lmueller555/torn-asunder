@@ -1,0 +1,106 @@
+name: Ilyra native overworld launch
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ilyra-native-launch.yml'
+      - 'project.godot'
+      - 'export_presets.cfg'
+      - 'game/title_screen.gd'
+      - 'game/profile_store.gd'
+      - 'game/campaign_*.gd'
+      - 'game/overworld/**'
+      - 'assets/overworld/**'
+      - 'tests/native_ilyra_release_smoke.gd'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GODOT_RELEASE: 4.7.2-stable
+      EDITOR_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+      TEMPLATES_SHA256: f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011
+    steps:
+      - name: Check out the proposed merge
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install verified matching Godot editor and Linux templates
+        run: |
+          asset="https://github.com/godotengine/godot-builds/releases/download/$GODOT_RELEASE/Godot_v$GODOT_RELEASE"
+          curl --fail --silent --show-error --location --retry 2 --max-time 180 "$asset"_linux.x86_64.zip -o "$RUNNER_TEMP/editor.zip"
+          curl --fail --silent --show-error --location --retry 2 --max-time 420 "$asset"_export_templates.tpz -o "$RUNNER_TEMP/templates.tpz"
+          printf '%s  %s\n' "$EDITOR_SHA256" "$RUNNER_TEMP/editor.zip" "$TEMPLATES_SHA256" "$RUNNER_TEMP/templates.tpz" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/editor.zip" -d "$RUNNER_TEMP"
+          install -m 0755 "$RUNNER_TEMP/Godot_v${GODOT_RELEASE}_linux.x86_64" "$RUNNER_TEMP/godot"
+          export_dir="$HOME/.local/share/godot/export_templates/${GODOT_RELEASE/-/.}"
+          mkdir -p "$export_dir"
+          for flavor in debug release; do
+            unzip -p "$RUNNER_TEMP/templates.tpz" "templates/linux_$flavor.x86_64" > "$export_dir/linux_$flavor.x86_64"
+            test -s "$export_dir/linux_$flavor.x86_64"
+            chmod 0755 "$export_dir/linux_$flavor.x86_64"
+          done
+          rm "$RUNNER_TEMP/editor.zip" "$RUNNER_TEMP/templates.tpz"
+          "$RUNNER_TEMP/godot" --version
+      - name: Build a disposable copy of the actual release candidate
+        run: |
+          # Do not alter the release defaults, main scene, or campaign profile.
+          python3 - <<'PYCI'
+          from pathlib import Path
+          p = Path("project.godot")
+          raw = p.read_text()
+          autoload = "[autoload]\n"
+          assert raw.count(autoload) == raw.count("ilyra_3d_overworld=true") == 1
+          p.write_text(raw.replace(autoload, autoload + 'NativeIlyraSmoke="*res://tests/native_ilyra_release_smoke.gd"\n'))
+          PYCI
+          "$RUNNER_TEMP/godot" --headless --import
+          mkdir -p "$RUNNER_TEMP/ilyra-bin" "$RUNNER_TEMP/away-from-source" "$RUNNER_TEMP/ilyra-old" "$RUNNER_TEMP/ilyra-new"
+          "$RUNNER_TEMP/godot" --headless --export-release "Linux x86_64" "$RUNNER_TEMP/ilyra-bin/torn-asunder.x86_64"
+          test -x "$RUNNER_TEMP/ilyra-bin/torn-asunder.x86_64"
+      - name: Cold fixtures and genuine travel outside the checkout
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/away-from-source"
+          app="$RUNNER_TEMP/ilyra-bin/torn-asunder.x86_64"
+          export LIBGL_ALWAYS_SOFTWARE=1 MESA_SHADER_CACHE_DISABLE=true LP_NUM_THREADS=2
+          export XDG_DATA_HOME="$RUNNER_TEMP/ilyra-old" XDG_CONFIG_HOME="$RUNNER_TEMP/ilyra-old"
+          p="$XDG_DATA_HOME/godot/app_userdata/Torn Asunder/profile.cfg"
+          mkdir -p "$(dirname "$p")"
+          printf '[campaigns]\nilyra=1\n\n[campaign_waypoints]\nilyra="moonwash_harbor"\n\n[settings]\nfullscreen=false\n' > "$p"
+          ILYRA_SMOKE_MODE=old timeout 80s "$app" --headless 2>&1 | tee "$RUNNER_TEMP/ilyra-old.log"
+          grep -F 'Native Ilyra launch smoke (old): PASS' "$RUNNER_TEMP/ilyra-old.log"
+
+          export XDG_DATA_HOME="$RUNNER_TEMP/ilyra-new" XDG_CONFIG_HOME="$RUNNER_TEMP/ilyra-new"
+          ILYRA_SMOKE_MODE=travel timeout 100s "$app" --headless 2>&1 | tee "$RUNNER_TEMP/ilyra-travel.log"
+          grep -F 'Native Ilyra launch smoke (travel): PASS' "$RUNNER_TEMP/ilyra-travel.log"
+
+          # Real renderer and fresh process reconstruct the prior headless save.
+          ILYRA_SMOKE_MODE=rendered xvfb-run -a timeout 105s "$app" --audio-driver Dummy --windowed --resolution 960x540 \
+            2>&1 | tee "$RUNNER_TEMP/ilyra-rendered.log"
+          grep -F 'Native Ilyra launch smoke (rendered): PASS' "$RUNNER_TEMP/ilyra-rendered.log"
+
+          # The exact shared identifier remains on Mara's Upper Quay side.
+          export XDG_DATA_HOME="$RUNNER_TEMP/mara-harbor-check" XDG_CONFIG_HOME="$RUNNER_TEMP/mara-harbor-check"
+          p="$XDG_DATA_HOME/godot/app_userdata/Torn Asunder/profile.cfg"
+          mkdir -p "$(dirname "$p")"
+          cat > "$p" <<'CFG'
+          [campaigns]
+          mara=1
+          [campaign_waypoints]
+          mara="moonwash_harbor"
+          [mission_progress]
+          mara=PackedStringArray("mara_mine_escort","mara_grain_crossing")
+          [mission_results]
+          mara_grain_crossing="both"
+          [campaign_intermissions]
+          mara=PackedStringArray("mara_water_request")
+          [settings]
+          fullscreen=false
+          CFG
+          ILYRA_SMOKE_MODE=mara_harbor xvfb-run -a timeout 105s "$app" --audio-driver Dummy --windowed --resolution 960x540             2>&1 | tee "$RUNNER_TEMP/mara-harbor-check.log"
+          grep -F 'Native Ilyra launch smoke (mara_harbor): PASS' "$RUNNER_TEMP/mara-harbor-check.log"
