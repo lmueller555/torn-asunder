@@ -50,6 +50,7 @@ static var last_flags: Dictionary = {}
 var battle: Battle
 var mission: Dictionary
 var command_mode := false
+var minimap_expanded := false
 var cursor := Vector2.ZERO
 var selected := 0
 var paused := false
@@ -87,6 +88,7 @@ func _ready() -> void:
 
 func start() -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 	_models.clear()
 	_players.clear()
@@ -99,6 +101,7 @@ func start() -> void:
 	outcome_shown = false
 	_outcome_timer = 0.0
 	command_mode = false
+	minimap_expanded = false
 	battle = null
 	mission = {} if mission_id.is_empty() else Missions.find(mission_id)
 	if mission.is_empty():
@@ -414,6 +417,47 @@ func selected_entry() -> Dictionary:
 	return entries[selected]
 
 
+func _toggle_minimap() -> void:
+	if battle == null or paused or battle.outcome != Battle.Outcome.LIVE:
+		return
+	minimap_expanded = not minimap_expanded
+	_mouse_moved = false
+	if minimap_expanded:
+		var entry := selected_entry()
+		cursor = entry.get("position", battle.hero.position)
+	_hud.expand_minimap(minimap_expanded)
+
+
+## Returns true only if the native mission accepts and will run the order.
+func _order_minimap_waypoint(point: Vector2, append: bool) -> bool:
+	if not minimap_expanded or paused or battle.outcome != Battle.Outcome.LIVE:
+		return false
+	var entry := selected_entry()
+	if entry.get("kind") == "cart":
+		# Carts keep their existing authored route-selection behavior.
+		if append:
+			return false
+		battle.command_structure(entry.cart.structure_id, "advance", point)
+		return true
+	if entry.get("kind") != "squad":
+		return false
+	return battle.command_waypoint(entry.squad.index, point, append)
+
+
+func _select_from_minimap(point: Vector2) -> void:
+	var entries := command_entries()
+	# Pick the nearest pip in a screen-sized hit area, not a different squad
+	# merely because a similarly spaced point happens to be within the map.
+	var hit_radius: float = battle.bounds.size.length() * 0.02
+	for i in entries.size():
+		var entry := entries[i]
+		var at: Vector2 = entry.squad.anchor if entry.kind == "squad" else entry.position
+		var distance := point.distance_to(at)
+		if distance < hit_radius:
+			hit_radius = distance
+			selected = i
+
+
 func _order_move() -> void:
 	var entry := selected_entry()
 	if entry.is_empty():
@@ -463,6 +507,8 @@ func _enemy_squad_near(point: Vector2, radius: float) -> Battle.Squad:
 	for squad in battle.squads:
 		if squad.team != Battle.ENEMY_TEAM or not squad.spawned or squad.alive_count(battle) == 0:
 			continue
+		if minimap_expanded and not battle.tactic_enemy_visible(squad):
+			continue
 		var distance := squad.centroid(battle).distance_to(point)
 		if distance < nearest:
 			nearest = distance
@@ -475,6 +521,30 @@ func _enemy_squad_near(point: Vector2, radius: float) -> Battle.Squad:
 
 func _unhandled_input(event: InputEvent) -> void:
 	event = GameplayBindings.translate(event)
+	if battle == null or not is_instance_valid(_hud):
+		return
+	if event is InputEventKey and event.pressed and not event.echo \
+		and (event.physical_keycode == KEY_N or (event.physical_keycode == KEY_NONE and event.keycode == KEY_N)):
+		_toggle_minimap()
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_DPAD_UP:
+		if event.device == ControllerSupport.device() and GameplayBindings.axis(event.device, JOY_AXIS_TRIGGER_LEFT) > 0.5:
+			_toggle_minimap()
+			get_viewport().set_input_as_handled()
+		return
+	if minimap_expanded and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		var pointer: Vector2 = event.position
+		if _hud.contains_minimap_pixel(pointer):
+			var point: Variant = _hud.map_point_from_viewport(pointer)
+			if point is Vector2 and not paused and battle.outcome == Battle.Outcome.LIVE:
+				cursor = point
+				if event is InputEventMouseButton and event.pressed:
+					match event.button_index:
+						MOUSE_BUTTON_LEFT: _select_from_minimap(point)
+						MOUSE_BUTTON_RIGHT: _order_minimap_waypoint(point, event.ctrl_pressed)
+			get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion:
 		_mouse_moved = true
 		if GameplayBindings.mouse(MOUSE_BUTTON_MIDDLE):
@@ -505,7 +575,7 @@ func _held(name: String, pressed: bool) -> bool:
 
 
 func _handle_input(delta: float) -> void:
-	if outcome_shown:
+	if battle.outcome != Battle.Outcome.LIVE:
 		return
 	var device: int = ControllerSupport.device()
 	var stick := Vector2.ZERO
@@ -533,13 +603,26 @@ func _handle_input(delta: float) -> void:
 	_pitch = clampf(_pitch - look.y * 1.4 * delta, -1.2, -0.15)
 	command_mode = key.call(KEY_TAB) or trigger > 0.5
 	var entries := command_entries()
-	var prev_unit: bool = _held("prev", joy.call(JOY_BUTTON_DPAD_LEFT) or (command_mode and key.call(KEY_Q)))
-	var next_unit: bool = _held("next", joy.call(JOY_BUTTON_DPAD_RIGHT) or (command_mode and key.call(KEY_E)))
+	var prev_unit: bool = _held("prev", joy.call(JOY_BUTTON_DPAD_LEFT) or ((command_mode or minimap_expanded) and key.call(KEY_Q)))
+	var next_unit: bool = _held("next", joy.call(JOY_BUTTON_DPAD_RIGHT) or ((command_mode or minimap_expanded) and key.call(KEY_E)))
 	if not entries.is_empty():
 		if prev_unit:
 			selected = posmod(selected - 1, entries.size())
 		if next_unit:
 			selected = posmod(selected + 1, entries.size())
+	if minimap_expanded:
+		cursor = (cursor + move * battle.bounds.size.length() * 0.26 * delta).clamp(
+			battle.bounds.position, battle.bounds.end)
+		battle.set_hero_input({"move": Vector2.ZERO})
+		if _held("c_move", joy.call(JOY_BUTTON_X) or key.call(KEY_J)):
+			_order_minimap_waypoint(cursor, joy.call(JOY_BUTTON_RIGHT_SHOULDER) or key.call(KEY_CTRL))
+		if _held("c_attack", joy.call(JOY_BUTTON_Y) or key.call(KEY_K)):
+			_order_attack()
+		if _held("c_hold", joy.call(JOY_BUTTON_A) or key.call(KEY_SPACE) or key.call(KEY_H)):
+			_order_hold()
+		if _held("c_clear", joy.call(JOY_BUTTON_B) or key.call(KEY_F)):
+			_order_clear()
+		return
 	var forward := Vector2(-sin(_yaw), -cos(_yaw))
 	var right := Vector2(-forward.y, forward.x)
 	if command_mode:

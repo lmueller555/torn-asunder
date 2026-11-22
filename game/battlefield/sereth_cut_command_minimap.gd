@@ -6,6 +6,9 @@ const GameplayBindings := preload("res://game/settings/control_bindings.gd")
 
 const Harness := preload("res://game/battlefield/command_harness.gd")
 const Battle := preload("res://game/battlefield/command_battle.gd")
+const Chart := preload("res://game/ui/authored_mission_map.gd")
+const CUT_MAP_PAINT := {"road": ["Geometry/Road/VillageRoad", "Geometry/Road/OpenRecordApproach",
+	"Geometry/Village/CemeteryFootLane"]}
 const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
 const Queue := preload("res://game/battlefield/platoon_waypoint_queue.gd")
 const Routes := preload("res://game/battlefield/command_platoon_routes.gd")
@@ -47,6 +50,11 @@ var _claimed_buttons: Dictionary[int, bool] = {}
 var _capture_device := -1
 var _aim: AimReticle
 var _normal_hint := ""
+var _map_expanded := false
+var _map_exploration := Chart.Exploration.new()
+var _map_available := false
+var _chart_source: Node3D
+var _chart_bounds := Rect2()
 
 @onready var map: Minimap = $Margin/Readout/Map
 @onready var _hint: Label = $Margin/Readout/Hint
@@ -56,6 +64,7 @@ func _ready() -> void:
 	map.right_click_to_move = true
 	map.point_requested.connect(_focus_sector)
 	map.move_requested.connect(_move_from_map)
+	map.append_requested.connect(_append_map_point)
 	mouse_entered.connect(_stop_world_mouse_pan)
 	map.mouse_entered.connect(_stop_world_mouse_pan)
 	_normal_hint = _hint.text
@@ -74,41 +83,83 @@ func _ready() -> void:
 
 func refresh(field: Harness, available: bool) -> void:
 	_field = field
+	_map_available = available
+	if not map.tactical_style and field.tactical_minimap_enabled:
+		var title := get_node_or_null(^"Margin/Readout/Title") as Label
+		map.configure_tactical_panel(self, [title, _hint])
+		map.tooltip_text = "In command: N / LT + D-pad Up to open. Right-click / A sets a waypoint; Ctrl + right-click / RB appends. Click a platoon / X to switch."
 	_bind_routes(field.battle if available else null)
-	var active := available and field.command_view and field._sector != null and field._terrain != null
+	var active := available and (field.command_view or (map.tactical_style and field.march_mode())) \
+		and field._sector != null and field._terrain != null
+	if not field.command_view:
+		_map_expanded = false
 	if _draft_battle and (not active or not _can_aim()):
 		_close_draft()
 	if visible != active:
 		visible = active
-		map.click_to_focus = active
+		map.click_to_focus = active and (not map.tactical_style or _map_expanded or _draft_battle != null)
 		if not active:
 			map.show_frame(null)
 	if not active:
 		_sync_draft()
 		return
+	if map.tactical_style and (_chart_source != field._field or _chart_bounds != field.battle.bounds):
+		_chart_source = field._field
+		_chart_bounds = field.battle.bounds
+		map.terrain_texture = Chart.build_terrain(field, CUT_MAP_PAINT)
 	map.set_field_bounds(field.battle.bounds)
 	var frame := Minimap.Frame.new()
 	frame.hero = Minimap.Marker.new(&"sereth", field.battle.hero_position, field.battle.hero_heading)
+	frame.selected_hero = field.selected_index == Battle.LEAD_INDEX
+	Chart.add_order_route(frame, field, Battle.LEAD_INDEX, &"sereth")
+	var friends := PackedVector2Array([field.battle.hero_position])
 	for index in range(field.battle.formations.size()):
 		var platoon := field.battle.formations[index]
 		if not platoon.can_receive_orders():
 			continue
 		var id := StringName("formation_%d" % index)
 		frame.allies.append(Minimap.Marker.new(id, platoon.position, platoon.heading))
+		Chart.add_order_route(frame, field, index, id)
+		friends.append(platoon.position)
 		if index == field.selected_index:
 			frame.selected_ally = id
 	frame.camera_footprint = _sector_footprint()
+	if map.tactical_style:
+		frame.explored_areas = _map_exploration.update(field.battle, friends)
+		if _draft_battle:
+			frame.command_cursor = _draft_point
+		elif _map_expanded:
+			frame.command_cursor = map.unproject(map.get_local_mouse_position())
 	map.show_frame(frame)
 	_sync_draft()
 
 
+func _append_map_point(point: Vector2) -> void:
+	if map.tactical_style and (_map_expanded or _draft_battle) and _can_plan():
+		_append_waypoint(point)
+
+
 func _focus_sector(point: Vector2) -> void:
+	if map.tactical_style and (not (_map_expanded or _draft_battle) or Chart.select_platoon_at(_field, map, point)):
+		return
 	if _usable(point):
 		_snap_sector(point)
 		_field._sync_view()
 
 
 func _move_from_map(point: Vector2) -> bool:
+	if map.tactical_style:
+		if not (_map_expanded or _draft_battle) or not _can_plan():
+			return false
+		_sending_route_order = true
+		var result := _routes.issue(_route_battle, _field.selected_index, point, false,
+			func(at: Vector2) -> bool: return Chart.can_plot(_field, at))
+		_sending_route_order = false
+		if result == Queue.Result.ACCEPTED:
+			_snap_sector(point)
+			_field._sync_view()
+			return true
+		return false
 	if not _usable(point) or not _field.battle.formation_at(_field.selected_index).can_receive_orders():
 		return false
 	var hit: Variant = _walkable_hit(point)
@@ -177,6 +228,8 @@ func _append_waypoint(point: Vector2) -> void:
 
 
 func _waypoint_fits(point: Vector2) -> bool:
+	if map.tactical_style:
+		return Chart.can_plot(_field, point)
 	# Both the command overlay and the hero marker use the same physical test.
 	# Neither the visibility of this panel nor the active camera defines ground.
 	return _in_bounds(point) and _field._terrain != null \
@@ -211,6 +264,15 @@ func advance_routes() -> void:
 func _input(event: InputEvent) -> void:
 	event = GameplayBindings.translate(event)
 	if not _field or (not visible and not _draft_battle and _until_neutral.is_empty() and _claimed_buttons.is_empty()):
+		return
+	if map.tactical_style and event is InputEventKey and event.physical_keycode == KEY_SHIFT \
+			and not event.pressed and not _field._l2_down:
+		_map_expanded = false
+		_sync_draft()
+	if map.tactical_style and event is InputEventKey and _can_plan() and Minimap.is_tactical_toggle(event):
+		_map_expanded = not _map_expanded
+		_sync_draft()
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey:
 		var key: Key = event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode
@@ -283,7 +345,7 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 			_append_waypoint(_field.cursor)
 			return true
 		return false
-	if button not in AIM_BUTTONS:
+	if button not in AIM_BUTTONS and not (map.tactical_style and button == JOY_BUTTON_X):
 		return false # Options, Create and other existing shell actions pass.
 	if event.pressed:
 		_claimed_buttons[button] = true
@@ -299,6 +361,9 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 					_draft_blocked = true
 					_sync_draft()
 			JOY_BUTTON_B: _close_draft()
+			JOY_BUTTON_X:
+				_draft_index = posmod(_field.selected_index + 2, _field.battle.formations.size() + 1) - 1
+				_field._select_relative(1)
 			JOY_BUTTON_RIGHT_SHOULDER:
 				if _can_aim():
 					_append_waypoint(_draft_point)
@@ -306,7 +371,8 @@ func _capture_button(event: InputEventJoypadButton) -> bool:
 
 
 func _can_plan() -> bool:
-	return (visible and _route_battle != null and _field.command_view
+	return (visible and _map_available and not get_tree().paused and _route_battle != null and _field.command_view
+		and _field.battle.is_valid_command_index(_field.selected_index)
 		and _field.battle.formation_at(_field.selected_index).can_receive_orders())
 
 
@@ -367,12 +433,15 @@ func _nudge(offset: Vector2) -> void:
 
 
 func _sync_draft() -> void:
-	_aim.visible = _draft_battle != null
+	if map.tactical_style:
+		map.set_tactical_expanded(_map_expanded or _draft_battle != null)
+		map.click_to_focus = _can_plan() and (_map_expanded or _draft_battle != null)
+	_aim.visible = not map.tactical_style and _draft_battle != null
 	var may_show_route := _can_plan()
 	var index := _field.selected_index if _field else -1
 	var pending := pending_waypoints(index) if may_show_route else PackedVector2Array()
 	var route_blocked := false
-	_route_overlay.visible = not pending.is_empty()
+	_route_overlay.visible = not map.tactical_style and not pending.is_empty()
 	if _route_overlay.visible:
 		var platoon := _field.battle.formation_at(index)
 		var marching := platoon.order == Battle.Order.MOVE and platoon.destination.is_equal_approx(pending[0])

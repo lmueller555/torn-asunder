@@ -150,6 +150,8 @@ class Squad:
 	var order: Dictionary = {"kind": "hold"}
 	var path := PackedVector2Array()
 	var path_index := 0
+	## Remaining queued destinations as validated navigation legs (active leg first).
+	var waypoint_legs: Array[PackedVector2Array] = []
 	var goal := Vector2.INF
 	var commandable := false
 	var spawned := false
@@ -564,6 +566,95 @@ func command(squad_index: int, order: Dictionary) -> void:
 	if not target.commandable or target.team != PLAYER_TEAM:
 		return
 	_apply_order(target, order)
+
+
+const WAYPOINT_QUEUE_MAX := 8
+const TACTICAL_VISION_RANGE := 50.0
+
+
+## A minimap waypoint is a move order, not an attack on the unit under the cursor.
+## Validate against the same navigation data that the squad will actually use.
+func command_waypoint(squad_index: int, point: Vector2, append: bool) -> bool:
+	if outcome != Outcome.LIVE or squad_index < 0 or squad_index >= squads.size():
+		return false
+	var target := squads[squad_index]
+	if not target.commandable or target.team != PLAYER_TEAM or not target.spawned \
+		or target.departed or target.alive_count(self) == 0:
+		return false
+	if not point.is_finite() or not bounds.grow(-0.7).has_point(point) or _blocked(point, 0.7):
+		return false
+	var pending: bool = append and target.order.kind == "move" and target.path_index < target.path.size() \
+		and not target.order.get("despawn", false)
+	if pending and target.waypoint_legs.size() >= WAYPOINT_QUEUE_MAX:
+		return false
+	var start := target.anchor
+	if pending:
+		var tail: PackedVector2Array = target.path if target.waypoint_legs.is_empty() else target.waypoint_legs.back()
+		start = tail[tail.size() - 1]
+	if start.distance_squared_to(point) <= 0.25:
+		return false
+	var leg := find_path(start, point)
+	var previous := start
+	for turn in leg:
+		# find_path's normal recovery may return a direct blocked fallback.
+		if not _clear_line(previous, turn):
+			return false
+		previous = turn
+	if leg.is_empty() or not previous.is_equal_approx(point):
+		return false
+	if not pending:
+		_apply_order(target, {"kind": "move", "to": point}, leg)
+	elif target.waypoint_legs.is_empty():
+		target.waypoint_legs.append(target.path)
+	target.waypoint_legs.append(leg)
+	return true
+
+
+## The indicator reads only orders accepted by the native simulation.
+func waypoint_route(target: Squad) -> PackedVector2Array:
+	var points := PackedVector2Array([target.anchor])
+	if target.order.kind == "move":
+		points.append_array(target.path.slice(target.path_index))
+		for i in range(1, target.waypoint_legs.size()):
+			points.append_array(target.waypoint_legs[i])
+	return points
+
+
+func waypoint_stops(target: Squad) -> PackedVector2Array:
+	var stops := PackedVector2Array()
+	for leg in target.waypoint_legs:
+		stops.append(leg[leg.size() - 1])
+	if stops.is_empty() and target.order.kind == "move" and target.path_index < target.path.size():
+		stops.append(target.path[target.path.size() - 1])
+	return stops
+
+
+## Spot hostiles from live friendly positions and terrain sight, never via the
+## minimap cursor. Keep out-of-sight orders from leaking hostile positions.
+func tactic_observers() -> PackedVector2Array:
+	var observers := PackedVector2Array()
+	if hero.is_alive():
+		observers.append(hero.position)
+	for ally in squads:
+		if ally.team == PLAYER_TEAM and ally.spawned and not ally.departed and ally.alive_count(self) > 0:
+			observers.append(ally.anchor)
+	return observers
+
+
+func tactic_position_visible(point: Vector2, observers: PackedVector2Array) -> bool:
+	for origin in observers:
+		if tactic_origin_sees(origin, point):
+			return true
+	return false
+
+
+func tactic_origin_sees(origin: Vector2, point: Vector2) -> bool:
+	return origin.distance_squared_to(point) <= TACTICAL_VISION_RANGE * TACTICAL_VISION_RANGE \
+		and _clear_aggro_sight(origin, point)
+
+
+func tactic_enemy_visible(target: Squad) -> bool:
+	return tactic_position_visible(target.centroid(self), tactic_observers())
 
 
 func commandable_squads() -> Array[Squad]:
@@ -1153,15 +1244,16 @@ func _enemies_near(fighter: Fighter, radius: float) -> Array[Fighter]:
 # ---------------------------------------------------------------- squads
 
 
-func _apply_order(squad: Squad, order: Dictionary) -> void:
+func _apply_order(squad: Squad, order: Dictionary, validated_path := PackedVector2Array()) -> void:
 	squad.order = order.duplicate()
+	squad.waypoint_legs.clear()
 	squad.path = PackedVector2Array()
 	squad.path_index = 0
 	squad.goal = Vector2.INF
 	squad.think_in = 0.0
 	if order.kind == "move" or order.kind == "assault":
 		squad.goal = _point(order.get("to", squad.anchor))
-		squad.path = find_path(squad.anchor, squad.goal)
+		squad.path = find_path(squad.anchor, squad.goal) if validated_path.is_empty() else validated_path
 	elif order.kind == "path":
 		for point in order.get("points", []):
 			squad.path.append(_point(point))
@@ -1301,10 +1393,20 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 		speed = 2.6
 	speed = float(squad.order.get("speed", speed))
 	var travel := speed * delta
+	if offset.length_squared() > 0.04:
+		squad.facing = squad.facing.slerp(offset.normalized(), minf(1.0, 4.0 * delta)).normalized()
 	if offset.length() <= travel:
 		squad.anchor = waypoint
 		squad.path_index += 1
 		if squad.path_index >= squad.path.size() and squad.order.kind == "move":
+			if not squad.waypoint_legs.is_empty():
+				squad.waypoint_legs.pop_front()
+				if not squad.waypoint_legs.is_empty():
+					squad.path = squad.waypoint_legs[0]
+					squad.path_index = 0
+					squad.goal = squad.path[squad.path.size() - 1]
+					squad.order.to = squad.goal
+					return
 			if squad.order.get("despawn", false):
 				squad.departed = true
 				for member in squad.members:
@@ -1314,8 +1416,6 @@ func _move_anchor(squad: Squad, delta: float) -> void:
 			squad.order = {"kind": "hold", "arrived": true}
 	else:
 		squad.anchor += offset / offset.length() * travel
-	if offset.length() > 0.2:
-		squad.facing = squad.facing.slerp(offset.normalized(), minf(1.0, 4.0 * delta)).normalized()
 
 
 func _entity_position(who: String) -> Vector2:

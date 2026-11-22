@@ -2,6 +2,8 @@ extends Control
 ## Mission HUD: objectives, minimap, hero and Battle Points, the unit roster, dialogue,
 ## command-view overlays, world-space health bars and the result screen.
 
+const Minimap := preload("res://game/battlefield/battlefield_minimap.gd")
+const TacticalUnits := preload("res://game/mission/mission_units.gd")
 const Battle := preload("res://game/mission/mission_battle.gd")
 const Missions := preload("res://game/mission/missions.gd")
 const Campaigns := preload("res://game/campaigns.gd")
@@ -18,18 +20,51 @@ const RED := Color("#a84c47")
 const BLACK := Color("#08090a")
 const BP := Color("#7fb6e8")
 
+const MAP_LAND := Color("#50563e")
+const MAP_STONE := Color("#767260")
+const MAP_WATER := Color("#3d5250")
+const MAP_PIXELS := 192
+
+
+# Native map plus the generic scenario's existing world-size objective zones.
+class MissionMinimap extends Minimap:
+	var active_zones: Array[Dictionary] = []
+
+	func _draw() -> void:
+		super._draw()
+		if not map_rect().has_area():
+			return
+		for zone in active_zones:
+			var center := project(zone.pos)
+			var edge := project(zone.pos + Vector2.RIGHT * float(zone.radius))
+			draw_arc(center, maxf(2.0, center.distance_to(edge)), 0, TAU, 20, GOLD, 1.0, true)
+
+
 var view
 var _message_index := 0
 var _current: Dictionary = {}
 var _current_until := 0.0
 var _portraits: Dictionary = {}
 var _outcome: Control
+var _map: MissionMinimap
+var _map_obstacles: Array = []
+var _next_map_time := -1.0
+var _map_selection := ""
+var _explored_cells: Dictionary = {}
 
 
 func setup(owner_view) -> void:
 	view = owner_view
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_map = MissionMinimap.new()
+	_map.name = "BattlefieldMinimap"
+	_map.tactical_style = true
+	add_child(_map)
+	_map.place_tactical_overlay(false)
+	_map.set_field_bounds(view.battle.bounds)
+	_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rebuild_terrain(view.battle)
 	for campaign in Campaigns.ALL:
 		_portraits[campaign.id] = campaign.portrait
 
@@ -44,7 +79,32 @@ func refresh() -> void:
 			_current_until = now + 2.4 + _current.text.length() / 24.0
 		elif now >= _current_until:
 			_current = {}
+	_map.visible = battle.outcome == Battle.Outcome.LIVE
+	_map.process_mode = Node.PROCESS_MODE_DISABLED if view.paused else Node.PROCESS_MODE_INHERIT
+	if _map.visible:
+		var selected_entry: Dictionary = view.selected_entry()
+		var selection: String = selected_entry.squad.id if selected_entry.get("kind") == "squad" else ""
+		if _map_obstacles != battle.obstacles:
+			_rebuild_terrain(battle)
+		if now >= _next_map_time or selection != _map_selection:
+			_map_selection = selection
+			_next_map_time = now + (0.05 if view.minimap_expanded else 0.10)
+			_refresh_map_frame(battle, selected_entry)
 	queue_redraw()
+
+
+func expand_minimap(expanded: bool) -> void:
+	_map.set_tactical_expanded(expanded)
+	_next_map_time = -1.0
+
+
+func map_point_from_viewport(pixel: Vector2) -> Variant:
+	return _map.unproject(_map.get_global_transform_with_canvas().affine_inverse() * pixel)
+
+
+func contains_minimap_pixel(pixel: Vector2) -> bool:
+	return _map.visible and Rect2(Vector2.ZERO, _map.size).has_point(
+		_map.get_global_transform_with_canvas().affine_inverse() * pixel)
 
 
 func show_outcome(won: bool, reason: String) -> void:
@@ -113,7 +173,6 @@ func _draw() -> void:
 	var battle: Battle = view.battle
 	_draw_world_bars(battle)
 	_draw_objectives(battle)
-	_draw_minimap(battle)
 	_draw_hero(battle)
 	_draw_units(battle)
 	_draw_dialogue()
@@ -172,50 +231,90 @@ func _draw_objectives(battle: Battle) -> void:
 		y += 27.0
 
 
-func _draw_minimap(battle: Battle) -> void:
-	var box := Rect2(size.x - 254, 22, 230, 230)
-	_panel(box)
-	var inner := box.grow(-8)
-	var bounds := battle.bounds
-	var scale := minf(inner.size.x / bounds.size.x, inner.size.y / bounds.size.y)
-	var offset := inner.position + (inner.size - bounds.size * scale) * 0.5
-	var map := func(point: Vector2) -> Vector2: return offset + (point - bounds.position) * scale
-	for obstacle in battle.obstacles:
-		var color := Color(0.45, 0.43, 0.38, 0.9)
-		if obstacle.get("kind", "") in ["water", "chasm"]:
-			color = Color(0.2, 0.36, 0.44, 0.9)
-		if obstacle.has("rect"):
-			var rect: Rect2 = obstacle.rect
-			draw_rect(Rect2(map.call(rect.position), rect.size * scale), color)
-		elif obstacle.has("circle"):
-			var circle: Vector3 = obstacle.circle
-			draw_circle(map.call(Vector2(circle.x, circle.y)), maxf(1.0, circle.z * scale), color)
+func _refresh_map_frame(battle: Battle, entry: Dictionary) -> void:
+	var frame := Minimap.Frame.new()
+	frame.selected_ally = StringName(_map_selection)
+	if battle.hero.is_alive():
+		frame.hero = Minimap.Marker.new(&"hero", battle.hero.position, battle.hero.facing)
+	if view.minimap_expanded:
+		frame.command_cursor = view.cursor
+	if entry.get("kind") == "squad" and entry.squad.info.get("role") == TacticalUnits.Role.RANGED:
+		frame.attack_range = float(entry.squad.info.get("range", 15.0))
+	var observers := battle.tactic_observers()
+	_update_exploration(battle, observers)
+	frame.explored_areas.assign(_explored_cells.values())
+	for squad in battle.squads:
+		if not squad.spawned or squad.departed or squad.alive_count(battle) == 0:
+			continue
+		var marker := Minimap.Marker.new(StringName(squad.id), squad.anchor, squad.facing)
+		if squad.team == Battle.PLAYER_TEAM:
+			if squad.commandable:
+				frame.allies.append(marker)
+				var route := battle.waypoint_route(squad)
+				if route.size() > 1:
+					frame.platoon_routes[marker.id] = route
+					frame.platoon_stops[marker.id] = battle.waypoint_stops(squad)
+			else:
+				frame.visible_neutrals.append(marker)
+		elif squad.team == Battle.ENEMY_TEAM and battle.tactic_position_visible(squad.centroid(battle), observers):
+			frame.visible_enemies.append(marker)
+	_map.active_zones.clear()
 	for item in battle.objectives:
 		if item.status == "active" and item.has("zone") and battle.zones.has(item.zone):
-			var zone: Dictionary = battle.zones[item.zone]
-			draw_arc(map.call(zone.pos), maxf(3.0, zone.radius * scale), 0, TAU, 20, GOLD, 1.5)
-	for entry in battle.interactables:
-		if entry.active and not entry.done:
-			draw_circle(map.call(entry.pos), 3.5, Color("#bfe6ff"))
-	for fighter in battle.fighters:
-		if not fighter.is_alive():
-			continue
-		var color: Color = [Color("#74cddc"), Color("#e0664f"), Color("#d8d2a8")][fighter.team]
-		var radius := 1.5
-		if fighter.kind == Battle.Kind.STRUCTURE:
-			color = Color("#f4e8d5")
-			radius = 3.0
-		elif fighter.kind == Battle.Kind.HERO:
-			radius = 3.0
-		if fighter.controlled:
-			continue
-		draw_circle(map.call(fighter.position), radius, color)
-	var hero_at: Vector2 = map.call(battle.hero.position)
-	var facing := battle.hero.facing
-	var points := PackedVector2Array([hero_at + facing * 7.0, hero_at + facing.rotated(2.5) * 5.0, hero_at + facing.rotated(-2.5) * 5.0])
-	draw_colored_polygon(points, GOLD)
-	if view.command_mode:
-		draw_arc(map.call(view.cursor), 5.0, 0, TAU, 16, IVORY, 1.5)
+			_map.active_zones.append(battle.zones[item.zone])
+	for i in range(battle.interactables.size()):
+		var item := battle.interactables[i]
+		if item.active and not item.done:
+			frame.objectives.append(Minimap.Marker.new(StringName("interact_%d" % i), item.pos))
+	_map.show_frame(frame)
+
+
+func _update_exploration(battle: Battle, observers: PackedVector2Array) -> void:
+	const CELL := 12.0
+	var field := battle.bounds
+	for origin in observers:
+		var lo := Vector2i(((origin - field.position - Vector2.ONE * Battle.TACTICAL_VISION_RANGE) / CELL).floor()).max(Vector2i.ZERO)
+		var hi := Vector2i(((origin - field.position + Vector2.ONE * Battle.TACTICAL_VISION_RANGE) / CELL).floor()).min(
+			Vector2i((field.size / CELL).ceil()) - Vector2i.ONE)
+		for x in range(lo.x, hi.x + 1):
+			for y in range(lo.y, hi.y + 1):
+				var cell := Vector2i(x, y)
+				if _explored_cells.has(cell):
+					continue
+				var area := Rect2(field.position + Vector2(cell) * CELL, Vector2.ONE * CELL).intersection(field)
+				if battle.tactic_origin_sees(origin, area.get_center()):
+					_explored_cells[cell] = area
+
+
+func _rebuild_terrain(battle: Battle) -> void:
+	# Schematic of the same real blockers previously drawn by the generic map,
+	# not a new illustration or a texture inferred from another battlefield.
+	_map_obstacles = battle.obstacles.duplicate(true)
+	var field := battle.bounds
+	var picture := Image.create_empty(MAP_PIXELS, MAP_PIXELS, false, Image.FORMAT_RGBA8)
+	picture.fill(MAP_LAND)
+	var pixel_bounds := Rect2i(0, 0, MAP_PIXELS, MAP_PIXELS)
+	if field.has_area():
+		for obstacle in _map_obstacles:
+			var color := MAP_WATER if obstacle.get("kind", "") in ["water", "chasm"] else MAP_STONE
+			if obstacle.has("rect"):
+				var rect: Rect2 = obstacle.rect
+				var corner := (rect.position - field.position) / field.size * MAP_PIXELS
+				var spread := rect.size / field.size * MAP_PIXELS
+				picture.fill_rect(Rect2i(Vector2i(corner.floor()), Vector2i(spread.ceil())).intersection(pixel_bounds), color)
+			elif obstacle.has("circle"):
+				var circle: Vector3 = obstacle.circle
+				var center := (Vector2(circle.x, circle.y) - field.position) / field.size * MAP_PIXELS
+				var radius := Vector2.ONE * circle.z / field.size * MAP_PIXELS
+				if radius.x <= 0.0 or radius.y <= 0.0:
+					continue
+				var area := Rect2i(Vector2i((center - radius).floor()), Vector2i((radius * 2.0).ceil())).intersection(pixel_bounds)
+				for y in range(area.position.y, area.end.y):
+					for x in range(area.position.x, area.end.x):
+						if ((Vector2(x, y) + Vector2.ONE * 0.5 - center) / radius).length_squared() <= 1.0:
+							picture.set_pixel(x, y, color)
+	_map.terrain_texture = ImageTexture.create_from_image(picture)
+
 
 
 func _draw_hero(battle: Battle) -> void:

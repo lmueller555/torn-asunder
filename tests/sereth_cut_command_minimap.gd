@@ -608,33 +608,32 @@ func _travel_and_return(title: Title, profile: Profile) -> void:
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tick()
 	await process_frame
-	var back := title._stage.get_node_or_null("PauseBattle") as Button
-	_check(_mission.command_view and _map.is_visible_in_tree() and _hud_fits() and back != null,
-		"Test button access in active command rather than before opening the map.")
-	if not back:
-		return
-	var button_rect := back.get_global_rect()
-	var panel_rect := _mission._command_minimap.get_global_rect()
-	_check(not panel_rect.intersects(button_rect) and root.get_visible_rect().encloses(button_rect),
-		"The minimap must not cover the shell's Pause button.")
+	_check(_mission.command_view and _map.tactical_style and _map.is_visible_in_tree() and _hud_fits(),
+		"Test live Pause in active command rather than before opening the tactical map.")
 	var road := _point("Routes/ApproachRoadWest")
-	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(road))
-	_key(KEY_G)
+	_key(KEY_N)
+	_tick()
+	await process_frame
+	_mouse_map(MOUSE_BUTTON_RIGHT, _map.project(road))
 	_tap(JOY_BUTTON_DPAD_UP)
-	_tap(JOY_BUTTON_DPAD_RIGHT)
-	_check(_mission._command_minimap._aim.is_visible_in_tree() and _route_is(0, [road]),
-		"Return must be available even with an accepted route and a separate unsent aim.")
+	_axis(JOY_AXIS_LEFT_X, 0.75)
+	_draft_tick(3)
+	await process_frame
+	_check(_map.size.is_equal_approx(Minimap.TACTICAL_EXPANDED_SIZE)
+		and _map._command_cursor is Vector2 and _route_is(0, [road]),
+		"Pause remains available with an accepted movement route and a separate unconfirmed aim.")
+	var panel_rect := _mission._command_minimap.get_global_rect()
 	await _capture_image("campaign-command-pause-visible")
-	_click(MOUSE_BUTTON_LEFT, button_rect.get_center())
+	_tap(JOY_BUTTON_BACK)
 	await process_frame
 	_check(paused and PauseTest.confirm_leave(title._pause_menu), "Pause must freeze the battle and allow leaving after confirmation.")
 	await process_frame
 	_check(title._page == Title.Page.WORLD_MAP and title._campaign_battle == null
 		and title._campaign_world.current_waypoint_id() == "still_kingdom_cut"
 		and profile.completed_missions("sereth").is_empty(),
-		"A real mouse click while L2 remains held returns to the Cut pin without awarding a victory.")
+		"Pause while L2 remains held returns to the Cut pin without awarding a victory.")
 	await _capture_image("campaign-returned-to-cut")
-	print("Sereth campaign pointer: panel %s / Return button %s / returned to Cut while L2 held." % [panel_rect, button_rect])
+	print("Sereth campaign: tactical panel %s / returned to Cut through Pause while L2 held." % panel_rect)
 
 
 func _press_at(title: Title, name: String) -> void:

@@ -1,5 +1,6 @@
 extends Node3D
 
+const MissionHud := preload("res://game/ui/mission_hud.gd")
 const GameplayBindings := preload("res://game/settings/control_bindings.gd")
 
 const Battle := preload("res://game/battlefield/command_battle.gd")
@@ -66,6 +67,12 @@ var command_view := false
 var selected_index := 0
 var cursor := Vector2.ZERO
 
+var _shared_mission_hud_enabled := false
+var _mission_hud: MissionHud
+var _mission_objective_feed: Node
+var _mission_hero_name := ""
+var _mission_lead_level := 1
+
 var _keys: Dictionary = {}
 var _axes: Dictionary = {}
 var _input_device := -1
@@ -117,6 +124,49 @@ var _pre_combat_index := Battle.LEAD_INDEX
 @onready var _controls_label: Label = $HUD/Panel/Margin/Readout/Controls
 
 
+# The title shell opts campaign missions into tactical charts. Developer/drill
+# scenes keep their authored controls and presentation until explicitly opted in.
+var tactical_minimap_enabled := false
+var _tactical_map_request: InputEventAction
+var _tactical_map_target := Vector2.ZERO
+var _tactical_map_append := false
+var _tactical_map_result := false
+
+
+func enable_tactical_minimap() -> void:
+	tactical_minimap_enabled = true
+
+
+## Dispatch a map order through the real scene's existing input and movement
+## overrides, not through a made-up camera pixel or a direct battle mutation.
+## The private event reference prevents a remapped action from impersonating it.
+func request_tactical_map_order(point: Vector2, append: bool) -> bool:
+	if not tactical_minimap_enabled or not command_view or get_tree().paused or _tactical_map_request != null:
+		return false
+	if not point.is_finite() or not battle.bounds.has_point(point) or not _terrain:
+		return false
+	var formation := battle.formation_at(selected_index)
+	if formation == null or not formation.can_receive_orders():
+		return false
+	if selected_index == Battle.LEAD_INDEX and battle.direct_hero_control():
+		return false
+	var height_hit: Variant = _terrain.destination_from_ray(Vector3(point.x, 64.0, point.y), Vector3(point.x, -32.0, point.y))
+	if height_hit == null or not _terrain.formation_fits_at(height_hit) or not formation.footprint_fits(height_hit):
+		return false
+	_tactical_map_request = InputEventAction.new()
+	_tactical_map_target = height_hit
+	_tactical_map_append = append
+	_tactical_map_result = false
+	_unhandled_input(_tactical_map_request)
+	_tactical_map_request = null
+	return _tactical_map_result
+
+
+## Only the campaign shell opts in; free-standing combat drills retain their UI.
+func enable_shared_mission_hud() -> void:
+	_shared_mission_hud_enabled = true
+
+
 func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	var device := ControllerSupport.device()
@@ -132,6 +182,9 @@ func _ready() -> void:
 	_configure_field()
 	_build_placeholders()
 	_reset_march_marker()
+	if _shared_mission_hud_enabled:
+		_mission_hud = MissionHud.mount(self) as MissionHud
+		$HUD/Panel.hide()
 	_update_cameras()
 	_update_mode()
 	_sync_view()
@@ -406,6 +459,13 @@ func _movement_check() -> Callable:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event == _tactical_map_request:
+		var previous_cursor := cursor
+		cursor = _tactical_map_target
+		_move_selected()
+		if not _tactical_map_result:
+			cursor = previous_cursor
+		return
 	event = GameplayBindings.translate(event)
 	if event is InputEventKey and not event.echo:
 		var code: int = event.physical_keycode
@@ -522,12 +582,20 @@ func _select_at_cursor() -> void:
 
 func _move_selected() -> void:
 	if command_view:
-		battle.order_move(selected_index, cursor)
+		if _tactical_map_request != null:
+			_tactical_map_result = routes.issue(battle, selected_index, cursor, _tactical_map_append,
+				func(_point: Vector2) -> bool: return true) == MarchQueue.Result.ACCEPTED
+		else:
+			if tactical_minimap_enabled and march_route_provider == null:
+				routes.clear(selected_index)
+			battle.order_move(selected_index, cursor)
 		_sync_view()
 
 
 func _hold_selected() -> void:
 	if command_view:
+		if tactical_minimap_enabled and march_route_provider == null:
+			routes.clear(selected_index)
 		battle.order_hold(selected_index)
 		_sync_view()
 
@@ -650,6 +718,72 @@ func _sync_view() -> void:
 			_controls_label.text = "MARCHING · %s · Left stick / WASD: move the waypoint   ·   %s   ·   Right stick / Q E: swing the waypoint" % [selected.title, _march_route_controls()]
 			if not _march_note.is_empty():
 				_controls_label.text += "\n" + _march_note
+
+	_present_mission_hud()
+
+
+func _present_mission_hud() -> void:
+	if _mission_hud != null:
+		_mission_hud.present(_mission_hud_state())
+
+
+## Adapters supply only measured battle data. Negative HP means
+## the authored encounter does not simulate that stat.
+func _mission_hud_entry(index: int, hp: float = -1.0, max_hp: float = -1.0, level: int = 1) -> Dictionary:
+	var group := battle.formation_at(index)
+	return {
+		"name": _mission_hero_name if index == Battle.LEAD_INDEX and not _mission_hero_name.is_empty() else group.title,
+		"level": maxi(1, level),
+		"hp": hp,
+		"max_hp": max_hp,
+		"selected": index == selected_index,
+		"engaged": battle.lead_engaged if index == Battle.LEAD_INDEX else group.order == Battle.Order.ATTACK,
+	}
+
+
+func _mission_hud_state() -> Dictionary:
+	var roster: Array[Dictionary] = []
+	if battle.lead_platoon_enabled:
+		roster.append(_mission_hud_entry(Battle.LEAD_INDEX, -1.0, -1.0, _mission_lead_level))
+	elif not _mission_hero_name.is_empty():
+		# The Cairnspine scout is directly controlled without a lead platoon.
+		# Free movement is not an engagement or membership in a support unit.
+		roster.append({
+			"name": _mission_hero_name, "level": maxi(1, _mission_lead_level),
+			"hp": -1.0, "max_hp": -1.0, "selected": not command_view, "engaged": false,
+		})
+	for index in range(battle.formations.size()):
+		roster.append(_mission_hud_entry(index))
+	var objective := ""
+	var context := ""
+	if is_instance_valid(_mission_objective_feed):
+		var sample: Dictionary = _mission_objective_feed.call(&"sample")
+		objective = String(sample.get("objective", ""))
+		context = String(sample.get("context", ""))
+	var anchor := _mission_hud_project(_hero.global_position) if not command_view else Vector2.INF
+	return {
+		"roster": roster,
+		"bp": -1,
+		"bp_max": -1,
+		"objective": objective,
+		"objective_visible": not objective.is_empty(),
+		"context": context,
+		"hero_hp": -1.0,
+		"hero_max_hp": -1.0,
+		"hero_anchor": anchor,
+		"enemy": {},
+		"combat": battle.lead_engaged and hero_combat_active(),
+		"feedback": _march_note,
+	}
+
+
+func _mission_hud_project(world_position: Vector3) -> Vector2:
+	var viewport := get_viewport()
+	var camera := viewport.get_camera_3d()
+	if not camera or camera.is_position_behind(world_position):
+		return Vector2.INF
+	var projected := camera.unproject_position(world_position)
+	return projected if viewport.get_visible_rect().has_point(projected) else Vector2.INF
 
 
 func _march_route_controls() -> String:
@@ -965,7 +1099,7 @@ func _sync_lead_platoon() -> void:
 	if not _lead_model:
 		return
 	_lead_model.visible = battle.lead_platoon_enabled
-	_lead_banner.visible = command_view
+	_lead_banner.visible = command_view and not _shared_mission_hud_enabled
 	var origin := _ground(battle.hero_position)
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
