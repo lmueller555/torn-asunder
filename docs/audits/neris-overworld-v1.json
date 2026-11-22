@@ -31,7 +31,7 @@
     },
     "integration_and_cost": {
       "result": "PASS",
-      "finding": "Index version/SHA and each exact binary chunk are pinned. Missing or changed terrain declines without any profile write. Shared chunks replace duplicate full-region generation."
+      "finding": "Index version/SHA and each exact binary chunk are pinned. Missing or changed terrain declines without any profile write. Shared chunks replace duplicate full-region generation. The first-frame cancel lifetime test keeps abandoned requests off the profile and does not change rendered assets."
     }
   },
   "files": {
@@ -118,6 +118,6 @@
     "game/overworld/neris/neris_finale_transfer.gd": "c32bcbf264aae2d01e0b6a4f27a87c5585f5c612901a58da5cea58c7f88ba36b",
     "game/overworld/neris/neris_greyhollow_sector.gd": "4de19a882149b23708bf7ef242720d16bada4fe30676d9b4236b80d1559f4040",
     "game/overworld/neris/neris_greyhollow_sector.tscn": "5acf8c28bcd7efe57f83a9659cedd173425ada51243d020206f085a64b0f98dd",
-    "game/overworld/neris/normal_presenter.gd": "19198e7add2cb8446ef62818fa1952d467a2416983cd2183fff3f8240f3fa9ad"
+    "game/overworld/neris/normal_presenter.gd": "3d9747677f98b08353b199b369009869100115f7eb48a536beb3cf61dfe19a8a"
   }
 }
