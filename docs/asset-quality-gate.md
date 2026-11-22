@@ -4,6 +4,8 @@
 
 This gate applies to art already in the project as well as to each new or visibly revised unit, prop, environment kit, map layer, material, animation, effect, and UI art asset. Treat a kit as one submission only when its pieces are shown together in the same use case and each proposed piece is inspectable. A new use of an existing asset needs a context check for scale, readability, and performance; that check does not replace auditing any new or changed art.
 
+For a new or revised unit, complete the [unit discovery and animation brief](unit-art-workflow.md#0-research-the-unit-and-plan-its-animation-set) before authoring. A completed brief is not an audit pass.
+
 ## Existing art
 
 See the [existing visual art inventory](visual-audit-inventory.md) for confirmed findings and pending reviews.
