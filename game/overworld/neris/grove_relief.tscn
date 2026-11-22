@@ -1,0 +1,10 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://game/overworld/neris/grove_relief.gd" id="1"]
+[node name="GroveRelief" type="Node3D"]
+script = ExtResource("1")
+[node name="Camera" type="Camera3D" parent="."]
+current = true
+fov = 44.0
+near = 0.5
+far = 1700.0
+[node name="Party" type="Node3D" parent="."]
