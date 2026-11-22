@@ -48,6 +48,12 @@ func _ready() -> void:
 		_on_joy_connection_changed(device, true)
 
 
+func _exit_tree() -> void:
+	# Release script-backed translations while both script and server are
+	# alive; TranslationServer outlives the ordinary scene tree teardown.
+	Bindings.release_prompt_translation()
+
+
 func _input(event: InputEvent) -> void:
 	# _input runs before any scene's _unhandled_input, so battle scripts see the
 	# new pad on the same press that picked it up.

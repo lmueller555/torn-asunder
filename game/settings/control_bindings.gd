@@ -300,8 +300,15 @@ static func _apply_layout(next: int) -> void:
 			_prompts = HeroesPrompts.new()
 		_prompts.locale = TranslationServer.get_locale()
 		TranslationServer.add_translation(_prompts)
-	elif _prompts != null:
+	else:
+		release_prompt_translation()
+
+
+## Match the Controller autoload's lifetime, not the engine server's lifetime.
+static func release_prompt_translation() -> void:
+	if _prompts != null:
 		TranslationServer.remove_translation(_prompts)
+		_prompts = null
 
 
 static func _scripted_run() -> bool:
