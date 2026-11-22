@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "Heavy Infantry V02 Hit Stagger, Blocked Hit Stagger and Sword Recoil in normal AI Infantry Skirmish; exact supported post-animation Heavy boot catch only. No Mine, knockdown, get-up, defeat or victory clip change.",
+  "author": "Heavy Infantry animation and presentation author",
+  "reviewer": "Independent native character-art reviewer",
+  "reviewed_on": "2026-11-22",
+  "result": "PASS",
+  "evidence": {
+    "godot_context": "Godot 4.7.2 native X11 GL Compatibility at 1280×720, unchanged Skirmish light and adaptive camera. Paired ordinary 32+32 and 4×32 vs 4×32 at actual tick 159; real 28 hits, one block, five active hooks. Supplementary near and real staged separate contacts reviewed.",
+    "close_up": "Paired genuine rear-over-guard, frontal/open, both lateral, and running/attack interruption. Supplementary near catches use both player-facing and opposite side lenses with retained geometry and existing stock gear.",
+    "reproduction": "Run tests/stagger_runtime_edges.gd after project import. In AI Infantry Skirmish, set level 10 and nine earned Melee allocation to select Heavy, use one platoon each side then an all-Heavy 4×32 mirror; inspect the actual brace/recoil/catch frames without changing movement. Full staged exact test and native review precede publication.",
+    "measurements": "64 native tactical sample 566 draws/1,028,154 primitives at t139 and 567/1,036,890 at t153, unchanged. Actual 256 t159 matched 2,174/2,382,204 tactical, 600/2,714,176 supplemental near; matched per-actor digest. CPU-only 256 artificially active hook stress 4.174 ms median and 5.947 p95, engine/renderer excluded; not a device FPS claim.",
+    "motion": "Reviewed matched native close time series during real repeated hit, immediate hook exit during authoritative knockdown (unchanged idle fallback), and unchanged ordinary 90-degree side recovery pivot. Rechecked source sockets and authentic headless travel and interrupt parity."
+  },
+  "checks": {
+    "shape_and_craft": {
+      "result": "PASS",
+      "reason": "Reviewed the exact preserved Heavy mesh, shield and sword and the new fitted leg catches in paired native front, rear, side and interrupted running shots. No new kit articulation or clipping in the checked poses."
+    },
+    "materials_and_lighting": {
+      "result": "PASS",
+      "reason": "Existing approved mesh, external surface maps and import preset remain identical. Native captures in the unchanged Skirmish light preserved the steel, cloth and team cues."
+    },
+    "readability_in_play": {
+      "result": "PASS",
+      "reason": "Normal Skirmish and close review lenses distinguish a planted open-hit catch, braced shield absorption and released sword recoil. Subtle ordinary formations remain readable; no new individual tactical silhouette claims."
+    },
+    "motion_and_effects": {
+      "result": "PASS",
+      "reason": "Native repeat and interruption sequences, exact contact; repeats retain the beat and loss of STAGGER ends the catch. Existing post-state 90-degree facing pivot and unauthored fall/defeat states remain unchanged and not approved here."
+    },
+    "integration_and_cost": {
+      "result": "PASS",
+      "reason": "Unchanged 64-actor native submission and matched 256 all-Heavy tick 159, five active hooks, both views. Logical outcomes, anchors and roots matched. Measured bounded hook CPU stress separately; no sustained 256 real-time or hardware claim."
+    }
+  },
+  "files": {
+    "assets/models/heavy_infantry/armor_normal.png": "6c3eea07d81ce11919eef676addf42432c2a867d6a7100977b4c62127e32a53e",
+    "assets/models/heavy_infantry/painted_base_color.png": "60cbc8aa025c94b39cb0ba85ed8ec9f258699f5ce38ab47bc4e568c61ff0887d",
+    "assets/models/heavy_infantry/painted_roughness_metallic.png": "ae260d19f2578f851e089866daceee9c063993212e1de5b7cbe9aafafe5f8d45",
+    "assets/models/human_heavy_infantry.glb": "ca20a9e2b9d085433e75670d9edd7f1ac140fa3ba202d630f209675a2f287c52",
+    "assets/models/human_heavy_infantry.glb.import": "99c85163e36ae28bebafa84e99cc983a6545ef889994a93f0faa71ddaa148a95",
+    "assets/source/human_heavy_infantry_game.blend": "8047956754204c955170b5575bb71cd88d46b2ef6464de1b4ba294c3e5520406",
+    "game/combat/heavy_stagger_contact_modifier.gd": "04f0c7cad7cb09a9277c2c12f675b8bfff2081a334e5e03b49bf2db1273f7df5",
+    "game/combat/heavy_stagger_sole.gd": "8cefe933bf49ae5ce203e5262930ec913b25c587bc8c8d1e423611529fe43097",
+    "game/combat/infantry_skirmish_view.gd": "ee1ab607e8ba3f425f72e34e50b8ed37c5f75da07f713db9cf15666cd301ff82",
+    "tests/stagger_runtime_edges.gd": "e0b871336b278ba7852548ac6ba28b59ad8574c047d650015c1c6c43b2eaa752"
+  }
+}

@@ -3,6 +3,7 @@ extends Node3D
 const Battle := preload("res://game/combat/infantry_skirmish.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
 const Setup := preload("res://game/combat/skirmish_setup.gd")
+const HeavyStaggerContact := preload("res://game/combat/heavy_stagger_contact_modifier.gd")
 
 const TEAM_COLORS := [Color("#74cddc"), Color("#ecad67")]
 const CLIPS := {
@@ -29,6 +30,9 @@ const HEAVY_CLIPS := {
 	Battle.State.RAISE: &"Shield Raise",
 	Battle.State.GUARD: &"Shield Guard",
 	Battle.State.LOWER: &"Shield Lower",
+	Battle.State.RECOIL: &"Sword Recoil",
+	Battle.State.BLOCKED: &"Blocked Hit Stagger",
+	Battle.State.STAGGER: &"Hit Stagger",
 }
 const CLIPS_BY_TYPE := {
 	Catalog.HUMAN_INFANTRY: CLIPS,
@@ -46,6 +50,7 @@ var _camera_depth := 25.0
 var _models: Array[Node3D] = []
 var _players: Array[AnimationPlayer] = []
 var _clip_sets: Array[Dictionary] = []
+var _stagger_contacts: Array[HeavyStaggerContact] = []
 var _markers: Array[MeshInstance3D] = []
 var _displayed: Array[int] = []
 var _last_display_second := -1
@@ -95,11 +100,38 @@ func _ready() -> void:
 		model.add_child(marker)
 		_markers.append(marker)
 		_displayed.append(-1)
+		_stagger_contacts.append(null)
 	_sync_models(0.0)
+	_install_stagger_contacts()
 	_frame_battle(0.0)
 
 
+func _install_stagger_contacts() -> void:
+	for index in range(_models.size()):
+		if battle.soldiers[index].unit_type != Catalog.HUMAN_HEAVY_INFANTRY:
+			continue
+		if _valid_clip(_players[index], _clip_sets[index], Battle.State.STAGGER) != &"Hit Stagger":
+			continue
+		var skel := _models[index].find_child("Skeleton3D", true, false) as Skeleton3D
+		if skel == null:
+			# Imported GLTF rigs can have an arbitrary skeleton-node name.
+			var skeletons := _models[index].find_children("*", "Skeleton3D", true, false)
+			if skeletons.size() != 1:
+				continue
+			skel = skeletons[0] as Skeleton3D
+		var modifier := HeavyStaggerContact.new()
+		if not modifier.configure(skel):
+			modifier.free()
+			continue
+		modifier.name = "HeavyStaggerContact"
+		skel.add_child(modifier)
+		_stagger_contacts[index] = modifier
+
+
 func restart() -> void:
+	for contact in _stagger_contacts:
+		if contact:
+			contact.reset_episode()
 	battle = Battle.new(8, _setup)
 	paused = false
 	_displayed.fill(-1)
@@ -193,6 +225,14 @@ func _sync_models(delta: float) -> void:
 			# The attack is chosen at the end of the simulation step, with its clock still at zero.
 			var attack_just_started := soldier.state == Battle.State.ATTACK and soldier.time == 0.0
 			player.advance(0.0 if attack_just_started else delta)
+
+		# Feed each authoritative movement step here, not at render cadence. The
+		# temporary leg poses are only written later by the supported skeleton modifier.
+		var contact := _stagger_contacts[index]
+		if contact and (soldier.state == Battle.State.STAGGER or contact.has_episode):
+			var wants_stagger := soldier.state == Battle.State.STAGGER and model.visible \
+				and player != null and player.assigned_animation == &"Hit Stagger"
+			contact.prepare_tick(wants_stagger, soldier.time, delta)
 
 
 func _frame_battle(delta: float) -> void:
