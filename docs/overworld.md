@@ -1,6 +1,6 @@
 # Vareth 3D overworld
 
-Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign also uses 3D from the ordinary title. Raska, Sova, Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
+Mara's Human campaign uses the authored Marches and Moonwash maps from the ordinary title. Choose New Game → Humans, or Continue or Load an existing Human save. Ilyra’s Elven campaign and Sova’s Druid campaign also use 3D from the ordinary title. Raska, Neris and Sereth retain their existing presentation until their routes pass review. A missing or invalid Mara map package falls back to the original campaign map rather than replacing the save or advancing the story.
 
 For map development only, the isolated playtest still uses a separate profile. From the repository root:
 
@@ -38,6 +38,14 @@ The references are the original [Xbox manual pp. 20–21](https://www.manualslib
 New Game opens Ilyra’s introductory scene and deploys her directly into **Hulls on Stone** at Moonwash Harbor. After the battle, the overworld connects the Harbor to the Moonwash scout camp. Her rescue clear opens the grounded route to Survey Shore and its existing **Two Shorelines** briefing. Her own Survey clear then opens a reversible sector transfer to Spanwater’s **south landing**. Selecting the berth and confirming deployment still opens the original Year Four evacuation. Transferring does not launch a mission or grant a victory. Ilyra’s Harbor result and saved waypoints are independent of Mara’s Upper Quay and Raska’s north-bank approach.
 
 The Linux native launch check exercises an old Harbor save, actual coast navigation, cold Load at the south berth, cargo persistence, and a separate Mara Upper Quay load. [Scoped visual audit](audits/ilyra-overworld-v1.json).
+
+## Sova’s Cairnspine
+
+New Game keeps Sova’s original opening scene and deploys **The Workers’ Way Out** directly. Return from battle, Continue, or Load to see the authored overworld. Cairnspine Camp and the Greyhollow entrance share a physical route. Sova’s own mine evacuation clear unlocks the reversible Greyhollow–Assembly crossing. Select a named crossing with Tab or controller Y before confirming; it does not draw a road between separate landscapes.
+
+At the Assembly, choose the original **Let Them Walk Out** briefing. After the hearing is cleared, travel the upper road to the existing Year Four Godbridle handover. The handover opens on arrival, or on a cold resume if it was left unread, and does not replay after a successful acknowledgement. The short final road leads to the closed Cairnspine Vault entrance and the Year Five **No New Command** briefing. Travel and save actions do not grant victories.
+
+[Scoped Cairnspine visual audit](audits/sova-overworld-v1.json). No additional optional missions or battlefield assets are installed by this rollout.
 
 ## Extension checks
 

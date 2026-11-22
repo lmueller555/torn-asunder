@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/overworld/cairnspine/sova_vault_renderer.gd" id="1"]
+
+[node name="CairnspineUpperValley" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 43.0
+near = 0.5
+far = 1700.0
+current = true
+
+[node name="Party" type="Node3D" parent="."]
