@@ -34,6 +34,12 @@ A reviewer other than the asset author examines the evidence and checks the cand
 
 Mark non-applicable checks with a reason. Record one overall result: **Pass**, **Rework**, or **Blocked**. An unknown or missing required check is **Blocked**, not approved. If visual quality, fit, or technical checks fail, explain what must change, revise locally, and repeat the audit with fresh evidence. There is no limit on revision rounds.
 
+### Compare the actual material inputs
+
+Use the same renderer, camera and lighting on both sides of a comparison. Record the imported texture and material actually bound to each surface, including its color space, mipmaps and filtering. Keep these settings fixed when judging a change to a model or map. Identical image files with different mipmap settings can look different at battle distance; isolate that difference before blaming the artwork.
+
+If a color looks wrong in Godot, first check the source and the imported data, then render a small unlit color sample through the same material path. That separates a color-transport issue from lighting or shading. Bake standard albedo textures in sRGB and keep normals and other data maps linear. In Compatibility, the [vertex color sRGB flag](https://docs.godotengine.org/en/stable/classes/class_basematerial3d.html#class-basematerial3d-property-vertex-color-is-srgb) does not fix a mismatch between linear vertex colors and the visible albedo. Compare a normal sRGB albedo texture against the original palette before repainting. These diagnostics do not replace matched, lit gameplay views or the rest of the visual review.
+
 ## 3. Publish only the passed candidate
 
 A **Pass** identifies the reviewer, date, exact candidate digests, capture or reproduction references, relevant measurements, and the results above. Only then may the passed files be added to the repository in a focused PR. Include or link the review record in the PR and verify the published files match the audited candidate. Gameplay may use the asset only after it passes. If an import, material, animation, mesh, or other audited file changes before merge, hold the changed version for another review.
