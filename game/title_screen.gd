@@ -14,6 +14,7 @@ const DevelopmentOverworld := preload("res://game/campaign_overworld_3d.gd")
 const NormalIlyraEntry := preload("res://game/overworld/ilyra_normal_entry.gd")
 const NormalSovaEntry := preload("res://game/overworld/sova_normal_entry.gd")
 const NormalMaraEntry := preload("res://game/overworld/mara_normal_entry.gd")
+const NormalRaskaEntry := preload("res://game/overworld/raska/raska_normal_entry.gd")
 const ForwardCamp := preload("res://game/overworld/forward_campaign_camp.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
@@ -409,6 +410,9 @@ func _show_world_map() -> void:
 	if _maybe_show_required_water_request():
 		return
 	_replace_stage(Page.WORLD_MAP)
+	if _add_normal_raska_overworld():
+		_show_campaign_warning()
+		return
 	if _add_development_overworld():
 		_show_campaign_warning()
 		return
@@ -421,6 +425,30 @@ func _show_world_map() -> void:
 	map.briefing_requested.connect(_show_campaign_mission_briefing)
 	_stage.add_child(map)
 	_show_campaign_warning()
+
+
+func _add_normal_raska_overworld() -> bool:
+	if not _campaign_world or _campaign_world.campaign_id() != "raska" or not NormalRaskaEntry.requested():
+		return false
+	var map := NormalRaskaEntry.open_map(_campaign_world, _profile)
+	if not map:
+		_campaign_warning = NormalRaskaEntry.FALLBACK_MESSAGE
+		return false
+	map.return_requested.connect(_show_title)
+	map.camp_operations_requested.connect(_show_briefing)
+	map.briefing_requested.connect(_show_campaign_mission_briefing)
+	map.world_committed.connect(_on_raska_world_committed)
+	_stage.add_child(map)
+	map.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return true
+
+
+func _on_raska_world_committed(world: CampaignWorld) -> void:
+	if _page != Page.WORLD_MAP or not _campaign_world or _campaign_world.campaign_id() != "raska" or world.campaign_id() != "raska":
+		return
+	# The seam persisted the canonical arrival atomically before scene ownership moved.
+	_campaign_world = world
+	_show_waypoint_intermission(false)
 
 
 func _add_development_overworld() -> bool:
