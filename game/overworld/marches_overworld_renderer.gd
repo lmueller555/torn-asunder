@@ -381,7 +381,7 @@ func _build_routes() -> void:
 		return
 	var glow := StandardMaterial3D.new()
 	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	glow.albedo_color = Color("#e1bd64")
+	glow.albedo_color = Color("#82956d") # Road guidance, never the live gold cursor tether.
 	var disabled := glow.duplicate() as StandardMaterial3D
 	disabled.albedo_color = Color("#776864")
 	_open_pigment = glow

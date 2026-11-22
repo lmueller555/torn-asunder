@@ -9,7 +9,17 @@ godot --headless --editor --import
 godot --path . --script res://game/overworld/marches_overworld_playtest.gd
 ```
 
-Choose New Game and Mara to see the opening and play Greyhollow. After the opening battle, or on Continue or Load, use the campaign map. Arrow keys, D-pad, or mouse select visible sites. Enter, controller A, or the contextual button confirms the selection. Escape or B cancels travel (returning to the previous committed site) or goes back when idle. Z, shoulder buttons, or the wheel switch between regional and landmark views. Ordinary campaign play uses the existing profile and saved waypoints; no migration is required.
+Choose New Game and Mara to see the opening and play Greyhollow. After the opening battle, or on Continue or Load, use the campaign map. Ordinary campaign play uses the existing profile and saved waypoints; no migration is required.
+
+## Browse, preview and travel
+
+On authored 3D maps, the gold ring starts at the army’s station. Move the left stick or mouse to browse freely. The gold dots lead back to the army, which stays put while you browse. Reachable destinations have green markers. Hover for the mission preview; if a route is locked, its preview shows the actual prerequisite. D-pad and arrow keys still snap between sites.
+
+Press controller A or Enter, double-click the waypoint, or use the contextual button to confirm a live selection. On a local route, an army miniature marches along the road and the station updates only on arrival. Press B or Escape to cancel while traveling, or to go back when idle. With reduced motion, travel completes without the marching animation. Selecting a mission at your current station opens its existing briefing; it does not deploy the army without confirmation.
+
+Use the shoulder buttons, Z, or the wheel to switch between the regional and close lenses. Steering outward at the edge of the close view widens to the regional lens. Transitions between separate authored sectors still use their named boundary choices rather than drawing a path through unbuilt terrain. The battle minimap and legacy campaign maps are unchanged.
+
+The shared cursor and travel checks run in Godot smoke tests as `tests/overworld_compass.gd`.
 
 ## Western Marches corridor
 
