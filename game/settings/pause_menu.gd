@@ -161,11 +161,12 @@ func _show_settings() -> void:
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(rows)
 	for kind: StringName in GROUPS[_group]:
-		for slot: int in Bindings.ROWS[kind]:
-			var action: String = Bindings.ROWS[kind][slot]
+		for slot: int in Bindings.rows()[kind]:
+			var action: String = Bindings.rows()[kind][slot]
 			var assigned := Bindings.describe(kind, Bindings.physical(kind, slot))
 			_button("%s    ·    %s" % [action, assigned], _show_capture.bind(kind, slot), rows)
 	_label(_content, "Pause: Escape / Options or Menu. Assigning a used input swaps the two bindings.")
+	_button("Controller layout: %s" % Bindings.LAYOUT_NAMES[Bindings.layout()], _toggle_layout, _content)
 	if not _feedback.is_empty():
 		_label(_content, _feedback)
 		_feedback = ""
@@ -177,13 +178,20 @@ func _show_settings() -> void:
 	active_tab.grab_focus()
 
 
+func _toggle_layout() -> void:
+	var next := Bindings.Layout.CLASSIC if Bindings.layout() == Bindings.Layout.HEROES else Bindings.Layout.HEROES
+	_feedback = "Controller layout: %s" % Bindings.LAYOUT_NAMES[next] if Bindings.set_layout(next, bindings_path) == OK \
+		else "The controller layout could not be saved."
+	_show_settings()
+
+
 func _select_group(group: String) -> void:
 	_group = group
 	_show_settings()
 
 
 func _show_capture(group: StringName, slot: int) -> void:
-	_build(Page.CAPTURE, Bindings.ROWS[group][slot])
+	_build(Page.CAPTURE, Bindings.rows()[group][slot])
 	_capture_group = group
 	_capture_slot = slot
 	var prompt: String = {

@@ -247,6 +247,11 @@ func march_issue(index: int, point: Vector2, append: bool) -> int:
 	return result
 
 
+## True while a mini-map aim draft is open (the Heroes layout keeps its buttons).
+func is_drafting() -> bool:
+	return _draft_battle != null
+
+
 func march_clear(index: int) -> void:
 	_routes.clear(index)
 	if _route_note_index == index:

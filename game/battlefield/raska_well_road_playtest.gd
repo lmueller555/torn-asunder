@@ -713,5 +713,15 @@ func _face(actor: Node3D, target: Vector3) -> void:
 
 
 func _march_route_controls() -> String:
+	if GameplayBindings.heroes_active():
+		return super._march_route_controls() + "\nD-pad Left: other cart   ·   D-pad Right: salt road   ·   D-pad Down: wash route"
 	# L1 switches carts on this road, so tightening stays on the keyboard.
 	return super._march_route_controls().replace("L1 / I: tighter formation", "I: tighter formation (L1 switches carts here)")
+
+
+## Heroes layout: the carts' routes are this road's "support" calls on the D-pad.
+func _heroes_overrides(mode: int) -> Dictionary:
+	if mode == GameplayBindings.Mode.ACTION:
+		return {}
+	return {JOY_BUTTON_DPAD_LEFT: JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_DPAD_RIGHT: JOY_BUTTON_RIGHT_SHOULDER,
+		JOY_BUTTON_DPAD_DOWN: JOY_BUTTON_Y}

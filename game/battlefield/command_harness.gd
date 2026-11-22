@@ -28,6 +28,9 @@ const MARKER_LEASH := 60.0
 ## The marker starts this far ahead of the platoon when it is (re)selected.
 const MARKER_START := 4.0
 const MARKER_CAMERA_DISTANCE := 9.0
+## Hero camera distance multipliers for R3 "change camera view" (Heroes layout).
+const CAMERA_VIEWS: PackedFloat32Array = [1.0, 1.6, 0.72]
+const CAMERA_VIEW_NAMES: PackedStringArray = ["standard", "far", "near"]
 ## How far ahead of the platoon, toward the marker, the marching camera aims.
 const MARKER_CAMERA_LOOK_AHEAD := 5.0
 ## The marker can't be pulled closer than this, so it never crosses the platoon
@@ -120,6 +123,11 @@ var _destination_marker: MeshInstance3D
 @onready var _formation_label: Label = $HUD/Panel/Margin/Readout/Formation
 var _roster_label: Label
 var _lead_was_engaged := false
+var _r2_down := false
+var _placed_spread := {}
+var _camera_view := 0
+## Set by mini-map HUDs while a mini-map aim draft is open.
+var minimap_drafting := false
 var _pre_combat_index := Battle.LEAD_INDEX
 @onready var _controls_label: Label = $HUD/Panel/Margin/Readout/Controls
 
@@ -169,6 +177,7 @@ func enable_shared_mission_hud() -> void:
 
 func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
+	GameplayBindings.set_mode_provider(_binding_mode)
 	var device := ControllerSupport.device()
 	if device >= 0:
 		_input_device = device
@@ -330,6 +339,76 @@ func march_waypoints(index: int) -> PackedVector2Array:
 	return routes.snapshot(index)
 
 
+## Y in the Heroes layout: every platoon that can take orders heads for the marker
+## (or the command cursor), keeping its place relative to the selected platoon.
+## Replaces their routes. The leader's platoon joins in only outside combat.
+func move_all_troops() -> int:
+	if not (march_mode() or command_view):
+		return 0
+	var anchor := battle.formation_at(selected_index)
+	if anchor == null:
+		return 0
+	var target := march_marker if march_mode() else cursor
+	var indices: Array[int] = []
+	if battle.lead_platoon_enabled and not battle.direct_hero_control():
+		indices.append(Battle.LEAD_INDEX)
+	for index in range(battle.formations.size()):
+		indices.append(index)
+	var moved := 0
+	for index in indices:
+		var group := battle.formation_at(index)
+		if group == null or not group.can_receive_orders():
+			continue
+		var point := battle.clamp_to_field(target + group.position - anchor.position)
+		if not _march_point_fits(point):
+			point = target
+		var accepted := false
+		if march_route_provider and march_route_provider.has_method("march_issue") and march_mode():
+			accepted = march_route_provider.march_issue(index, point, false) == MarchQueue.Result.ACCEPTED
+		elif march_mode():
+			accepted = routes.issue(battle, index, point, false, _march_point_fits) == MarchQueue.Result.ACCEPTED
+		else:
+			if march_route_provider and march_route_provider.has_method("march_clear"):
+				march_route_provider.march_clear(index)
+			else:
+				routes.clear(index)
+			battle.order_move(index, point)
+			accepted = true
+		if accepted:
+			moved += 1
+	_march_note = "All troops moving" if moved > 0 else "No troops could move there"
+	_sync_view()
+	return moved
+
+
+## R3 in the Heroes layout: change the hero camera's view (standard, far, near).
+func cycle_camera_view() -> void:
+	if command_view:
+		return
+	_camera_view = (_camera_view + 1) % CAMERA_VIEWS.size()
+	_march_note = "Camera: %s view" % CAMERA_VIEW_NAMES[_camera_view]
+	_update_cameras()
+	_sync_view()
+
+
+## What the Heroes controller layout needs to know to resolve a button press.
+func _binding_mode() -> Dictionary:
+	var mode := GameplayBindings.Mode.TACTICS
+	if command_view:
+		mode = GameplayBindings.Mode.COMMAND
+	elif hero_combat_active():
+		mode = GameplayBindings.Mode.ACTION
+	var drafting: bool = minimap_drafting or (march_route_provider != null and march_route_provider.has_method("is_drafting")
+		and march_route_provider.is_drafting())
+	return {"mode": mode, "overrides": _heroes_overrides(mode), "drafting": drafting}
+
+
+## Scenes reassign Heroes buttons whose classic slot means something else there,
+## as {physical button: logical button}.
+func _heroes_overrides(_mode: int) -> Dictionary:
+	return {}
+
+
 func _march_point_fits(point: Vector2) -> bool:
 	if not battle.clamp_to_field(point).is_equal_approx(point):
 		return false
@@ -486,14 +565,28 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_G: if march_mode(): add_march_waypoint()
 				KEY_J: if march_mode(): queue_march_waypoint()
 				KEY_T: if march_mode(): clear_march_route()
+				KEY_I: step_formation(-1)
+				KEY_O: step_formation(1)
 	elif event is InputEventJoypadMotion and _uses_joypad(event.device):
 		_axes[event.axis] = event.axis_value
 		if event.axis == JOY_AXIS_TRIGGER_LEFT:
 			_l2_down = event.axis_value > L2_RELEASE if _l2_down else event.axis_value >= L2_PRESS
 			_update_mode()
+		elif event.axis == JOY_AXIS_TRIGGER_RIGHT:
+			var was_down := _r2_down
+			_r2_down = event.axis_value > L2_RELEASE if was_down else event.axis_value >= L2_PRESS
+			if _r2_down and not was_down:
+				step_formation(1)
 	elif event is InputEventJoypadButton and event.pressed and _uses_joypad(event.device):
 		# Godot names face buttons by their Xbox positions: X is Square and A is Cross.
-		match event.button_index:
+		match int(event.button_index):
+			GameplayBindings.ACT_SET_WAYPOINT: if march_mode(): add_march_waypoint()
+			GameplayBindings.ACT_ADD_WAYPOINT: if march_mode(): queue_march_waypoint()
+			GameplayBindings.ACT_MOVE_ALL: move_all_troops()
+			GameplayBindings.ACT_TIGHTER: step_formation(-1)
+			GameplayBindings.ACT_WIDER: step_formation(1)
+			GameplayBindings.ACT_CAMERA_VIEW: cycle_camera_view()
+			JOY_BUTTON_LEFT_SHOULDER: step_formation(-1)
 			JOY_BUTTON_DPAD_LEFT: _select_relative(-1)
 			JOY_BUTTON_DPAD_RIGHT: _select_relative(1)
 			JOY_BUTTON_X:
@@ -517,6 +610,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_select_at_cursor()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and _point_cursor(event.position, false):
 			_move_selected()
+
+
+func _exit_tree() -> void:
+	GameplayBindings.clear_mode_provider(self)
 
 
 func _notification(what: int) -> void:
@@ -640,7 +737,7 @@ func _update_cameras() -> void:
 		_camera_pivot = _camera_pivot.lerp(goal, minf(1.0, 12.0 * step))
 		_camera_yaw = lerp_angle(_camera_yaw, _hero_yaw, minf(1.0, 10.0 * step))
 	var hero := _camera_pivot
-	var distance := MARKER_CAMERA_DISTANCE if marching else 6.1
+	var distance := (MARKER_CAMERA_DISTANCE if marching else 6.1) * CAMERA_VIEWS[_camera_view]
 	var hero_offset := Vector3(0.0, sin(_hero_pitch), cos(_hero_pitch)) * distance
 	var desired := hero + hero_offset.rotated(Vector3.UP, _camera_yaw)
 	_hero_camera.position = _terrain.camera_position(hero, desired) if _terrain else desired
@@ -683,6 +780,7 @@ func _sync_view() -> void:
 		var yaw := atan2(-formation.heading.x, -formation.heading.y)
 		var origin := _ground(formation.position)
 		var moved := model.position != origin or not is_equal_approx(model.rotation.y, yaw)
+		moved = _place_formation_members(index, formation) or moved
 		model.position = origin
 		model.rotation.y = yaw
 		if _terrain and moved:
@@ -700,11 +798,15 @@ func _sync_view() -> void:
 		status = "In combat · direct control"
 	_mode_label.text = "COMMAND VIEW  /  LIVE" if command_view else ("HERO VIEW  /  COMBAT" if battle.lead_engaged else "HERO VIEW  /  MARCHING")
 	_formation_label.text = "%s  ·  %s" % [selected.title, status]
+	if battle.lead_platoon_enabled and selected.uses_formations():
+		_formation_label.text += "  ·  %s formation" % selected.spacing_name()
 	_sync_roster()
 	if command_view:
 		if _sector:
 			_mode_label.text = "%s  /  LIVE" % ("FIELD OVERVIEW" if _sector.overview else "TACTICAL SECTOR")
-		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold"
+		_controls_label.text = "Release L2 / Shift to return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nD-pad / Z X / left click: select   ·   Square / right click: move   ·   Cross / H: hold\nL1 / I: tighter formation   ·   R2 / O: wider formation"
+		if GameplayBindings.heroes_active():
+			_controls_label.text = "Back / release Shift: return to hero\nLeft stick / mouse: cursor   ·   Right stick / Q E R F: camera\nLT / RT / D-pad / Z X: select   ·   Cross / right click: move   ·   LT + RT + Cross: add waypoint\nCircle / H: hold   ·   Square / K: attack at cursor   ·   Triangle: move all troops\nL1 / O: wider formation   ·   R1 / I: tighter formation"
 		if _sector:
 			_controls_label.text += "\nR3 / M: overview / sector   ·   L3 / Home: center on hero"
 			if not _sector.overview:
@@ -712,6 +814,8 @@ func _sync_view() -> void:
 	else:
 		if hero_combat_active():
 			_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Right stick / Q E R F: camera\nD-pad Left/Right / Z X: switch to another platoon   ·   Hold L2 / Shift: command view"
+			if GameplayBindings.heroes_active():
+				_controls_label.text = "COMBAT · Left stick / WASD: fight as the leader   ·   Cross: attack   ·   Triangle: heavy attack   ·   Hold Triangle + Circle: special\nCircle: dodge   ·   L1 / R1: guard   ·   Square: interact   ·   LT / RT / D-pad: switch platoon   ·   R3: camera view   ·   Back: mini-map"
 		else:
 			if battle.lead_engaged:
 				_mode_label.text = "HERO VIEW  /  COMBAT · COMMANDING %s" % selected.title.to_upper()
@@ -787,7 +891,9 @@ func _mission_hud_project(world_position: Vector3) -> Vector2:
 
 
 func _march_route_controls() -> String:
-	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon"
+	if GameplayBindings.heroes_active():
+		return "Cross / G: set waypoint (replaces route)   ·   LT + RT + Cross / J: add to route   ·   Circle / T: stop\nTriangle: move all troops   ·   Square: interact   ·   LT / RT / D-pad / Z X: change platoon\nL1 / O: wider formation   ·   R1 / I: tighter formation   ·   R3: camera view   ·   Back: mini-map"
+	return "R1 / G: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / T: clear route   ·   D-pad Left/Right / Z X: change platoon\nL1 / I: tighter formation   ·   R2 / O: wider formation"
 
 
 ## The platoon roster under the selected platoon: every platoon you can switch to
@@ -857,8 +963,8 @@ func _configure_formation_roles() -> void:
 func _regular_melee_footprint_fits(group: Battle.Formation, center: Vector2) -> bool:
 	var near_slot := group.members.front() as Battle.Member
 	var far_slot := group.members.back() as Battle.Member
-	var feet_half_size := (far_slot.offset - near_slot.offset) * 0.5
-	var layout_center := (near_slot.offset + far_slot.offset) * 0.5
+	var feet_half_size := (group.member_offset(far_slot) - group.member_offset(near_slot)) * 0.5
+	var layout_center := (group.member_offset(near_slot) + group.member_offset(far_slot)) * 0.5
 	var half_size := feet_half_size + group.footprint_padding
 	var side := Vector2(-group.heading.y, group.heading.x)
 	var back := -group.heading
@@ -878,6 +984,9 @@ func restart_battle() -> void:
 	routes.reset(battle)
 	_marker_active = false
 	_lead_was_engaged = false
+	GameplayBindings.reset_heroes_state()
+	for index in range(battle.formations.size()):
+		_placed_spread[index] = -1.0
 	_camera_pivot = Vector3.INF
 	_calm_seconds = 0.0
 	selected_index = 0
@@ -1104,10 +1213,55 @@ func _sync_lead_platoon() -> void:
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
 	_lead_model.rotation.y = yaw
+	_apply_spread(_lead_members, battle.lead.spread)
 	if _terrain:
 		for member in _lead_members:
 			var offset := Vector3(member.position.x, 0.0, member.position.z).rotated(Vector3.UP, yaw)
 			member.position.y = _terrain.ground_height(battle.hero_position + Vector2(offset.x, offset.z)) - origin.y
+
+
+## Gathers a platoon's soldiers in or fans them out as its formation changes.
+## Returns true if any soldier moved.
+func _place_formation_members(index: int, formation: Battle.Formation) -> bool:
+	if is_equal_approx(formation.spread, _placed_spread.get(index, 1.0)):
+		return false
+	_placed_spread[index] = formation.spread
+	var anchors: Array = _formation_members[index]
+	for slot in formation.members:
+		if slot.index < anchors.size():
+			var anchor := anchors[slot.index] as Node3D
+			var offset := formation.member_offset(slot)
+			anchor.position.x = offset.x
+			anchor.position.z = offset.y
+	return true
+
+
+## The leader's soldiers gather in or fan out from their Normal places.
+static func _apply_spread(members: Array, spread: float) -> void:
+	for member: Node3D in members:
+		if not member.has_meta(&"formation_base"):
+			member.set_meta(&"formation_base", Vector2(member.position.x, member.position.z))
+		var base: Vector2 = member.get_meta(&"formation_base")
+		member.position.x = base.x * spread
+		member.position.z = base.y * spread
+
+
+## Tighter (-1) or wider (+1) formation for the selected platoon, while marching
+## and in command view.
+func step_formation(direction: int) -> bool:
+	if not battle.lead_platoon_enabled or not (march_mode() or command_view):
+		return false
+	var selected := battle.formation_at(selected_index)
+	if selected == null:
+		return false
+	if not battle.step_spacing(selected_index, direction):
+		if not selected.uses_formations():
+			_march_note = "%s keep a single formation" % selected.title
+		_sync_view()
+		return false
+	_march_note = "%s: %s formation" % [selected.title, selected.spacing_name()]
+	_sync_view()
+	return true
 
 
 ## Scenes may fill the existing feet anchor without changing simulation or formations.

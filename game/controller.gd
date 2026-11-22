@@ -20,6 +20,7 @@ extends Node
 ## SDL mapping body for a DualShock 3 seen as a raw HID device on macOS. The button
 ## numbers follow the DS3's own HID report order (Select, L3, R3, Start, D-pad
 ## up/right/down/left, L2, R2, L1, R1, Triangle, Circle, Cross, Square, PS).
+const Bindings := preload("res://game/settings/control_bindings.gd")
 const PS3_MAC_MAPPING := "a:b14,b:b13,back:b0,dpdown:b6,dpleft:b7,dpright:b5,dpup:b4,guide:b16," \
 	+ "leftshoulder:b10,leftstick:b1,lefttrigger:b8,leftx:a0,lefty:a1,rightshoulder:b11," \
 	+ "rightstick:b2,righttrigger:b9,rightx:a2,righty:a3,start:b3,x:b15,y:b12"
@@ -40,6 +41,8 @@ static var active_device := -1
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Resolve the saved controller layout early so battle prompts read correctly.
+	Bindings.layout()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	for device in Input.get_connected_joypads():
 		_on_joy_connection_changed(device, true)

@@ -1,30 +1,112 @@
-# DualSense controls
+# Controls
 
-The PlayStation 5 DualSense is the primary controller for *Torn Asunder*. Hold **L2** to enter the command view and release it to return to the hero. The battle continues in both views. See the [combat system](combat.md) for how the two views work together.
+*Torn Asunder*'s controller layout follows *Kingdom Under Fire: Heroes* (Xbox, 2005) mode by mode, the way its manual splits the controls. This **Heroes layout** is the default. The original layout is still available as **Classic** (pause menu → Settings → Controller layout), and both can be remapped in the same settings page.
 
-The hero view has two modes. **Marching** is whenever the leader isn't fighting: you steer a waypoint marker and move platoons. **Combat** starts when an enemy comes within 8 m of the leader's platoon: you fight as the leader. Attack buttons do nothing while marching, and their prompts appear only in combat.
+Button names below are Xbox first, with the PlayStation button in the same position after the slash. A = Cross, B = Circle, X = Square, Y = Triangle, LB / RB = L1 / R1, LT / RT = L2 / R2, Back = Create / Select / View, Start = Options / Menu. The keyboard keys are the same in both layouts.
 
-| Input | Marching (hero view) | Combat (hero view, Lead Platoon selected) | Command view while holding L2 |
-|---|---|---|---|
-| Left stick | Move the waypoint marker out from the selected platoon | Move the hero | Move the battlefield cursor |
-| Right stick | Swing the marker round its platoon (up/down tilts) | Control the camera | Rotate and tilt the command camera |
-| D-pad left / right | Switch platoon: Lead Platoon, then each of your platoons | Switch platoon. Picking another platoon mid-fight hands the stick to its marker while the leader holds; switch back to fight | Select the previous or next allied unit |
-| R1 | **Set waypoint**: replaces the platoon's route and sends it straight to the marker | Officer ability | Append the cursor as a waypoint (where available) |
-| Square | **Add to route**: appends the marker, so the platoon walks the waypoints in order | Light attack | Order the selected unit to move to the cursor |
-| Circle | Clear the route and hold | Dodge | Clear the current target |
-| D-pad up | Clear the route and hold | — | Aim on the minimap (where available) |
-| Triangle | — | Heavy attack | Order the selected unit to attack the highlighted enemy |
-| L1 | Tighter formation for the selected platoon | Guard | Tighter formation for the selected platoon |
-| R2 | Wider formation for the selected platoon | Sundering Strike (Mara, where unlocked) | Wider formation for the selected platoon |
-| Cross | Interact with an objective | Interact with an objective | Order the selected unit to hold its current position |
+A battle switches between three modes on its own:
+- **Tactics**: the leader isn't fighting. You steer a tall waypoint marker out from the selected troop.
+- **Action**: an enemy comes within 8 m of the leader's platoon. You fight as the leader.
+- **Command**: the mini-map and command view, opened with **Back**.
 
-Keyboard: WASD marker or hero · **G** set waypoint · **J** add to route · **T** clear · **Z / X** switch platoon · **I / O** tighter / wider formation. In combat **J / K / L / U / V** attack, heavy, dodge, guard and Sundering Strike.
+Attack buttons do nothing in Tactics mode, and their prompts appear only in combat.
 
-The **roster line** under the selected platoon lists every platoon you can switch to, brackets the selected one, and marks who is fighting. When combat starts, the Lead Platoon is selected for you. When it ends, the platoon you had selected before comes back, unless you switched platoons during the fight.
+## 1. Tactics mode (marching)
 
-At the mine, hold **L2**, select the archers with the **D-pad**, move the cursor over the Orc company approaching the escort, and press **Triangle**. Release **L2** to return to the hero while the archers carry out the order.
+| Input | *Heroes* | *Torn Asunder* |
+|---|---|---|
+| Left stick | Move cursor / direct the troop | Move the waypoint marker away from, toward, or round the selected troop |
+| Right stick | Camera | Camera; it stays behind the troop facing the marker, so turning it swings the marker round the troop |
+| R3 (click) | Change camera view | Change camera view: standard, far, near. In Mara's missions it toggles the camera focus on Mara |
+| D-pad | Abilities / call support troops | Mission actions. Grain Crossing: Left = other cart, Right = dispatch, Down = turn back. Well Road: Left = other cart, Right = salt road, Down = wash route. Up clears the route; Left / Right also change troop |
+| A / Cross | Confirm / move the troop to the cursor | **Set waypoint**: the troop marches to the marker, replacing its route |
+| B / Circle | Cancel / stop | **Stop**: clear the troop's route and hold |
+| X / Square | — | Interact with an objective (pick up, load, inspect, rally) |
+| Y / Triangle | Move all troops at once | **Move all troops** to the marker, keeping their places around the selected troop |
+| LT / RT | Change selected troop | Previous / next troop: Lead Platoon, then each platoon |
+| LB / L1 (White) | Wider formation | **Wider formation**: Normal → Open (1.5× pace) |
+| RB / R1 (Black) | Tighter formation | **Tighter formation**: Normal → Closed (0.5× pace) |
+| Back | Mini-map on / off | Mini-map and command view on / off |
+| Start | Pause | Pause menu (standalone test scenes restart) |
+| LT + RT + A | Set waypoints (up to 8) | **Add to route**: append the marker, up to 8 waypoints walked in order |
+| Hold RT + left stick | Zoom the mini-map | — (in command view, R3 switches tactical ↔ overview) |
 
-The first playtest should check whether the player can redirect a unit mid-fight and return to the hero in time to read the next incoming attack.
+Keyboard: WASD marker · **G** set waypoint · **J** add to route · **T** stop · **Z / X** change troop · **O / I** wider / tighter · **Space** interact.
+
+## 2. Action mode (fighting as the leader)
+
+| Input | *Heroes* | *Torn Asunder* |
+|---|---|---|
+| Left stick | Move hero | Move the leader |
+| Right stick | Camera | Orbit the camera |
+| R3 (click) | Change camera view | Change camera view (Mara: camera focus) |
+| D-pad | Abilities / support troops | Left / Right change troop; mission actions where listed |
+| A / Cross | Normal attack | **Normal (light) attack** |
+| X / Square | Normal attack | Interact (an objective in reach) |
+| B / Circle | Special move (counter / evade) | **Dodge** in the stick's direction |
+| Y / Triangle | Special attack | **Heavy attack** (fires when you let go of Y) |
+| Y + B | Special attack | **Special attack**: Mara's Sundering Strike where unlocked. Hold Y, press B |
+| LB / RB | Summon officers | **Guard** while held (there are no officers yet) |
+| LT / RT | Change selected troop | Change troop. Picking another troop mid-fight hands the stick to its marker while the leader holds; pick the Lead Platoon to fight again |
+| Hold RT | Show the mini-map | — (Back opens it) |
+| Back | Mini-map on / off | Mini-map and command view on / off |
+| Hold LT + A | Waypoints on the mini-map | LT picks the previous troop, then A sets its waypoint |
+| Start | Pause | Pause menu |
+
+Keyboard: WASD move · **J** light · **K** heavy · **L** dodge · **U** guard · **V** Sundering Strike · **Space** interact.
+
+## 3. Command mode (mini-map and command view, toggled with Back)
+
+*Heroes* runs troop orders through its mini-map. Ours also gives a tactical camera over the battlefield cursor. Shift held on the keyboard does the same as Back.
+
+| Input | *Torn Asunder* |
+|---|---|
+| Left stick / mouse | Move the battlefield cursor |
+| Right stick | Rotate and tilt the command camera |
+| A / Cross | Move the selected troop to the cursor |
+| LT + RT + A | Append the cursor as a waypoint (where routes are available) |
+| B / Circle | Stop the selected troop (hold) |
+| X / Square | Attack the enemy under the cursor with the selected troop |
+| Y / Triangle | Move all troops to the cursor |
+| LT / RT, D-pad Left / Right | Previous / next troop |
+| D-pad Up | Aim on the mini-map (Mara's and Sereth's missions). While aiming: stick / D-pad move the reticle, A sends a Move, LT + RT + A or RB appends, B closes |
+| LB / RB | Wider / tighter formation for the selected troop |
+| R3 / L3 | Tactical ↔ overview / center on the leader (large fields) |
+| Back | Return to the hero |
+
+## 4. Castle / base and world map (menus and the overworld)
+
+| Input | *Heroes* | *Torn Asunder* |
+|---|---|---|
+| Left stick / D-pad | Move the cursor / between nodes | Move between menu items / overworld waypoints |
+| A / Cross | Confirm / open the briefing | Confirm / travel / open the briefing; advance dialogue |
+| B / Circle | Back | Back; skip dialogue |
+| Y | Help messages (castle) | — |
+| LB / RB | Officer ability (world map) | — |
+| Hold RT | World mini-map | — (the overworld is already a full map) |
+| Start | Pause (save / load) | Pause menu; the campaign saves automatically |
+
+## Classic layout
+
+The Classic layout keeps *Torn Asunder*'s original buttons. Hold **L2** for the command view. In Tactics mode:
+- **R1** sets a waypoint and **Square** adds to the route.
+- **Circle** or **D-pad Up** clears the route.
+- **D-pad Left / Right** changes troop.
+- **L1 / R2** make the formation tighter / wider.
+- **Cross** interacts.
+
+In Action mode:
+- **Square** is the light attack and **Triangle** the heavy attack.
+- **Circle** dodges and **L1** guards.
+- **R2** is the Sundering Strike and **R1** the officer ability.
+
+In command view:
+- **Square** moves, **Triangle** attacks and **Cross** holds.
+- **R1** appends a waypoint and **D-pad Up** aims on the mini-map.
+
+The scripted test suite runs in the Classic layout, because the battle scripts are written in its slots. `tests/heroes_layout.gd` switches to the Heroes layout and checks every mode. Under the hood, the Heroes layout translates buttons into those slots per mode, in `game/settings/control_bindings.gd`. Battle prompts are rewritten for it through a `Translation`, so the scripts' own text is unchanged.
+
+The **roster line** under the selected troop lists every troop you can switch to, brackets the selected one, and marks who is fighting. When combat starts, the Lead Platoon is selected for you. When it ends, the troop you had selected before comes back, unless you switched troops during the fight.
 
 ## Formations
 
@@ -36,7 +118,7 @@ Melee platoons (infantry, guards, marines and the leader's own platoon) travel i
 | **Normal** | The usual layout (every platoon starts here) | 1× |
 | **Open** | Soldiers fan out | 1.5× |
 
-Press **L1 / I** to step the selected platoon one formation tighter and **R2 / O** to step it one wider. This works while marching and in command view. While you fight as the leader, L1 is guard and R2 is the Sundering Strike, so switch to another platoon (or hold L2) to change formations mid-fight. The soldiers ease into the new spacing over about half a second. The platoon line in the HUD shows the current formation. In Grain Crossing and the Well Road, L1 switches carts, so tighten with **I** there.
+Press **LB (L1) / O** for a wider formation and **RB (R1) / I** for a tighter one in the Heroes layout. In the Classic layout, **L1** is tighter and **R2** wider. This works in Tactics mode and in command view. While you fight as the leader the shoulder buttons guard, so switch to another troop or open the mini-map to change formations mid-fight. The soldiers ease into the new spacing over about half a second. The platoon line in the HUD shows the current formation. In the Classic layout, L1 switches carts in Grain Crossing and on the Well Road, so tighten with **I** there.
 
 Formations change spacing and pace only; they don't yet change combat strength. Run `godot --headless --script tests/formation_spacing.gd` to check the pace, the spreading and gathering, the controls and the settings rows.
 
@@ -46,8 +128,8 @@ A DualShock 3 works with the same layout. The face buttons, shoulders, sticks an
 
 | DualSense | DualShock 3 | What it does |
 |---|---|---|
-| Options | **START** | Restart the current battle or drill (every prompt that says "Options") |
-| Create | **SELECT** | Leave a campaign battle and return to the overworld |
+| Options | **START** | Pause menu in campaign battles; restart in standalone drills (every prompt that says "Options") |
+| Create | **SELECT** | Back in the tables above: mini-map and command view on / off (Classic layout: alternate pause) |
 | Cross / Circle | Cross / Circle | Confirm / back in menus, the overworld and dialogue scenes |
 | D-pad | D-pad | Move between menu items and overworld waypoints |
 | L2 / R2 | L2 / R2 | Analog triggers: hold L2 for command view; R2 is Mara's Sundering Strike where it's enabled |

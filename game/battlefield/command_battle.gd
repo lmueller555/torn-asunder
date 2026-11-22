@@ -5,6 +5,18 @@ const PlatoonSize := preload("res://game/combat/platoon_size.gd")
 
 enum Order { HOLD, MOVE, BLOCKED, ATTACK, DEFEATED, EXTRACTED }
 enum FormationRole { UNSPECIFIED, REGULAR_MELEE, RANGED, SUPPORT }
+## Melee platoons travel in one of three formations. Closed packs the soldiers in
+## and halves their pace; Open spreads them out and moves half again as fast.
+enum Spacing { CLOSED, NORMAL, OPEN }
+const SPACING_NAMES: PackedStringArray = ["Closed", "Normal", "Open"]
+const SPACING_SPEED: PackedFloat32Array = [0.5, 1.0, 1.5]
+## How far apart the soldiers stand, relative to the Normal layout.
+const SPACING_SPREAD: PackedFloat32Array = [0.66, 1.0, 1.65]
+## Spread change per second while soldiers gather in or fan out.
+const SPREAD_RATE := 1.4
+## Platoons without an explicit role whose titles contain these are archers or
+## civilians and keep one layout.
+const NO_FORMATION_WORDS: PackedStringArray = ["archer", "bow", "sling", "refugee", "witness", "civilian", "miner"]
 
 const LEGACY_AUTHORED_MEMBERS := 12
 const AUTHORED_MELEE_FILES := 8
@@ -46,6 +58,9 @@ class Formation:
 	var members: Array[Member] = []
 	var member_footprint_check := Callable()
 	var footprint_padding := Vector2(0.44, 0.40)
+	var spacing := Spacing.NORMAL
+	## The current spread, easing toward the formation's target as soldiers move.
+	var spread := 1.0
 	var order := Order.HOLD:
 		set(value):
 			if value == order:
@@ -78,9 +93,49 @@ class Formation:
 					Vector2((file - (files - 1) * 0.5) * spacing.x, (row - (rows - 1) * 0.5) * spacing.y + bias)))
 
 
+	## A soldier's place in the platoon, gathered in or fanned out by the formation.
+	func member_offset(member: Member) -> Vector2:
+		return member.offset * spread
+
 	func member_position(member: Member) -> Vector2:
 		var side := Vector2(-heading.y, heading.x)
-		return position + side * member.offset.x - heading * member.offset.y
+		var offset := member_offset(member)
+		return position + side * offset.x - heading * offset.y
+
+	## Regular melee platoons (and untyped platoons that aren't archers or civilians)
+	## change formation; ranged and support platoons do not.
+	func uses_formations() -> bool:
+		if role == FormationRole.REGULAR_MELEE:
+			return true
+		if role != FormationRole.UNSPECIFIED:
+			return false
+		var lowered := title.to_lower()
+		for word in NO_FORMATION_WORDS:
+			if lowered.contains(word):
+				return false
+		return true
+
+	## Steps one formation tighter (-1) or wider (+1). Returns true if it changed.
+	func step_spacing(direction: int) -> bool:
+		if not uses_formations() or not can_receive_orders():
+			return false
+		var next := clampi(spacing + direction, Spacing.CLOSED, Spacing.OPEN) as Spacing
+		if next == spacing:
+			return false
+		spacing = next
+		return true
+
+	func speed_factor() -> float:
+		return SPACING_SPEED[spacing] if uses_formations() else 1.0
+
+	func target_spread() -> float:
+		return SPACING_SPREAD[spacing] if uses_formations() else 1.0
+
+	func spacing_name() -> String:
+		return SPACING_NAMES[spacing]
+
+	func settle_spread(delta: float) -> void:
+		spread = move_toward(spread, target_spread(), SPREAD_RATE * delta)
 
 
 	func footprint_fits(center: Vector2) -> bool:
@@ -111,7 +166,7 @@ class Formation:
 		var previous_heading := heading
 		if travel.length_squared() > 0.0:
 			heading = travel.normalized()
-		var next := position.move_toward(destination, move_speed * delta)
+		var next := position.move_toward(destination, move_speed * speed_factor() * delta)
 		if can_move.is_valid() and not can_move.call(position, next, true):
 			if member_footprint_check.is_valid():
 				heading = previous_heading
@@ -150,6 +205,7 @@ var lead_engaged := false:
 var lead_platoon_enabled := true
 
 signal lead_engagement_changed(engaged: bool)
+signal formation_spacing_changed(index: int)
 
 var _hero_synced := Vector2.INF
 var formations: Array[Formation] = [
@@ -209,8 +265,19 @@ func step(delta: float, hero_direction: Vector2, can_move := Callable()) -> void
 	else:
 		_march_lead(delta, can_move)
 	_hero_synced = hero_position
+	lead.settle_spread(delta)
 	for formation in formations:
 		formation.advance(delta, can_move)
+		formation.settle_spread(delta)
+
+
+## Steps the indexed platoon's formation tighter (-1) or wider (+1).
+func step_spacing(index: int, direction: int) -> bool:
+	var formation := formation_at(index)
+	if formation == null or not formation.step_spacing(direction):
+		return false
+	formation_spacing_changed.emit(index)
+	return true
 
 
 ## The leader walks at the head of the platoon toward its Move order. The platoon
@@ -219,7 +286,8 @@ func step(delta: float, hero_direction: Vector2, can_move := Callable()) -> void
 func _march_lead(delta: float, can_move: Callable) -> void:
 	if lead.order == Order.MOVE:
 		var travel := lead.destination - hero_position
-		if travel.length() <= LEAD_SPEED * delta:
+		var pace := LEAD_SPEED * lead.speed_factor()
+		if travel.length() <= pace * delta:
 			var before := hero_position
 			move_hero(travel, can_move)
 			if hero_position == before and travel.length_squared() > 0.0:
@@ -232,7 +300,7 @@ func _march_lead(delta: float, can_move: Callable) -> void:
 			lead.heading = travel.normalized()
 			hero_heading = lead.heading
 			var before := hero_position
-			move_hero(lead.heading * LEAD_SPEED * delta, can_move)
+			move_hero(lead.heading * pace * delta, can_move)
 			if hero_position == before:
 				lead.order = Order.BLOCKED
 	lead.position = hero_position

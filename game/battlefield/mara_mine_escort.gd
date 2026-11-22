@@ -82,6 +82,8 @@ var _infantry_animators: Array[AnimationPlayer] = []
 @onready var _special_status: Label = $CombatHUD/Panel/Margin/Readout/Sundering
 @onready var _combat_tell: Label = $CombatHUD/Panel/Margin/Readout/Tell
 @onready var _combat_controls: Label = $CombatHUD/Panel/Margin/Readout/Controls
+const CLASSIC_COMBAT_CONTROLS := "Hero: Square / J · Light     Triangle / K · Heavy\n          L1 / U · Guard        Circle / L · Dodge\nCommand: Triangle / K · Attack with selected formation"
+const HEROES_COMBAT_CONTROLS := "Hero: Cross / J · Attack     Triangle / K · Heavy\n          L1 R1 / U · Guard     Circle / L · Dodge\n          Hold Triangle + Circle / V · Sundering Strike\nCommand: Square / K · Attack with selected formation"
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
 
@@ -322,6 +324,11 @@ func _body_can_move(from: Vector2, to: Vector2, is_formation: bool) -> bool:
 		if toward < Encounter.BODY_CLEARANCE and toward < from.distance_to(encounter.enemy_position):
 			return false
 	return _terrain.can_move(from, to, is_formation)
+
+
+## Heroes layout: R3 "change camera view" is Mara's camera focus here.
+func _heroes_overrides(mode: int) -> Dictionary:
+	return {} if mode == GameplayBindings.Mode.COMMAND else {JOY_BUTTON_RIGHT_STICK: JOY_BUTTON_DPAD_DOWN}
 
 
 func _handle_combat_input(event: InputEvent) -> bool:
@@ -594,6 +601,7 @@ func _refresh_combat_view() -> void:
 	_hero_guard.visible = encounter != null and encounter.defense.phase == Defense.Phase.GUARD
 	# Attack prompts only while Mara fights (or in command view, for formation attacks).
 	_combat_controls.visible = (command_view or hero_combat_active()) and not _combat_controls.has_meta(&"tutorial_hidden")
+	_combat_controls.text = HEROES_COMBAT_CONTROLS if GameplayBindings.heroes_active() else CLASSIC_COMBAT_CONTROLS
 	if not encounter:
 		return
 	_enemy_visual.position = _ground(encounter.enemy_position)

@@ -156,7 +156,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		super._unhandled_input(event)
 
 
+## Heroes layout: the carts are this field's "support troops" on the D-pad.
+func _heroes_overrides(mode: int) -> Dictionary:
+	if mode == GameplayBindings.Mode.ACTION:
+		return {}
+	return {JOY_BUTTON_DPAD_LEFT: JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_DPAD_RIGHT: JOY_BUTTON_RIGHT_SHOULDER,
+		JOY_BUTTON_DPAD_DOWN: JOY_BUTTON_Y}
+
+
 func _march_route_controls() -> String:
+	if GameplayBindings.heroes_active():
+		return "Cross / V: set waypoint (replaces route)   ·   LT + RT + Cross / J: add to route   ·   Circle / B: stop\nD-pad Left: other cart   ·   D-pad Right: dispatch   ·   D-pad Down: turn back   ·   LT / RT: change platoon\nL1 / O: wider formation   ·   R1 / I: tighter formation   ·   Triangle: move all troops"
 	return "D-pad Down / V: set waypoint (replaces route)   ·   Square / J: add to route\nCircle / D-pad Up / B: clear route   ·   D-pad Left/Right / Z X: change platoon\nR2 / O: wider formation   ·   I: tighter formation (L1 switches carts here)"
 
 
