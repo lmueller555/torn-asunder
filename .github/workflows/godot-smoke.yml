@@ -58,7 +58,7 @@ jobs:
           if grep -E '^(ERROR:|SCRIPT ERROR:|FAIL:)' "$RUNNER_TEMP/neris-cancel.log"; then exit 1; fi
       - name: Run campaign, battlefield and combat smoke tests
         run: |
-          for test in mara_shield_barracks_profile mara_barracks_campaign human_barracks mara_station_title marches_road_camp_authored campaign_opening heroes_layout pause_menu_flow campaign_missions mara_greyhollow_rescue mara_greyhollow_shield_slash mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap sector_camera minimap_route_overlay overworld_compass sova_overworld_normal_title ilyra_headland_relay_skin cairnspine_perimeter_march battle_points heavy_infantry_cut stagger_runtime_edges; do
+          for test in mara_shield_barracks_profile mara_barracks_campaign human_barracks mara_station_title marches_road_camp_authored campaign_opening heroes_layout pause_menu_flow campaign_missions mara_greyhollow_rescue mara_greyhollow_shield_slash mara_greyhollow_profile_resume mara_greyhollow_reveal_resume greyhollow_cinematic_presentation neris_cairnspine_survey neris_greyhollow_campaign sereth_cut_command_minimap sector_camera minimap_route_overlay overworld_compass sova_overworld_normal_title ilyra_headland_relay_skin cairnspine_perimeter_march battle_points heavy_infantry_cut stagger_runtime_edges fall_exact_endpoints fall_native_states; do
             echo "::group::$test"
             "$RUNNER_TEMP/godot" --headless --script "res://tests/$test.gd"
             echo "::endgroup::"
