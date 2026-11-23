@@ -47,7 +47,8 @@ func _run() -> void:
 	_button(JOY_BUTTON_RIGHT_STICK)
 	_button(JOY_BUTTON_DPAD_RIGHT) # Select Basin Regulars.
 	var regulars := _mission.battle.formations[0]
-	for path in ["Routes/UpstreamApproach", "Routes/ServiceCauseway", "Routes/LockApron", "Objectives/SpillwayWheel"]:
+	for path in ["Routes/UpstreamApproach", "Routes/ServiceCauseway", "Routes/LockApron",
+		"Routes/WheelStairTurn", "Routes/WheelPedestalTurn", "Objectives/SpillwayWheel"]:
 		_order_at(_point(path))
 		_finish_march(regulars, _point(path), path)
 	_tick(100)
@@ -173,7 +174,7 @@ func _order_at(point: Vector2) -> void:
 
 
 func _finish_march(formation: Battle.Formation, point: Vector2, context: String) -> void:
-	var budget := ceili(formation.position.distance_to(point) / Battle.FORMATION_SPEED / DT) + 30
+	var budget := ceili(formation.position.distance_to(point) / (formation.move_speed * formation.speed_factor()) / DT) + 30
 	for i in range(budget):
 		if formation.order != Battle.Order.MOVE:
 			break

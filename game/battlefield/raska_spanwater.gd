@@ -49,6 +49,7 @@ var _interact := false
 var _flow: MeshInstance3D
 var _march_proxy: Node3D
 var _wheel_zone: MeshInstance3D
+var _wheel_approach_flags: Array[Node3D] = []
 var _wheel_ready_material: StandardMaterial3D
 var _wheel_contested_material: StandardMaterial3D
 var _wheel_beacon: Node3D
@@ -277,6 +278,8 @@ func _refresh_objective(control: Release.WheelControl) -> void:
 	_exit_beacon.visible = objective.phase == Release.Phase.EXTRACT or objective.phase == Release.Phase.SUCCEEDED
 	_wheel_beacon.visible = objective.phase < Release.Phase.EXTRACT
 	_wheel_zone.visible = _wheel_beacon.visible
+	for flag in _wheel_approach_flags:
+		flag.visible = objective.phase == Release.Phase.SECURE_SPILLWAY
 	_wheel_zone.material_override = _wheel_ready_material if control == Release.WheelControl.SECURED else _wheel_contested_material
 	_situation.text = "Sea gate stays shut."
 	if objective.withdrawal_ordered:
@@ -284,7 +287,7 @@ func _refresh_objective(control: Release.WheelControl) -> void:
 	match objective.phase:
 		Release.Phase.SECURE_SPILLWAY:
 			_goal.text = "Secure the spillway wheel"
-			_hint.text = "Follow the raised causeway. Move a formation into the inner wheel ring to push the March guard back."
+			_hint.text = "Follow the raised causeway. Keep the regulars Closed and take the two marked turns into the wheel ring."
 		Release.Phase.READY_AT_WHEEL:
 			_goal.text = "Raska must open the spillway"
 			_hint.text = "At the wheel, leave command view and press Cross / Space. The sea gate is not a target."
@@ -307,6 +310,8 @@ func _refresh_objective(control: Release.WheelControl) -> void:
 
 func _build_objective_proxies(crossing: Vector2) -> void:
 	_wheel_beacon = _beacon(_wheel, "SPILLWAY WHEEL", Color("#ffd085"))
+	for flag in [[^"Markers/Routes/WheelStairTurn", "1 · APRON TURN"], [^"Markers/Routes/WheelPedestalTurn", "2 · WHEEL TURN"]]:
+		_wheel_approach_flags.append(_beacon(_marker_ground(flag[0]), flag[1], Color("#d2e9b7")))
 	_exit_beacon = _beacon(_exit, "HIGH BANK EXIT", Color("#90e5ba"))
 	_crossing_beacon = _beacon(crossing, "LOW CROSSING CLOSED", Color("#9bd6ff"))
 	_wheel_ready_material = _material(Color("#90e5ba"), true)

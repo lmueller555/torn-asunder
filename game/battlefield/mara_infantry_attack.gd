@@ -110,6 +110,8 @@ func advance(delta: float, battle: Battle, enemy: Unit, target: Vector2, clear_c
 			_remaining -= delta
 			if _remaining <= 0.0:
 				_reset()
+	if group.order == Battle.Order.ATTACK:
+		group.advance_grouped_combat_feet(delta, can_move)
 	return 0.0
 
 

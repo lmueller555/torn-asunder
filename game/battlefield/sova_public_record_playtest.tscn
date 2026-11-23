@@ -6,8 +6,8 @@
 
 [node name="SovaPublicRecordPlaytest" instance=ExtResource("1_harness")]
 formation_roles = Array[int]([1, 1])
+initial_formation_spacing = Array[int]([0, 0])
 regular_melee_slot_files = PackedInt32Array(4, 4)
-regular_melee_spacing = Vector2(0.56, 0.57)
 regular_melee_trailing_bias = 0.23
 regular_melee_staging_offsets = PackedVector2Array(0, 0, 3, 2)
 script = ExtResource("3_playtest")

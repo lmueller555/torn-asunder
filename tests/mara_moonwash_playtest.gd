@@ -147,7 +147,7 @@ func _march(group: Battle.Formation, id: String) -> void:
 	var target := _point(id)
 	_order(id)
 	_check(group.order == Battle.Order.MOVE and group.destination.distance_to(target) < 0.05, "Projected order reaches %s." % id)
-	var budget := ceili(group.position.distance_to(target) / Battle.FORMATION_SPEED / DT) + 95
+	var budget := ceili(group.position.distance_to(target) / (group.move_speed * group.speed_factor()) / DT) + 95
 	for step in range(budget):
 		if group.order != Battle.Order.MOVE:
 			break

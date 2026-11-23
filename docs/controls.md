@@ -114,13 +114,13 @@ Melee platoons (infantry, guards, marines and the leader's own platoon) travel i
 
 | Formation | Spacing | Pace |
 |---|---|---|
-| **Closed** | Soldiers gather in, shoulder to shoulder | 0.5× |
-| **Normal** | The usual layout (every platoon starts here) | 1× |
-| **Open** | Soldiers fan out | 1.5× |
+| **Closed** | 1 m center to center | 0.5× |
+| **Normal** | 2 m center to center | 1× |
+| **Open** | 3 m center to center | 1.5× |
 
-Press **LB (L1) / O** for a wider formation and **RB (R1) / I** for a tighter one in the Heroes layout. In the Classic layout, **L1** is tighter and **R2** wider. This works in Tactics mode and in command view. While you fight as the leader the shoulder buttons guard, so switch to another troop or open the mini-map to change formations mid-fight. The soldiers ease into the new spacing over about half a second. The platoon line in the HUD shows the current formation. In the Classic layout, L1 switches carts in Grain Crossing and on the Well Road, so tighten with **I** there.
+Press **LB (L1) / O** for a wider formation and **RB (R1) / I** for a tighter one in the Heroes layout. In the Classic layout, **L1** is tighter and **R2** wider. This works in Tactics mode and in command view. While you fight as the leader the shoulder buttons guard, so switch to another troop or open the mini-map to change formations mid-fight. The soldiers ease into the new spacing over about half a second. The platoon line in the HUD shows the current formation. Most groups start in Normal; groups staged for a tight passage can start in Closed. In the Classic layout, L1 switches carts in Grain Crossing and on the Well Road, so tighten with **I** there.
 
-Formations change spacing and pace only; they don't yet change combat strength. Run `godot --headless --script tests/formation_spacing.gd` to check the pace, the spreading and gathering, the controls and the settings rows.
+Spacing is the same across files and ranks in every battlefield that uses these formations. Fighters leave their numbered places during combat and move back to the same places when contact ends. A tactical Move for an engaged Lead Platoon orders it to withdraw and re-form while moving. Its slots follow its current position, facing and formation instead of where combat started. The formation mode does not change combat strength. Run `godot --headless --script tests/formation_spacing.gd` to check the pace, the spreading and gathering, the controls and the settings rows.
 
 ## PlayStation 3 controller (DualShock 3) on macOS
 

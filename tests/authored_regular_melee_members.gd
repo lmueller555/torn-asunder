@@ -108,7 +108,7 @@ func _run() -> void:
 
 func _check_column_reverse() -> void:
 	var column := Battle.Formation.new("Fixture", Vector2.ZERO)
-	column.configure_role(Battle.FormationRole.REGULAR_MELEE, 4, Vector2(0.56, 0.57), 0.23)
+	column.configure_role(Battle.FormationRole.REGULAR_MELEE, 0.23)
 	var member := column.members[0]
 	var first_foot := column.member_position(member)
 	column.member_footprint_check = func(group: Battle.Formation, _point: Vector2) -> bool:

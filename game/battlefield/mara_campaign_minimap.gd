@@ -118,7 +118,7 @@ func _move_from_map(point: Vector2) -> bool:
 			return false
 		_sending_route_order = true
 		var result := _routes.issue(_route_battle, _mission.selected_index, point, false,
-			func(at: Vector2) -> bool: return Chart.can_plot(_mission, at))
+			func(at: Vector2) -> bool: return Chart.can_plot(_mission, at), true)
 		_sending_route_order = false
 		if result == Queue.Result.ACCEPTED:
 			_focus_map_point(point)

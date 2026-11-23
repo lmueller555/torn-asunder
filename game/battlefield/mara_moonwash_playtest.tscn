@@ -6,6 +6,7 @@
 
 [node name="MaraMoonwashPlaytest" instance=ExtResource("1_command")]
 formation_roles = Array[int]([1, 1])
+initial_formation_spacing = Array[int]([0, 0])
 lead_has_officer_escort = true
 regular_melee_slot_files = PackedInt32Array(4, 4)
 script = ExtResource("3_quay")
