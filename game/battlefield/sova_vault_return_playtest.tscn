@@ -17,6 +17,9 @@ local_sector_size = 70.0
 hero_spawn = NodePath("Markers/Spawns/SovaCarrier")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/KeeperShelfGuard"), NodePath("Markers/Spawns/KeeperSideGuard")])
 
+[node name="ShelfGuardTurn" type="Marker3D" parent="."]
+position = Vector3(-85.7, 0, -16.9)
+
 [node name="VaultHUD" type="CanvasLayer" parent="."]
 layer = 2
 

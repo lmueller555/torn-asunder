@@ -86,6 +86,8 @@ func _play_route(shelf: bool) -> void:
 	_check(_mission.objective.phase == Return.Phase.CARRYING and _mission.objective.closure_progress == 0.0, "A rejected interaction in a contested vault advanced closure or caused automatic defeat.")
 
 	var guard_index := 0 if shelf else 1
+	if shelf:
+		_move_guard(guard_index, (_mission.get_node("ShelfGuardTurn") as Marker3D).global_position)
 	for point: String in terrain_route:
 		_move_guard(guard_index, _route(point))
 	_move_guard(guard_index, custody)

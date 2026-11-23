@@ -35,6 +35,7 @@ var _keepers_departing := false
 var _scribes_alive := 1
 var _confirmed_loss := false
 var _sova_fell := false
+var _guard_route_signs: Array[Label3D] = []
 
 @onready var _goal: Label = $HearingHUD/Panel/Margin/Readout/Goal
 @onready var _detail: Label = $HearingHUD/Panel/Margin/Readout/Detail
@@ -47,6 +48,9 @@ func _ready() -> void:
 	super._ready()
 	for id in [Hearing.Venue.OPEN, Hearing.Venue.RECESSED]:
 		_layouts.append(_make_venue(id))
+	for marker in $GuardRoutes.get_children():
+		var caption := "GUARD TURN" if marker.name == &"MusterTurn" else "WEST LANE"
+		_guard_route_signs.append(_sign(self, marker.global_position + Vector3.UP * 1.6, caption, Color("#d2e9b7")))
 	_restart_button.pressed.connect(restart_mission)
 	_reset_hearing()
 	_refresh_hearing()
@@ -256,6 +260,8 @@ func _nearby_lectern(hero: Vector3) -> Hearing.Venue:
 
 
 func _refresh_hearing() -> void:
+	for sign in _guard_route_signs:
+		sign.visible = command_view and objective.phase in [Hearing.Phase.CHOOSING_VENUE, Hearing.Phase.READING]
 	for id in [Hearing.Venue.OPEN, Hearing.Venue.RECESSED]:
 		var layout := _layouts[id]
 		layout.visuals.visible = objective.venue == Hearing.Venue.NONE or objective.venue == id

@@ -50,6 +50,7 @@ func _ready() -> void:
 		_route("RivalReserveReveal"), _route("Forecourt"),
 		_point(^"Markers/Objectives/CustodyLine"), _point(^"Markers/Objectives/VaultEntrance"),
 	])
+	_breadcrumb($ShelfGuardTurn.global_position, "CLOSED GUARD TURN", CLEAR)
 	_breadcrumb(_route("ShelfDecision"), "NARROW SHELF", GOLD)
 	_breadcrumb(_route("SideDecision"), "WIDER SIDE PATH", CLEAR)
 	_breadcrumb(_rival_route[-2], "GUARD SCREEN", CLEAR)

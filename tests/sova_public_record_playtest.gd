@@ -80,18 +80,20 @@ func _play_venue(venue: Hearing.Venue) -> void:
 	var partial := _mission.objective.passage_progress
 	_check(partial > 0.2, "The current passage has no player-driven progress.")
 	var assembly := _marker(^"Markers/Routes/ValleyAssembly")
-	_give_order(0, assembly)
 	var guard := _mission.battle.formations[0]
+	_route_guard(guard, [_guard_marker("MusterTurn")])
+	_give_order(0, assembly)
 	var from := guard.position
 	_tick(24)
 	_check(guard.position.distance_to(from) > 1.0 and not _mission.command_view and is_equal_approx(_mission.objective.passage_progress, partial), "An allied Move order did not stay live after returning to the lectern.")
 	_await_guard(guard, assembly)
 
 	# A guard physically blocks the chosen public exit. The other exit remains independent.
-	var shared_west := _hearing_marker("OpenPublicExit")
+	var shared_west := _guard_marker("OpenWestLane")
+	var exit_lane := _guard_marker(prefix + "WestLane")
 	if venue == Hearing.Venue.RECESSED:
 		_route_guard(guard, [shared_west, _hearing_marker("RecessedApproach")])
-	_route_guard(guard, [layout.public_exit])
+	_route_guard(guard, [exit_lane])
 	_check(guard.position.distance_to(_flat(other_exit)) > 20.0 and _mission.objective.interruption == Hearing.Interruption.EXIT_BLOCKED and layout.exit_label.text.contains("Blocked"), "The public exit warning was not tied to the physically blocked selected exit.")
 	_read(venue, true)
 	_tick(25)
@@ -102,9 +104,9 @@ func _play_venue(venue: Hearing.Venue) -> void:
 	_route_guard(guard, [assembly])
 	_check(_mission.objective.phase == Hearing.Phase.READING and layout.exit_label.text.contains("Open"), "Moving the guard reopened no path to resume.")
 	if venue == Hearing.Venue.OPEN:
-		_route_guard(guard, [layout.public_exit, layout.ring_center])
+		_route_guard(guard, [exit_lane, layout.ring_center])
 		_check(_mission.objective.interruption == Hearing.Interruption.RING_CONTESTED and _mission.objective.passage_progress == 0.0 and _mission.objective.passages_read == 1, "An armed formation entering the real ring did not reset only the current passage.")
-		_route_guard(guard, [layout.public_exit, assembly])
+		_route_guard(guard, [exit_lane, assembly])
 		_read(venue, true)
 		_tick(12)
 		_read(venue, false)
@@ -172,6 +174,10 @@ func _advance_until(condition: Callable) -> void:
 
 func _marker(path: NodePath) -> Vector3:
 	return _mission.battlefield_marker(path).global_position
+
+
+func _guard_marker(id: String) -> Vector3:
+	return (_mission.get_node("GuardRoutes/" + id) as Marker3D).global_position
 
 
 func _hearing_marker(id: String) -> Vector3:

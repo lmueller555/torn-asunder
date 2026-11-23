@@ -18,6 +18,17 @@ local_sector_size = 54.0
 hero_spawn = NodePath("Markers/Spawns/SovaHearing")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/KeeperShelfGuard"), NodePath("Markers/Spawns/KeeperSideGuard")])
 
+[node name="GuardRoutes" type="Node3D" parent="."]
+
+[node name="MusterTurn" type="Marker3D" parent="GuardRoutes"]
+position = Vector3(-108, 0, -7.4)
+
+[node name="OpenWestLane" type="Marker3D" parent="GuardRoutes"]
+position = Vector3(-143, 0, -6.5)
+
+[node name="RecessedWestLane" type="Marker3D" parent="GuardRoutes"]
+position = Vector3(-142.5, 0, 35)
+
 [node name="HearingHUD" type="CanvasLayer" parent="."]
 layer = 2
 
