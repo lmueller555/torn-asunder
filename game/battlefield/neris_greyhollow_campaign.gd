@@ -15,6 +15,8 @@ const MINER_ROUTE: Array[NodePath] = [
 ]
 const COVER := Vector2(-57.0, 18.0)
 const STRIKE_TURN := Vector2(-52.0, 12.0)
+## The screen must clear the cover shelf in Closed before it can widen and outrun pursuit.
+const SCREEN_TURN := Vector2(-57.5, 16.0)
 const FALLBACK := Vector2(-34.0, 10.0)
 const NERIS_SPAWN := Vector2(-62.0, 17.0)
 const STRIKE_SPAWN := Vector2(-64.0, 19.0)
@@ -57,6 +59,7 @@ var _press_beacon: Node3D
 var _cover_beacon: Node3D
 var _fallback_beacon: Node3D
 var _turn_beacon: Node3D
+var _screen_turn_beacon: Node3D
 var _cover_label: Label3D
 
 @onready var _goal: Label = $ObjectiveHUD/Panel/Margin/Readout/Goal
@@ -77,6 +80,7 @@ func _ready() -> void:
 	_cover_beacon = _beacon(COVER, "FALLBACK SCREEN", COVER_RADIUS, ALERT_COLOR)
 	_cover_label = _cover_beacon.get_node("Label")
 	_turn_beacon = _beacon(STRIKE_TURN, "STRIKE TURN", 1.4, ALLY_COLOR)
+	_screen_turn_beacon = _beacon(SCREEN_TURN, "SCREEN TURN", 0.7, ALLY_COLOR)
 	_fallback_beacon = _beacon(FALLBACK, "EAST FALLBACK", FALLBACK_RADIUS, ALLY_COLOR)
 	_restart.pressed.connect(restart_mission)
 	_reset_encounter()
@@ -273,6 +277,7 @@ func _refresh_objective() -> void:
 	_press_beacon.visible = phase in [Phase.APPROACH, Phase.CONTACT]
 	_cover_beacon.visible = phase in [Phase.SCREEN, Phase.RETREAT]
 	_turn_beacon.visible = phase == Phase.SCREEN
+	_screen_turn_beacon.visible = phase == Phase.RETREAT
 	_fallback_beacon.visible = phase in [Phase.SCREEN, Phase.RETREAT]
 	_cover_label.text = "SCREEN HOLDING" if _covering and phase == Phase.SCREEN else ("PULL SCREEN BACK" if phase == Phase.RETREAT else "HOLD HERE · SCREEN PARTY")
 	_restart.visible = phase in [Phase.SUCCEEDED, Phase.FAILED]
@@ -291,7 +296,7 @@ func _refresh_objective() -> void:
 		Phase.RETREAT:
 			_goal.text = "Pull the Screen Party into the east fallback."
 			_status.text += "   ·   %ds to withdraw" % ceili(seconds_left)
-			_cue.text = "Neris and Strike Party are clear. Move the last party before the rearguard closes the route."
+			_cue.text = "Take the Screen Party to the marked turn in Closed, then widen to Normal and move to the east fallback."
 		Phase.SUCCEEDED:
 			_goal.text = "Both Dryad parties withdrew."
 			_cue.text = "The Human rescue broke through the tunnel. We did not stop them."

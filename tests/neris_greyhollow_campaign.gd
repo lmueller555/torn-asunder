@@ -62,7 +62,14 @@ func _try_clear() -> bool:
 		return _require(false, "screen did not cover Neris and Strike until they were clear")
 	if not _require(_outcomes.is_empty() and _mission.battle.formations[Mission.STRIKE].order == Battle.Order.EXTRACTED, "one party and Neris cannot finish without the screen"):
 		return false
-	_mission.battle.order_move(Mission.SCREEN_PARTY, Mission.FALLBACK)
+	var screen := _mission.battle.formations[Mission.SCREEN_PARTY]
+	if not _issue_projected_order(Mission.SCREEN_PARTY, Mission.SCREEN_TURN) or not _until(func() -> bool:
+		return screen.order == Battle.Order.HOLD and screen.position.distance_to(Mission.SCREEN_TURN) < 0.03):
+		return _require(false, "Screen Party must clear the shelf in Closed using the marked turn")
+	if not _issue_projected_order(Mission.SCREEN_PARTY, Mission.FALLBACK, true):
+		return false
+	if not _require(screen.spacing == Battle.Spacing.NORMAL, "A real formation key widens the Screen Party for its final retreat"):
+		return false
 	if not _until(func() -> bool: return _mission.phase == Mission.Phase.SUCCEEDED):
 		return _require(false, "screen did not withdraw on the real route")
 	_tick(1.0)
@@ -73,21 +80,37 @@ func _try_clear() -> bool:
 
 
 func _issue_strike_order() -> bool:
+	return _issue_projected_order(Mission.STRIKE, _mission._press)
+
+
+func _issue_projected_order(index: int, destination: Vector2, widen := false) -> bool:
 	var shift := InputEventKey.new()
 	shift.physical_keycode = KEY_SHIFT
 	shift.pressed = true
 	_mission._unhandled_input(shift)
+	for i in _mission.battle.formations.size():
+		if _mission.selected_index == index:
+			break
+		var select_next := InputEventKey.new()
+		select_next.physical_keycode = KEY_X
+		select_next.pressed = true
+		_mission._unhandled_input(select_next)
+	if widen:
+		var loosen := InputEventKey.new()
+		loosen.physical_keycode = KEY_O
+		loosen.pressed = true
+		_mission._unhandled_input(loosen)
 	var camera: Camera3D = _mission.get_node("CommandCamera")
 	var order := InputEventMouseButton.new()
 	order.button_index = MOUSE_BUTTON_RIGHT
 	order.pressed = true
-	order.position = camera.unproject_position(_mission.to_global(_mission._ground(_mission._press)))
+	order.position = camera.unproject_position(_mission.to_global(_mission._ground(destination)))
 	_mission._unhandled_input(order)
 	shift.pressed = false
 	_mission._unhandled_input(shift)
-	var strike := _mission.battle.formations[Mission.STRIKE]
-	return _require(strike.order == Battle.Order.MOVE and strike.destination.distance_to(_mission._press) < 0.03,
-		"Shift and a right-click must place a real Strike order on the visible yard marker")
+	var formation := _mission.battle.formations[index]
+	return _require(formation.order == Battle.Order.MOVE and formation.destination.distance_to(destination) < 0.03,
+		"Shift and a right-click must order %s to its visible marker" % formation.title)
 
 
 func _try_party_loss() -> bool:
