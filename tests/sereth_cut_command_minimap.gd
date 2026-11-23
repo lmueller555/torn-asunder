@@ -466,6 +466,8 @@ func _blocked_queue() -> void:
 	_mission.battle.formation_commanded.connect(func(index: int) -> void: _orders.append(index))
 	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_tap(JOY_BUTTON_DPAD_RIGHT)
+	_key(KEY_I)
+	_tick(40)
 	for point in [first, second, roof]:
 		_mouse_map(MOUSE_BUTTON_LEFT, _map.project(point))
 		_key(KEY_G)
@@ -473,7 +475,7 @@ func _blocked_queue() -> void:
 		"Accept the standable endpoints even though the first leg crosses a baffle; reject the roof.")
 	_mouse_map(MOUSE_BUTTON_LEFT, _map.project(start))
 	_check(not hud._hint.text.contains("Not a walkable"), "Invalid append feedback belongs to the cursor point that was tried.")
-	for _frame in 500:
+	for _frame in _march_budget(guard, first):
 		_tick()
 		if guard.order == Battle.Order.BLOCKED:
 			break
@@ -488,7 +490,7 @@ func _blocked_queue() -> void:
 	var leading_x := maxf(front_x, stopped.x + Terrain.FORMATION_RADIUS)
 	var gap := west_face - leading_x
 	_check(is_equal_approx(stopped.y, start.y) and guard.heading.is_equal_approx(Vector2.RIGHT)
-		and gap >= -0.002 and gap <= guard.move_speed * DT + 0.002
+		and gap >= -0.002 and gap <= guard.move_speed * guard.speed_factor() * DT + 0.002
 		and guard.destination.is_equal_approx(first) and guard.order == Battle.Order.BLOCKED,
 		"The guard physically stops on the west face of EastInnerBaffle, not at the accepted head.")
 	_check(hud._hint.text.contains("Route blocked") and _hud_fits(),
@@ -502,7 +504,7 @@ func _blocked_queue() -> void:
 	_mouse_map(MOUSE_BUTTON_RIGHT, _map.project(start))
 	_check(_orders == [0, 0] and _route_is(0, []) and guard.order == Battle.Order.MOVE
 		and not hud._hint.text.contains("Route blocked"), "A safe direct Move replaces the paused route.")
-	_tick(480)
+	_tick(_march_budget(guard, start))
 	_check(guard.position.is_equal_approx(start) and guard.order == Battle.Order.HOLD,
 		"The guard marches back along the safe side of the baffle instead of promoting the discarded tail.")
 
@@ -518,13 +520,17 @@ func _blocked_queue() -> void:
 	_key(KEY_G)
 	_check(_route_is(0, [short_leg, start]) and hud._hint.text.contains("Not a walkable"),
 		"Keep invalid append feedback while the failed aim and route state are current.")
-	for _frame in 70:
+	for _frame in _march_budget(guard, actual_head):
 		_tick()
 		if guard.position == actual_head:
 			break
 	_check(_route_is(0, [start]) and hud._hint.text.contains("1/8") and not hud._hint.text.contains("Not a walkable"),
 		"Head arrival restores the count for the next leg even if the cursor did not move.")
 	_mission.restart_mission()
+
+
+func _march_budget(formation: Battle.Formation, destination: Vector2) -> int:
+	return ceili(formation.position.distance_to(destination) / (formation.move_speed * formation.speed_factor() * DT)) + 5
 
 
 func _route_is(index: int, expected: Array) -> bool:

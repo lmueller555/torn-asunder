@@ -93,7 +93,7 @@ func _exercise() -> void:
 	_button(JOY_BUTTON_DPAD_RIGHT) # Select the guard that holds the track.
 	var guard := _mission.battle.formations[1]
 	_order_at(_marker("Routes/LoadingScreenHold"))
-	_wait(func() -> bool: return guard.order != Battle.Order.MOVE, 500)
+	_wait(func() -> bool: return guard.order != Battle.Order.MOVE, 1100)
 	_check(_mission.selected_index == 1 and guard.order == Battle.Order.HOLD and guard.position.distance_to(_xz(_marker("Routes/LoadingScreenHold"))) < 0.15,
 		"The actual mapped formation order must reach and hold at the track screen.")
 	_wait(func() -> bool: return objective.interruption == Grove.Interruption.NONE, 480)

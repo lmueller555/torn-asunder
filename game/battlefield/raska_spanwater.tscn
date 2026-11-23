@@ -8,8 +8,8 @@
 
 [node name="RaskaSpanwater" instance=ExtResource("1_harness")]
 formation_roles = Array[int]([1, 3])
+initial_formation_spacing = Array[int]([0])
 regular_melee_slot_files = PackedInt32Array(4, 8)
-regular_melee_spacing = Vector2(0.62, 0.60)
 script = ExtResource("2_mission")
 battlefield_scene = ExtResource("3_spanwater")
 field_bounds = Rect2(-166, -105, 336, 206)

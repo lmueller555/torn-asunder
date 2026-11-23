@@ -11,16 +11,18 @@ enum FormationRole { UNSPECIFIED, REGULAR_MELEE, RANGED, SUPPORT }
 enum Spacing { CLOSED, NORMAL, OPEN }
 const SPACING_NAMES: PackedStringArray = ["Closed", "Normal", "Open"]
 const SPACING_SPEED: PackedFloat32Array = [0.5, 1.0, 1.5]
-## How far apart the soldiers stand, relative to the Normal layout.
-const SPACING_SPREAD: PackedFloat32Array = [0.66, 1.0, 1.65]
+## Center-to-center meters along both axes, shared by all selectable formations.
+const SPACING_METERS: PackedFloat32Array = [1.0, 2.0, 3.0]
+const NORMAL_SPACING := 2.0
+## Combat for authored groups is still aggregate. Their fighting line closes
+## around the existing contact pivot; this is not a selectable formation mode.
+const GROUPED_COMBAT_SPREAD := 0.425
+const REGROUP_SPEED := 8.5
 ## Spread change per second while soldiers gather in or fan out.
 const SPREAD_RATE := 1.4
 ## Platoons without an explicit role whose titles contain these are archers or
 ## civilians and keep one layout.
 const NO_FORMATION_WORDS: PackedStringArray = ["archer", "bow", "sling", "refugee", "witness", "civilian", "miner"]
-
-const LEGACY_AUTHORED_MEMBERS := 12
-const AUTHORED_MELEE_FILES := PlatoonSize.REGULAR_MELEE_COLUMNS
 
 ## The two officers flank the hero; the thirty escorts are behind them.
 const LEAD_OFFICER_OFFSETS := [Vector2(-1.5, -0.4), Vector2(1.5, -0.4)]
@@ -32,6 +34,8 @@ class Member:
 	var index: int
 	var offset: Vector2
 	var crossed := false
+	## World-space feet while fighting or catching up, independent of the slot.
+	var detached_position := Vector2.INF
 	var is_leader: bool
 	# Assigned by a scene's existing grouped melee resolver, not a second HP ledger.
 	var combatant: CombatUnit
@@ -74,6 +78,8 @@ class Formation:
 		set(value):
 			if value == order:
 				return
+			if value == Order.ATTACK:
+				detach_members()
 			order = value
 			order_changed.emit(order)
 
@@ -84,23 +90,22 @@ class Formation:
 		configure_role(FormationRole.UNSPECIFIED)
 
 
-	func configure_role(formation_role: FormationRole, _legacy_files := AUTHORED_MELEE_FILES, melee_spacing := Vector2(0.85, 0.78), melee_trailing_bias := 0.0) -> void:
+	func configure_role(formation_role: FormationRole, melee_trailing_bias := 0.0) -> void:
 		role = formation_role
 		leader = null
 		members.clear()
-		var spacing := melee_spacing if role == FormationRole.REGULAR_MELEE else Vector2(0.85, 0.78)
-		footprint_padding = Vector2(0.44, 0.40) if spacing.x >= 0.85 else Vector2(0.26, 0.34)
+		var grid := Vector2.ONE * NORMAL_SPACING
 		if role == FormationRole.REGULAR_MELEE:
 			# Keep the existing command pivot in the regular block for wayfinding,
 			# formation checks and extracting the whole platoon.
-			var first_rank := melee_trailing_bias - (PlatoonSize.REGULAR_MELEE_RANKS - 1) * spacing.y * 0.5
-			_append_regular_ranks(spacing, first_rank)
-			leader = Member.new(members.size(), Vector2(0.0, first_rank - spacing.y), true)
+			var first_rank := melee_trailing_bias - (PlatoonSize.REGULAR_MELEE_RANKS - 1) * grid.y * 0.5
+			_append_regular_ranks(grid, first_rank)
+			leader = Member.new(members.size(), Vector2(0.0, first_rank - grid.y), true)
 			members.append(leader)
 			return
 		for file in 4:
 			for row in 3:
-				members.append(Member.new(members.size(), Vector2((file - 1.5) * spacing.x, (row - 1.0) * spacing.y)))
+				members.append(Member.new(members.size(), Vector2((file - 1.5) * grid.x, (row - 1.0) * grid.y)))
 
 
 	func _append_regular_ranks(spacing: Vector2, first_rank: float) -> void:
@@ -116,17 +121,92 @@ class Formation:
 		role = FormationRole.REGULAR_MELEE
 		leader = null
 		members.clear()
-		_append_regular_ranks(Vector2(0.85, 0.78), 1.55)
+		_append_regular_ranks(Vector2.ONE * NORMAL_SPACING, NORMAL_SPACING * 2.0)
+
+
+	func configure_lead(escort: bool) -> void:
+		if escort:
+			configure_officer_escort()
+			return
+		role = FormationRole.UNSPECIFIED
+		leader = null
+		members.clear()
+		# Two files on either side of the hero. Retain their original roster
+		# ordering; the two middle files are exactly one grid interval apart.
+		for side: float in [-1.0, 1.0]:
+			for row in 3:
+				for file in 2:
+					members.append(Member.new(members.size(),
+						Vector2(side * (file + 0.5), row) * NORMAL_SPACING))
 
 
 	## A soldier's place in the platoon, gathered in or fanned out by the formation.
 	func member_offset(member: Member) -> Vector2:
-		return member.offset * spread
+		return member.offset * spread if uses_formations() else member.offset * Vector2(0.85, 0.78) / NORMAL_SPACING
+
+	func has_detached_members() -> bool:
+		for member in members:
+			if member.detached_position.is_finite() and _member_can_move(member):
+				return true
+		return false
+
+	func _member_can_move(member: Member) -> bool:
+		return not member.crossed and (not member.combatant or member.combatant.is_alive())
 
 	func member_position(member: Member) -> Vector2:
-		var side := Vector2(-heading.y, heading.x)
-		var offset := member_offset(member)
-		return position + side * offset.x - heading * offset.y
+		return member.detached_position if member.detached_position.is_finite() else slot_position(member)
+
+	func slot_position(member: Member) -> Vector2:
+		return _to_world(member_offset(member))
+
+	func member_local_position(member: Member) -> Vector2:
+		if not member.detached_position.is_finite():
+			return member_offset(member)
+		var offset := member.detached_position - position
+		return Vector2(offset.dot(Vector2(-heading.y, heading.x)), -offset.dot(heading))
+
+	func _to_world(offset: Vector2) -> Vector2:
+		return position + Vector2(-heading.y, heading.x) * offset.x - heading * offset.y
+
+	## Seed combat feet before the pivot moves or turns for the first time.
+	func detach_members() -> void:
+		if not uses_formations():
+			return
+		for member in members:
+			if _member_can_move(member) and not member.detached_position.is_finite():
+				member.detached_position = slot_position(member)
+
+	## The grouped resolver gets a compact fighting layout at its existing
+	## pivot. Independent fighters can drive their own detached feet instead.
+	func advance_grouped_combat_feet(delta: float, can_move: Callable) -> void:
+		for member in members:
+			if member.detached_position.is_finite() and _member_can_move(member):
+				_move_detached(member, _to_world(member.offset * GROUPED_COMBAT_SPREAD), delta, can_move)
+
+	## Rejoin the same index, using the current pivot, facing and mode each tick.
+	func advance_rejoining_feet(delta: float, can_move: Callable) -> void:
+		if not can_receive_orders():
+			return
+		for member in members:
+			if not member.detached_position.is_finite() or not _member_can_move(member):
+				continue
+			var slot := slot_position(member)
+			_move_detached(member, slot, delta, can_move)
+			if member.detached_position.is_equal_approx(slot):
+				member.detached_position = Vector2.INF
+
+	func _move_detached(member: Member, goal: Vector2, delta: float, can_move: Callable) -> void:
+		var from := member.detached_position
+		var next := from.move_toward(goal, REGROUP_SPEED * delta)
+		if next == from:
+			return
+		if not can_move.is_valid() or can_move.call(from, next, false):
+			member.detached_position = next
+			return
+		for slide in [Vector2(next.x, from.y), Vector2(from.x, next.y)]:
+			if slide != from and can_move.call(from, slide, false):
+				member.detached_position = slide
+				return
 
 	## Regular melee platoons (and untyped platoons that aren't archers or civilians)
 	## change formation; ranged and support platoons do not.
@@ -155,7 +235,7 @@ class Formation:
 		return SPACING_SPEED[spacing] if uses_formations() else 1.0
 
 	func target_spread() -> float:
-		return SPACING_SPREAD[spacing] if uses_formations() else 1.0
+		return SPACING_METERS[spacing] / NORMAL_SPACING if uses_formations() else 1.0
 
 	func spacing_name() -> String:
 		return SPACING_NAMES[spacing]
@@ -222,6 +302,8 @@ var lead_engaged := false:
 	set(value):
 		if value == lead_engaged:
 			return
+		if value:
+			lead.detach_members()
 		lead_engaged = value
 		# Combat interrupts the march; the platoon re-forms where the fight ended.
 		lead.position = hero_position
@@ -229,6 +311,9 @@ var lead_engaged := false:
 		lead_engagement_changed.emit(value)
 ## False restores the legacy free-walking leader for scenes that need it.
 var lead_platoon_enabled := true
+## An explicit Move in command mode supersedes direct combat control. Do not
+## let the proximity trigger immediately steal a retreat that is under way.
+var lead_withdrawing := false
 
 signal lead_engagement_changed(engaged: bool)
 signal formation_spacing_changed(index: int)
@@ -238,6 +323,10 @@ var formations: Array[Formation] = [
 	Formation.new("Shield Infantry", Vector2(-6.0, -4.0)),
 	Formation.new("Archers", Vector2(6.0, -3.0)),
 ]
+
+
+func _init() -> void:
+	lead.configure_lead(false)
 
 
 func clamp_to_field(point: Vector2) -> Vector2:
@@ -271,9 +360,22 @@ func order_move(index: int, point: Vector2) -> void:
 	formation_commanded.emit(index)
 
 
+## An explicit tactical Move from combat withdraws the lead. Ordinary queued
+## marching orders do not take control away from a hero in combat.
+func order_retreat(point: Vector2) -> void:
+	if not lead_platoon_enabled or not lead.can_receive_orders():
+		return
+	if lead_engaged:
+		lead_withdrawing = true
+		lead_engaged = false
+	order_move(LEAD_INDEX, point)
+
+
 func order_hold(index: int) -> void:
 	var formation := formation_at(index)
 	if formation and formation.can_receive_orders():
+		if index == LEAD_INDEX:
+			lead_withdrawing = false
 		formation.hold()
 		formation_commanded.emit(index)
 
@@ -292,9 +394,15 @@ func step(delta: float, hero_direction: Vector2, can_move := Callable()) -> void
 		_march_lead(delta, can_move)
 	_hero_synced = hero_position
 	lead.settle_spread(delta)
+	if lead_engaged:
+		lead.advance_grouped_combat_feet(delta, can_move)
+	else:
+		lead.advance_rejoining_feet(delta, can_move)
 	for formation in formations:
 		formation.advance(delta, can_move)
 		formation.settle_spread(delta)
+		if formation.order != Order.ATTACK:
+			formation.advance_rejoining_feet(delta, can_move)
 
 
 ## Steps the indexed platoon's formation tighter (-1) or wider (+1).
@@ -313,6 +421,9 @@ func _march_lead(delta: float, can_move: Callable) -> void:
 	if lead.order == Order.MOVE:
 		var travel := lead.destination - hero_position
 		var pace := LEAD_SPEED * lead.speed_factor()
+		if not travel.is_zero_approx():
+			lead.heading = travel.normalized()
+			hero_heading = lead.heading
 		if travel.length() <= pace * delta:
 			var before := hero_position
 			move_hero(travel, can_move)
@@ -323,8 +434,6 @@ func _march_lead(delta: float, can_move: Callable) -> void:
 				lead.position = hero_position
 				lead.hold()
 		else:
-			lead.heading = travel.normalized()
-			hero_heading = lead.heading
 			var before := hero_position
 			move_hero(lead.heading * pace * delta, can_move)
 			if hero_position == before:
@@ -338,6 +447,7 @@ func _sync_lead_to_external_moves() -> void:
 	if hero_position == _hero_synced or hero_position == lead.position:
 		return
 	lead.position = hero_position
+	lead.heading = hero_heading
 	lead.destination = hero_position
 	if lead.order == Order.MOVE or lead.order == Order.BLOCKED:
 		lead.hold()

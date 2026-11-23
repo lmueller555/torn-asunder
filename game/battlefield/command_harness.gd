@@ -55,8 +55,9 @@ const MARKER_BEAM_HEIGHT := 9.0
 @export var formation_roles: Array[Battle.FormationRole] = []
 ## Legacy scene values are accepted; regular melee now uses five files everywhere.
 @export var regular_melee_slot_files: PackedInt32Array
-## Measured feet spacing for scenes that still use only their stock 0.49m troops.
-@export var regular_melee_spacing := Vector2(0.85, 0.78)
+## Tighter staging for deployments whose intended path has a choke. This picks
+## a real mode, never an independent distance or a forced mid-march change.
+@export var initial_formation_spacing: Array[Battle.Spacing] = []
 ## A narrow marching block may sit behind its command pivot. This is a fixed
 ## deployment offset for every member, not a teleport/refile during movement.
 @export var regular_melee_trailing_bias := 0.0
@@ -128,7 +129,6 @@ var _destination_marker: MeshInstance3D
 var _roster_label: Label
 var _lead_was_engaged := false
 var _r2_down := false
-var _placed_spread := {}
 var _camera_view := 0
 ## Set by mini-map HUDs while a mini-map aim draft is open.
 var minimap_drafting := false
@@ -160,7 +160,7 @@ func request_tactical_map_order(point: Vector2, append: bool) -> bool:
 	var formation := battle.formation_at(selected_index)
 	if formation == null or not formation.can_receive_orders():
 		return false
-	if selected_index == Battle.LEAD_INDEX and battle.direct_hero_control():
+	if selected_index == Battle.LEAD_INDEX and (not battle.lead_platoon_enabled or (append and battle.lead_engaged)):
 		return false
 	var height_hit: Variant = _terrain.destination_from_ray(Vector3(point.x, 64.0, point.y), Vector3(point.x, -32.0, point.y))
 	if height_hit == null or not _terrain.formation_fits_at(height_hit) or not formation.footprint_fits(height_hit):
@@ -438,6 +438,10 @@ func _visible_node_positions(nodes: Array) -> PackedVector2Array:
 
 
 func _update_lead_engagement(delta: float) -> void:
+	if battle.lead_withdrawing:
+		if battle.lead.order == Battle.Order.MOVE or (battle.lead.order == Battle.Order.HOLD and battle.lead.has_detached_members()):
+			return
+		battle.lead_withdrawing = false
 	var nearest := INF
 	for point in _hostile_positions():
 		if point.is_finite():
@@ -685,11 +689,14 @@ func _move_selected() -> void:
 	if command_view:
 		if _tactical_map_request != null:
 			_tactical_map_result = routes.issue(battle, selected_index, cursor, _tactical_map_append,
-				func(_point: Vector2) -> bool: return true) == MarchQueue.Result.ACCEPTED
+				func(_point: Vector2) -> bool: return true, true) == MarchQueue.Result.ACCEPTED
 		else:
 			if tactical_minimap_enabled and march_route_provider == null:
 				routes.clear(selected_index)
-			battle.order_move(selected_index, cursor)
+			if selected_index == Battle.LEAD_INDEX and battle.lead_engaged:
+				battle.order_retreat(cursor)
+			else:
+				battle.order_move(selected_index, cursor)
 		_sync_view()
 
 
@@ -955,13 +962,14 @@ func _configure_field() -> void:
 
 
 func _configure_formation_roles() -> void:
-	if lead_has_officer_escort:
-		battle.lead.configure_officer_escort()
+	battle.lead.configure_lead(lead_has_officer_escort)
 	for index in range(battle.formations.size()):
 		var group := battle.formations[index]
 		var role := formation_roles[index] if index < formation_roles.size() else Battle.FormationRole.UNSPECIFIED
-		var files := regular_melee_slot_files[index] if index < regular_melee_slot_files.size() else Battle.AUTHORED_MELEE_FILES
-		group.configure_role(role, files, regular_melee_spacing, regular_melee_trailing_bias)
+		group.configure_role(role, regular_melee_trailing_bias)
+		if index < initial_formation_spacing.size() and group.uses_formations():
+			group.spacing = initial_formation_spacing[index]
+			group.spread = group.target_spread()
 		if role == Battle.FormationRole.REGULAR_MELEE:
 			group.member_footprint_check = _regular_melee_footprint_fits
 
@@ -970,7 +978,7 @@ func _regular_melee_footprint_fits(group: Battle.Formation, center: Vector2) -> 
 	var low := Vector2.INF
 	var high := -Vector2.INF
 	for member in group.members:
-		var offset := group.member_offset(member)
+		var offset := member.offset * Battle.GROUPED_COMBAT_SPREAD if group.order == Battle.Order.ATTACK else group.member_offset(member)
 		low = low.min(offset)
 		high = high.max(offset)
 	var feet_half_size := (high - low) * 0.5
@@ -982,8 +990,8 @@ func _regular_melee_footprint_fits(group: Battle.Formation, center: Vector2) -> 
 	for corner in [side * half_size.x + back * half_size.y, side * half_size.x - back * half_size.y]:
 		if not battle.bounds.has_point(hull_center + corner) or not battle.bounds.has_point(hull_center - corner):
 			return false
-	var support := feet_half_size + Vector2(0.08, 0.08) if group.footprint_padding.x < 0.3 else Vector2.ZERO
-	return not _terrain or _terrain.oriented_formation_fits_at(hull_center, group.heading, half_size, support)
+	return not _terrain or _terrain.oriented_formation_fits_at(hull_center, group.heading, half_size,
+		feet_half_size + Vector2(0.08, 0.08))
 
 
 func restart_battle() -> void:
@@ -995,8 +1003,6 @@ func restart_battle() -> void:
 	_marker_active = false
 	_lead_was_engaged = false
 	GameplayBindings.reset_heroes_state()
-	for index in range(battle.formations.size()):
-		_placed_spread[index] = -1.0
 	_camera_pivot = Vector3.INF
 	_calm_seconds = 0.0
 	_select_starting_platoon()
@@ -1027,6 +1033,9 @@ func _place_at_spawns() -> void:
 	if hero_marker:
 		battle.hero_position = _marker_position(hero_marker)
 		battle.hero_heading = _marker_heading(hero_marker)
+		battle.lead.heading = battle.hero_heading
+		battle.lead.position = battle.hero_position
+		battle.lead.hold()
 		_hero_yaw = atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 		cursor = battle.hero_position
 	for index in range(mini(formation_spawns.size(), battle.formations.size())):
@@ -1090,7 +1099,8 @@ func _build_placeholders() -> void:
 		var members: Array[Node3D] = []
 		for slot in battle.formations[index].members:
 			var member := Node3D.new()
-			member.position = Vector3(slot.offset.x, 0.0, slot.offset.y)
+			var offset := battle.formations[index].member_offset(slot)
+			member.position = Vector3(offset.x, 0.0, offset.y)
 			group.add_child(member)
 			members.append(member)
 			if not _add_formation_member_visual(member, index):
@@ -1125,21 +1135,15 @@ func _build_lead_platoon(troop: Mesh, equipment: Mesh) -> void:
 	var art := load(HUMAN_ESCORT_SOLDIER_MODEL) as PackedScene if lead_has_officer_escort else _lead_member_scene()
 	_lead_members.clear()
 	_lead_officers.clear()
+	for slot in battle.lead.members:
+		var anchor := _make_lead_member(slot.offset, troop, equipment, uniform, trim, art)
+		anchor.name = "LeadSoldier%02d" % (slot.index + 1)
+		_lead_members.append(anchor)
 	if lead_has_officer_escort:
-		for slot in battle.lead.members:
-			var anchor := _make_lead_member(slot.offset, troop, equipment, uniform, trim, art)
-			anchor.name = "LeadSoldier%02d" % (slot.index + 1)
-			_lead_members.append(anchor)
 		for offset: Vector2 in Battle.LEAD_OFFICER_OFFSETS:
 			var officer := _make_lead_member(offset, troop, equipment, uniform, trim, null)
 			officer.name = "LeadOfficer%02d" % (_lead_officers.size() + 1)
 			_lead_officers.append(officer)
-	else:
-		for side: float in [-1.0, 1.0]:
-			for row in range(3):
-				for file in range(2):
-					var offset := Vector2(side * (1.5 + file * 0.85), -0.4 + row * 0.85)
-					_lead_members.append(_make_lead_member(offset, troop, equipment, uniform, trim, art))
 	_lead_banner = Label3D.new()
 	_lead_banner.text = battle.lead.title
 	_lead_banner.position = Vector3(0.0, 2.4, 0.4)
@@ -1246,7 +1250,14 @@ func _sync_lead_platoon() -> void:
 	var yaw := atan2(-battle.hero_heading.x, -battle.hero_heading.y)
 	_lead_model.position = origin
 	_lead_model.rotation.y = yaw
-	_sync_lead_anchors(_lead_members, origin.y, yaw)
+	for slot in battle.lead.members:
+		var anchor := _lead_members[slot.index]
+		var offset := battle.lead.member_local_position(slot)
+		# Hero facing is the lead's normal facing; use actual feet for elevation.
+		anchor.position.x = offset.x
+		anchor.position.z = offset.y
+		if _terrain:
+			anchor.position.y = _terrain.ground_height(battle.lead.member_position(slot)) - origin.y
 	_sync_lead_anchors(_lead_officers, origin.y, yaw)
 
 
@@ -1261,17 +1272,17 @@ func _sync_lead_anchors(anchors: Array[Node3D], origin_y: float, yaw: float) -> 
 ## Gathers a platoon's soldiers in or fans them out as its formation changes.
 ## Returns true if any soldier moved.
 func _place_formation_members(index: int, formation: Battle.Formation) -> bool:
-	if is_equal_approx(formation.spread, _placed_spread.get(index, 1.0)):
-		return false
-	_placed_spread[index] = formation.spread
+	var changed := false
 	var anchors: Array = _formation_members[index]
 	for slot in formation.members:
 		if slot.index < anchors.size():
 			var anchor := anchors[slot.index] as Node3D
-			var offset := formation.member_offset(slot)
-			anchor.position.x = offset.x
-			anchor.position.z = offset.y
-	return true
+			var offset := formation.member_local_position(slot)
+			if not Vector2(anchor.position.x, anchor.position.z).is_equal_approx(offset):
+				anchor.position.x = offset.x
+				anchor.position.z = offset.y
+				changed = true
+	return changed
 
 
 ## The leader's soldiers gather in or fan out from their Normal places.

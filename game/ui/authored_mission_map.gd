@@ -148,7 +148,7 @@ static func can_plot(host: Harness, point: Vector2) -> bool:
 	var platoon := host.battle.formation_at(host.selected_index)
 	if not platoon or not platoon.can_receive_orders():
 		return false
-	if host.selected_index == Battle.LEAD_INDEX and host.battle.direct_hero_control():
+	if host.selected_index == Battle.LEAD_INDEX and not host.battle.lead_platoon_enabled:
 		return false
 	var hit: Variant = host._terrain.destination_from_ray(Vector3(point.x, 64.0, point.y), Vector3(point.x, -32.0, point.y))
 	return hit != null and host._terrain.formation_fits_at(hit) and platoon.footprint_fits(hit)

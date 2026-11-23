@@ -1853,6 +1853,12 @@ position = Vector3(-66, 5, -38)
 rotation = Vector3(0, -1.5708, 0)
 gizmo_extents = 1.0
 
+[node name="WheelStairTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-45, 5, -31)
+
+[node name="WheelPedestalTurn" type="Marker3D" parent="Markers/Routes"]
+position = Vector3(-42, 5, -28)
+
 [node name="LockStairFoot" type="Marker3D" parent="Markers/Routes"]
 position = Vector3(-54, 0, -8)
 rotation = Vector3(0, 0, 0)

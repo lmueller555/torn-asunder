@@ -28,18 +28,23 @@ func snapshot(index: int) -> PackedVector2Array:
 	return route.snapshot() if route else PackedVector2Array()
 
 
-func issue(battle: Battle, index: int, point: Vector2, append: bool, validator: Callable) -> Queue.Result:
+func issue(battle: Battle, index: int, point: Vector2, append: bool, validator: Callable, tactical_retreat := false) -> Queue.Result:
 	var route := _route(index)
 	var formation := battle.formation_at(index)
 	if route == null or formation == null or not formation.can_receive_orders():
 		return Queue.Result.INVALID_FOR_BATTLEFIELD
-	# Waypoints steer the leader's platoon only outside combat.
-	if index == Battle.LEAD_INDEX and battle.direct_hero_control():
+	# A replacement Move can explicitly withdraw the lead platoon. An
+	# appended waypoint alone does not break contact.
+	var retreat := index == Battle.LEAD_INDEX and battle.lead_engaged and tactical_retreat and not append
+	if index == Battle.LEAD_INDEX and (not battle.lead_platoon_enabled or (battle.lead_engaged and not retreat)):
 		return Queue.Result.INVALID_FOR_BATTLEFIELD
 	var was_empty := route.count() == 0
 	var result := route.add_waypoint(point, validator) if append else route.set_destination(point, validator)
 	if result == Queue.Result.ACCEPTED and (not append or was_empty):
-		battle.order_move(index, point)
+		if retreat:
+			battle.order_retreat(point)
+		else:
+			battle.order_move(index, point)
 	return result
 
 

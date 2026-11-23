@@ -64,8 +64,11 @@ func _run() -> void:
 					target = alternative
 					break
 		_key(KEY_SHIFT, true)
-		_key(KEY_Z, true)
-		_key(KEY_Z, false)
+		for i in host.battle.formations.size():
+			if host.selected_index == Battle.LEAD_INDEX:
+				break
+			_key(KEY_Z, true)
+			_key(KEY_Z, false)
 		var mouse := InputEventMouseMotion.new()
 		mouse.position = host._command_camera.unproject_position(host.to_global(host._ground(target)))
 		root.push_input(mouse, true)
