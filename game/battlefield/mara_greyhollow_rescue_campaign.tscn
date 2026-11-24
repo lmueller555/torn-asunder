@@ -12,6 +12,7 @@ custody_case_scene = null
 hero_spawn = NodePath("Markers/Routes/QuarryTurn")
 formation_spawns = Array[NodePath]([NodePath("Markers/Spawns/HumanInfantry"), NodePath("Markers/Routes/WestAssembly")])
 road_guard_spawn = NodePath("Markers/Routes/MineYard")
+starting_campaign_enemy_level = 12
 interception_approach = NodePath("")
 interception_route = Array[NodePath]([])
 

@@ -4,6 +4,7 @@ const World := preload("res://game/campaign_world.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
 const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
+const MaraStarting := preload("res://game/combat/mara_campaign_starting_platoons.gd")
 const LeadAllocation := preload("res://game/combat/campaign_stat_allocation.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
 const Grain := preload("res://game/battlefield/mara_grain_crossing.gd")
@@ -11,6 +12,8 @@ const Moonwash := preload("res://game/battlefield/ilyra_moonwash_rescue.gd")
 
 const PATH := "user://profile.cfg"
 const CAMPAIGNS := "campaigns"
+const CAMPAIGN_STARTING_LOADOUT := "campaign_starting_loadout"
+const MARA_STARTING_LOADOUT_V1 := 1
 const MISSION_PROGRESS := "mission_progress"
 const MISSION_RESULTS := "mission_results"
 const CAMPAIGN_INTERMISSIONS := "campaign_intermissions"
@@ -68,13 +71,45 @@ func saved_campaigns(catalog: Array[Dictionary]) -> Array[Dictionary]:
 	return saves
 
 
-func mark_played(id: String) -> Error:
+func mark_played(id: String, begin_new := false) -> Error:
+	# Selection and the versioned starting build are one save transaction.
+	# A re-opened title or a replay cannot retrofit an existing save.
+	var latest := ConfigFile.new()
+	var read := latest.load(_path)
+	if read not in [OK, ERR_FILE_NOT_FOUND]:
+		return read
 	var sequence := 0
-	if _config.has_section(CAMPAIGNS):
-		for key in _config.get_section_keys(CAMPAIGNS):
-			sequence = maxi(sequence, _saved_order(key))
-	return _set_value(CAMPAIGNS, id, sequence + 1)
+	if latest.has_section(CAMPAIGNS):
+		for key in latest.get_section_keys(CAMPAIGNS):
+			var order: Variant = latest.get_value(CAMPAIGNS, key)
+			if order is int:
+				sequence = maxi(sequence, order)
+	var values := {CAMPAIGNS: {id: sequence + 1}}
+	if begin_new and id == MARA and not _has_mara_campaign_record(latest):
+		values[CAMPAIGN_STARTING_LOADOUT] = {MARA: MARA_STARTING_LOADOUT_V1}
+	return _set_values(values, latest)
 
+
+func _has_mara_campaign_record(config: ConfigFile) -> bool:
+	return config.has_section_key(CAMPAIGNS, MARA) \
+		or config.has_section_key(CAMPAIGN_STARTING_LOADOUT, MARA) \
+		or config.has_section_key(MISSION_PROGRESS, MARA) \
+		or config.has_section_key(CAMPAIGN_WAYPOINTS, MARA) \
+		or config.has_section_key(CAMPAIGN_INTERMISSIONS, MARA) \
+		or config.has_section_key(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING) \
+		or config.has_section_key(MISSION_RESULTS, Grain.MISSION_ID) \
+		or config.has_section_key(SUBORDINATE_TRAINING, MARA_SHIELD_DRILL) \
+		or config.has_section_key(SUBORDINATE_STAT_ALLOCATIONS, MARA_SHIELD_MELEE) \
+		or config.has_section_key(LEAD_TRAINING, MARA_LEAD_MELEE)
+
+
+func mara_uses_starting_platoons() -> bool:
+	return _mara_uses_starting_platoons(_config)
+
+
+func _mara_uses_starting_platoons(config: ConfigFile) -> bool:
+	var value: Variant = config.get_value(CAMPAIGN_STARTING_LOADOUT, MARA, 0)
+	return value is int and value == MARA_STARTING_LOADOUT_V1
 
 ## Mission IDs are independent of the campaign's last-played sequence.
 func completed_missions(id: String) -> PackedStringArray:
@@ -205,18 +240,18 @@ func _mara_shield_barracks_state(config: ConfigFile) -> MaraShieldBarracksState:
 	state.training = _mara_training_plan(config)
 	state.heavy_authorized = state.training.qualifies_for_branch(Training.SHIELD_INFANTRY_SLOT, Training.BRANCH_UNIT)
 	var reveal: Variant = config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, "")
-	# The archived escort used this same clear ID. Without the rescue's own
-	# typed reveal record, preserve its drill entitlement but award no new XP.
-	if not state.confirmed_clears.has(MARA_MINE) or not reveal is bool:
-		return state
-	state.reveal_completed = not reveal
-	state.total_xp = LeadProgress.XP_PER_FIRST_CLEAR
-	var progress := Unit.new()
-	progress.award_experience(state.total_xp)
+	# Archived escort clears preserve Drill entitlement without rescue XP.
+	var completed_rescue := state.confirmed_clears.has(MARA_MINE) and reveal is bool
+	state.reveal_completed = completed_rescue and not reveal
+	state.total_xp = LeadProgress.XP_PER_FIRST_CLEAR if completed_rescue else 0
+	var progress := MaraStarting.infantry_progress(state.total_xp) if _mara_uses_starting_platoons(config) else Unit.new()
+	if not _mara_uses_starting_platoons(config):
+		progress.award_experience(state.total_xp)
 	state.level = progress.level
 	state.xp_in_level = progress.experience
 	state.next_level_xp = progress.experience_for_next_level()
-	if reveal or progress.stat_points < 1:
+	state.melee_rating = progress.rating(Unit.Damage.MELEE)
+	if not state.reveal_completed or progress.stat_points < 1:
 		return state
 	var invested: Variant = config.get_value(SUBORDINATE_STAT_ALLOCATIONS, MARA_SHIELD_MELEE, false)
 	if not invested is bool:
@@ -264,9 +299,14 @@ func _mara_lead_melee_status(config: ConfigFile) -> MaraLeadMeleeStatus:
 	var clears := _confirmed_missions(config, MARA)
 	if not clears.has(MARA_MINE):
 		return MaraLeadMeleeStatus.LOCKED
-	var allocation := LeadAllocation.new(MARA, clears)
-	if not allocation.can_invest(Unit.Damage.MELEE):
-		return MaraLeadMeleeStatus.LOCKED
+	if _mara_uses_starting_platoons(config):
+		var progress := MaraStarting.infantry_progress(LeadProgress.inspect(MARA, clears).total_xp)
+		if progress.stat_points == 0:
+			return MaraLeadMeleeStatus.LOCKED
+	else:
+		var allocation := LeadAllocation.new(MARA, clears)
+		if not allocation.can_invest(Unit.Damage.MELEE):
+			return MaraLeadMeleeStatus.LOCKED
 	var invested: Variant = config.get_value(LEAD_TRAINING, MARA_LEAD_MELEE, false)
 	if not invested is bool:
 		return MaraLeadMeleeStatus.UNAVAILABLE

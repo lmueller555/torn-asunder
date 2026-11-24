@@ -22,7 +22,7 @@ var _neris_presenter: RefCounted
 var _neris_resume_played_pending:=false
 
 
-func _prepare_campaign(campaign: Dictionary) -> void:
+func _prepare_campaign(campaign: Dictionary, begin_new := false) -> void:
 	_neris_resume_played_pending=false
 	if get_tree().current_scene == self and (NormalMaraEntry.requested() or NormalIlyraEntry.requested() or NormalSovaEntry.requested() or NormalNerisEntry.requested() or NormalSerethEntry.requested()):
 		if _neris_presenter:
@@ -78,7 +78,7 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 		_campaign_warning=""
 		_neris_resume_played_pending=true
 		return
-	super._prepare_campaign(campaign)
+	super._prepare_campaign(campaign, begin_new)
 	if get_tree().current_scene == self and campaign.id == "sereth" and NormalSerethEntry.requested() and not _sereth_presenter:
 		_report_sereth_fallback()
 	if get_tree().current_scene==self and campaign.id=="neris" and NormalNerisEntry.requested() and not _neris_presenter and _campaign_warning.is_empty():
