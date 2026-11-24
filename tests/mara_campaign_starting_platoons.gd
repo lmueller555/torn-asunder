@@ -78,11 +78,31 @@ func _fresh_campaign(path: String) -> bool:
 	var previous := mission.encounter
 	mission.encounter.hero.receive_damage(15.0)
 	_key(KEY_BACKSPACE)
-	return (_is_new_loadout(mission) and mission.encounter != previous \
-		and mission.encounter.hero.hp == mission.encounter.hero.max_hp \
-		and FileAccess.get_file_as_bytes(path) == before) \
-		or _fail("Retry re-awarded, lost, or persisted campaign starting allocations.")
+	if not _is_new_loadout(mission) or mission.encounter == previous \
+			or mission.encounter.hero.hp != mission.encounter.hero.max_hp \
+			or FileAccess.get_file_as_bytes(path) != before:
+		return _fail("Retry re-awarded, lost, or persisted campaign starting allocations.")
+	await _close_title()
+	return await _later_hud(path)
 
+
+func _later_hud(path: String) -> bool:
+	var save := Profile.new(path)
+	var world := save.load_campaign_world("mara")
+	var clears := save.completed_missions("mara")
+	if world.travel_to(ROAD, clears) != world.TravelResult.ARRIVED \
+			or world.travel_to(CROSSING, clears) != world.TravelResult.ARRIVED \
+			or save.record_world_waypoint(world) != OK:
+		return _fail("Could not place the already-cleared campaign at the actual next deployment.")
+	await _open_title(path)
+	if not _press("Continue") or not _on_map(CROSSING) or not _press("ConfirmTravel") \
+			or not _on_briefing() or not _press("Confirm Deployment"):
+		return _fail("Could not reopen the real later Human deployment.")
+	var grain := _title._campaign_battle as GrainScene
+	if not grain or grain.scene_file_path != "res://game/battlefield/mara_grain_crossing_campaign.tscn":
+		return _fail("The continuity check did not open the registered Grain Crossing.")
+	return (grain._mission_lead_level == 12 and not grain.has_method("team_battle_points_frame")) \
+		or _fail("The later shared HUD lost Mara's campaign lead level or gained an unowned BP pool.")
 
 func _legacy_campaign(path: String) -> bool:
 	await _close_title()

@@ -902,7 +902,7 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		# The full orders initially expand the label before wrapping is enabled.
 		orders.set_deferred("size", Vector2(1000, 120))
 		deploy_y = 578.0
-		var lead := _mara_mine_lead_progress(_profile.completed_missions("mara"))
+		var lead := _mara_campaign_lead_progress(_profile.completed_missions("mara"))
 		var budget := _label(_stage,
 			"Mine deployment: %d starting BP · Lead platoon Lv %d · %d BP cap.\n"
 			% [lead.next_mission_bp, lead.lead_level, lead.next_mission_capacity]
@@ -933,7 +933,7 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 	_show_campaign_warning()
 
 
-func _mara_mine_lead_progress(clears: PackedStringArray) -> LeadProgress.Frame:
+func _mara_campaign_lead_progress(clears: PackedStringArray) -> LeadProgress.Frame:
 	var lead := LeadProgress.inspect(ProfileStore.MARA, clears)
 	if _profile.mara_uses_starting_platoons():
 		var unit := MaraStarting.infantry_progress(lead.total_xp)
@@ -993,7 +993,7 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
-		var progress := _mara_mine_lead_progress(confirmed_clears)
+		var progress := _mara_campaign_lead_progress(confirmed_clears)
 		mission.configure_campaign_lead_level(progress.lead_level)
 		if _profile.mara_uses_starting_platoons() and shield_state != null:
 			mission.configure_mara_starting_platoons(progress.total_xp, shield_state.total_xp)
@@ -1005,7 +1005,7 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 	var authored_hud := mission.has_method(&"enable_shared_mission_hud")
 	if authored_hud:
 		mission.set("_mission_hero_name", _active_campaign.name)
-		var lead := _mara_mine_lead_progress(confirmed_clears) if campaign_id == ProfileStore.MARA and mission_id == ProfileStore.MARA_MINE \
+		var lead := _mara_campaign_lead_progress(confirmed_clears) if campaign_id == ProfileStore.MARA \
 			else LeadProgress.inspect(campaign_id, confirmed_clears)
 		mission.set("_mission_lead_level", lead.lead_level)
 		mission.call(&"enable_shared_mission_hud")
