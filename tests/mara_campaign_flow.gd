@@ -194,6 +194,8 @@ func _flow() -> bool:
 	if not _win_rescue():
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or FileAccess.get_file_as_string(_profile_path) != after_clear:
 		return _fail("Completing the same mission again rewrote the profile.")
 	_joy(JOY_BUTTON_B)
@@ -336,6 +338,8 @@ func _grain_flow() -> bool:
 	if not _win_single_grain(grain, Grain.Cart.BREAD):
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if (
 		_saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID])
 		or _saved_grain() != Grain.SEED_ONLY
@@ -356,6 +360,8 @@ func _grain_flow() -> bool:
 	if not _win_both_grain(grain):
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if (
 		FileAccess.get_file_as_string(_profile_path) != before
 		or _saved_grain() != Grain.SEED_ONLY
@@ -416,6 +422,8 @@ func _high_quay_flow() -> bool:
 	if not _win_high_quay(quay):
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) or _saved_world() != HARBOR \
 		or _saved_clears() != PackedStringArray([CLEAR_ID, GRAIN_ID, QUAY_ID]) or _saved_grain() != Grain.SEED_ONLY:
 		return _fail("Only physical upper-quay withdrawal should persist the exact third clear and authentic debrief.")
@@ -438,6 +446,8 @@ func _high_quay_flow() -> bool:
 	if not _win_high_quay(quay):
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_HIGH_QUAY_DEBRIEF) or FileAccess.get_file_as_string(_profile_path) != replay_before \
 			or _saved_grain() != Grain.SEED_ONLY:
 		return _fail("Final replay duplicated a clear or rewrote the saved first result.")
@@ -468,6 +478,8 @@ func _completed_mine_replay() -> bool:
 	if not _win_rescue():
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	return (_is_dialogue(Beats.MARA_MINE_DEBRIEF) and FileAccess.get_file_as_string(_profile_path) == mine_profile
 		and _saved_clears() == PackedStringArray([CLEAR_ID, GRAIN_ID, QUAY_ID]) and _saved_grain() == Grain.SEED_ONLY) \
 		or _fail("A boosted Mine replay rewrote the completed profile or original Grain result.")
@@ -596,6 +608,8 @@ func _fresh_bread_flow(path: String) -> bool:
 	if not _win_single_grain(grain, Grain.Cart.SEED):
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	return (_saved_grain() == Grain.BREAD_ONLY and _finish_beat(Beats.MARA_GRAIN_BREAD_DEBRIEF)
 		and _on_map(CROSSING)) or _fail("The independent first bread-only clear did not save its own outcome and dialogue.")
 

@@ -755,12 +755,12 @@ func _mission_hud_state() -> Dictionary:
 	}
 	state.roster = [
 		hero,
-		_mission_hud_entry(InfantryAttack.INFANTRY_INDEX, infantry.hp, infantry.max_hp),
-		_mission_hud_entry(ArcherAttack.ARCHER_INDEX, archers.hp, archers.max_hp),
+		_mission_hud_entry(InfantryAttack.INFANTRY_INDEX, infantry.hp, infantry.max_hp, infantry.level),
+		_mission_hud_entry(ArcherAttack.ARCHER_INDEX, archers.hp, archers.max_hp, archers.level),
 	]
 	var enemy_anchor := _mission_hud_enemy_anchor()
 	if enemy_anchor.is_finite():
-		state.enemy = {"name": _enemy_title(), "level": 1, "hp": encounter.enemy.hp, "max_hp": encounter.enemy.max_hp}
+		state.enemy = {"name": _enemy_title(), "level": encounter.enemy.level, "hp": encounter.enemy.hp, "max_hp": encounter.enemy.max_hp}
 		state.enemy_anchor = enemy_anchor
 	if _finished():
 		state.feedback = _instructions_label.text

@@ -46,8 +46,9 @@ func _fresh_campaign(path: String) -> bool:
 	if not _begin_mara() or not Profile.new(path).mara_uses_starting_platoons():
 		return _fail("A genuinely new Mara New Game did not persist its versioned starting build.")
 	var mission := _title._campaign_battle as Mission
-	if not _is_new_loadout(mission):
-		return _fail("Initial real units or owner BP were not leveled/trained.")
+	if not _is_new_loadout(mission) or not _enemy_hud_level(mission, 12):
+		return _fail("Initial live units, displayed enemy level, or owner BP were not leveled/trained.")
+	mission.restart_mission()
 	if mission.encounter.enemy_phase != Encounter.EnemyPhase.AT_RESERVE or mission._dryad_released:
 		return _fail("An authored hostile actor should start reserved without protecting generic miners as combatants.")
 	mission.set_physics_process(false)
@@ -123,9 +124,12 @@ func _legacy_campaign(path: String) -> bool:
 		return _fail("The legacy campaign did not reach the real rescue.")
 	var encounter := mission.encounter
 	var budget := mission.team_battle_points_frame()
-	return (encounter.hero.level == 1 and encounter.hero.rating(Unit.Damage.MELEE) == 1 \
+	var roster: Array = mission._mission_hud_state().roster
+	return (roster.size() == 3 and roster[0].level == 1 and roster[1].level == 1 and roster[2].level == 1 \
+		and encounter.hero.level == 1 and encounter.hero.rating(Unit.Damage.MELEE) == 1 \
 		and encounter.infantry_attack.attacker.level == 1 and encounter.archer_attack.attacker.level == 1 \
-		and encounter.enemy.level == 1 and budget.lead_level == 1 and budget.capacity == 700) \
+		and encounter.enemy.level == 1 and budget.lead_level == 1 and budget.capacity == 700 \
+		and _enemy_hud_level(mission, 1)) \
 		or _fail("An existing unmarked save changed legacy combat levels or BP.")
 
 
@@ -134,6 +138,9 @@ func _is_new_loadout(mission: Mission) -> bool:
 		return false
 	var encounter := mission.encounter
 	var budget := mission.team_battle_points_frame()
+	var roster: Array = mission._mission_hud_state().roster
+	if roster.size() != 3 or roster[0].level != 12 or roster[1].level != 12 or roster[2].level != 11:
+		return false
 	var archers := encounter.archer_attack.attacker
 	return _only(encounter.hero, 12, Unit.Damage.MELEE, 12) \
 		and _only(encounter.infantry_attack.attacker, 12, Unit.Damage.MELEE, 12) \
@@ -141,6 +148,29 @@ func _is_new_loadout(mission: Mission) -> bool:
 		and budget.balance == 400 and budget.capacity == 920 and budget.lead_level == encounter.hero.level \
 		and encounter.enemy.level == mission.starting_campaign_enemy_level and encounter.enemy.level in [11, 12, 13] \
 		and mission.battle.formations.size() == 2 and mission.battle.formations[1].title == "Archers"
+
+
+func _enemy_hud_level(mission: Mission, expected: int) -> bool:
+	# Show the actual encounter combatant through the real, conditional hero
+	# HUD payload. Stage only the clear sight/engagement needed to display it.
+	var enemy := mission.encounter.enemy_position
+	for angle in range(16):
+		var facing := Vector2.RIGHT.rotated(TAU * float(angle) / 16.0)
+		var near := enemy - facing * 1.2
+		if not mission._terrain.clear_melee_contact(near, enemy):
+			continue
+		mission.battle.hero_position = near
+		mission.battle.hero_heading = facing
+		mission.battle.lead_engaged = true
+		mission.selected_index = Battle.LEAD_INDEX
+		mission._hero_yaw = atan2(-facing.x, -facing.y)
+		mission._hero_camera.make_current()
+		mission._update_cameras()
+		mission._refresh_combat_view()
+		var entry: Dictionary = mission._mission_hud_state().enemy
+		if not entry.is_empty():
+			return entry.level == expected and entry.hp == mission.encounter.enemy.hp
+	return false
 
 
 func _only(unit: Unit, level: int, specialty: Unit.Damage, rating: int) -> bool:

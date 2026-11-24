@@ -23,6 +23,10 @@ const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
 const MaraRescue := preload("res://game/battlefield/mara_greyhollow_rescue.gd")
+const MaraGrain := preload("res://game/battlefield/mara_grain_crossing_playtest.gd")
+const GrainRules := preload("res://game/battlefield/mara_grain_crossing.gd")
+const MaraQuay := preload("res://game/battlefield/mara_moonwash_playtest.gd")
+const QuayRules := preload("res://game/battlefield/mara_moonwash_quay.gd")
 const MissionXP := preload("res://game/combat/campaign_mission_experience.gd")
 const MaraStarting := preload("res://game/combat/mara_campaign_starting_platoons.gd")
 const Points := preload("res://game/combat/battle_points.gd")
@@ -136,6 +140,10 @@ var _pause_menu: PauseMenu
 var _victory_pending := false
 var _mission_xp_recap: MissionXP.Receipt
 var _continue_after_xp := Callable()
+var _xp_recap_mission := ""
+var _xp_recap_reveal: Tween
+var _xp_recap_defeats: Label
+var _xp_recap_award: Label
 var _drill_index := 0
 var _drill_rank := Platoon.MAX_RANK
 var _drill_buttons: Array[Button] = []
@@ -457,15 +465,32 @@ func _open_campaign(campaign: Dictionary) -> void:
 			var pending := _profile.greyhollow_pending_xp_recap()
 			var reveal := _present_campaign_dialogue.bind(DialogueBeats.MARA_MINE_DEBRIEF, _finish_greyhollow_reveal)
 			if pending:
-				_show_mission_xp_recap(pending, reveal)
+				_show_mission_xp_recap(ProfileStore.MARA_MINE, pending, reveal)
 			else:
 				reveal.call()
+			return
+		if campaign.id == ProfileStore.MARA and _resume_mara_noncombat_recap():
 			return
 		if not _show_waypoint_intermission():
 			_show_world_map()
 	else:
 		_show_briefing()
 		_show_campaign_warning()
+
+
+func _resume_mara_noncombat_recap() -> bool:
+	var pending := _profile.mara_pending_noncombat_recap()
+	if pending.is_empty():
+		return false
+	var mission_id: String = pending.mission_id
+	var deployment := CampaignDeployments.for_mission(mission_id)
+	var debrief: StringName = deployment.get("debrief", &"")
+	if mission_id == GrainRules.MISSION_ID:
+		debrief = DialogueBeats.grain_debrief_id(_profile.grain_clear_result())
+	if debrief == &"":
+		return false
+	_show_mission_xp_recap(mission_id, pending.receipt, _present_campaign_dialogue.bind(debrief, _return_from_campaign_debrief))
+	return true
 
 
 ## An explicit development harness can supply a fresh map for supported campaign locations.
@@ -1077,7 +1102,20 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 			else:
 				saved = _profile.record_greyhollow_rescue_clear()
 		"mara_grain_crossing":
-			saved = _profile.record_grain_clear(result)
+			var grain := mission as MaraGrain
+			if campaign_id == ProfileStore.MARA and grain and grain.objective.outcome == GrainRules.Outcome.SUCCEEDED \
+					and grain.objective.clear_result == result:
+				combat_recap = _profile.commit_mara_noncombat_victory(mission_id, result)
+				saved = combat_recap.error
+			else:
+				saved = _profile.record_grain_clear(result)
+		"mara_moonwash_quay":
+			var quay := mission as MaraQuay
+			if campaign_id == ProfileStore.MARA and quay and quay.objective.phase == QuayRules.Phase.SUCCEEDED:
+				combat_recap = _profile.commit_mara_noncombat_victory(mission_id)
+				saved = combat_recap.error
+			else:
+				saved = _profile.record_mission_clear(campaign_id, mission_id)
 		"ilyra_moonwash_rescue":
 			saved = _profile.record_ilyra_moonwash_clear(result)
 		_:
@@ -1086,47 +1124,79 @@ func _record_campaign_victory(mission: Node3D, campaign_id: String, mission_id: 
 		_campaign_warning = "The mission was completed, but its clear could not be saved."
 	elif not _opening_replay_return and _profile.record_world_waypoint(_campaign_world) != OK:
 		_campaign_warning = "The mission cleared, but the current waypoint could not be saved."
-	_finish_campaign_battle.call_deferred(mission, debrief, combat_recap if saved == OK else null)
+	_finish_campaign_battle.call_deferred(mission, mission_id, debrief, combat_recap if saved == OK else null)
 
 
-func _finish_campaign_battle(mission: Node3D, debrief: StringName, combat_recap: MissionXP.Receipt = null) -> void:
+func _finish_campaign_battle(mission: Node3D, mission_id: String, debrief: StringName, combat_recap: MissionXP.Receipt = null) -> void:
 	if mission != _campaign_battle:
 		return
 	var follow_up := _finish_greyhollow_reveal if debrief == DialogueBeats.MARA_MINE_DEBRIEF else _return_from_campaign_debrief
 	var present := _present_campaign_dialogue.bind(debrief, follow_up)
 	if combat_recap:
-		_show_mission_xp_recap(combat_recap, present)
+		_show_mission_xp_recap(mission_id, combat_recap, present)
 	else:
 		present.call()
 
 
-func _show_mission_xp_recap(receipt: MissionXP.Receipt, next: Callable) -> void:
+func _show_mission_xp_recap(mission_id: String, receipt: MissionXP.Receipt, next: Callable) -> void:
 	_open_page(Page.MISSION_XP_RECAP)
 	_mission_xp_recap = receipt
+	_xp_recap_mission = mission_id
 	_continue_after_xp = next
+	var chapter := CampaignMissions.mission_for_campaign(ProfileStore.MARA, mission_id)
 	_label(_stage, "Battle Results", Rect2(76, 67, 1050, 76), 57, IVORY, DISPLAY_FACE)
-	_label(_stage, "GET THEM OUT  /  GREYHOLLOW MINE", Rect2(77, 148, 1050, 34), 23, MUTED)
+	_label(_stage, String(chapter.get("title", "")).to_upper(), Rect2(77, 148, 1050, 34), 23, MUTED)
 	_rule(Rect2(76, 196, 1288, 1), HAIRLINE)
-	_label(_stage, "Enemy combat units defeated: %d" % receipt.defeated, Rect2(76, 280, 1150, 48), 32, IVORY)
-	_label(_stage, "Lead platoon XP awarded: %d" % receipt.total_xp(), Rect2(76, 340, 1150, 48), 32, GOLD)
+	_xp_recap_defeats = _label(_stage, "", Rect2(76, 280, 1150, 48), 32, IVORY)
+	_xp_recap_award = _label(_stage, "", Rect2(76, 340, 1150, 48), 32, GOLD)
 	var detail := "First clear: %d XP     Confirmed defeats: +%d XP" % [receipt.clear_xp, receipt.combat_xp]
 	if receipt.clear_xp == 0:
 		detail = "This mission was already cleared. No additional campaign XP awarded."
 	_label(_stage, detail, Rect2(76, 398, 1150, 48), 24, MUTED)
 	_button("Continue", Rect2(76, 542, 300, 58), _continue_mission_xp_recap).grab_focus()
+	if _profile.setting("reduced_motion"):
+		_render_xp_recap(1.0)
+	else:
+		_render_xp_recap(0.0)
+		_xp_recap_reveal = create_tween()
+		_xp_recap_reveal.tween_method(_render_xp_recap, 0.0, 1.0, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_xp_recap_reveal.finished.connect(_finish_xp_recap_reveal)
+
+
+func _render_xp_recap(progress: float) -> void:
+	if not _mission_xp_recap or _page != Page.MISSION_XP_RECAP:
+		return
+	_xp_recap_defeats.text = "Enemy combat units defeated: %d" % roundi(_mission_xp_recap.defeated * progress)
+	_xp_recap_award.text = "Lead platoon XP awarded: %d" % roundi(_mission_xp_recap.total_xp() * progress)
+	_xp_recap_defeats.modulate.a = lerpf(0.45, 1.0, progress)
+	_xp_recap_award.modulate.a = lerpf(0.45, 1.0, progress)
+
+
+func _finish_xp_recap_reveal() -> void:
+	if _xp_recap_reveal:
+		_xp_recap_reveal.kill()
+		_xp_recap_reveal = null
+	_render_xp_recap(1.0)
 
 
 func _continue_mission_xp_recap() -> void:
 	if _page != Page.MISSION_XP_RECAP or not _mission_xp_recap or not _continue_after_xp.is_valid():
 		return
-	if _mission_xp_recap.pending and _profile.acknowledge_greyhollow_xp_recap() != OK:
-		_show_notice("Could not acknowledge the saved results. Press Continue to retry.")
+	# Confirm/Skip is available immediately. The first input on an active
+	# reveal displays the actual final numbers instead of dismissing them.
+	if _xp_recap_reveal:
+		_finish_xp_recap_reveal()
 		return
+	if _mission_xp_recap.pending:
+		var acknowledged := _profile.acknowledge_greyhollow_xp_recap() if _xp_recap_mission == ProfileStore.MARA_MINE \
+			else _profile.acknowledge_mara_noncombat_recap(_xp_recap_mission)
+		if acknowledged != OK:
+			_show_notice("Could not acknowledge the saved results. Press Continue to retry.")
+			return
 	var next := _continue_after_xp
 	_mission_xp_recap = null
 	_continue_after_xp = Callable()
 	next.call()
-
 
 func _finish_greyhollow_reveal() -> void:
 	if _profile.finish_greyhollow_reveal() != OK:
@@ -1948,6 +2018,9 @@ func _show_quit() -> void:
 
 
 func _replace_stage(page: Page) -> void:
+	if _xp_recap_reveal:
+		_xp_recap_reveal.kill()
+		_xp_recap_reveal = null
 	if is_instance_valid(_pause_menu):
 		_pause_menu.close(false)
 	_page = page
