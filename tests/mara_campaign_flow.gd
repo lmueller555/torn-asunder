@@ -156,6 +156,8 @@ func _flow() -> bool:
 	if not _win_rescue():
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]) \
 			or _saved_world() != MINE:
 		return _fail("The physical rescue did not persist the stable clear and waypoint before the reveal.")
@@ -672,6 +674,11 @@ func _finish_beat(id: StringName) -> bool:
 
 func _saved_grain() -> StringName:
 	return Profile.new(_profile_path).grain_clear_result()
+
+
+func _continue_greyhollow_xp_recap() -> bool:
+	return (_title._page == Title.Page.MISSION_XP_RECAP and _press("Continue")) \
+		or _fail("The real mission result did not show a confirmed XP recap.")
 
 
 func _win_rescue() -> bool:

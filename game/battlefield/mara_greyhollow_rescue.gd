@@ -76,6 +76,14 @@ func _rally_offset(index: int) -> Vector2:
 	return [Vector2(0, 0), Vector2(-0.7, 1.6), Vector2(0.7, 3.2)][index]
 
 
+## No result for unfinished/failing attempts. A Retry creates a new owner
+## with no recorded kill. The reserved Dryad is the only combat enemy here.
+func confirmed_enemy_defeats_on_victory() -> Variant:
+	if scene_file_path != GREYHOLLOW_STARTING_SCENE or rescue_phase != Rescue.SUCCEEDED:
+		return null
+	return int(encounter != null and encounter.enemy_defeated_in_combat)
+
+
 func _reset_encounter() -> void:
 	super._reset_encounter()
 	if encounter:

@@ -4,6 +4,7 @@ const World := preload("res://game/campaign_world.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
 const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
+const MissionXP := preload("res://game/combat/campaign_mission_experience.gd")
 const MaraStarting := preload("res://game/combat/mara_campaign_starting_platoons.gd")
 const LeadAllocation := preload("res://game/combat/campaign_stat_allocation.gd")
 const Unit := preload("res://game/combat/combat_unit.gd")
@@ -26,6 +27,8 @@ const MARA_LEAD_MELEE := "mara_mine_melee_point"
 const MARA := "mara"
 const MARA_MINE := "mara_mine_escort"
 const GREYHOLLOW_REVEAL_PENDING := "greyhollow_reveal_pending"
+const CAMPAIGN_COMBAT_XP := "campaign_combat_xp"
+const GREYHOLLOW_XP_RECAP := "greyhollow_xp_recap"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 const ILYRA := "ilyra"
@@ -97,6 +100,7 @@ func _has_mara_campaign_record(config: ConfigFile) -> bool:
 		or config.has_section_key(CAMPAIGN_WAYPOINTS, MARA) \
 		or config.has_section_key(CAMPAIGN_INTERMISSIONS, MARA) \
 		or config.has_section_key(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING) \
+		or config.has_section_key(CAMPAIGN_COMBAT_XP, MARA) \
 		or config.has_section_key(MISSION_RESULTS, Grain.MISSION_ID) \
 		or config.has_section_key(SUBORDINATE_TRAINING, MARA_SHIELD_DRILL) \
 		or config.has_section_key(SUBORDINATE_STAT_ALLOCATIONS, MARA_SHIELD_MELEE) \
@@ -154,6 +158,69 @@ func record_greyhollow_rescue_clear() -> Error:
 	})
 
 
+## The registered Mine owner can report at most its one genuine combat unit.
+## Save clear, bonus, recap, and mandatory reveal in a single transaction.
+## Replays (including existing clear records without bonus data) earn nothing.
+func commit_greyhollow_victory(defeated: int) -> MissionXP.Receipt:
+	if defeated not in [0, 1]:
+		return MissionXP.Receipt.new(ERR_INVALID_DATA, defeated, 0, 0, false)
+	var latest := ConfigFile.new()
+	var load_error := latest.load(_path)
+	if load_error not in [OK, ERR_FILE_NOT_FOUND]:
+		return MissionXP.Receipt.new(load_error, defeated, 0, 0, false)
+	var clears := _confirmed_missions(latest, MARA)
+	if clears.has(MARA_MINE):
+		_config = latest
+		var replay_error := record_greyhollow_rescue_clear()
+		return MissionXP.Receipt.new(replay_error, defeated, 0, 0, false)
+	var ledger: Variant = latest.get_value(CAMPAIGN_COMBAT_XP, MARA, {})
+	if not ledger is Dictionary or ledger.has(MARA_MINE):
+		return MissionXP.Receipt.new(ERR_INVALID_DATA, defeated, 0, 0, false)
+	var receipt := MissionXP.Receipt.new(OK, defeated, LeadProgress.XP_PER_FIRST_CLEAR,
+		defeated * MissionXP.XP_PER_DEFEATED_COMBAT_UNIT, true)
+	clears.append(MARA_MINE)
+	var updated: Dictionary = ledger.duplicate()
+	updated[MARA_MINE] = receipt.combat_xp
+	var saved := _set_values({
+		MISSION_PROGRESS: {MARA: clears},
+		MISSION_RESULTS: {GREYHOLLOW_REVEAL_PENDING: true, GREYHOLLOW_XP_RECAP: receipt.stored()},
+		CAMPAIGN_COMBAT_XP: {MARA: updated},
+	}, latest)
+	return receipt if saved == OK else MissionXP.Receipt.new(saved, defeated, 0, 0, false)
+
+
+func campaign_combat_xp(campaign_id: String) -> Dictionary:
+	return _campaign_combat_xp(_config, campaign_id)
+
+
+func _campaign_combat_xp(config: ConfigFile, campaign_id: String) -> Dictionary:
+	var value: Variant = config.get_value(CAMPAIGN_COMBAT_XP, campaign_id, {})
+	return value.duplicate() if value is Dictionary else {}
+
+
+func greyhollow_pending_xp_recap() -> MissionXP.Receipt:
+	if not greyhollow_reveal_pending():
+		return null
+	var receipt := MissionXP.restore(_config.get_value(MISSION_RESULTS, GREYHOLLOW_XP_RECAP, {}))
+	if not receipt or receipt.defeated not in [0, 1] \
+			or _campaign_combat_xp(_config, MARA).get(MARA_MINE, -1) != receipt.combat_xp:
+		return null
+	return receipt
+
+
+func acknowledge_greyhollow_xp_recap() -> Error:
+	var latest := ConfigFile.new()
+	var load_error := latest.load(_path)
+	if load_error != OK:
+		return load_error
+	if not latest.has_section_key(MISSION_RESULTS, GREYHOLLOW_XP_RECAP):
+		_config = latest
+		return OK
+	if MissionXP.restore(latest.get_value(MISSION_RESULTS, GREYHOLLOW_XP_RECAP)) == null:
+		return ERR_INVALID_DATA
+	return _set_values({MISSION_RESULTS: {GREYHOLLOW_XP_RECAP: null}}, latest)
+
+
 func greyhollow_reveal_pending() -> bool:
 	var pending: Variant = _config.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false)
 	return pending is bool and pending and completed_missions(MARA).has(MARA_MINE)
@@ -166,10 +233,15 @@ func greyhollow_reveal_completed() -> bool:
 
 
 func finish_greyhollow_reveal() -> Error:
-	if not greyhollow_reveal_pending():
+	var latest := ConfigFile.new()
+	var load_error := latest.load(_path)
+	if load_error != OK:
+		return OK if load_error == ERR_FILE_NOT_FOUND else load_error
+	var pending: Variant = latest.get_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false)
+	if not pending is bool or not pending or not _confirmed_missions(latest, MARA).has(MARA_MINE):
+		_config = latest
 		return OK
-	return _set_value(MISSION_RESULTS, GREYHOLLOW_REVEAL_PENDING, false)
-
+	return _set_values({MISSION_RESULTS: {GREYHOLLOW_REVEAL_PENDING: false}}, latest)
 
 ## Detached plan for the one Human slot. Old saves without the marker are
 ## untrained; a marker without the qualifying clear cannot restore a purchase.
@@ -300,7 +372,7 @@ func _mara_lead_melee_status(config: ConfigFile) -> MaraLeadMeleeStatus:
 	if not clears.has(MARA_MINE):
 		return MaraLeadMeleeStatus.LOCKED
 	if _mara_uses_starting_platoons(config):
-		var progress := MaraStarting.infantry_progress(LeadProgress.inspect(MARA, clears).total_xp)
+		var progress := MaraStarting.infantry_progress(LeadProgress.inspect(MARA, clears, _campaign_combat_xp(config, MARA)).total_xp)
 		if progress.stat_points == 0:
 			return MaraLeadMeleeStatus.LOCKED
 	else:

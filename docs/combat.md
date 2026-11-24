@@ -177,3 +177,10 @@ All values are provisional. The battlefield would supply hostility, a clear lane
 ## Campaign lead-platoon progression prototype
 
 A read-only progression plan counts the consecutive first clears of one campaign and provisionally grants 100 XP per chapter. It reuses the existing unit XP curve and the existing Battle Points cap of 700 at level 1 plus 20 per additional lead-platoon level. Each mission still starts with 400 BP; replay, visits, and foreign clears award nothing. This plan is not yet wired to campaign saves, deployment or spending. Run `godot --headless --script tests/campaign_platoon_progress.gd`.
+
+
+### Greyhollow victory XP
+
+The registered **Get Them Out** mission credits progression only on a successful first completion: the existing **100 XP** first-clear reward and **10 additional lead-platoon XP per confirmed enemy combat unit defeated**. The Dryad raider is one combat unit, no matter how many visual elements depict the encounter. Withdrawing, leaving a foe alive, or removing it without an actual combat defeat counts for no bonus. A combat defeat remains pending during the mission, so loss, Retry, or leaving forfeits the attempt. Battle Points still award immediately under their existing combat rules and are not XP.
+
+The result screen records the actual defeat count and XP awarded before the mandatory reveal. Closing the game does not re-award XP; Continue can reopen the saved first-clear results. Replays may show a new defeat count, but award no duplicate campaign XP. This combat bonus belongs to the existing lead progression. No Archer or Shield spend, Drill requirement, or other mission's result was added by this slice.

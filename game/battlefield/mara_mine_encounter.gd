@@ -48,6 +48,7 @@ var _civilian_index := -1
 var enemy_position: Vector2
 var enemy_heading := Vector2.LEFT
 var enemy_phase := EnemyPhase.WATCHING
+var enemy_defeated_in_combat := false
 var alert_target := Target.NONE
 var last_contact := ""
 var windup_target: Target:
@@ -108,6 +109,7 @@ func order_archer_attack(battle: Battle, selected: int, point: Vector2, clear_co
 
 
 func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Callable) -> void:
+	var enemy_was_alive := enemy.is_alive()
 	_feedback_seconds -= delta
 	alert_target = Target.NONE
 	var sight := bool(clear_contact.call(battle.hero_position, enemy_position))
@@ -137,6 +139,10 @@ func advance(delta: float, battle: Battle, clear_contact: Callable, can_move: Ca
 			else:
 				_feedback(_archer_denial(shot.status))
 	if not enemy.is_alive():
+		# One actual encounter Unit, not the number of meshes depicting it.
+		# Only a transition caused by this owner’s combat above is a defeat.
+		if enemy_was_alive:
+			enemy_defeated_in_combat = true
 		enemy_phase = EnemyPhase.DEFEATED
 		_windup_target = Target.NONE
 		return
