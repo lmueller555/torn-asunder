@@ -56,6 +56,11 @@ func _fresh_campaign(path: String) -> bool:
 	if not _winning_rescue_with_combat(mission):
 		return false
 	await process_frame
+	var xp_result := _title._mission_xp_recap
+	if not xp_result or xp_result.defeated != 0 or xp_result.total_xp() != 100:
+		return _fail("Leaving the Dryad alive incorrectly changed the normal 100 XP first clear.")
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or not _finish_beat(Beats.MARA_MINE_DEBRIEF):
 		return _fail("Real success at the new levels did not commit the rescue and mandatory reveal.")
 	var profile := Profile.new(path)

@@ -20,17 +20,21 @@ class Frame:
 	var next_mission_capacity: int
 
 
-static func inspect(campaign_id: String, completed_ids: PackedStringArray) -> Frame:
+static func inspect(campaign_id: String, completed_ids: PackedStringArray, combat_bonuses := {}) -> Frame:
 	var chapters := Missions.missions_for_campaign(campaign_id)
 	if chapters.is_empty():
 		return null
 	var count := 0
+	var combat_xp := 0
 	for chapter in chapters:
 		if not completed_ids.has(chapter.id):
 			break
 		count += 1
+		var bonus: Variant = combat_bonuses.get(chapter.id, 0)
+		if bonus is int and bonus > 0:
+			combat_xp += bonus
 	var lead := Unit.new()
-	var xp := count * XP_PER_FIRST_CLEAR
+	var xp := count * XP_PER_FIRST_CLEAR + combat_xp
 	lead.award_experience(xp)
 	var pool := BP.new(lead.level)
 	var frame := Frame.new()

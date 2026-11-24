@@ -42,6 +42,8 @@ func _interrupt_real_rescue_reveal() -> bool:
 	if not _win_rescue():
 		return false
 	await process_frame
+	if not _continue_greyhollow_xp_recap():
+		return false
 	if not _is_dialogue(Beats.MARA_MINE_DEBRIEF) or _saved_clears() != PackedStringArray([CLEAR_ID]) \
 			or _saved_world() != MINE:
 		return _fail("The actual rescue did not persist the stable clear and start the shelter reveal.")
