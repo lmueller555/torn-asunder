@@ -4,6 +4,9 @@ extends "res://game/battlefield/command_harness.gd"
 signal mission_finished(won: bool)
 
 const Encounter := preload("res://game/battlefield/mara_mine_encounter.gd")
+const MaraStarting := preload("res://game/combat/mara_campaign_starting_platoons.gd")
+const Unit := preload("res://game/combat/combat_unit.gd")
+const GREYHOLLOW_STARTING_SCENE := "res://game/battlefield/mara_greyhollow_rescue_campaign.tscn"
 const InfantryAttack := preload("res://game/battlefield/mara_infantry_attack.gd")
 const ArcherAttack := preload("res://game/battlefield/mara_archer_attack.gd")
 const Catalog := preload("res://game/combat/unit_catalog.gd")
@@ -38,6 +41,9 @@ const HEAVY_MOVE_SPEED := 2.55
 const CAMPAIGN_MINE := "res://game/battlefields/year_one_mine_campaign.tscn"
 
 @export var opposition_enabled := true
+# Authored first-mission combat actor level. Enabled only by the new-save
+# Greyhollow launch path; standalone drills and older profiles keep theirs.
+@export_range(1, 99) var starting_campaign_enemy_level := 1
 @export var render_shield_infantry := false
 @export var sundering_strike_enabled := false
 @export var road_guard_spawn: NodePath = ^"Markers/Spawns/MaraRoadGuard"
@@ -48,6 +54,9 @@ const CAMPAIGN_MINE := "res://game/battlefields/year_one_mine_campaign.tscn"
 var objective := Escort.new()
 var encounter: Encounter
 var _launch_lead_level := 1
+var _launch_new_starting_platoons := false
+var _launch_lead_earned_xp := 0
+var _launch_shield_earned_xp := 0
 var _launch_lead_melee_invested := false
 var _launch_shield_melee_invested := false
 var _heavy_replay_loadout := false
@@ -88,8 +97,16 @@ const HEROES_COMBAT_CONTROLS := "Hero: Cross / J · Attack     Triangle / K · H
 @onready var _restart_button: Button = $ObjectiveHUD/Panel/Margin/Readout/Restart
 
 
-## Sampled from confirmed campaign clears at deployment, never read again
-## during the attempt or on local retry. This sets the BP cap, not Mara's stats.
+## The profile version selects this build before the registered mission enters
+## the tree. Retry reconstructs it from the same launch-time XP snapshot.
+func configure_mara_starting_platoons(lead_earned_xp: int, shield_earned_xp: int) -> void:
+	if not is_inside_tree() and not is_node_ready() and scene_file_path == GREYHOLLOW_STARTING_SCENE:
+		_launch_new_starting_platoons = true
+		_launch_lead_earned_xp = maxi(0, lead_earned_xp)
+		_launch_shield_earned_xp = maxi(0, shield_earned_xp)
+
+
+## Sampled at deployment. This sets the shared pool's level-derived cap.
 func configure_campaign_lead_level(level: int) -> void:
 	if not is_inside_tree():
 		_launch_lead_level = level
@@ -552,14 +569,18 @@ func _reset_encounter() -> void:
 	if not guard_marker:
 		guard_marker = battlefield_marker(^"Markers/Routes/EastPass")
 	var infantry: InfantryAttack
+	var legacy_shield_melee := _launch_shield_melee_invested and not _launch_new_starting_platoons
+	var legacy_lead_melee := _launch_lead_melee_invested and not _launch_new_starting_platoons
 	if _heavy_replay_loadout:
-		infantry = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE, _launch_shield_melee_invested)
-	elif _launch_shield_melee_invested:
+		infantry = InfantryAttack.new(HEAVY_HP, HEAVY_CONTACT_BASE, legacy_shield_melee)
+	elif legacy_shield_melee:
 		infantry = InfantryAttack.new(InfantryAttack.PROTOTYPE_HP, InfantryAttack.BASE_DAMAGE, true)
 	encounter = Encounter.new(_marker_position(guard_marker), _ground, _terrain.clear_ranged_lane,
-		_launch_lead_level, infantry, _launch_lead_melee_invested, _enemy_title()) \
+		_launch_lead_level, infantry, legacy_lead_melee, _enemy_title()) \
 		if opposition_enabled and guard_marker else null
 	if encounter:
+		if _launch_new_starting_platoons:
+			_apply_starting_platoons()
 		encounter.aggro_sight = _clear_enemy_aggro_sight
 		encounter.hold_story_lane = _pass_release != null
 	if encounter and _pass_release:
@@ -572,6 +593,19 @@ func _reset_encounter() -> void:
 			route.append(_marker_position(waypoint))
 		encounter.stage_interception(route)
 	_refresh_combat_view()
+
+
+func _apply_starting_platoons() -> void:
+	MaraStarting.allocate_infantry(encounter.hero)
+	MaraStarting.allocate_infantry(encounter.infantry_attack.attacker)
+	MaraStarting.allocate_archer(encounter.archer_attack.attacker)
+	encounter.hero.award_experience(_launch_lead_earned_xp)
+	encounter.infantry_attack.attacker.award_experience(_launch_shield_earned_xp)
+	if _launch_lead_melee_invested:
+		encounter.hero.spend_stat_point(Unit.Damage.MELEE)
+	if _launch_shield_melee_invested:
+		encounter.infantry_attack.attacker.spend_stat_point(Unit.Damage.MELEE)
+	MaraStarting.level_unit(encounter.enemy, starting_campaign_enemy_level)
 
 
 func _clear_enemy_aggro_sight(from: Vector2, to: Vector2) -> bool:

@@ -22,6 +22,8 @@ const HumanBarracks := preload("res://game/ui/human_barracks.gd")
 const CampaignDialogue := preload("res://game/campaign_dialogue.gd")
 const DialogueBeats := preload("res://game/campaign_dialogues.gd")
 const MaraMine := preload("res://game/battlefield/mara_mine_escort.gd")
+const MaraStarting := preload("res://game/combat/mara_campaign_starting_platoons.gd")
+const Points := preload("res://game/combat/battle_points.gd")
 const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
 const MaraTraining := preload("res://game/combat/mara_subordinate_training.gd")
 const SurveyBattle := preload("res://game/battlefield/ilyra_coast_survey_campaign.gd")
@@ -387,11 +389,11 @@ func _begin_selected() -> void:
 	_start_campaign(Campaigns.ALL[_selected])
 
 
-func _prepare_campaign(campaign: Dictionary) -> void:
+func _prepare_campaign(campaign: Dictionary, begin_new := false) -> void:
 	_discard_station_context()
 	_opening_replay_return = null
 	_active_campaign = campaign
-	var result := _profile.mark_played(campaign.id)
+	var result := _profile.mark_played(campaign.id, begin_new)
 	_campaign_world = null
 	_campaign_warning = "" if result == OK else "The campaign selection could not be saved."
 	if campaign.id == "mara" and result == OK and not _normal_mara_fallback.is_empty():
@@ -399,7 +401,7 @@ func _prepare_campaign(campaign: Dictionary) -> void:
 
 
 func _start_campaign(campaign: Dictionary) -> void:
-	_prepare_campaign(campaign)
+	_prepare_campaign(campaign, true)
 	var campaign_id: String = campaign.id
 	var mission_id := CampaignMissions.first_unplayed_mission_id(campaign_id, PackedStringArray())
 	var deployment := CampaignDeployments.for_mission(mission_id)
@@ -624,8 +626,17 @@ func _show_station_barracks(restore := "") -> void:
 	if snapshot.error not in [OK, ERR_FILE_NOT_FOUND]:
 		notice = "Campaign progression could not be read. No changes can be made."
 	_open_page(Page.BARRACKS)
+	var archers := {}
+	if _profile.mara_uses_starting_platoons():
+		var unit := Unit.new()
+		MaraStarting.allocate_archer(unit)
+		archers = {"level": unit.level, "ratings": {
+			"Melee Power": unit.rating(Unit.Damage.MELEE),
+			"Ranged Power": unit.rating(Unit.Damage.RANGED),
+		}}
 	var barracks := HumanBarracks.new()
 	barracks.configure({
+		"archers": archers,
 		"shield_drill_rank": plan.formation_drill_rank(slot),
 		"shield_drill_credit": plan.available_drill_credit(slot) > 0,
 		"heavy_replay_eligible": snapshot.heavy_authorized,
@@ -891,7 +902,7 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		# The full orders initially expand the label before wrapping is enabled.
 		orders.set_deferred("size", Vector2(1000, 120))
 		deploy_y = 578.0
-		var lead := LeadProgress.inspect("mara", _profile.completed_missions("mara"))
+		var lead := _mara_campaign_lead_progress(_profile.completed_missions("mara"))
 		var budget := _label(_stage,
 			"Mine deployment: %d starting BP · Lead platoon Lv %d · %d BP cap.\n"
 			% [lead.next_mission_bp, lead.lead_level, lead.next_mission_capacity]
@@ -920,6 +931,17 @@ func _show_campaign_mission_briefing(mission_id: String) -> void:
 		_link_focus(dispatch, SIDE_TOP, back)
 	back.grab_focus()
 	_show_campaign_warning()
+
+
+func _mara_campaign_lead_progress(clears: PackedStringArray) -> LeadProgress.Frame:
+	var lead := LeadProgress.inspect(ProfileStore.MARA, clears)
+	if _profile.mara_uses_starting_platoons():
+		var unit := MaraStarting.infantry_progress(lead.total_xp)
+		var pool := Points.new(unit.level)
+		lead.lead_level = unit.level
+		lead.next_mission_bp = pool.balance
+		lead.next_mission_capacity = pool.capacity
+	return lead
 
 
 func _mine_replay_heavy_available(campaign_id: String, mission_id: String, confirmed_clears: PackedStringArray,
@@ -971,7 +993,10 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 	_replace_stage(Page.CAMPAIGN_BATTLE)
 	_victory_pending = false
 	if campaign_id == "mara" and mission_id == "mara_mine_escort" and mission is MaraMine:
-		mission.configure_campaign_lead_level(LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
+		var progress := _mara_campaign_lead_progress(confirmed_clears)
+		mission.configure_campaign_lead_level(progress.lead_level)
+		if _profile.mara_uses_starting_platoons() and shield_state != null:
+			mission.configure_mara_starting_platoons(progress.total_xp, shield_state.total_xp)
 		mission.configure_campaign_lead_melee(confirmed_clears.has(mission_id) and _profile.mara_lead_melee_invested())
 		mission.configure_campaign_shield_melee(shield_state != null and shield_state.error == OK \
 			and shield_state.melee_status == ProfileStore.MaraShieldMeleeStatus.INVESTED)
@@ -980,7 +1005,9 @@ func _launch_campaign_mission(mission_id: String, use_heavy: bool) -> void:
 	var authored_hud := mission.has_method(&"enable_shared_mission_hud")
 	if authored_hud:
 		mission.set("_mission_hero_name", _active_campaign.name)
-		mission.set("_mission_lead_level", LeadProgress.inspect(campaign_id, confirmed_clears).lead_level)
+		var lead := _mara_campaign_lead_progress(confirmed_clears) if campaign_id == ProfileStore.MARA \
+			else LeadProgress.inspect(campaign_id, confirmed_clears)
+		mission.set("_mission_lead_level", lead.lead_level)
 		mission.call(&"enable_shared_mission_hud")
 	_campaign_battle = mission
 	if deployment.get("result_debrief", false):
