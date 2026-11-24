@@ -1,6 +1,7 @@
 extends RefCounted
 
 const World := preload("res://game/campaign_world.gd")
+const CampaignMissions := preload("res://game/campaign_missions.gd")
 const Beats := preload("res://game/campaign_dialogues.gd")
 const Training := preload("res://game/combat/mara_subordinate_training.gd")
 const LeadProgress := preload("res://game/combat/campaign_platoon_progress.gd")
@@ -29,6 +30,8 @@ const MARA_MINE := "mara_mine_escort"
 const GREYHOLLOW_REVEAL_PENDING := "greyhollow_reveal_pending"
 const CAMPAIGN_COMBAT_XP := "campaign_combat_xp"
 const GREYHOLLOW_XP_RECAP := "greyhollow_xp_recap"
+const MARA_NONCOMBAT_RECAPS := "mara_noncombat_recaps"
+const MARA_HIGH_QUAY := "mara_moonwash_quay"
 const CAMPAIGN_WAYPOINTS := "campaign_waypoints"
 const SETTINGS := "settings"
 const ILYRA := "ilyra"
@@ -219,6 +222,61 @@ func acknowledge_greyhollow_xp_recap() -> Error:
 	if MissionXP.restore(latest.get_value(MISSION_RESULTS, GREYHOLLOW_XP_RECAP)) == null:
 		return ERR_INVALID_DATA
 	return _set_values({MISSION_RESULTS: {GREYHOLLOW_XP_RECAP: null}}, latest)
+
+
+## The ordinary Grain and High Quay owners have no combat defeats. This
+## preserves Grain's first delivery result in the same clear transaction.
+func commit_mara_noncombat_victory(mission_id: String, result := &"") -> MissionXP.Receipt:
+	if (mission_id == Grain.MISSION_ID and not _is_grain_result(result)) \
+			or (mission_id == MARA_HIGH_QUAY and result != &"") \
+			or mission_id not in [String(Grain.MISSION_ID), MARA_HIGH_QUAY]:
+		return MissionXP.Receipt.new(ERR_INVALID_PARAMETER, 0, 0, 0, false)
+	var latest := ConfigFile.new()
+	var load_error := latest.load(_path)
+	if load_error not in [OK, ERR_FILE_NOT_FOUND]:
+		return MissionXP.Receipt.new(load_error, 0, 0, 0, false)
+	var clears := _confirmed_missions(latest, MARA)
+	if clears.has(mission_id):
+		_config = latest
+		return MissionXP.Receipt.new(OK, 0, 0, 0, false)
+	# Do not award/display a nominal first-clear XP that the campaign's
+	# consecutive chapter progression would not consume.
+	if not CampaignMissions.is_unlocked(MARA, mission_id, clears):
+		return MissionXP.Receipt.new(ERR_UNAUTHORIZED, 0, 0, 0, false)
+	var receipt := MissionXP.Receipt.new(OK, 0, LeadProgress.XP_PER_FIRST_CLEAR, 0, true)
+	clears.append(mission_id)
+	var values := {
+		MISSION_PROGRESS: {MARA: clears},
+		MARA_NONCOMBAT_RECAPS: {mission_id: receipt.stored()},
+	}
+	if mission_id == Grain.MISSION_ID:
+		values[MISSION_RESULTS] = {mission_id: String(result)}
+	var saved := _set_values(values, latest)
+	return receipt if saved == OK else MissionXP.Receipt.new(saved, 0, 0, 0, false)
+
+
+func mara_pending_noncombat_recap() -> Dictionary:
+	var clears := completed_missions(MARA)
+	for mission_id: String in [String(Grain.MISSION_ID), MARA_HIGH_QUAY]:
+		if not clears.has(mission_id):
+			continue
+		var receipt := MissionXP.restore(_config.get_value(MARA_NONCOMBAT_RECAPS, mission_id, {}))
+		if receipt and receipt.defeated == 0 and receipt.combat_xp == 0:
+			return {"mission_id": mission_id, "receipt": receipt}
+	return {}
+
+
+func acknowledge_mara_noncombat_recap(mission_id: String) -> Error:
+	if mission_id not in [String(Grain.MISSION_ID), MARA_HIGH_QUAY]:
+		return ERR_INVALID_PARAMETER
+	var latest := ConfigFile.new()
+	var load_error := latest.load(_path)
+	if load_error != OK:
+		return load_error
+	if not latest.has_section_key(MARA_NONCOMBAT_RECAPS, mission_id):
+		_config = latest
+		return OK
+	return _set_values({MARA_NONCOMBAT_RECAPS: {mission_id: null}}, latest)
 
 
 func greyhollow_reveal_pending() -> bool:
